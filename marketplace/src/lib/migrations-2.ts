@@ -249,3 +249,28 @@ export async function addRemindersTables() {
         ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE;
       `,
     },
+    {
+      name: 'add_message_hash_chain_columns',
+      sql: `
+        ALTER TABLE deal_messages ADD COLUMN IF NOT EXISTS prev_hash TEXT;
+        ALTER TABLE deal_messages ADD COLUMN IF NOT EXISTS hash TEXT;
+        ALTER TABLE deal_messages ADD COLUMN IF NOT EXISTS wal_position TEXT;
+        ALTER TABLE deal_messages ADD COLUMN IF NOT EXISTS consent_logged BOOLEAN DEFAULT FALSE;
+      `,
+    },
+    {
+      name: 'create_user_consents_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS user_consents (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          consent_type VARCHAR(100) NOT NULL,
+          granted BOOLEAN NOT NULL DEFAULT TRUE,
+          version VARCHAR(20),
+          ip_address INET,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          UNIQUE(user_id, consent_type)
+        );
+        CREATE INDEX IF NOT EXISTS idx_user_consents_user ON user_consents(user_id);
+      `,
+    },

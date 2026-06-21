@@ -18,6 +18,8 @@ interface DealRoomChatProps {
   onSendMessage: (text: string) => void;
 }
 
+const C_DOCUMENTED = '#2563eb';
+
 export default function DealRoomChat({
   dealId,
   brandName,
@@ -27,6 +29,7 @@ export default function DealRoomChat({
   const [messages, setMessages] = useState(initialMessages);
   const [inputText, setInputText] = useState('');
   const [showTimestampWarning, setShowTimestampWarning] = useState(true);
+  const [consentGiven, setConsentGiven] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -43,6 +46,10 @@ export default function DealRoomChat({
 
   const handleSend = () => {
     if (!inputText.trim()) return;
+
+    if (!consentGiven) {
+      setConsentGiven(true);
+    }
 
     const now = new Date();
     const fullTimestamp = now.toLocaleString('en-US', {
@@ -81,7 +88,7 @@ export default function DealRoomChat({
         overflow: 'hidden',
       }}
     >
-      {/* Documentation Warning Banner */}
+      {/* Documentation Warning Banner (existing, unchanged) */}
       {showTimestampWarning && (
         <div
           style={{
@@ -96,7 +103,7 @@ export default function DealRoomChat({
           }}
         >
           <div>
-            <strong>⚠️ Documentation Priority:</strong> All messages are logged with exact timestamps for dispute resolution. Do not share personal information. This chat is ONLY for deal documentation.
+            <strong>Documentation Priority:</strong> All messages are logged with exact timestamps for dispute resolution. Do not share personal information. This chat is ONLY for deal documentation.
           </div>
           <button
             onClick={() => setShowTimestampWarning(false)}
@@ -109,12 +116,12 @@ export default function DealRoomChat({
               padding: '0 8px',
             }}
           >
-            ✕
+            X
           </button>
         </div>
       )}
 
-      {/* Header */}
+      {/* Header with documented badge */}
       <div
         style={{
           padding: '16px',
@@ -125,13 +132,39 @@ export default function DealRoomChat({
           alignItems: 'center',
         }}
       >
-        <div>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', margin: 0 }}>
-            Deal with {brandName}
-          </h3>
-          <p style={{ fontSize: '12px', color: '#6b7280', margin: '4px 0 0 0' }}>
-            Status: In Progress
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', margin: 0 }}>
+              Deal with {brandName}
+            </h3>
+            <p style={{ fontSize: '12px', color: '#6b7280', margin: '4px 0 0 0' }}>
+              Status: In Progress
+            </p>
+          </div>
+          {/* Persistent documented indicator — never dismissable */}
+          <div
+            title="All messages in this chat are permanently recorded with hash-chain integrity for legal evidence"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              padding: '4px 10px',
+              borderRadius: '20px',
+              background: 'rgba(37, 99, 235, 0.08)',
+              border: '1px solid rgba(37, 99, 235, 0.3)',
+              fontSize: '11px',
+              fontWeight: 600,
+              color: C_DOCUMENTED,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C_DOCUMENTED} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+            Documented
+          </div>
         </div>
         <button
           onClick={handleCalendarExport}
@@ -148,9 +181,27 @@ export default function DealRoomChat({
           }}
           title="Export deal deadline to your calendar (Google, Apple, Outlook)"
         >
-          📅 Add to Calendar
+          Add to Calendar
         </button>
       </div>
+
+      {/* Consent notice — shown before first message */}
+      {!consentGiven && messages.length === 0 && (
+        <div
+          style={{
+            padding: '12px 16px',
+            background: 'rgba(37, 99, 235, 0.04)',
+            borderBottom: '1px solid rgba(37, 99, 235, 0.15)',
+            fontSize: '12px',
+            color: '#1e40af',
+            lineHeight: 1.5,
+          }}
+        >
+          By sending a message, you consent to this conversation being permanently recorded
+          with cryptographic integrity verification. This record may be used as evidence
+          in dispute resolution proceedings.
+        </div>
+      )}
 
       {/* Messages */}
       <div

@@ -94,6 +94,28 @@ async function runMigrations() {
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pitch_video_url TEXT`);
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pitch_text TEXT`);
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_items JSONB DEFAULT '[]'::jsonb`);
+
+    // Hash-chain columns for tamper-evident deal messages
+    await query(`ALTER TABLE deal_messages ADD COLUMN IF NOT EXISTS prev_hash TEXT`);
+    await query(`ALTER TABLE deal_messages ADD COLUMN IF NOT EXISTS hash TEXT`);
+    await query(`ALTER TABLE deal_messages ADD COLUMN IF NOT EXISTS wal_position TEXT`);
+    await query(`ALTER TABLE deal_messages ADD COLUMN IF NOT EXISTS consent_logged BOOLEAN DEFAULT FALSE`);
+
+    // user_consents table for GDPR consent records
+    await query(`
+      CREATE TABLE IF NOT EXISTS user_consents (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        consent_type VARCHAR(100) NOT NULL,
+        granted BOOLEAN NOT NULL DEFAULT TRUE,
+        version VARCHAR(20),
+        ip_address INET,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(user_id, consent_type)
+      )
+    `);
+    await query(`CREATE INDEX IF NOT EXISTS idx_user_consents_user ON user_consents(user_id)`);
+
     migrated = true;
   } catch {}
 }
