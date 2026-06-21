@@ -6,18 +6,18 @@ import { useAuth } from '@/context/AuthContext';
 import { C } from '@/theme/colors';
 
 const PROFESSIONS = {
-  'Fashion': ['Fashion Influencer','Stylist','Fashion Designer','Model','Personal Shopper','Fashion Photographer','Streetwear Creator','Sustainable Fashion Advocate'],
-  'Beauty': ['Makeup Artist','Skincare Specialist','Hair Stylist','Nail Artist','Beauty Reviewer','Fragrance Enthusiast','Esthetician','Beauty Educator'],
-  'Travel': ['Travel Blogger','Adventure Creator','Luxury Travel','Budget Travel','Solo Travel','Travel Photographer','Digital Nomad','Hotel Reviewer'],
-  'Food & Beverage': ['Chef','Food Photographer','Recipe Creator','Restaurant Reviewer','Pastry Chef','Nutritionist','Food Stylist','Culinary Student'],
-  'Fitness': ['Personal Trainer','Yoga Instructor','Fitness Coach','CrossFit Athlete','Pilates Instructor','Bodybuilder','Marathon Runner','Sports Nutritionist'],
-  'Lifestyle': ['Lifestyle Blogger','Minimalist','Wellness Coach','Self-Care Advocate','Productivity Creator','Journal Creator','Morning Routine Creator','Slow Living Advocate'],
-  'Photography': ['Portrait Photographer','Street Photographer','Landscape Photographer','Product Photographer','Wedding Photographer','Drone Photographer','Photo Editor','Analog Film Creator'],
-  'Interior Design': ['Interior Designer','Home Decor Creator','DIY Home','Minimalist Home','Plant Parent','Organization Expert','Furniture Designer','Renovation Creator'],
-  'Technology': ['Software Engineer','Full Stack Developer','Data Scientist','Product Manager','DevOps Engineer','UX/UI Designer','Tech Entrepreneur','AI/ML Specialist'],
-  'Entertainment': ['Actor','Comedian','Musician','Producer','Director','Screenwriter','Animator','Voice Actor','Podcast Host','DJ','Streamer','Stunt Performer'],
-  'Sports': ['Professional Athlete','Fitness Coach','Sports Coach','Yoga Instructor','Nutritionist','Sports Analyst','Personal Trainer','Physical Therapist'],
-  'Business': ['CEO','Entrepreneur','Consultant','Sales Manager','HR Manager','Operations Manager','Marketing Manager','Business Analyst'],
+  'Fashion': ['Boutique','Streetwear Brand','Luxury Fashion','Sustainable Fashion','Activewear','Accessories Brand','Vintage & Thrift','Tailoring & Alterations'],
+  'Beauty': ['Cosmetics Brand','Skincare Line','Haircare Brand','Fragrance House','Beauty Clinic','Salon','Spa & Wellness','Organic Beauty'],
+  'Travel': ['Hotel','Resort','Travel Agency','Airline','Tour Operator','Vacation Rental','Cruise Line','Destination Marketing'],
+  'Food & Beverage': ['Restaurant','Cafe','Bakery','Fast Casual','Fine Dining','Food Truck','Bar & Lounge','Catering'],
+  'Fitness': ['Gym','Fitness Studio','Wellness Center','Sports Brand','Athletic Apparel','Supplement Company','Yoga Studio','Outdoor Gear'],
+  'Lifestyle': ['Home Goods','Subscription Box','Lifestyle App','Magazine & Media','Event Brand','Wellness Product','Luxury Goods','Sustainable Living'],
+  'Photography': ['Photo Studio','Camera Brand','Print Shop','Stock Photography','Event Photography','Film Lab','Photo Tech','Art Gallery'],
+  'Interior Design': ['Furniture Brand','Home Decor','Lighting Design','Textile Brand','Paint & Finishes','Architecture Firm','Staging Company','Outdoor Living'],
+  'Technology': ['SaaS Company','Mobile App','Agency','E-Commerce','Dev Tool','Game Studio','Hardware Brand','EdTech Platform'],
+  'Entertainment': ['Record Label','Streaming Service','Production Company','Event Venue','Talent Agency','Gaming Brand','Media Network','Experiential Marketing'],
+  'Sports': ['Sports Team','League','Stadium & Arena','Sporting Goods','Fan Merch','Training Facility','Sports Media','Esports Organization'],
+  'Business': ['Consulting Firm','Agency','SaaS','Marketplace','E-Commerce','FinTech','SaaS Platform','B2B Service'],
 };
 
 export default function ValueSkinsStore() {

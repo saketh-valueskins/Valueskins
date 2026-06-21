@@ -27,7 +27,7 @@ export default function FilterSidebar({ onFilterChange }: FilterSidebarProps) {
   }, [budgetMin, budgetMax, dealTypes, professions, onFilterChange]);
 
   const dealTypeOptions = ['Paid', 'Barter', 'Equity', 'Ambassador'];
-  const professionOptions = ['Software Engineer', 'Designer', 'Fitness Coach', 'Chef', 'Photographer'];
+  const professionOptions = ['Restaurant', 'Boutique', 'SaaS Company', 'Gym', 'Hotel'];
 
   return (
     <div style={{

@@ -157,12 +157,12 @@ function calculateMatchScore(campaign: Campaign, creator: Creator): number {
  */
 function isSimilarProfession(prof1: string, prof2: string): boolean {
   const similar: { [key: string]: string[] } = {
-    'Fashion': ['Fashion Influencer', 'Stylist', 'Fashion Designer', 'Model'],
-    'Beauty': ['Makeup Artist', 'Skincare Specialist', 'Hair Stylist', 'Beauty Reviewer'],
-    'Travel': ['Travel Blogger', 'Adventure Creator', 'Digital Nomad'],
-    'Food': ['Chef', 'Food Photographer', 'Recipe Creator', 'Restaurant Reviewer'],
-    'Fitness': ['Personal Trainer', 'Yoga Instructor', 'Fitness Coach'],
-    'Technology': ['Software Engineer', 'Developer', 'Tech Entrepreneur'],
+    'Fashion': ['Boutique', 'Streetwear Brand', 'Luxury Fashion'],
+    'Beauty': ['Cosmetics Brand', 'Skincare Line', 'Salon'],
+    'Travel': ['Hotel', 'Resort', 'Travel Agency'],
+    'Food': ['Restaurant', 'Cafe', 'Bakery', 'Catering'],
+    'Fitness': ['Gym', 'Fitness Studio', 'Yoga Studio'],
+    'Technology': ['SaaS Company', 'Mobile App', 'Agency'],
   };
 
   const prof1Lower = prof1.toLowerCase();

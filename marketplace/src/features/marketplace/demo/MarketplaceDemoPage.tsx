@@ -83,18 +83,18 @@ const DEAL_LABELS = {
 } as const;
 
 const PROFESSIONS = {
-  'Fashion':        { name: 'Fashion',        subProfessions: ['Fashion Influencer','Stylist','Fashion Designer','Model','Personal Shopper','Fashion Photographer','Streetwear Creator','Sustainable Fashion Advocate'] },
-  'Beauty':         { name: 'Beauty',         subProfessions: ['Makeup Artist','Skincare Specialist','Hair Stylist','Nail Artist','Beauty Reviewer','Fragrance Enthusiast','Esthetician','Beauty Educator'] },
-  'Travel':         { name: 'Travel',         subProfessions: ['Travel Blogger','Adventure Creator','Luxury Travel','Budget Travel','Solo Travel','Travel Photographer','Digital Nomad','Hotel Reviewer'] },
-  'Food & Beverage':{ name: 'Food & Beverage',subProfessions: ['Chef','Food Photographer','Recipe Creator','Restaurant Reviewer','Pastry Chef','Nutritionist','Food Stylist','Culinary Student'] },
-  'Fitness':        { name: 'Fitness',        subProfessions: ['Personal Trainer','Yoga Instructor','Fitness Coach','CrossFit Athlete','Pilates Instructor','Bodybuilder','Marathon Runner','Sports Nutritionist'] },
-  'Lifestyle':      { name: 'Lifestyle',      subProfessions: ['Lifestyle Blogger','Minimalist','Wellness Coach','Self-Care Advocate','Productivity Creator','Journal Creator','Morning Routine Creator','Slow Living Advocate'] },
-  'Photography':    { name: 'Photography',    subProfessions: ['Portrait Photographer','Street Photographer','Landscape Photographer','Product Photographer','Wedding Photographer','Drone Photographer','Photo Editor','Analog Film Creator'] },
-  'Interior Design':{ name: 'Interior Design',subProfessions: ['Interior Designer','Home Decor Creator','DIY Home','Minimalist Home','Plant Parent','Organization Expert','Furniture Designer','Renovation Creator'] },
-  'Technology':     { name: 'Technology',     subProfessions: ['Software Engineer','Full Stack Developer','Data Scientist','Product Manager','DevOps Engineer','UX/UI Designer','Tech Entrepreneur','AI/ML Specialist'] },
-  'Entertainment':  { name: 'Entertainment',  subProfessions: ['Actor','Comedian','Musician','Producer','Director','Screenwriter','Animator','Voice Actor','Podcast Host','DJ','Streamer','Stunt Performer'] },
-  'Sports':         { name: 'Sports',         subProfessions: ['Professional Athlete','Fitness Coach','Sports Coach','Yoga Instructor','Nutritionist','Sports Analyst','Personal Trainer','Physical Therapist'] },
-  'Business':       { name: 'Business',       subProfessions: ['CEO','Entrepreneur','Consultant','Sales Manager','HR Manager','Operations Manager','Marketing Manager','Business Analyst'] },
+  'Fashion':        { name: 'Fashion',        subProfessions: ['Boutique','Streetwear Brand','Luxury Fashion','Sustainable Fashion','Activewear','Accessories Brand','Vintage & Thrift','Tailoring & Alterations'] },
+  'Beauty':         { name: 'Beauty',         subProfessions: ['Cosmetics Brand','Skincare Line','Haircare Brand','Fragrance House','Beauty Clinic','Salon','Spa & Wellness','Organic Beauty'] },
+  'Travel':         { name: 'Travel',         subProfessions: ['Hotel','Resort','Travel Agency','Airline','Tour Operator','Vacation Rental','Cruise Line','Destination Marketing'] },
+  'Food & Beverage':{ name: 'Food & Beverage',subProfessions: ['Restaurant','Cafe','Bakery','Fast Casual','Fine Dining','Food Truck','Bar & Lounge','Catering'] },
+  'Fitness':        { name: 'Fitness',        subProfessions: ['Gym','Fitness Studio','Wellness Center','Sports Brand','Athletic Apparel','Supplement Company','Yoga Studio','Outdoor Gear'] },
+  'Lifestyle':      { name: 'Lifestyle',      subProfessions: ['Home Goods','Subscription Box','Lifestyle App','Magazine & Media','Event Brand','Wellness Product','Luxury Goods','Sustainable Living'] },
+  'Photography':    { name: 'Photography',    subProfessions: ['Photo Studio','Camera Brand','Print Shop','Stock Photography','Event Photography','Film Lab','Photo Tech','Art Gallery'] },
+  'Interior Design':{ name: 'Interior Design',subProfessions: ['Furniture Brand','Home Decor','Lighting Design','Textile Brand','Paint & Finishes','Architecture Firm','Staging Company','Outdoor Living'] },
+  'Technology':     { name: 'Technology',     subProfessions: ['SaaS Company','Mobile App','Agency','E-Commerce','Dev Tool','Game Studio','Hardware Brand','EdTech Platform'] },
+  'Entertainment':  { name: 'Entertainment',  subProfessions: ['Record Label','Streaming Service','Production Company','Event Venue','Talent Agency','Gaming Brand','Media Network','Experiential Marketing'] },
+  'Sports':         { name: 'Sports',         subProfessions: ['Sports Team','League','Stadium & Arena','Sporting Goods','Fan Merch','Training Facility','Sports Media','Esports Organization'] },
+  'Business':       { name: 'Business',       subProfessions: ['Consulting Firm','Agency','SaaS','Marketplace','E-Commerce','FinTech','SaaS Platform','B2B Service'] },
 };
 
 // Creator data is now fetched from backend via /api/creators/match
@@ -8514,8 +8514,7 @@ export default function MarketplaceDemoPage() {
                   <div style={{ marginBottom: '24px' }}>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '12px' }}>Brand Settings</div>
                     <div style={{ background: C.card, border: `1px solid rgba(230,81,0,0.25)`, borderRadius: '12px', padding: '14px 16px', marginBottom: '10px' }}>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: C.text, marginBottom: '2px' }}>Brand Identity</div>
-                      <div style={{ fontSize: '12px', color: C.textSecondary, marginBottom: '12px' }}>Your ValueSkin determines which creators you can contact. Only creators with the same profession will see your proposals.</div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>Brand Identity</div>
                       {brandValueSkins.length > 0 ? (
                         <div>
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>

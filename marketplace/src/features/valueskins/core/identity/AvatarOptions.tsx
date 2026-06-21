@@ -114,14 +114,15 @@ export const PROFESSION_BADGES: Record<string, ProfessionBadge> = {
 
 export function defaultAboutMe(profession: string): string {
   const defaults: Record<string, string> = {
-    'Software Engineer': 'Full-stack engineer with 5+ years building scalable products. I specialize in React, TypeScript, and distributed systems. Known for shipping clean, well-tested code on time.',
-    'Data Scientist': 'Data scientist with deep expertise in ML pipelines, NLP, and predictive modeling. I turn messy datasets into clear business insights.',
-    'Product Manager': 'Product manager who has taken 3 products from 0 to 1. I bridge engineering, design, and business stakeholders to ship features that users love.',
-    'Musician': 'Multi-genre musician with 10 years of live performance and studio recording experience.',
-    'Photographer': 'Documentary and portrait photographer. 8 years shooting for editorial and commercial clients.',
-    'Fitness Coach': 'Certified personal trainer specializing in strength and mobility for busy professionals.',
+    'Restaurant': 'Modern restaurant bringing bold flavors and unforgettable dining experiences. We create content that makes people hungry and drives foot traffic.',
+    'Cafe': 'Neighborhood cafe crafting specialty coffee and artisanal pastries. Warm atmosphere, quality ingredients, and a loyal community of regulars.',
+    'Boutique': 'Curated boutique offering handpicked fashion and accessories. We tell stories through style and connect with customers who love unique finds.',
+    'Hotel': 'Boutique hotel delivering memorable stays with personalized service. Every detail designed to create share-worthy guest experiences.',
+    'Gym': 'Modern fitness facility focused on results-driven training. We help people transform their health through innovative programs.',
+    'SaaS Company': 'B2B SaaS platform solving real problems for real businesses. We partner with creators who can explain complex products simply.',
+    'Cosmetics Brand': 'Clean beauty brand committed to ingredients you can trust. We believe in real beauty, real results, and real transparency.',
   };
-  return defaults[profession] ?? `${profession} — click Edit to write your story and explain why someone should work with you.`;
+  return defaults[profession] ?? `${profession} — click Edit to write your brand story and explain what makes you unique.`;
 }
 
 //  Profession Sticker (clickable — opens About Me panel) 

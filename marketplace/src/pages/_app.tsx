@@ -30,7 +30,7 @@ export default function App({ Component, pageProps }: AppProps) {
           fontWeight: 700,
           border: '1px solid rgba(255,255,255,0.15)',
           boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         }}
       >
         ValueSkins

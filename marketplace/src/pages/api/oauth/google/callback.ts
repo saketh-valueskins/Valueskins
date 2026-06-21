@@ -85,7 +85,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       [sessionId, userId, true, expiresAt]
     );
 
-    const cookieStr = `valueskins_session=${sessionId}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${COOKIE_MAX_AGE}`;
+    const isSecure = req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';
+    const cookieStr = `valueskins_session=${sessionId}; HttpOnly${isSecure ? '; Secure' : ''}; SameSite=Lax; Path=/; Max-Age=${COOKIE_MAX_AGE}`;
     res.setHeader('Set-Cookie', cookieStr);
     console.log('✅ Session cookie set');
 
