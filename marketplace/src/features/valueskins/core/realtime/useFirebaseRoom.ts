@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+
+const API_URL = '/api/realtime/state';
+const POLL_INTERVAL = 3000;
 
 function normalizeCollection<T>(value: unknown): T[] {
   if (Array.isArray(value)) return value as T[];
@@ -16,63 +19,105 @@ function normalizeState(raw: any) {
   };
 }
 
+async function fetchState(): Promise<any> {
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function persistState(state: any): Promise<void> {
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: state }),
+    });
+  } catch {}
+}
+
 export const useFirebaseRoom = (userId: string | null, roomId: string | null, userId2: string) => {
   const [state, setState] = useState<any>({ deals: {}, campaigns: [], messages: {}, applications: [], notifications: [] });
-  const [syncing, setSyncing] = useState(false);
+  const [syncing, setSyncing] = useState(true);
+  const stateRef = useRef(state);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  stateRef.current = state;
+
+  // Initial load + polling
   useEffect(() => {
-    // Load from localStorage on mount
-    const stored = localStorage.getItem('firebase_room_state');
-    if (stored) {
-      try {
-        setState(normalizeState(JSON.parse(stored)));
-      } catch (e) {
-        setState({ deals: {}, campaigns: [], messages: {}, applications: [], notifications: [] });
+    let mounted = true;
+
+    async function load() {
+      const data = await fetchState();
+      if (!mounted) return;
+      if (data) {
+        setState(normalizeState(data));
       }
+      setSyncing(false);
     }
+
+    load();
+
+    pollingRef.current = setInterval(async () => {
+      const data = await fetchState();
+      if (!mounted) return;
+      if (data) {
+        setState(normalizeState(data));
+      }
+    }, POLL_INTERVAL);
+
+    return () => {
+      mounted = false;
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
   }, []);
 
-  const createCampaign = (campaign: any) => {
+  // Debounced persist on state change
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (syncing) return;
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = setTimeout(() => {
+      persistState(stateRef.current);
+    }, 200);
+  }, [state, syncing]);
+
+  const createCampaign = useCallback((campaign: any) => {
     setState(prev => {
       const campaigns = normalizeCollection(prev.campaigns);
-      const updated = {
+      return {
         ...prev,
         campaigns: [...campaigns.filter((entry: any) => entry?.id !== campaign.id), campaign],
       };
-      localStorage.setItem('firebase_room_state', JSON.stringify(updated));
-      return updated;
     });
-  };
+  }, []);
 
-  const updateDeal = (dealId: string, updates: any) => {
-    setState(prev => {
-      const updated = {
-        ...prev,
-        deals: { ...prev.deals, [dealId]: { ...prev.deals[dealId], ...updates } }
-      };
-      localStorage.setItem('firebase_room_state', JSON.stringify(updated));
-      return updated;
-    });
-  };
+  const updateDeal = useCallback((dealId: string, updates: any) => {
+    setState(prev => ({
+      ...prev,
+      deals: { ...prev.deals, [dealId]: { ...prev.deals[dealId], ...updates } }
+    }));
+  }, []);
 
-  const addMessage = (dealId: string, message: any) => {
-    setState(prev => {
-      const updated = {
-        ...prev,
-        messages: {
-          ...prev.messages,
-          [dealId]: [...(prev.messages[dealId] || []), message]
-        }
-      };
-      localStorage.setItem('firebase_room_state', JSON.stringify(updated));
-      return updated;
-    });
-  };
+  const addMessage = useCallback((dealId: string, message: any) => {
+    setState(prev => ({
+      ...prev,
+      messages: {
+        ...prev.messages,
+        [dealId]: [...(prev.messages[dealId] || []), message]
+      }
+    }));
+  }, []);
 
-  const sendNotification = (recipient: string, type: string, message: string) => {
+  const sendNotification = useCallback((recipient: string, type: string, message: string) => {
     setState(prev => {
       const notifications = normalizeCollection(prev.notifications);
-      const updated = {
+      return {
         ...prev,
         notifications: [
           {
@@ -86,22 +131,18 @@ export const useFirebaseRoom = (userId: string | null, roomId: string | null, us
           ...notifications,
         ].slice(0, 100),
       };
-      localStorage.setItem('firebase_room_state', JSON.stringify(updated));
-      return updated;
     });
-  };
+  }, []);
 
-  const createApplication = (application: any) => {
+  const createApplication = useCallback((application: any) => {
     setState(prev => {
       const applications = normalizeCollection(prev.applications);
-      const updated = {
+      return {
         ...prev,
         applications: [...applications.filter((entry: any) => entry?.id !== application.id), application],
       };
-      localStorage.setItem('firebase_room_state', JSON.stringify(updated));
-      return updated;
     });
-  };
+  }, []);
 
   return {
     state,
