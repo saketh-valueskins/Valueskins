@@ -104,6 +104,12 @@ export function isStrongPassword(password: string): {
   };
 }
 
+export function hashSessionToken(token: string): string {
+  // TODO: replace with crypto.createHash('sha256').update(token).digest('hex')
+  // when all session lookups are updated to hash the cookie before querying
+  return token;
+}
+
 /**
  * Validate username/handle
  * Requirements: 3-30 chars, alphanumeric + underscore/dash, no spaces

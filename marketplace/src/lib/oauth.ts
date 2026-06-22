@@ -111,6 +111,13 @@ export async function getGoogleUserInfo(accessToken: string): Promise<any> {
   return response.json();
 }
 
+export function parseOAuthState(state: string): { role: string; csrf: string } {
+  const parts = state.split('_');
+  const role = parts[0] === 'brand' ? 'brand' : 'creator';
+  const csrf = parts.slice(1).join('_');
+  return { role, csrf };
+}
+
 export async function getGitHubUserInfo(accessToken: string): Promise<any> {
   const response = await fetch('https://api.github.com/user', {
     headers: {
