@@ -1,8 +1,21 @@
 import { Pool } from 'pg';
 import dns from 'dns';
 
-// Supabase `db.` subdomain is IPv6-only; force Node.js to prefer IPv6
-dns.setDefaultResultOrder('ipv6first');
+// Supabase `db.` subdomain is IPv6-only.
+// Resolve via IPv6 explicitly so it works on Vercel (AWS Lambda).
+const lookup = (host: string, opts: dns.LookupOptions, cb: (err: Error | null, address: string, family: number) => void) => {
+  if (host.endsWith('.supabase.co') || host.endsWith('.pooler.supabase.com')) {
+    dns.resolve6(host, (err, addresses) => {
+      if (!err && addresses.length > 0) {
+        cb(null, addresses[0], 6);
+      } else {
+        dns.lookup(host, { ...opts, all: false }, cb);
+      }
+    });
+  } else {
+    dns.lookup(host, opts, cb);
+  }
+};
 
 const DATABASE_URL = process.env.DATABASE_URL || process.env.NEXT_PUBLIC_DATABASE_URL;
 
@@ -16,6 +29,7 @@ export function getPool(): Pool {
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
       ssl: { rejectUnauthorized: false },
+      lookup,
     });
   }
   return pool;
