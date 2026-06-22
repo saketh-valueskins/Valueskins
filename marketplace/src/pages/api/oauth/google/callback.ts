@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { exchangeGoogleCode, getGoogleUserInfo } from '@/lib/oauth';
-import { query } from '@/lib/db';
+import { getSupabase } from '@/lib/supabase';
 
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
@@ -50,29 +50,55 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Use email as instagram_user_id for OAuth users
     const instagramUserId = googleUser.email;
 
-    let userId: number;
-    let result = await query('SELECT id FROM users WHERE instagram_user_id = $1', [instagramUserId]);
+    const supabase = getSupabase();
 
-    if (result.rows.length > 0) {
-      userId = result.rows[0].id;
+    let userId: number;
+    const { data: existing } = await supabase
+      .from('users')
+      .select('id')
+      .eq('instagram_user_id', instagramUserId)
+      .maybeSingle();
+
+    if (existing) {
+      userId = existing.id;
       console.log('✅ Found user:', userId);
-      try { await query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [userId]); } catch {}
+      await supabase
+        .from('users')
+        .update({ last_login_at: new Date().toISOString() })
+        .eq('id', userId);
     } else {
       console.log('🆕 Creating new user for:', googleUser.email);
-      // Try with onboarding_stage first, fall back without it if column doesn't exist
-      let createResult;
-      try {
-        createResult = await query(
-          'INSERT INTO users (instagram_user_id, username, display_name, avatar_url, is_active, onboarding_stage) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-          [instagramUserId, googleUser.email.split('@')[0], googleUser.name || googleUser.email, googleUser.picture || null, true, 'pending']
-        );
-      } catch {
-        createResult = await query(
-          'INSERT INTO users (instagram_user_id, username, display_name, avatar_url, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-          [instagramUserId, googleUser.email.split('@')[0], googleUser.name || googleUser.email, googleUser.picture || null, true]
-        );
+      const { data: created, error: createErr } = await supabase
+        .from('users')
+        .insert({
+          instagram_user_id: instagramUserId,
+          username: googleUser.email.split('@')[0],
+          display_name: googleUser.name || googleUser.email,
+          avatar_url: googleUser.picture || null,
+          is_active: true,
+          onboarding_stage: 'pending',
+        })
+        .select('id')
+        .single();
+
+      if (createErr || !created) {
+        // Fallback without onboarding_stage
+        const { data: created2, error: createErr2 } = await supabase
+          .from('users')
+          .insert({
+            instagram_user_id: instagramUserId,
+            username: googleUser.email.split('@')[0],
+            display_name: googleUser.name || googleUser.email,
+            avatar_url: googleUser.picture || null,
+            is_active: true,
+          })
+          .select('id')
+          .single();
+        if (createErr2 || !created2) throw createErr2 || new Error('Failed to create user');
+        userId = created2.id;
+      } else {
+        userId = created.id;
       }
-      userId = createResult.rows[0].id;
       console.log('✅ Created user:', userId);
     }
 
@@ -80,10 +106,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const expiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
 
     console.log('🔐 Creating session:', sessionId);
-    await query(
-      'INSERT INTO auth_sessions (id, user_id, is_active, expires_at) VALUES ($1, $2, $3, $4)',
-      [sessionId, userId, true, expiresAt]
-    );
+    await supabase
+      .from('auth_sessions')
+      .insert({
+        id: sessionId,
+        user_id: userId,
+        is_active: true,
+        expires_at: expiresAt.toISOString(),
+      });
 
     const isSecure = req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';
     const cookieStr = `valueskins_session=${sessionId}; HttpOnly${isSecure ? '; Secure' : ''}; SameSite=Lax; Path=/; Max-Age=${COOKIE_MAX_AGE}`;
