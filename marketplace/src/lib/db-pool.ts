@@ -1,40 +1,43 @@
-import { Pool } from 'pg';
+import { Pool, PoolConfig } from 'pg';
 import dns from 'dns';
 
-// Supabase `db.` subdomain is IPv6-only.
-// Resolve via IPv6 explicitly so it works on Vercel (AWS Lambda).
-const lookup = (host: string, opts: dns.LookupOptions, cb: (err: Error | null, address: string, family: number) => void) => {
-  if (host.endsWith('.supabase.co') || host.endsWith('.pooler.supabase.com')) {
-    dns.resolve6(host, (err, addresses) => {
-      if (!err && addresses.length > 0) {
-        cb(null, addresses[0], 6);
-      } else {
-        dns.lookup(host, { ...opts, all: false }, cb);
-      }
-    });
-  } else {
-    dns.lookup(host, opts, cb);
+async function buildPoolConfig(rawUrl: string): Promise<PoolConfig> {
+  const parsed = new URL(rawUrl);
+  const host = parsed.hostname;
+  const port = parseInt(parsed.port || '5432');
+  const database = parsed.pathname.replace(/^\//, '');
+  const user = decodeURIComponent(parsed.username);
+  const password = decodeURIComponent(parsed.password);
+  try {
+    const addrs = await dns.promises.resolve6(host);
+    if (addrs.length > 0) {
+      return { host: addrs[0], port, database, user, password, max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000, ssl: { rejectUnauthorized: false } };
+    }
+  } catch {}
+  return { host, port, database, user, password, max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000, ssl: { rejectUnauthorized: false } };
+}
+
+let pool: Pool | null = null;
+let resolving: Promise<void> | null = null;
+
+export async function getPool(): Promise<Pool> {
+  if (!pool) {
+    if (!resolving) {
+      resolving = (async () => {
+        const cfg = await buildPoolConfig(process.env.DATABASE_URL || '');
+        pool = new Pool(cfg);
+      })();
+    }
+    await resolving;
   }
-};
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-  ssl: { rejectUnauthorized: false },
-  lookup,
-});
-
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
-});
+  return pool;
+}
 
 export async function query(text: string, params?: any[]) {
+  const p = await getPool();
   const start = Date.now();
   try {
-    const result = await pool.query(text, params);
+    const result = await p.query(text, params);
     const duration = Date.now() - start;
     if (duration > 1000) {
       console.warn(`Slow query detected: ${duration}ms`, text.substring(0, 100));
@@ -52,7 +55,8 @@ export async function queryOne(text: string, params?: any[]) {
 }
 
 export async function transaction(fn: (client: any) => Promise<void>) {
-  const client = await pool.connect();
+  const p = await getPool();
+  const client = await p.connect();
   try {
     await client.query('BEGIN');
     await fn(client);

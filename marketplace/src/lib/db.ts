@@ -1,42 +1,42 @@
-import { Pool } from 'pg';
+import { Pool, PoolConfig } from 'pg';
 import dns from 'dns';
 
-// Supabase `db.` subdomain is IPv6-only.
-// Resolve via IPv6 explicitly so it works on Vercel (AWS Lambda).
-const lookup = (host: string, opts: dns.LookupOptions, cb: (err: Error | null, address: string, family: number) => void) => {
-  if (host.endsWith('.supabase.co') || host.endsWith('.pooler.supabase.com')) {
-    dns.resolve6(host, (err, addresses) => {
-      if (!err && addresses.length > 0) {
-        cb(null, addresses[0], 6);
-      } else {
-        dns.lookup(host, { ...opts, all: false }, cb);
-      }
-    });
-  } else {
-    dns.lookup(host, opts, cb);
-  }
-};
+async function buildPoolConfig(rawUrl: string): Promise<PoolConfig> {
+  const parsed = new URL(rawUrl);
+  const host = parsed.hostname;
+  const port = parseInt(parsed.port || '5432');
+  const database = parsed.pathname.replace(/^\//, '');
+  const user = decodeURIComponent(parsed.username);
+  const password = decodeURIComponent(parsed.password);
+  try {
+    const addrs = await dns.promises.resolve6(host);
+    if (addrs.length > 0) {
+      return { host: addrs[0], port, database, user, password, max: 10, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000, ssl: { rejectUnauthorized: false } };
+    }
+  } catch {}
+  return { host, port, database, user, password, max: 10, idleTimeoutMillis: 30000, connectionTimeoutMillis: 5000, ssl: { rejectUnauthorized: false } };
+}
 
 const DATABASE_URL = process.env.DATABASE_URL || process.env.NEXT_PUBLIC_DATABASE_URL;
 
 let pool: Pool | null = null;
+let resolving: Promise<void> | null = null;
 
-export function getPool(): Pool {
+export async function getPool(): Promise<Pool> {
   if (!pool) {
-    pool = new Pool({
-      connectionString: DATABASE_URL,
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
-      ssl: { rejectUnauthorized: false },
-      lookup,
-    });
+    if (!resolving) {
+      resolving = (async () => {
+        const cfg = await buildPoolConfig(DATABASE_URL || '');
+        pool = new Pool(cfg);
+      })();
+    }
+    await resolving;
   }
   return pool;
 }
 
 export async function query(text: string, params?: any[]) {
-  const client = await getPool().connect();
+  const client = await (await getPool()).connect();
   try {
     return await client.query(text, params);
   } finally {
@@ -45,7 +45,8 @@ export async function query(text: string, params?: any[]) {
 }
 
 export async function transaction<T>(fn: (query: (text: string, params?: any[]) => Promise<any>) => Promise<T>): Promise<T> {
-  const client = await getPool().connect();
+  const p = await getPool();
+  const client = await p.connect();
   try {
     await client.query('BEGIN');
     const result = await fn((text: string, params?: any[]) => client.query(text, params));
