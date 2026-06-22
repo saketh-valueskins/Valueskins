@@ -9,9 +9,13 @@ import { C } from '@/theme/colors';
 export default function Signup() {
   const [error, setError] = useState('');
 
-  const handleGoogleAuth = () => {
-    const url = getGoogleAuthUrl();
-    window.location.href = url;
+  const handleGoogleAuth = async () => {
+    try {
+      const url = await getGoogleAuthUrl();
+      window.location.href = url;
+    } catch {
+      setError('Failed to start signup');
+    }
   };
 
   return (

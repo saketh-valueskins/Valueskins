@@ -4,15 +4,16 @@ import Link from 'next/link';
 import { getGoogleAuthUrl } from '@/lib/oauth';
 import { C } from '@/theme/colors';
 
-// Note: Using unified ValueSkins theme - same functionality, consistent styling
-
 export default function Login() {
   const [error, setError] = useState('');
-  const [devLoading, setDevLoading] = useState(false);
 
-  const handleGoogleAuth = () => {
-    const url = getGoogleAuthUrl();
-    window.location.href = url;
+  const handleGoogleAuth = async () => {
+    try {
+      const url = await getGoogleAuthUrl();
+      window.location.href = url;
+    } catch {
+      setError('Failed to start login');
+    }
   };
 
 

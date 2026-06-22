@@ -25,23 +25,24 @@ function randomState(): string {
   return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-export function getGoogleAuthUrl(customState?: string): string {
-  const state = customState || randomState();
-  const scope = 'openid profile email';
-  const params = new URLSearchParams({
-    client_id: GOOGLE_CLIENT_ID,
-    redirect_uri: GOOGLE_REDIRECT_URI,
-    response_type: 'code',
-    scope,
-    state,
-    access_type: 'offline',
-  });
-
-  if (typeof window !== 'undefined' && !customState) {
-    sessionStorage.setItem('oauth_state', state);
+// Server-side URL construction — client should fetch /api/oauth/start/google instead
+export async function getGoogleAuthUrl(): Promise<string> {
+  if (typeof window === 'undefined') {
+    // Server-side: construct directly
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: GOOGLE_REDIRECT_URI,
+      response_type: 'code',
+      scope: 'openid profile email',
+      state: randomState(),
+      access_type: 'offline',
+    });
+    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   }
-
-  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  // Client-side: fetch from server endpoint to ensure env vars are correct
+  const res = await fetch('/api/oauth/start/google');
+  const data = await res.json();
+  return data.url;
 }
 
 export function getGitHubAuthUrl(): string {
