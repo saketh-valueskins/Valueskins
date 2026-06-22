@@ -122,6 +122,8 @@ export async function addRemindersTables() {
   }
 }
 
+export async function addEscrowMigrations() {
+  const migrations = [
     {
       name: 'create_deal_escrow_table',
       sql: `
@@ -224,7 +226,19 @@ export async function addRemindersTables() {
         CREATE INDEX IF NOT EXISTS idx_deal_messages_deal_id ON deal_messages(deal_id);
       `,
     },
+  ];
 
+  for (const migration of migrations) {
+    try {
+      await query(migration.sql);
+    } catch (error) {
+      console.log(`Migration ${migration.name} skipped or already applied`);
+    }
+  }
+}
+
+export async function addEventFeaturesMigrations() {
+  const migrations = [
     {
       name: 'create_notifications_table',
       sql: `
@@ -274,3 +288,13 @@ export async function addRemindersTables() {
         CREATE INDEX IF NOT EXISTS idx_user_consents_user ON user_consents(user_id);
       `,
     },
+  ];
+
+  for (const migration of migrations) {
+    try {
+      await query(migration.sql);
+    } catch (error) {
+      console.log(`Migration ${migration.name} skipped or already applied`);
+    }
+  }
+}

@@ -10,7 +10,7 @@ const cspHeader = [
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https: http:",
   "media-src 'self' blob: data:",
-  "connect-src 'self' https://api.valueskins.io http://localhost:8080 https://localhost:8080 wss: https://*.firebaseio.com https://*.googleapis.com https://*.firebasedatabase.app",
+  "connect-src 'self' https://api.valueskins.io http://localhost:8080 https://localhost:8080 wss: https://*.firebaseio.com https://*.googleapis.com https://*.firebasedatabase.app https://*.supabase.co wss://*.supabase.co",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

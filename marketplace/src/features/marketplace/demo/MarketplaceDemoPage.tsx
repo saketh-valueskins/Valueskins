@@ -575,8 +575,8 @@ export default function MarketplaceDemoPage() {
 
   const [brandCurrentOppIndex, setBrandCurrentOppIndex] = useState(0);
 
-  // Deal sync hook — bridges localStorage with backend API
-  const dealSync = useDealSync();
+  // Deal sync hook — bridges localStorage with backend API + cross-device sync via Supabase Realtime
+  const dealSync = useDealSync(account?.id);
   // Firebase sync — all users share one global namespace
   const { state: firebaseState, syncing: firebaseSyncing, createCampaign: firebaseCreateCampaign, updateDeal: firebaseUpdateDeal, addMessage: firebaseAddMessage, sendNotification: firebaseSendNotification, createApplication: firebaseCreateApplication } = useFirebaseRoom(null, null, '');
   const { dealStates, setDealStates, getOrCreateDeal, updateDeal: localUpdateDeal } = dealSync;

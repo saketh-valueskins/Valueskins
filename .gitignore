@@ -8,3 +8,4 @@ backend/target/
 **/target/
 .vercel
 .env*.local
+*.tsbuildinfo

@@ -108,8 +108,8 @@ export default function MarketplaceLayout({
                     <NavItem href="/demo/marketplace" active={pathname === '/demo/marketplace'} label="Deals" badge={activePlatform === 'across' ? '🌐' : undefined}>
                         <MarketplaceIcon filled={pathname === '/demo/marketplace'} />
                     </NavItem>
-                    <NavItem href="/profile/me" active={pathname.startsWith('/profile')} label="Profile">
-                        <ProfileIcon filled={pathname.startsWith('/profile')} />
+                    <NavItem href="/profile/me" active={!!pathname?.startsWith('/profile')} label="Profile">
+                        <ProfileIcon filled={!!pathname?.startsWith('/profile')} />
                     </NavItem>
                 </nav>
                 )}

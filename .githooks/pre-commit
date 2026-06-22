@@ -1,0 +1,32 @@
+#!/bin/bash
+set -e
+
+echo "=== Pre-commit security checks ==="
+
+# 1. Scan for secrets
+if command -v git-secrets &> /dev/null; then
+  git-secrets --scan || {
+    echo "FAIL: Secrets detected in staged files. Remove them before committing."
+    exit 1
+  }
+fi
+
+# 2. Scan for hardcoded secrets using grep patterns
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+for FILE in $STAGED_FILES; do
+  if [[ "$FILE" == *.ts || "$FILE" == *.js || "$FILE" == *.rs || "$FILE" == *.py ]]; then
+    if grep -Pn '(?i)(password|secret|api.?key|token)\s*[:=]\s*["'"'"'][A-Za-z0-9_\-]{16,}["'"'"']' "$FILE" 2>/dev/null; then
+      echo "FAIL: Possible hardcoded secret in $FILE"
+      exit 1
+    fi
+  fi
+done
+
+# 3. Check for .env files being staged
+ENV_STAGED=$(git diff --cached --name-only | grep -E '^\.env' || true)
+if [ -n "$ENV_STAGED" ]; then
+  echo "FAIL: Environment files detected in staging: $ENV_STAGED"
+  exit 1
+fi
+
+echo "=== Pre-commit checks passed ==="
