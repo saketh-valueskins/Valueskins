@@ -1,10 +1,15 @@
 import { Pool } from 'pg';
+import dns from 'dns';
+
+// Supabase `db.` subdomain is IPv6-only; force Node.js to prefer IPv6
+dns.setDefaultResultOrder('ipv6first');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
+  ssl: { rejectUnauthorized: false },
 });
 
 pool.on('error', (err) => {
