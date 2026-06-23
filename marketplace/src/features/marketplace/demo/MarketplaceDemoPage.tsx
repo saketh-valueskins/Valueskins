@@ -123,22 +123,24 @@ function currencyForCountry(country: string): { code: string; symbol: string } {
 }
 
 // System 1: Brand business types — what the brand IS (display-only, no matching logic)
+// These are concrete storefront/business types, NOT creator professions
 const PROFESSIONS: Record<string, { name: string; subProfessions: string[] }> = {
-  'Food & Beverage': { name: 'Food & Beverage', subProfessions: ['Cafe', 'Restaurant', 'Bakery', 'Food Truck', 'Bar/Pub', 'Brewery', 'Winery', 'Catering'] },
-  'Retail & E-commerce': { name: 'Retail & E-commerce', subProfessions: ['Fashion Brand', 'Beauty Brand', 'DTC Brand', 'Marketplace', 'Luxury Goods', 'Home Goods', 'Pet Supplies'] },
-  'Technology': { name: 'Technology', subProfessions: ['SaaS', 'Mobile App', 'Gaming Studio', 'AI/ML Platform', 'B2B Software', 'Hardware', 'DevTool', 'Cybersecurity'] },
-  'Health & Wellness': { name: 'Health & Wellness', subProfessions: ['Fitness Brand', 'Supplement Brand', 'Wellness App', 'Meditation', 'Healthcare Provider', 'Telehealth'] },
-  'Beauty & Cosmetics': { name: 'Beauty & Cosmetics', subProfessions: ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Nail Brand', 'Men Grooming'] },
-  'Travel & Hospitality': { name: 'Travel & Hospitality', subProfessions: ['Hotel', 'Resort', 'Airline', 'Travel Agency', 'Tour Operator', 'Cruise Line'] },
-  'Fashion & Apparel': { name: 'Fashion & Apparel', subProfessions: ['Streetwear', 'Luxury', 'Activewear', 'Footwear', 'Accessories', 'Sustainable Fashion'] },
-  'Media & Entertainment': { name: 'Media & Entertainment', subProfessions: ['Streaming Service', 'Record Label', 'Film Studio', 'Publisher', 'Gaming Brand', 'News Outlet'] },
-  'Sports': { name: 'Sports', subProfessions: ['Sportswear', 'Sports Team', 'Fitness Equipment', 'Outdoor Gear', 'Sports League'] },
-  'Education': { name: 'Education', subProfessions: ['EdTech', 'Online Course Platform', 'Tutoring Service', 'Academy', 'Test Prep'] },
-  'Finance & Insurance': { name: 'Finance & Insurance', subProfessions: ['Fintech', 'Bank', 'Insurance', 'Investment Platform', 'Crypto', 'Wealth Management'] },
-  'Real Estate': { name: 'Real Estate', subProfessions: ['Property Developer', 'Real Estate Agency', 'Co-working Space', 'Rental Platform'] },
-  'Professional Services': { name: 'Professional Services', subProfessions: ['Agency', 'Consultancy', 'Law Firm', 'Marketing Agency', 'PR Firm', 'Accounting'] },
-  'Automotive': { name: 'Automotive', subProfessions: ['Car Manufacturer', 'Dealership', 'EV Brand', 'Auto Parts', 'Ride Share'] },
-  'Non-Profit & Public': { name: 'Non-Profit & Public', subProfessions: ['Non-Profit', 'Foundation', 'Government Agency', 'NGO', 'Religious Organization'] },
+  'Food & Beverage': { name: 'Food & Beverage', subProfessions: ['Cafe', 'Restaurant', 'Bakery', 'Pizzeria', 'Ice Cream Shop', 'Food Truck', 'Juice Bar', 'Bar', 'Brewery', 'Winery'] },
+  'Retail & Shopping': { name: 'Retail & Shopping', subProfessions: ['Clothing Boutique', 'Department Store', 'Vintage Shop', 'Jewelry Store', 'Bookstore', 'Grocery Store', 'Convenience Store', 'Thrift Store'] },
+  'Technology': { name: 'Technology', subProfessions: ['App Developer', 'Software Company', 'Gaming Studio', 'Computer Store', 'Tech Startup', 'Repair Shop', 'IT Services'] },
+  'Health & Fitness': { name: 'Health & Fitness', subProfessions: ['Gym', 'Yoga Studio', 'Spa', 'Meditation Center', 'Health Clinic', 'Pharmacy', 'Dental Clinic'] },
+  'Beauty & Personal Care': { name: 'Beauty & Personal Care', subProfessions: ['Salon', 'Barbershop', 'Nail Salon', 'Tattoo Studio', 'Cosmetics Store', 'Fragrance Shop'] },
+  'Travel & Hospitality': { name: 'Travel & Hospitality', subProfessions: ['Hotel', 'Resort', 'Bed & Breakfast', 'Hostel', 'Travel Agency', 'Tour Company'] },
+  'Fashion & Apparel': { name: 'Fashion & Apparel', subProfessions: ['Boutique', 'Streetwear Store', 'Sneaker Shop', 'Tailor', 'Uniform Shop', 'Shoe Store'] },
+  'Entertainment & Media': { name: 'Entertainment & Media', subProfessions: ['Comedy Club', 'Movie Theater', 'Nightclub', 'Arcade', 'Concert Venue', 'Escape Room', 'Bowling Alley', 'Karaoke Bar'] },
+  'Sports & Recreation': { name: 'Sports & Recreation', subProfessions: ['Sports Bar', 'Golf Course', 'Tennis Club', 'Bike Shop', 'Skate Park', 'Swimming Pool', 'Stadium'] },
+  'Education': { name: 'Education', subProfessions: ['School', 'Preschool', 'Tutoring Center', 'Dance Studio', 'Music School', 'Coding Bootcamp', 'Language School', 'Driving School'] },
+  'Finance & Insurance': { name: 'Finance & Insurance', subProfessions: ['Bank', 'Credit Union', 'Investment Office', 'Insurance Agency', 'Accounting Office', 'Currency Exchange'] },
+  'Real Estate': { name: 'Real Estate', subProfessions: ['Real Estate Office', 'Property Management', 'Co-working Space', 'Apartment Complex', 'Storage Facility'] },
+  'Professional Services': { name: 'Professional Services', subProfessions: ['Law Firm', 'Marketing Agency', 'Consulting Firm', 'Architecture Firm', 'Design Studio', 'Photography Studio', 'Print Shop'] },
+  'Automotive': { name: 'Automotive', subProfessions: ['Car Dealership', 'Auto Repair Shop', 'Car Wash', 'Gas Station', 'EV Charging Station', 'Tire Shop'] },
+  'Home & Garden': { name: 'Home & Garden', subProfessions: ['Furniture Store', 'Home Depot', 'Garden Center', 'Florist', 'Hardware Store', 'Paint Shop'] },
+  'Non-Profit & Community': { name: 'Non-Profit & Community', subProfessions: ['Charity Shop', 'Community Center', 'Museum', 'Library', 'Art Gallery', 'Animal Shelter', 'Place of Worship'] },
 };
 
 // Creator data is now fetched from backend via /api/creators/match
