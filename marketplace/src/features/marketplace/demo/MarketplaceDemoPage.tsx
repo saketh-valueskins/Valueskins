@@ -122,18 +122,23 @@ function currencyForCountry(country: string): { code: string; symbol: string } {
   return COUNTRY_CURRENCY_MAP[country] || { code: 'USD', symbol: '$' };
 }
 
-const PROFESSIONS = {
-  'Technology':        { name: 'Technology',        subProfessions: ['Software Engineer', 'Data Scientist', 'Product Manager', 'DevOps Engineer', 'UX/UI Designer', 'AI/ML Specialist', 'Security Researcher'] },
-  'Entertainment':     { name: 'Entertainment',     subProfessions: ['Actor', 'Comedian', 'Musician', 'Producer', 'Director', 'Screenwriter', 'Animator', 'Voice Actor'] },
-  'Healthcare':        { name: 'Healthcare',        subProfessions: ['Doctor', 'Surgeon', 'Nurse', 'Pharmacist', 'Therapist', 'Nutritionist'] },
-  'Legal':             { name: 'Legal',             subProfessions: ['Lawyer', 'Attorney', 'Judge', 'Corporate Lawyer'] },
-  'Business & Finance':{ name: 'Business & Finance',subProfessions: ['CEO', 'Entrepreneur', 'Tech Entrepreneur', 'Operations Manager', 'Consultant', 'Financial Advisor', 'Trader', 'Investment Banker', 'Crypto Analyst', 'Finance Student'] },
-  'Education':         { name: 'Education',         subProfessions: ['Teacher', 'Professor', 'Tutor', 'EdTech Creator'] },
-  'Food & Beverage':   { name: 'Food & Beverage',   subProfessions: ['Chef', 'Pastry Chef', 'Food Critic', 'Food Photographer', 'Restaurant Owner', 'Sommelier', 'Culinary Student'] },
-  'Sports & Fitness':  { name: 'Sports & Fitness',  subProfessions: ['Professional Athlete', 'Fitness Coach', 'Yoga Instructor', 'Sports Manager'] },
-  'Aviation':          { name: 'Aviation',          subProfessions: ['Commercial Pilot', 'Air Traffic Controller', 'Aircraft Engineer', 'Aviation Student', 'Cabin Crew Manager'] },
-  'Real Estate':       { name: 'Real Estate',       subProfessions: ['Real Estate Agent', 'Real Estate Developer'] },
-  'Creative':          { name: 'Creative',          subProfessions: ['Graphic Designer', 'Digital Artist', 'Illustrator', 'Photographer'] },
+// System 1: Brand business types — what the brand IS (display-only, no matching logic)
+const PROFESSIONS: Record<string, { name: string; subProfessions: string[] }> = {
+  'Food & Beverage': { name: 'Food & Beverage', subProfessions: ['Cafe', 'Restaurant', 'Bakery', 'Food Truck', 'Bar/Pub', 'Brewery', 'Winery', 'Catering'] },
+  'Retail & E-commerce': { name: 'Retail & E-commerce', subProfessions: ['Fashion Brand', 'Beauty Brand', 'DTC Brand', 'Marketplace', 'Luxury Goods', 'Home Goods', 'Pet Supplies'] },
+  'Technology': { name: 'Technology', subProfessions: ['SaaS', 'Mobile App', 'Gaming Studio', 'AI/ML Platform', 'B2B Software', 'Hardware', 'DevTool', 'Cybersecurity'] },
+  'Health & Wellness': { name: 'Health & Wellness', subProfessions: ['Fitness Brand', 'Supplement Brand', 'Wellness App', 'Meditation', 'Healthcare Provider', 'Telehealth'] },
+  'Beauty & Cosmetics': { name: 'Beauty & Cosmetics', subProfessions: ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Nail Brand', 'Men Grooming'] },
+  'Travel & Hospitality': { name: 'Travel & Hospitality', subProfessions: ['Hotel', 'Resort', 'Airline', 'Travel Agency', 'Tour Operator', 'Cruise Line'] },
+  'Fashion & Apparel': { name: 'Fashion & Apparel', subProfessions: ['Streetwear', 'Luxury', 'Activewear', 'Footwear', 'Accessories', 'Sustainable Fashion'] },
+  'Media & Entertainment': { name: 'Media & Entertainment', subProfessions: ['Streaming Service', 'Record Label', 'Film Studio', 'Publisher', 'Gaming Brand', 'News Outlet'] },
+  'Sports': { name: 'Sports', subProfessions: ['Sportswear', 'Sports Team', 'Fitness Equipment', 'Outdoor Gear', 'Sports League'] },
+  'Education': { name: 'Education', subProfessions: ['EdTech', 'Online Course Platform', 'Tutoring Service', 'Academy', 'Test Prep'] },
+  'Finance & Insurance': { name: 'Finance & Insurance', subProfessions: ['Fintech', 'Bank', 'Insurance', 'Investment Platform', 'Crypto', 'Wealth Management'] },
+  'Real Estate': { name: 'Real Estate', subProfessions: ['Property Developer', 'Real Estate Agency', 'Co-working Space', 'Rental Platform'] },
+  'Professional Services': { name: 'Professional Services', subProfessions: ['Agency', 'Consultancy', 'Law Firm', 'Marketing Agency', 'PR Firm', 'Accounting'] },
+  'Automotive': { name: 'Automotive', subProfessions: ['Car Manufacturer', 'Dealership', 'EV Brand', 'Auto Parts', 'Ride Share'] },
+  'Non-Profit & Public': { name: 'Non-Profit & Public', subProfessions: ['Non-Profit', 'Foundation', 'Government Agency', 'NGO', 'Religious Organization'] },
 };
 
 // Creator data is now fetched from backend via /api/creators/match
@@ -144,6 +149,22 @@ const BRAND_CATEGORIES: Record<string, { name: string; subCategories: string[] }
   'Company Size':  { name: 'Company Size',  subCategories: ['Startup', 'SMB', 'Mid-Market', 'Enterprise', 'Agency', 'Solo Brand', 'Non-Profit', 'Government'] },
   'Campaign Type': { name: 'Campaign Type', subCategories: ['Product Review', 'Brand Ambassador', 'Sponsored Content', 'Event Coverage', 'Affiliate', 'Whitelabel', 'UGC', 'Podcast'] },
   'Budget Tier':   { name: 'Budget Tier',   subCategories: ['Micro ($500-2K)', 'Standard ($2K-10K)', 'Premium ($10K-50K)', 'Enterprise ($50K+)'] },
+};
+
+// Systems 2/3: Creator professions — used in store for creators (not brands)
+const CREATOR_PROFESSIONS: Record<string, { name: string; subProfessions: string[] }> = {
+  'Technology': { name: 'Technology', subProfessions: ['Software Engineer', 'Data Scientist', 'Product Manager', 'DevOps Engineer', 'UX/UI Designer', 'AI/ML Specialist', 'Security Researcher'] },
+  'Entertainment': { name: 'Entertainment', subProfessions: ['Actor', 'Comedian', 'Musician', 'Producer', 'Director', 'Screenwriter', 'Animator', 'Voice Actor', 'Dancer'] },
+  'Healthcare': { name: 'Healthcare', subProfessions: ['Doctor', 'Surgeon', 'Nurse', 'Pharmacist', 'Therapist', 'Nutritionist', 'Veterinarian'] },
+  'Legal': { name: 'Legal', subProfessions: ['Lawyer', 'Attorney', 'Judge', 'Corporate Lawyer', 'Paralegal'] },
+  'Business & Finance': { name: 'Business & Finance', subProfessions: ['CEO', 'Entrepreneur', 'Operations Manager', 'Consultant', 'Financial Advisor', 'Trader', 'Investment Banker', 'Crypto Analyst'] },
+  'Education': { name: 'Education', subProfessions: ['Teacher', 'Professor', 'Tutor', 'EdTech Creator'] },
+  'Food & Beverage': { name: 'Food & Beverage', subProfessions: ['Chef', 'Pastry Chef', 'Food Critic', 'Food Photographer', 'Sommelier'] },
+  'Sports & Fitness': { name: 'Sports & Fitness', subProfessions: ['Professional Athlete', 'Fitness Coach', 'Yoga Instructor', 'Sports Manager'] },
+  'Creative': { name: 'Creative', subProfessions: ['Graphic Designer', 'Digital Artist', 'Illustrator', 'Photographer', 'Motion Designer', '3D Artist'] },
+  'Gaming': { name: 'Gaming', subProfessions: ['Game Developer', 'Esports Pro', 'Game Streamer', 'Game Tester'] },
+  'Content': { name: 'Content', subProfessions: ['Content Creator', 'Educational Creator', 'Podcast Host', 'Video Creator', 'Streamer'] },
+  'Media & Journalism': { name: 'Media & Journalism', subProfessions: ['Journalist', 'Reporter', 'Editor', 'Photojournalist'] },
 };
 
 const CAMPAIGN_TYPES = ['Product Review', 'Brand Ambassador', 'Sponsored Content', 'Event Coverage', 'Affiliate', 'Whitelabel', 'UGC', 'Podcast'];
@@ -8297,7 +8318,7 @@ export default function MarketplaceDemoPage() {
 
                 {/* 2-column category grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {Object.values(PROFESSIONS).map((prof) => {
+                  {Object.values(marketplaceRole === 'brand' ? PROFESSIONS : CREATOR_PROFESSIONS).map((prof) => {
                     const isBrand = marketplaceRole === 'brand';
                     const brandOwns = isBrand && prof.subProfessions.some(sp => brandValueSkins.includes(sp));
                     const isCurrentSlotActive = !isBrand && assigningSlot && prof.subProfessions.includes(valueSkins[assigningSlot]?.profession ?? '');
@@ -9457,8 +9478,13 @@ export default function MarketplaceDemoPage() {
         );
       })()}
 
-      {/* Store Modal — shows only the selected category's professions */}
-      {showStoreModal && (assigningSlot || marketplaceRole === 'brand') && storeCategory && (PROFESSIONS as Record<string, typeof PROFESSIONS[keyof typeof PROFESSIONS]>)[storeCategory] && (
+      {/* Store Modal — shows brand types for brands, creator professions for creators */}
+      {showStoreModal && (assigningSlot || marketplaceRole === 'brand') && storeCategory && (() => {
+        const catMap = marketplaceRole === 'brand' ? PROFESSIONS : CREATOR_PROFESSIONS;
+        const cat = (catMap as Record<string, { name: string; subProfessions: string[] }>)[storeCategory];
+        if (!cat) return null;
+        const subs = cat.subProfessions;
+        return (
         <Modal onClose={() => { setShowStoreModal(false); setStoreCategory(null); }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
             <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: C.text, margin: 0 }}>{storeCategory}</h2>
@@ -9480,7 +9506,7 @@ export default function MarketplaceDemoPage() {
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            {(PROFESSIONS as Record<string, typeof PROFESSIONS[keyof typeof PROFESSIONS]>)[storeCategory].subProfessions.map((sub) => {
+            {subs.map((sub: string) => {
               const defined = PROFESSION_BADGES[sub];
               const isBrand = marketplaceRole === 'brand';
               const abbr = defined?.abbreviation ?? sub.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 3);
@@ -9536,7 +9562,8 @@ export default function MarketplaceDemoPage() {
             })}
           </div>
         </Modal>
-      )}
+      );
+    })()}
 
       {/* Brand Store Modal */}
       {/* Brand Store Modal — this is now unused since brands buy skins from the main store like creators */}

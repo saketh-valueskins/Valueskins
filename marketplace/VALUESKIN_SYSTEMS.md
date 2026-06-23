@@ -1,34 +1,38 @@
 # ValueSkin Systems Architecture
 
-There are three distinct ValueSkin concepts in the codebase. This document explains
-each one, how they relate, and the rules for keeping them aligned.
+There are three distinct ValueSkin concepts in the codebase. **They are NOT the same.**
 
 ---
 
-## System 1 — Brand Industry (STORE / DISPLAY ONLY)
+## System 1 — Brand Business Type (STORE / DISPLAY ONLY)
 
-**Purpose**: A categorization system for the ValueSkin store. Lets brands browse
-value skins by broad industry categories (Fashion, Beauty, Tech, etc.). Each
-category has sub-professions that are displayed as UI groupings.
+**Purpose**: What the brand IS as a business. A categorization system for the
+brand ValueSkin store. Each category lists business types that a brand can
+identify with (Cafe, Restaurant, SaaS, etc.).
+
+**IMPORTANT**: System 1 values are BRAND BUSINESS TYPES (not creator professions).
+A brand picks "Cafe" because they run a cafe, NOT because they are a comedian.
 
 **Used in**:
-- `MarketplaceDemoPage.tsx` — `PROFESSIONS` constant (line 124)
+- `MarketplaceDemoPage.tsx` — `PROFESSIONS` constant
+- `config/professions.ts` — same constant, exported
+- Store modal — shown to brands when buying value skins
 
 **RULES**:
+- MUST be business-related categories (Cafe, Restaurant, Fintech, etc.)
 - NEVER used for matching, filtering, or targeting
-- Purely a UI/organizational layer for the store
 - Changing this does NOT affect creator discovery
-- Sub-professions here are display labels only
+- Purely a UI layer — everyone sees what kind of brand they're dealing with
 
 ---
 
 ## System 2 — Campaign Targeting (FILTERING)
 
 **Purpose**: What the brand selects in the campaign creation form to specify
-which type of creator they want. This drives the auto-matching algorithm.
+which CREATOR PROFESSION they need for this campaign. Drives auto-matching.
 
 **Used in**:
-- `MarketplaceDemoPage.tsx` — campaign form dropdown (line 4898)
+- `MarketplaceDemoPage.tsx` — campaign form "Target profession/niche" dropdown
 - `autoMatch.ts` — matching algorithm compares against creator's value_skin
 
 **MUST MATCH System 3 exactly.**
@@ -42,15 +46,16 @@ which type of creator they want. This drives the auto-matching algorithm.
 (`/api/creators/all`) joins on this table to find eligible creators.
 
 **Used in**:
-- `onboarding-creator.tsx` — profession picker (line 262)
+- `onboarding-creator.tsx` — profession picker
 - `/api/creators/all.ts` — JOINs `user_value_skins` for matching
 - `/api/skins/manage.ts` — stores/retrieves value skins
+- `valueskins/store.tsx` — creator-facing store showing creator professions
 
 **MUST MATCH System 2 exactly.**
 
 ---
 
-## The Shared Source of Truth: `PROFESSION_BADGES`
+## The Shared Source of Truth (Systems 2 & 3): `PROFESSION_BADGES`
 
 Both **System 2** and **System 3** derive their options from the
 `PROFESSION_BADGES` constant defined in:
@@ -71,37 +76,76 @@ export const PROFESSION_BADGES: Record<string, ProfessionBadge> = {
 
 ---
 
+## The Source of Truth (System 1): `PROFESSIONS`
+
+**System 1** is an entirely separate list of business-type categories in:
+
+```
+src/config/professions.ts
+src/features/marketplace/demo/MarketplaceDemoPage.tsx  (same constant)
+```
+
+```typescript
+const PROFESSIONS = {
+  'Food & Beverage':   { subProfessions: ['Cafe', 'Restaurant', 'Bakery', ...] },
+  'Retail & E-commerce': { subProfessions: ['Fashion Brand', 'Beauty Brand', ...] },
+  'Technology': { subProfessions: ['SaaS', 'Mobile App', 'Gaming Studio', ...] },
+  // ...
+};
+```
+
+---
+
+## Critical Rule: NEVER CONFLATE SYSTEMS 1 AND 2/3
+
+**System 1 values (brand business types) and Systems 2/3 values (creator professions)
+are DIFFERENT LISTS.** They must never share constants or be used interchangeably.
+
+| If you do this... | ...it breaks |
+|---|---|
+| A brand picks "Comedian" as their brand type | Makes no sense — brands are not comedians |
+| A creator sees "Cafe" in the profession store | Makes no sense — creators are not businesses |
+| Campaign targeting shows "Restaurant" as a profession | No creator has that — zero matches |
+| Auto-match uses PROFESSIONS values | Evergreen season: zero matches |
+
+---
+
 ## Rules for Future Changes
 
-### Adding a new profession
+### Adding a new creator profession (Systems 2 & 3)
 
 1. **Edit `PROFESSION_BADGES`** in `AvatarOptions.tsx` (the ONLY file to change)
-2. **That's it.** System 2 and System 3 automatically pick it up because both
-   iterate over `Object.entries(PROFESSION_BADGES)` — no additional wiring needed.
+2. Also add to `CREATOR_PROFESSIONS` in `MarketplaceDemoPage.tsx` (store grid for creators)
+3. Also add to `PROFESSIONS` in `valueskins/store.tsx` (store page for creators)
+4. System 2 and System 3 automatically pick it up from `PROFESSION_BADGES`
+   because both iterate over `Object.entries(PROFESSION_BADGES)`
 
-### Adding a new brand store category
+### Adding a new brand business type (System 1)
 
-1. **Edit `PROFESSIONS`** in `MarketplaceDemoPage.tsx` (System 1 only)
-2. This has ZERO effect on matching. It's purely a store display grouping.
+1. **Edit `PROFESSIONS`** in `MarketplaceDemoPage.tsx` and `config/professions.ts`
+2. This has ZERO effect on matching. It's purely a brand identity display.
 
 ### Never
 
-- Add a separate profession list for campaign targeting that differs from
-  `PROFESSION_BADGES` — this will break matching
-- Add a separate profession list for creator onboarding that differs from
-  `PROFESSION_BADGES` — creators won't get matched
-- Use `PROFESSIONS` (System 1) values in the auto-matching algorithm
+- Merge PROFESSIONS (System 1) with PROFESSION_BADGES (Systems 2/3)
+- Use `PROFESSIONS` values in the campaign creation dropdown
+- Use `PROFESSIONS` values in the auto-matching algorithm
+- Use `PROFESSION_BADGES` values in the brand store grid
 
 ---
 
 ## How Alignment Works at Runtime
 
 ```
-Brand creates campaign:
+Brand picks identity:
+  → selects "Cafe" from store (System 1 = PROFESSIONS, brand type)
+  → Stored as brand's value_skin, displayed on brand profile
+
+Brand creates campaign targeting comedians:
   → selects "Comedian" from dropdown (System 2 = PROFESSION_BADGES)
   → campaign.requiredProfessions = ['Comedian']
 
-Creator registers:
+Creator registers as comedian:
   → selects "Comedian" from picker (System 3 = PROFESSION_BADGES)
   → POST /api/skins/manage → INSERT INTO user_value_skins (user_id, 'Comedian')
 
@@ -111,16 +155,13 @@ Auto-matching:
   → If country matches + profession matches → match found
 ```
 
-Both the campaign dropdown and the creator picker iterate over
-`Object.entries(PROFESSION_BADGES)`, so any profession a brand can target
-is exactly the set of professions a creator can register with.
-
 ---
 
 ## File Reference
 
-| System | Constant | File | Line |
-|--------|----------|------|------|
-| 1 (Brand Store) | `PROFESSIONS` | `MarketplaceDemoPage.tsx` | 124 |
-| 2 (Campaign Target) | `PROFESSION_BADGES` keys | `AvatarOptions.tsx` | 49 → used at 4898 |
-| 3 (Creator Registration) | `PROFESSION_BADGES` keys | `AvatarOptions.tsx` | 49 → used at onboarding-creator.tsx:262 |
+| System | Constant | Files |
+|--------|----------|-------|
+| 1 (Brand Type) | `PROFESSIONS` | `MarketplaceDemoPage.tsx`, `config/professions.ts` |
+| 2 (Campaign Target) | `PROFESSION_BADGES` keys | `AvatarOptions.tsx` → campaign form dropdown |
+| 3 (Creator Registration) | `PROFESSION_BADGES` keys | `AvatarOptions.tsx` → onboarding, `valueskins/store.tsx` |
+| Creator Store Grid | `CREATOR_PROFESSIONS` | `MarketplaceDemoPage.tsx` (store modal for creators) |

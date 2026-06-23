@@ -1,47 +1,64 @@
+// System 1: Brand business types — what the brand IS (display-only, no matching logic)
 export const PROFESSIONS = {
+  'Food & Beverage': {
+    name: 'Food & Beverage',
+    subProfessions: ['Cafe', 'Restaurant', 'Bakery', 'Food Truck', 'Bar/Pub', 'Brewery', 'Winery', 'Catering'],
+  },
+  'Retail & E-commerce': {
+    name: 'Retail & E-commerce',
+    subProfessions: ['Fashion Brand', 'Beauty Brand', 'DTC Brand', 'Marketplace', 'Luxury Goods', 'Home Goods', 'Pet Supplies'],
+  },
   'Technology': {
     name: 'Technology',
-    subProfessions: ['Software Engineer', 'Data Scientist', 'Product Manager', 'DevOps Engineer', 'UX/UI Designer', 'AI/ML Specialist', 'Security Researcher'],
+    subProfessions: ['SaaS', 'Mobile App', 'Gaming Studio', 'AI/ML Platform', 'B2B Software', 'Hardware', 'DevTool', 'Cybersecurity'],
   },
-  'Entertainment': {
-    name: 'Entertainment',
-    subProfessions: ['Actor', 'Comedian', 'Musician', 'Producer', 'Director', 'Screenwriter', 'Animator', 'Voice Actor'],
+  'Health & Wellness': {
+    name: 'Health & Wellness',
+    subProfessions: ['Fitness Brand', 'Supplement Brand', 'Wellness App', 'Meditation', 'Healthcare Provider', 'Telehealth'],
   },
-  'Healthcare': {
-    name: 'Healthcare',
-    subProfessions: ['Doctor', 'Surgeon', 'Nurse', 'Pharmacist', 'Therapist', 'Nutritionist'],
+  'Beauty & Cosmetics': {
+    name: 'Beauty & Cosmetics',
+    subProfessions: ['Skincare', 'Makeup', 'Haircare', 'Fragrance', 'Nail Brand', 'Men Grooming'],
   },
-  'Legal': {
-    name: 'Legal',
-    subProfessions: ['Lawyer', 'Attorney', 'Judge', 'Corporate Lawyer'],
+  'Travel & Hospitality': {
+    name: 'Travel & Hospitality',
+    subProfessions: ['Hotel', 'Resort', 'Airline', 'Travel Agency', 'Tour Operator', 'Cruise Line'],
   },
-  'Business & Finance': {
-    name: 'Business & Finance',
-    subProfessions: ['CEO', 'Entrepreneur', 'Tech Entrepreneur', 'Operations Manager', 'Consultant', 'Financial Advisor', 'Trader', 'Investment Banker', 'Crypto Analyst', 'Finance Student'],
+  'Fashion & Apparel': {
+    name: 'Fashion & Apparel',
+    subProfessions: ['Streetwear', 'Luxury', 'Activewear', 'Footwear', 'Accessories', 'Sustainable Fashion'],
+  },
+  'Media & Entertainment': {
+    name: 'Media & Entertainment',
+    subProfessions: ['Streaming Service', 'Record Label', 'Film Studio', 'Publisher', 'Gaming Brand', 'News Outlet'],
+  },
+  'Sports': {
+    name: 'Sports',
+    subProfessions: ['Sportswear', 'Sports Team', 'Fitness Equipment', 'Outdoor Gear', 'Sports League'],
   },
   'Education': {
     name: 'Education',
-    subProfessions: ['Teacher', 'Professor', 'Tutor', 'EdTech Creator'],
+    subProfessions: ['EdTech', 'Online Course Platform', 'Tutoring Service', 'Academy', 'Test Prep'],
   },
-  'Food & Beverage': {
-    name: 'Food & Beverage',
-    subProfessions: ['Chef', 'Pastry Chef', 'Food Critic', 'Food Photographer', 'Restaurant Owner', 'Sommelier', 'Culinary Student'],
-  },
-  'Sports & Fitness': {
-    name: 'Sports & Fitness',
-    subProfessions: ['Professional Athlete', 'Fitness Coach', 'Yoga Instructor', 'Sports Manager'],
-  },
-  'Aviation': {
-    name: 'Aviation',
-    subProfessions: ['Commercial Pilot', 'Air Traffic Controller', 'Aircraft Engineer', 'Aviation Student', 'Cabin Crew Manager'],
+  'Finance & Insurance': {
+    name: 'Finance & Insurance',
+    subProfessions: ['Fintech', 'Bank', 'Insurance', 'Investment Platform', 'Crypto', 'Wealth Management'],
   },
   'Real Estate': {
     name: 'Real Estate',
-    subProfessions: ['Real Estate Agent', 'Real Estate Developer'],
+    subProfessions: ['Property Developer', 'Real Estate Agency', 'Co-working Space', 'Rental Platform'],
   },
-  'Creative': {
-    name: 'Creative',
-    subProfessions: ['Graphic Designer', 'Digital Artist', 'Illustrator', 'Photographer'],
+  'Professional Services': {
+    name: 'Professional Services',
+    subProfessions: ['Agency', 'Consultancy', 'Law Firm', 'Marketing Agency', 'PR Firm', 'Accounting'],
+  },
+  'Automotive': {
+    name: 'Automotive',
+    subProfessions: ['Car Manufacturer', 'Dealership', 'EV Brand', 'Auto Parts', 'Ride Share'],
+  },
+  'Non-Profit & Public': {
+    name: 'Non-Profit & Public',
+    subProfessions: ['Non-Profit', 'Foundation', 'Government Agency', 'NGO', 'Religious Organization'],
   },
 };
 

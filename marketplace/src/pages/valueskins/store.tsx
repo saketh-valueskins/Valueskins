@@ -5,18 +5,20 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { C } from '@/theme/colors';
 
-const PROFESSIONS = {
+// System 3: Creator professions — same list as PROFESSION_BADGES used in onboarding and campaign targeting
+const PROFESSIONS: Record<string, string[]> = {
   'Technology': ['Software Engineer', 'Data Scientist', 'Product Manager', 'DevOps Engineer', 'UX/UI Designer', 'AI/ML Specialist', 'Security Researcher'],
-  'Entertainment': ['Actor', 'Comedian', 'Musician', 'Producer', 'Director', 'Screenwriter', 'Animator', 'Voice Actor'],
-  'Healthcare': ['Doctor', 'Surgeon', 'Nurse', 'Pharmacist', 'Therapist', 'Nutritionist'],
-  'Legal': ['Lawyer', 'Attorney', 'Judge', 'Corporate Lawyer'],
-  'Business & Finance': ['CEO', 'Entrepreneur', 'Tech Entrepreneur', 'Operations Manager', 'Consultant', 'Financial Advisor', 'Trader', 'Investment Banker', 'Crypto Analyst', 'Finance Student'],
+  'Entertainment': ['Actor', 'Comedian', 'Musician', 'Producer', 'Director', 'Screenwriter', 'Animator', 'Voice Actor', 'Dancer'],
+  'Healthcare': ['Doctor', 'Surgeon', 'Nurse', 'Pharmacist', 'Therapist', 'Nutritionist', 'Veterinarian'],
+  'Legal': ['Lawyer', 'Attorney', 'Judge', 'Corporate Lawyer', 'Paralegal'],
+  'Business & Finance': ['CEO', 'Entrepreneur', 'Operations Manager', 'Consultant', 'Financial Advisor', 'Trader', 'Investment Banker', 'Crypto Analyst'],
   'Education': ['Teacher', 'Professor', 'Tutor', 'EdTech Creator'],
-  'Food & Beverage': ['Chef', 'Pastry Chef', 'Food Critic', 'Food Photographer', 'Restaurant Owner', 'Sommelier', 'Culinary Student'],
+  'Food & Beverage': ['Chef', 'Pastry Chef', 'Food Critic', 'Food Photographer', 'Sommelier'],
   'Sports & Fitness': ['Professional Athlete', 'Fitness Coach', 'Yoga Instructor', 'Sports Manager'],
-  'Aviation': ['Commercial Pilot', 'Air Traffic Controller', 'Aircraft Engineer', 'Aviation Student', 'Cabin Crew Manager'],
-  'Real Estate': ['Real Estate Agent', 'Real Estate Developer'],
-  'Creative': ['Graphic Designer', 'Digital Artist', 'Illustrator', 'Photographer'],
+  'Creative': ['Graphic Designer', 'Digital Artist', 'Illustrator', 'Photographer', 'Motion Designer', '3D Artist'],
+  'Gaming': ['Game Developer', 'Esports Pro', 'Game Streamer', 'Game Tester'],
+  'Content': ['Content Creator', 'Educational Creator', 'Podcast Host', 'Video Creator', 'Streamer'],
+  'Media & Journalism': ['Journalist', 'Reporter', 'Editor', 'Photojournalist'],
 };
 
 export default function ValueSkinsStore() {
