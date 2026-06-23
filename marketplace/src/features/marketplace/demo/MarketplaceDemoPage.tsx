@@ -1146,6 +1146,18 @@ export default function MarketplaceDemoPage() {
   // Campaigns + applications — from deal sync hook (API-backed with localStorage fallback)
   const { applications: sharedApplications, setApplications: setSharedApplications, campaigns, setCampaigns } = dealSync;
 
+  const forceRefreshCampaigns = useCallback(async () => {
+    try {
+      const res = await fetch('/api/realtime/state');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.campaigns)) setCampaigns(data.campaigns);
+      }
+    } catch (e) {
+      console.error('Failed to refresh campaigns:', e);
+    }
+  }, [setCampaigns]);
+
   // Merge Firebase state into local state when in room mode (cross-device sync)
   useEffect(() => {
     // Firebase always active
@@ -2487,12 +2499,13 @@ export default function MarketplaceDemoPage() {
                         </button>
                         {availableForDeals && <span style={{ fontSize:'10px', fontWeight:700, color:C.success, background:'rgba(0,212,106,0.1)', padding:'2px 8px', borderRadius:'12px' }}>Taking deals</span>}
                       </div>
-                      <div style={{ display:'flex', gap:'6px' }}>
+                      <div style={{ display:'flex', gap:'6px', alignItems:'center' }}>
                         {(['opportunities','pipeline'] as const).map(tab => (
                           <button key={tab} onClick={() => setCreatorMarketplaceTab(tab)} style={{ padding:'4px 10px', fontSize:'10px', fontWeight:700, borderRadius:'6px', border:`1px solid ${creatorMarketplaceTab === tab ? C.primary : C.border}`, background: creatorMarketplaceTab === tab ? C.primary : 'transparent', color: creatorMarketplaceTab === tab ? '#fff' : C.textSecondary, cursor:'pointer' }}>
                             {tab === 'opportunities' ? 'Opportunities' : 'My Pipeline'}
                           </button>
                         ))}
+                        <button onClick={() => { fetchAllCreators(); forceRefreshCampaigns(); }} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 6px', display:'flex', alignItems:'center', color:C.textMuted, fontSize:'11px', fontWeight:600 }}>⟳</button>
                       </div>
                     </div>
 
@@ -6871,8 +6884,8 @@ export default function MarketplaceDemoPage() {
                             );
                           })()}
                           <button
-                            onClick={fetchAllCreators}
-                            title="Refresh creator list for live matching"
+                            onClick={() => { fetchAllCreators(); forceRefreshCampaigns(); }}
+                            title="Refresh creator list + campaigns"
                             style={{ background:'none', border:'none', cursor:'pointer', padding:'2px', display:'flex', alignItems:'center' }}
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2.5" style={{ opacity: allCreatorsLoading ? 0.5 : 0.7 }}>
