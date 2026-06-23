@@ -26,7 +26,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       FROM users u
       JOIN user_value_skins uv ON uv.user_id = u.id
       WHERE u.is_deleted = FALSE
-        AND u.followers_count > 0
       ORDER BY u.id, uv.value_skin
       LIMIT 500
     `);
