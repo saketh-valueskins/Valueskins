@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { C } from '@/theme/colors';
+import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
 
 type Step = 'role-select' | 'identity' | 'social' | 'content' | 'languages' | 'deal-prefs' | 'pricing' | 'availability' | 'review';
 
@@ -50,6 +51,7 @@ interface CreatorOnboarding {
   previousCampaigns: Array<{ brand: string; contentType: string; date: string; link?: string }>;
   testimonials: string[];
   exclusivityRestrictions: string[];
+  selectedValueSkin: string;
 }
 
 export default function OnboardingCreator() {
@@ -91,6 +93,7 @@ export default function OnboardingCreator() {
     previousCampaigns: [],
     testimonials: [],
     exclusivityRestrictions: [],
+    selectedValueSkin: '',
   });
 
   const handleRoleSelect = (role: 'creator' | 'brand') => {
@@ -140,6 +143,14 @@ export default function OnboardingCreator() {
         headers: { 'x-user-id': userId as string },
       }).catch(() => {});
 
+      if (data.selectedValueSkin) {
+        await fetch('/api/skins/manage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, valueSkin: data.selectedValueSkin }),
+        }).catch((e) => console.warn('Failed to save value skin during onboarding:', e));
+      }
+
       router.push('/demo/marketplace');
     } catch (err: any) {
       alert(`Error: ${err.message}`);
@@ -187,6 +198,7 @@ export default function OnboardingCreator() {
       previousCampaigns: [{ brand: 'Nike', contentType: 'sponsored post', date: '2026-01-15' }],
       testimonials: ['Great to work with!'],
       exclusivityRestrictions: ['Competing brands'],
+      selectedValueSkin: 'Software Engineer',
     });
     setStep('identity');
   };
@@ -240,12 +252,46 @@ export default function OnboardingCreator() {
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px', padding: '32px', marginBottom: '24px' }}>
           {step === 'identity' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Tell us about yourself</h2><input type="text" placeholder="Display name" value={data.displayName} onChange={(e) => setData({ ...data, displayName: e.target.value })} style={{ width: '100%', padding: '12px', border: `1px solid ${C.border}`, borderRadius: '8px', background: C.bg, color: C.text, fontSize: '14px', marginBottom: '12px', boxSizing: 'border-box' }} /></div>}
           {step === 'social' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Social accounts</h2><p style={{ color: C.textSecondary, fontSize: '13px', marginBottom: '16px' }}>Add your social accounts</p></div>}
-          {step === 'content' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Content style</h2></div>}
+          {step === 'content' && (
+            <div>
+              <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px' }}>Your value skin</h2>
+              <p style={{ fontSize: '13px', color: C.textSecondary, marginBottom: '20px' }}>
+                Choose the profession that best describes you. This is your ValueSkin — brands will use it to find and match with you.
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {Object.entries(PROFESSION_BADGES).map(([name, badge]) => (
+                  <button
+                    key={name}
+                    onClick={() => setData({ ...data, selectedValueSkin: name })}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      border: data.selectedValueSkin === name ? `2px solid ${badge.color}` : `1px solid ${C.border}`,
+                      background: data.selectedValueSkin === name ? `${badge.color}20` : C.bg,
+                      color: data.selectedValueSkin === name ? badge.color : C.textSecondary,
+                      fontSize: '12px',
+                      fontWeight: data.selectedValueSkin === name ? 600 : 400,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {badge.emoji && <span style={{ marginRight: '4px' }}>{badge.emoji}</span>}
+                    {badge.label}
+                  </button>
+                ))}
+              </div>
+              {data.selectedValueSkin && (
+                <div style={{ marginTop: '16px', padding: '12px', background: '#0066CC10', borderRadius: '8px', fontSize: '13px', color: C.text }}>
+                  Selected: <strong>{data.selectedValueSkin}</strong>
+                </div>
+              )}
+            </div>
+          )}
           {step === 'languages' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Languages</h2><div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>{data.languages.map((lang) => (<div key={lang} style={{ background: C.accent, color: '#000', padding: '6px 12px', borderRadius: '6px', fontSize: '12px' }}>{lang}</div>))}</div></div>}
           {step === 'deal-prefs' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Deal preferences</h2></div>}
           {step === 'pricing' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Pricing</h2></div>}
           {step === 'availability' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Availability</h2></div>}
-          {step === 'review' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Review your profile</h2><div style={{ fontSize: '13px', color: C.textSecondary }}><p>Name: {data.displayName}</p><p>Location: {data.location.city}, {data.location.country}</p></div></div>}
+          {step === 'review' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Review your profile</h2><div style={{ fontSize: '13px', color: C.textSecondary }}><p>Name: {data.displayName}</p><p>Location: {data.location.city}, {data.location.country}</p>{data.selectedValueSkin && <p>Value skin: {data.selectedValueSkin}</p>}</div></div>}
         </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>

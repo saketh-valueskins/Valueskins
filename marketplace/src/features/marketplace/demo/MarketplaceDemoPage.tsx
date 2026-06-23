@@ -82,6 +82,45 @@ const DEAL_LABELS = {
   c2c_collab: { proposer: 'Initiator', receiver: 'Collaborator' },
 } as const;
 
+const COUNTRY_CURRENCY_MAP: Record<string, { code: string; symbol: string }> = {
+  'India': { code: 'INR', symbol: '₹' },
+  'United States': { code: 'USD', symbol: '$' },
+  'United Kingdom': { code: 'GBP', symbol: '£' },
+  'Canada': { code: 'CAD', symbol: 'CA$' },
+  'Australia': { code: 'AUD', symbol: 'A$' },
+  'Singapore': { code: 'SGD', symbol: 'S$' },
+  'Japan': { code: 'JPY', symbol: '¥' },
+  'South Korea': { code: 'KRW', symbol: '₩' },
+  'Germany': { code: 'EUR', symbol: '€' },
+  'France': { code: 'EUR', symbol: '€' },
+  'Italy': { code: 'EUR', symbol: '€' },
+  'Spain': { code: 'EUR', symbol: '€' },
+  'Netherlands': { code: 'EUR', symbol: '€' },
+  'Brazil': { code: 'BRL', symbol: 'R$' },
+  'Mexico': { code: 'MXN', symbol: 'MX$' },
+  'United Arab Emirates': { code: 'AED', symbol: 'د.إ' },
+  'Sweden': { code: 'SEK', symbol: 'kr' },
+  'Norway': { code: 'NOK', symbol: 'kr' },
+  'Denmark': { code: 'DKK', symbol: 'kr' },
+  'New Zealand': { code: 'NZD', symbol: 'NZ$' },
+  'Nigeria': { code: 'NGN', symbol: '₦' },
+  'Kenya': { code: 'KES', symbol: 'KSh' },
+  'South Africa': { code: 'ZAR', symbol: 'R' },
+  'Indonesia': { code: 'IDR', symbol: 'Rp' },
+  'Philippines': { code: 'PHP', symbol: '₱' },
+  'Vietnam': { code: 'VND', symbol: '₫' },
+  'Thailand': { code: 'THB', symbol: '฿' },
+  'Malaysia': { code: 'MYR', symbol: 'RM' },
+  'Pakistan': { code: 'PKR', symbol: '₨' },
+  'Bangladesh': { code: 'BDT', symbol: '৳' },
+  'Sri Lanka': { code: 'LKR', symbol: 'Rs' },
+  'Nepal': { code: 'NPR', symbol: 'Rs' },
+};
+
+function currencyForCountry(country: string): { code: string; symbol: string } {
+  return COUNTRY_CURRENCY_MAP[country] || { code: 'USD', symbol: '$' };
+}
+
 const PROFESSIONS = {
   'Fashion':        { name: 'Fashion',        subProfessions: ['Boutique','Streetwear Brand','Luxury Fashion','Sustainable Fashion','Activewear','Accessories Brand','Vintage & Thrift','Tailoring & Alterations'] },
   'Beauty':         { name: 'Beauty',         subProfessions: ['Cosmetics Brand','Skincare Line','Haircare Brand','Fragrance House','Beauty Clinic','Salon','Spa & Wellness','Organic Beauty'] },
@@ -147,7 +186,7 @@ type Opportunity = {
   escrowPool?: number;
   creatorCount?: number;
   // Point of Contact for the campaign
-  poc?: { name: string; contactHandle: string; role: string };
+  poc?: { name: string; workEmail: string; role: string; phone?: string };
 };
 
 // Opportunities vary by profession — different brands want different skills
@@ -1239,10 +1278,10 @@ export default function MarketplaceDemoPage() {
   const [newCampaignStoriesCount, setNewCampaignStoriesCount] = useState(0);
   const [newCampaignPocEmail, setNewCampaignPocEmail] = useState('');
   const [newCampaignPocPhone, setNewCampaignPocPhone] = useState('');
+  const [newCampaignContentLanguage, setNewCampaignContentLanguage] = useState('English');
 
   // Campaign POC (Point of Contact) fields
   const [newCampaignPocName, setNewCampaignPocName] = useState('');
-  const [newCampaignPocHandle, setNewCampaignPocHandle] = useState('');
   const [newCampaignPocRole, setNewCampaignPocRole] = useState('');
 
   // Campaign script mode selection (brand chooses during creation)
@@ -3211,7 +3250,7 @@ export default function MarketplaceDemoPage() {
                                             <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
                                               <div style={{ fontSize: '9px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Point of Contact</div>
                                               <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{activeDeal.poc.name}</div>
-                                              <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.contactHandle}</div>
+                                              <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
                                               <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
                                             </div>
                                           )}
@@ -3356,7 +3395,7 @@ export default function MarketplaceDemoPage() {
                                             <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
                                               <div style={{ fontSize: '9px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Point of Contact</div>
                                               <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{activeDeal.poc.name}</div>
-                                              <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.contactHandle}</div>
+                                              <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
                                               <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
                                             </div>
                                           )}
@@ -3536,7 +3575,7 @@ export default function MarketplaceDemoPage() {
                                             <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
                                               <div style={{ fontSize: '9px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Point of Contact</div>
                                               <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{activeDeal.poc.name}</div>
-                                              <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.contactHandle}</div>
+                                              <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
                                               <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
                                             </div>
                                           )}
@@ -4508,16 +4547,16 @@ export default function MarketplaceDemoPage() {
                                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <div>
                                           <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{activeDeal.poc.name}</div>
-                                          <div style={{ fontSize: '11px', color: C.primary, marginTop: '1px' }}>{activeDeal.poc.contactHandle}</div>
+                                          <div style={{ fontSize: '11px', color: C.primary, marginTop: '1px' }}>{activeDeal.poc.workEmail}</div>
                                           {activeDeal.poc.role && <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '1px' }}>{activeDeal.poc.role}</div>}
                                         </div>
                                         <button
                                           onClick={() => {
-                                            const pocHandle = activeDeal.poc?.contactHandle?.replace('@', '') || '';
-                                            if (pocHandle) {
-                                              window.open(`https://portfolio.valueskins.com/${pocHandle}`, '_blank');
+                                            const workEmail = activeDeal.poc?.workEmail || '';
+                                            if (workEmail) {
+                                              window.open(`mailto:${workEmail}`, '_blank');
                                             }
-                                            setPurchaseToast(`Opening ${activeDeal.poc?.name || 'POC'}'s profile`);
+                                            setPurchaseToast(`Contacting ${activeDeal.poc?.name || 'POC'} via email`);
                                             setTimeout(() => setPurchaseToast(null), 2000);
                                           }}
                                           style={{ background: C.primary, border: 'none', borderRadius: '6px', padding: '5px 12px', color: '#fff', fontSize: '10px', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
@@ -4876,6 +4915,19 @@ export default function MarketplaceDemoPage() {
                             </select>
                           </div>
                           <div style={{ marginBottom:'12px' }}>
+                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Content language *</div>
+                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Which language should the creator use in their content?</div>
+                            <select
+                              value={newCampaignContentLanguage}
+                              onChange={e => setNewCampaignContentLanguage(e.target.value)}
+                              style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}
+                            >
+                              {['English','Hindi','Spanish','French','German','Portuguese','Arabic','Japanese','Korean','Chinese','Italian','Dutch','Russian','Turkish','Vietnamese','Thai','Indonesian','Malay','Tamil','Telugu','Bengali','Marathi','Gujarati','Kannada','Malayalam','Punjabi','Urdu'].map(lang => (
+                                <option key={lang} value={lang}>{lang}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Creator level range *</div>
                             <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Select min and max level. Only creators within this range can apply.</div>
                             <div style={{ display:'flex', gap:'6px', alignItems:'center' }}>
@@ -4892,9 +4944,10 @@ export default function MarketplaceDemoPage() {
                             </div>
                             <div style={{ fontSize:'10px', color:C.primary, marginTop:'4px', fontWeight:600 }}>Accepting Level {newCampaignMinLevel}{newCampaignMaxLevel !== newCampaignMinLevel ? ` to ${newCampaignMaxLevel}` : ' only'}</div>
                           </div>
+                          {(() => { const c = currencyForCountry(brandCountry); return (<>
                           <div style={{ display:'flex', gap:'10px', marginBottom:'12px' }}>
                             <div style={{ flex:1 }}>
-                              <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Budget per creator ($) *</div>
+                              <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Budget per creator ({c.symbol}) *</div>
                               <input type="text" value={newCampaignBudget} onChange={e=>setNewCampaignBudget(e.target.value.replace(/[^0-9]/g,''))} placeholder="5000" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
                             </div>
                             <div style={{ flex:1 }}>
@@ -4906,32 +4959,19 @@ export default function MarketplaceDemoPage() {
                               </div>
                             </div>
                           </div>
-                          {newCampaignBudget && (
+                          {newCampaignBudget && (() => { const c = currencyForCountry(brandCountry); return (
                             <div style={{ background:'rgba(0,212,106,0.06)', border:'1px solid rgba(0,212,106,0.2)', borderRadius:'8px', padding:'10px 12px', marginBottom:'12px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                               <div>
                                 <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.4px' }}>Total escrow required</div>
-                                <div style={{ fontSize:'11px', color:C.textSecondary, marginTop:'2px' }}>${parseInt(newCampaignBudget||'0').toLocaleString()} × {newCampaignCreatorCount} creator{newCampaignCreatorCount!==1?'s':''}</div>
+                                <div style={{ fontSize:'11px', color:C.textSecondary, marginTop:'2px' }}>{c.symbol}{parseInt(newCampaignBudget||'0').toLocaleString()} × {newCampaignCreatorCount} creator{newCampaignCreatorCount!==1?'s':''}</div>
                               </div>
-                              <div style={{ fontSize:'20px', fontWeight:800, color:C.success }}>${(parseInt(newCampaignBudget||'0')*newCampaignCreatorCount).toLocaleString()}</div>
+                              <div style={{ fontSize:'20px', fontWeight:800, color:C.success }}>{c.symbol}{(parseInt(newCampaignBudget||'0')*newCampaignCreatorCount).toLocaleString()}</div>
                             </div>
-                          )}
-                          <div style={{ display:'flex', gap:'10px', marginBottom:'12px' }}>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Location</div>
-                              <input type="text" value={newCampaignLocation} onChange={e=>setNewCampaignLocation(e.target.value)} placeholder="USA / Remote / Global" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                            </div>
-                          </div>
+                          );})()}
+                          </>)})()}
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Deliverables</div>
                             <input type="text" value={newCampaignDeliverables} onChange={e=>setNewCampaignDeliverables(e.target.value)} placeholder="e.g. 2x Reels, 3x Stories" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                          </div>
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'6px' }}>Non-negotiables</div>
-                            <div style={{ display:'flex', flexWrap:'wrap', gap:'6px' }}>
-                              {['NDA required','Usage rights: 90 days','Usage rights: 30 days','Exclusivity: 30 days','Exclusivity: 60 days','On-camera required','English only'].map(n => (
-                                <button key={n} onClick={()=>setNewCampaignNonNeg(prev=>prev.includes(n)?prev.filter(x=>x!==n):[...prev,n])} style={{ padding:'4px 9px', borderRadius:'6px', fontSize:'10px', fontWeight:600, cursor:'pointer', background:newCampaignNonNeg.includes(n)?'rgba(239,68,68,0.12)':C.bg, color:newCampaignNonNeg.includes(n)?C.textMuted:C.textSecondary, border:`1px solid ${newCampaignNonNeg.includes(n)?'rgba(239,68,68,0.4)':C.border}` }}>{n}</button>
-                              ))}
-                            </div>
                           </div>
                           {/* Compensation type */}
                           <div style={{ marginBottom:'12px' }}>
@@ -5002,11 +5042,6 @@ export default function MarketplaceDemoPage() {
                               </select>
                             </div>
                           </div>
-                          {/* Target audience */}
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Target audience *</div>
-                            <input type="text" value={newCampaignAudienceTarget} onChange={e=>setNewCampaignAudienceTarget(e.target.value)} placeholder="e.g. Developers, 25-40" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                          </div>
                           {/* Requirements — what creators must meet */}
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Creator requirements</div>
@@ -5038,10 +5073,8 @@ export default function MarketplaceDemoPage() {
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'2px' }}>Point of Contact</div>
                             <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'8px' }}>The person creators should reference for this campaign. Shown to both parties in the deal room.</div>
                             <input type="text" value={newCampaignPocName} onChange={e=>setNewCampaignPocName(e.target.value)} placeholder="Full name" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const, marginBottom:'8px' }} />
-                            <div style={{ position:'relative', marginBottom:'8px' }}>
-                              <span style={{ position:'absolute', left:'10px', top:'50%', transform:'translateY(-50%)', color:C.textMuted, fontSize:'13px' }}>@</span>
-                              <input type="text" value={newCampaignPocHandle} onChange={e=>setNewCampaignPocHandle(e.target.value)} placeholder="instagramhandle" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px 8px 24px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                            </div>
+                            <input type="email" value={newCampaignPocEmail} onChange={e=>setNewCampaignPocEmail(e.target.value)} placeholder="work email (required)" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const, marginBottom:'8px' }} />
+                            <input type="tel" value={newCampaignPocPhone} onChange={e=>setNewCampaignPocPhone(e.target.value)} placeholder="phone (optional)" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
                             <input type="text" value={newCampaignPocRole} onChange={e=>setNewCampaignPocRole(e.target.value)} placeholder="Role / title (e.g. Partnerships Manager)" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
                           </div>
 
@@ -5054,15 +5087,15 @@ export default function MarketplaceDemoPage() {
                               if (!newCampaignBudget) missing.push('Budget');
                               if (!newCampaignSelectedProfession) missing.push('Target profession');
                               if (!brandCountry) missing.push('Your country');
-                              if (!newCampaignAudienceTarget.trim()) missing.push('Target audience');
                               if (missing.length > 0) { setPurchaseToast(`Missing: ${missing.join(', ')}`); setTimeout(()=>setPurchaseToast(null),4000); return; }
                               const escrowPool = parseInt(newCampaignBudget||'0') * newCampaignCreatorCount;
                               const newC: Campaign = {
                                 id:Date.now(), brandName:profileName, brandProfession:newCampaignSelectedProfession, title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[newCampaignSelectedProfession], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, location:newCampaignLocation, country:brandCountry, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0,
                                 poc: newCampaignPocName.trim() ? {
                                   name: newCampaignPocName.trim(),
-                                  contactHandle: newCampaignPocHandle.trim().startsWith('@') ? newCampaignPocHandle.trim() : `@${newCampaignPocHandle.trim()}`,
+                                  workEmail: newCampaignPocEmail.trim(),
                                   role: newCampaignPocRole.trim(),
+                                  phone: newCampaignPocPhone.trim() || undefined,
                                 } : undefined,
                               };
                               persistCampaigns([...campaigns, newC]);
@@ -5073,7 +5106,7 @@ export default function MarketplaceDemoPage() {
                               setShowEscrowFundingModal(true);
                               setEscrowFundingInProgress2(false);
                               setBatchSendCreatorIds(new Set());
-                              setNewCampaignTitle(''); setNewCampaignDesc(''); setNewCampaignAbout(''); setNewCampaignBudget(''); setNewCampaignDeadline(''); setNewCampaignProfessions([]); setNewCampaignSelectedProfession(''); setNewCampaignMinLevel(1); setNewCampaignMaxLevel(5); setNewCampaignLocation(''); setNewCampaignDeliverables(''); setNewCampaignNonNeg([]); setNewCampaignCompensation('Paid'); setNewCampaignExclusivity('None'); setNewCampaignUsageRights('30 days, social only'); setNewCampaignAudienceTarget(''); setNewCampaignRequirements([]); setNewCampaignReqInput(''); setNewCampaignCreatorCount(1); setNewCampaignPocName(''); setNewCampaignPocHandle(''); setNewCampaignPocRole(''); setNewCampaignScriptMode('creator_freedom'); setNewCampaignScriptText('');
+                              setNewCampaignTitle(''); setNewCampaignDesc(''); setNewCampaignAbout(''); setNewCampaignBudget(''); setNewCampaignDeadline(''); setNewCampaignProfessions([]); setNewCampaignSelectedProfession(''); setNewCampaignMinLevel(1); setNewCampaignMaxLevel(5); setNewCampaignLocation(''); setNewCampaignDeliverables(''); setNewCampaignNonNeg([]); setNewCampaignCompensation('Paid'); setNewCampaignExclusivity('None'); setNewCampaignUsageRights('30 days, social only'); setNewCampaignAudienceTarget(''); setNewCampaignRequirements([]); setNewCampaignReqInput(''); setNewCampaignCreatorCount(1); setNewCampaignPocName(''); setNewCampaignPocEmail(''); setNewCampaignPocPhone(''); setNewCampaignPocRole(''); setNewCampaignScriptMode('creator_freedom'); setNewCampaignScriptText('');
                             }}
                             style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'14px', cursor:'pointer' }}
                           >
@@ -5101,8 +5134,9 @@ export default function MarketplaceDemoPage() {
                           <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'14px', marginBottom:'14px' }}>
                             <div style={{ fontSize:'12px', fontWeight:700, color:C.text, marginBottom:'10px' }}>{pendingCampaignForEscrow.title}</div>
                             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
+                              {(() => { const c = currencyForCountry(pendingCampaignForEscrow.country || brandCountry); return (<>
                               {[
-                                { label:'Per creator', value:`$${parseInt(pendingCampaignForEscrow.budget||'0').toLocaleString()}` },
+                                { label:'Per creator', value:`${c.symbol}${parseInt(pendingCampaignForEscrow.budget||'0').toLocaleString()}` },
                                 { label:'Creators hiring', value:`${pendingCampaignForEscrow.creatorCount || 1}` },
                               ].map(row => (
                                 <div key={row.label} style={{ background:C.surfaceAlt, borderRadius:'6px', padding:'8px 10px' }}>
@@ -5110,6 +5144,7 @@ export default function MarketplaceDemoPage() {
                                   <div style={{ fontSize:'14px', fontWeight:700, color:C.text }}>{row.value}</div>
                                 </div>
                               ))}
+                              </>)})()}
                             </div>
                             <div style={{ marginTop:'10px', padding:'10px', background:'rgba(0,212,106,0.06)', border:'1px solid rgba(0,212,106,0.2)', borderRadius:'8px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                               <span style={{ fontSize:'12px', color:C.textSecondary, fontWeight:600 }}>Total escrow deposit</span>
@@ -6826,16 +6861,16 @@ export default function MarketplaceDemoPage() {
                                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <div>
                                           <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{brandDeal.poc.name}</div>
-                                          <div style={{ fontSize: '11px', color: C.primary, marginTop: '1px' }}>{brandDeal.poc.contactHandle}</div>
+                                          <div style={{ fontSize: '11px', color: C.primary, marginTop: '1px' }}>{brandDeal.poc.workEmail}</div>
                                           {brandDeal.poc.role && <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '1px' }}>{brandDeal.poc.role}</div>}
                                         </div>
                                         <button
                                           onClick={() => {
-                                            const pocHandle = brandDeal.poc?.contactHandle?.replace('@', '') || '';
-                                            if (pocHandle) {
-                                              window.open(`https://portfolio.valueskins.com/${pocHandle}`, '_blank');
+                                            const workEmail = brandDeal.poc?.workEmail || '';
+                                            if (workEmail) {
+                                              window.open(`mailto:${workEmail}`, '_blank');
                                             }
-                                            setPurchaseToast(`Opening ${brandDeal.poc?.name || 'POC'}'s profile`);
+                                            setPurchaseToast(`Contacting ${brandDeal.poc?.name || 'POC'} via email`);
                                             setTimeout(() => setPurchaseToast(null), 2000);
                                           }}
                                           style={{ background: C.primary, border: 'none', borderRadius: '6px', padding: '5px 12px', color: '#fff', fontSize: '10px', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}

@@ -104,7 +104,7 @@ export type DealState = {
     status: 'open' | 'resolved';
   }>;
   // Point of Contact — set at campaign creation, shown to both parties
-  poc?: { name: string; contactHandle: string; role: string };
+  poc?: { name: string; workEmail: string; role: string; phone?: string };
   // Campaign linkage — connects deal to its originating campaign for Sent Deals tracking
   campaignId?: number;
   campaignTitle?: string;
@@ -200,7 +200,7 @@ export type Campaign = {
   escrowPool?: number;
   escrowAllocated?: number;
   country?: string;
-  poc?: { name: string; contactHandle: string; role: string };
+  poc?: { name: string; workEmail: string; role: string; phone?: string };
 };
 
 // ---- Storage keys ----
