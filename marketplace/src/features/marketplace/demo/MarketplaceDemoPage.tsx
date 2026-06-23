@@ -5,7 +5,7 @@
 // DATA SOURCE: useDealSync.ts (local state) + api.ts (backend calls) + Firebase (real-time)
 // OUTPUT: Interactive UI where creators browse offers and negotiate with brands
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { useLevelConfig, useReputationConfig } from '@/lib/useConfigStorage';
@@ -466,6 +466,30 @@ export default function MarketplaceDemoPage() {
       .finally(() => setCreatorsLoading(false));
   }, [activeBrandSkin]);
 
+  // Fetch all creators for continuous auto-matching (picks up new signups)
+  const fetchAllCreators = useCallback(async () => {
+    setAllCreatorsLoading(true);
+    try {
+      const res = await fetch('/api/creators/all');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.creators && Array.isArray(data.creators)) {
+          setAllCreators(data.creators);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch all creators:', e);
+    } finally {
+      setAllCreatorsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAllCreators();
+    const interval = setInterval(fetchAllCreators, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchAllCreators]);
+
   // Brand ValueSkin as marketing — brands can promote products/campaigns via their skin
   const [brandProfileSelections, setBrandProfileSelections] = useState<Record<string, string>>({});
   const [brandSkinMode, setBrandSkinMode] = useState<'static' | 'promo'>('static');
@@ -841,6 +865,9 @@ export default function MarketplaceDemoPage() {
   const [brandCampaignDesc, setBrandCampaignDesc] = useState('Looking for authentic content creators to showcase our product');
   const [brandCampaignType, setBrandCampaignType] = useState('Product Review');
 
+  // Brand's country — used for campaign matching (must match creator country)
+  const [brandCountry, setBrandCountry] = useState('');
+
   // Brand-side deal room state — uses dealStates for real-time sync (was: localStorage-only)
   // Key format MUST match creator side: creatorName|creatorSkin
   const getBrandDealKey = useCallback(() => {
@@ -921,8 +948,7 @@ export default function MarketplaceDemoPage() {
   const [brandChatInput, setBrandChatInput] = useState('');
   const [brandSoftHoldHours, setBrandSoftHoldHours] = useState<24 | 48 | 72>(48);
 
-  // Auto-matching state
-  const [autoMatchedCreators, setAutoMatchedCreators] = useState<AutoMatchResult[]>([]);
+  // Auto-matching — now computed live via campaignMatches useMemo
   const [creatorNotifications, setCreatorNotifications] = useState<Array<any>>([]);
   // Read the creator's counter amount from shared deal state (set by creator's counter-offer handler)
   const brandDealCounterAmount = brandDeal?.counterAmount || '';
@@ -1183,6 +1209,9 @@ export default function MarketplaceDemoPage() {
   const [marketplaceTab, setMarketplaceTab] = useState<'creators' | 'campaigns' | 'applications' | 'sent' | 'pastDeals'>('creators');
   const [backendCreators, setBackendCreators] = useState<any[]>([]);
   const [creatorsLoading, setCreatorsLoading] = useState(false);
+  // All creators across all professions — used for continuous live auto-matching
+  const [allCreators, setAllCreators] = useState<any[]>([]);
+  const [allCreatorsLoading, setAllCreatorsLoading] = useState(false);
   const [hiddenSentDealIds, setHiddenSentDealIds] = useState<Set<number>>(new Set());
   const [showCampaignCreator, setShowCampaignCreator] = useState(false);
   const [newCampaignTitle, setNewCampaignTitle] = useState('');
@@ -1204,6 +1233,7 @@ export default function MarketplaceDemoPage() {
   const [newCampaignReqInput, setNewCampaignReqInput] = useState('');
   const [newCampaignCreatorCount, setNewCampaignCreatorCount] = useState(1);
   const [newCampaignValueskin, setNewCampaignValueskin] = useState<ValueSkinSlot>('profession');
+  const [newCampaignSelectedProfession, setNewCampaignSelectedProfession] = useState('');
   const [newCampaignPostsCount, setNewCampaignPostsCount] = useState(0);
   const [newCampaignReelsCount, setNewCampaignReelsCount] = useState(0);
   const [newCampaignStoriesCount, setNewCampaignStoriesCount] = useState(0);
@@ -1707,10 +1737,22 @@ export default function MarketplaceDemoPage() {
 
   // Auto-expire campaigns past deadline
   const today = new Date().toISOString().split('T')[0];
-  const liveCampaigns = campaigns.map(c => {
+  const liveCampaigns = useMemo(() => (campaigns || []).map(c => {
     if (c.status === 'open' && c.deadline && c.deadline < today) return { ...c, status: 'expired' as const };
     return c;
-  });
+  }), [campaigns, today]);
+
+  // Continuous live auto-matching: recomputes whenever campaigns or allCreators change
+  const campaignMatches = useMemo(() => {
+    const map = new Map<number, AutoMatchResult[]>();
+    if (!allCreators.length || !campaigns) return map;
+    for (const campaign of campaigns) {
+      if (campaign.status !== 'open') continue;
+      const matches = autoMatchCreators(campaign, allCreators);
+      map.set(campaign.id, matches);
+    }
+    return map;
+  }, [campaigns, allCreators]);
 
   // Check if creator matches campaign requirements
   const creatorMatchesCampaignRequirements = (campaign: Campaign, creatorProfession: string, creatorData?: any): boolean => {
@@ -1720,6 +1762,14 @@ export default function MarketplaceDemoPage() {
 
     // If creator data provided, check other requirements
     if (creatorData) {
+      // Country: HARD GATE — must match if campaign has a country set
+      if (campaign.country) {
+        const creatorCountry = creatorData.country || creatorData.audienceLocation || '';
+        if (creatorCountry && campaign.country.toLowerCase().trim() !== creatorCountry.toLowerCase().trim()) {
+          return false;
+        }
+      }
+
       // Location: must match if campaign specifies a non-remote location
       if (campaign.location && campaign.location.trim().toLowerCase() !== 'remote') {
         const campaignLoc = campaign.location.toLowerCase().trim();
@@ -4797,10 +4847,33 @@ export default function MarketplaceDemoPage() {
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Campaign description *</div>
                             <textarea value={newCampaignDesc} onChange={e=>setNewCampaignDesc(e.target.value)} rows={2} placeholder="Briefly describe the type of content and goal of this campaign" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', resize:'none', boxSizing:'border-box' as const }} />
                           </div>
-                          <div style={{ marginBottom:'12px', background:`${C.primary}08`, border:`1px solid ${C.primary}30`, borderRadius:'8px', padding:'10px 12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Targeting creators with</div>
-                            <div style={{ fontSize:'14px', fontWeight:700, color:C.primary }}>{activeBrandSkin}</div>
-                            <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'3px' }}>Auto-matched from your selected ValueSkin. Only creators with this skin will see your campaign.</div>
+                          <div style={{ marginBottom:'12px' }}>
+                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Target profession/niche *</div>
+                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Choose the type of creator you want to target. Only creators with this valueskin will be matched.</div>
+                            <select
+                              value={newCampaignSelectedProfession}
+                              onChange={e => setNewCampaignSelectedProfession(e.target.value)}
+                              style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}
+                            >
+                              <option value="">Select a profession...</option>
+                              {Object.entries(PROFESSION_BADGES).map(([name]) => (
+                                <option key={name} value={name}>{name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div style={{ marginBottom:'12px' }}>
+                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Your country *</div>
+                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Only creators in the same country will be matched. Funds and payments stay within this country.</div>
+                            <select
+                              value={brandCountry}
+                              onChange={e => setBrandCountry(e.target.value)}
+                              style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}
+                            >
+                              <option value="">Select your country...</option>
+                              {['India','United States','United Kingdom','Canada','Australia','Singapore','Japan','South Korea','Germany','France','Brazil','Mexico','United Arab Emirates','Italy','Spain','Netherlands','Sweden','Norway','Denmark','New Zealand','Nigeria','Kenya','South Africa','Indonesia','Philippines','Vietnam','Thailand','Malaysia','Pakistan','Bangladesh','Sri Lanka','Nepal'].map(name => (
+                                <option key={name} value={name}>{name}</option>
+                              ))}
+                            </select>
                           </div>
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Creator level range *</div>
@@ -4979,11 +5052,13 @@ export default function MarketplaceDemoPage() {
                               if (!newCampaignAbout.trim()) missing.push('About product/campaign');
                               if (!newCampaignDesc.trim()) missing.push('Description');
                               if (!newCampaignBudget) missing.push('Budget');
+                              if (!newCampaignSelectedProfession) missing.push('Target profession');
+                              if (!brandCountry) missing.push('Your country');
                               if (!newCampaignAudienceTarget.trim()) missing.push('Target audience');
                               if (missing.length > 0) { setPurchaseToast(`Missing: ${missing.join(', ')}`); setTimeout(()=>setPurchaseToast(null),4000); return; }
                               const escrowPool = parseInt(newCampaignBudget||'0') * newCampaignCreatorCount;
                               const newC: Campaign = {
-                                id:Date.now(), brandName:profileName, brandProfession:activeBrandSkin??'', title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[activeBrandSkin ?? ''], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, location:newCampaignLocation, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0,
+                                id:Date.now(), brandName:profileName, brandProfession:newCampaignSelectedProfession, title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[newCampaignSelectedProfession], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, location:newCampaignLocation, country:brandCountry, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0,
                                 poc: newCampaignPocName.trim() ? {
                                   name: newCampaignPocName.trim(),
                                   contactHandle: newCampaignPocHandle.trim().startsWith('@') ? newCampaignPocHandle.trim() : `@${newCampaignPocHandle.trim()}`,
@@ -4998,7 +5073,7 @@ export default function MarketplaceDemoPage() {
                               setShowEscrowFundingModal(true);
                               setEscrowFundingInProgress2(false);
                               setBatchSendCreatorIds(new Set());
-                              setNewCampaignTitle(''); setNewCampaignDesc(''); setNewCampaignAbout(''); setNewCampaignBudget(''); setNewCampaignDeadline(''); setNewCampaignProfessions([]); setNewCampaignMinLevel(1); setNewCampaignMaxLevel(5); setNewCampaignLocation(''); setNewCampaignDeliverables(''); setNewCampaignNonNeg([]); setNewCampaignCompensation('Paid'); setNewCampaignExclusivity('None'); setNewCampaignUsageRights('30 days, social only'); setNewCampaignAudienceTarget(''); setNewCampaignRequirements([]); setNewCampaignReqInput(''); setNewCampaignCreatorCount(1); setNewCampaignPocName(''); setNewCampaignPocHandle(''); setNewCampaignPocRole(''); setNewCampaignScriptMode('creator_freedom'); setNewCampaignScriptText('');
+                              setNewCampaignTitle(''); setNewCampaignDesc(''); setNewCampaignAbout(''); setNewCampaignBudget(''); setNewCampaignDeadline(''); setNewCampaignProfessions([]); setNewCampaignSelectedProfession(''); setNewCampaignMinLevel(1); setNewCampaignMaxLevel(5); setNewCampaignLocation(''); setNewCampaignDeliverables(''); setNewCampaignNonNeg([]); setNewCampaignCompensation('Paid'); setNewCampaignExclusivity('None'); setNewCampaignUsageRights('30 days, social only'); setNewCampaignAudienceTarget(''); setNewCampaignRequirements([]); setNewCampaignReqInput(''); setNewCampaignCreatorCount(1); setNewCampaignPocName(''); setNewCampaignPocHandle(''); setNewCampaignPocRole(''); setNewCampaignScriptMode('creator_freedom'); setNewCampaignScriptText('');
                             }}
                             style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'14px', cursor:'pointer' }}
                           >
@@ -5077,23 +5152,22 @@ export default function MarketplaceDemoPage() {
                               setTimeout(() => {
                                 persistCampaigns(campaigns.map(c => c.id === pendingCampaignForEscrow.id ? { ...c, escrowFunded: true } : c));
 
-                                // AUTO-MATCH: Find matching creators
-                                const matched = autoMatchCreators(pendingCampaignForEscrow, BRAND_MARKETPLACE_CREATORS);
-                                setAutoMatchedCreators(matched);
+                                // AUTO-MATCH: Use continuously computed matches
+                                const liveMatches = campaignMatches.get(pendingCampaignForEscrow.id) || [];
 
                                 // Send notifications
                                 const notifs = sendAutoMatchNotifications(
                                   pendingCampaignForEscrow.id,
                                   pendingCampaignForEscrow.title,
                                   profileName,
-                                  matched
+                                  liveMatches
                                 );
                                 setCreatorNotifications(prev => [...prev, ...notifs]);
 
                                 setEscrowFundingInProgress2(false);
                                 setShowEscrowFundingModal(false);
-                                setShowBatchSendModal(true);
-                                setPurchaseToast(`Escrow funded — $${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured. Found ${matched.length} matching creators.`);
+                                setCampaignsSectionOpen(true);
+                                setPurchaseToast(`Escrow funded — $${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured. Platform found ${liveMatches.length} matching creator${liveMatches.length !== 1 ? 's' : ''}.`);
                                 setTimeout(() => setPurchaseToast(null), 4000);
                               }, 2000);
                             }}
@@ -5108,28 +5182,29 @@ export default function MarketplaceDemoPage() {
                       </div>
                     )}
 
-                    {/* Feature 4: Auto-Matched Creators Modal */}
-                    {showBatchSendModal && lastCreatedCampaignId && (
+                    {/* Feature 4: Auto-Matched Creators Modal — reads from live continuous matches */}
+                    {showBatchSendModal && lastCreatedCampaignId && (() => {
+                      const batchMatches = campaignMatches.get(lastCreatedCampaignId) || [];
+                      return (
                       <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999 }}>
                         <div style={{ background:C.surface, borderRadius:'16px', padding:'24px', maxWidth:'520px', width:'95vw', maxHeight:'90vh', overflowY:'auto', border:`1px solid ${C.border}`, position:'relative' }}>
                           <div style={{ fontSize:'16px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Auto-Matched Creators</div>
-                          <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'16px' }}>System found {autoMatchedCreators.length} creators matching your campaign. Select who to invite.</div>
+                          <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'16px' }}>System found {batchMatches.length} creators matching your campaign. Select who to invite.</div>
 
-                          {autoMatchedCreators.length === 0 ? (
+                          {batchMatches.length === 0 ? (
                             <div style={{ padding:'40px 20px', textAlign:'center', color:C.textSecondary }}>
                               <div style={{ fontSize:'14px', marginBottom:'8px' }}>No matching creators found</div>
                               <div style={{ fontSize:'12px' }}>Try adjusting your campaign requirements</div>
                             </div>
                           ) : (
                             <div style={{ maxHeight:'400px', overflowY:'auto', marginBottom:'16px', border:`1px solid ${C.border}`, borderRadius:'8px', background:C.bg }}>
-                              {autoMatchedCreators.map((match, idx) => {
-                                const creator = BRAND_MARKETPLACE_CREATORS.find(c => c.handle === match.creatorHandle);
+                              {batchMatches.map((match, idx) => {
                                 return (
                                   <div
                                     key={match.creatorHandle}
                                     style={{
                                       padding:'14px 12px',
-                                      borderBottom: idx < autoMatchedCreators.length - 1 ? `1px solid ${C.border}` : 'none',
+                                      borderBottom: idx < batchMatches.length - 1 ? `1px solid ${C.border}` : 'none',
                                       display:'flex',
                                       gap:'12px',
                                       alignItems:'flex-start',
@@ -5153,7 +5228,7 @@ export default function MarketplaceDemoPage() {
                                         <div style={{ fontSize:'13px', fontWeight:600, color:C.text }}>{match.creatorName}</div>
                                         <div style={{ fontSize:'12px', fontWeight:700, background:`${C.primary}15`, color:C.primary, padding:'2px 8px', borderRadius:'4px' }}>{match.matchScore}%</div>
                                       </div>
-                                      <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'6px' }}>{match.creatorProfession} · {creator?.followers} followers</div>
+                                      <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'6px' }}>{match.creatorProfession} · {match.creatorName}</div>
                                       <div style={{ display:'flex', flexWrap:'wrap', gap:'6px' }}>
                                         {match.reasons.map((reason, i) => (
                                           <div key={i} style={{ fontSize:'10px', background:C.card, color:C.textMuted, padding:'3px 8px', borderRadius:'4px' }}>{reason}</div>
@@ -5172,12 +5247,13 @@ export default function MarketplaceDemoPage() {
                           </div>
 
                           <div style={{ display:'flex', gap:'8px' }}>
-                            <button onClick={() => { setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); setAutoMatchedCreators([]); }} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'11px', color:C.text, fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
-                            <button onClick={() => { batchSendCreatorIds.forEach(idx => { const match = autoMatchedCreators[idx]; const creator = BRAND_MARKETPLACE_CREATORS.find(c => c.handle === match.creatorHandle); const campaign = campaigns.find(c => c.id === lastCreatedCampaignId); const oppIdx = activeOpportunities.findIndex(o => o.brand === campaign?.title); if (creator && campaign) { const app: SharedApplication = { id:Date.now() + idx, campaignId:lastCreatedCampaignId ?? 0, campaignTitle:campaign.title || 'Campaign', creatorProfession:creator.valueSkin || '', creatorHandle:creator.handle || '', creatorName:creator.name, status:'invited' as SharedApplication['status'], appliedAt:new Date().toISOString(), opportunityIndex: oppIdx >= 0 ? oppIdx : 0 }; firebaseCreateApplication(app); firebaseSendNotification(creator.handle || '', 'campaign', `${profileName} invited you to: ${campaign.title || 'Campaign'}`); } }); setPurchaseToast(`Invitations sent to ${batchSendCreatorIds.size} creator${batchSendCreatorIds.size !== 1 ? 's' : ''}`); setTimeout(() => setPurchaseToast(null), 3000); setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); setAutoMatchedCreators([]); }} style={{ flex:1, background:batchSendCreatorIds.size > 0 ? C.primary : C.border, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'13px', cursor: batchSendCreatorIds.size > 0 ? 'pointer' : 'not-allowed', opacity: batchSendCreatorIds.size > 0 ? 1 : 0.5 }}>Send to {batchSendCreatorIds.size} Creator{batchSendCreatorIds.size !== 1 ? 's' : ''}</button>
+                            <button onClick={() => { setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'11px', color:C.text, fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
+                            <button onClick={() => { batchSendCreatorIds.forEach(idx => { const match = batchMatches[idx]; const campaign = campaigns.find(c => c.id === lastCreatedCampaignId); const oppIdx = activeOpportunities.findIndex(o => o.brand === campaign?.title); if (campaign) { const app: SharedApplication = { id:Date.now() + idx, campaignId:lastCreatedCampaignId ?? 0, campaignTitle:campaign.title || 'Campaign', creatorProfession:match.creatorProfession || '', creatorHandle:match.creatorHandle || '', creatorName:match.creatorName, status:'invited' as SharedApplication['status'], appliedAt:new Date().toISOString(), opportunityIndex: oppIdx >= 0 ? oppIdx : 0 }; firebaseCreateApplication(app); firebaseSendNotification(match.creatorHandle || '', 'campaign', `${profileName} invited you to: ${campaign.title || 'Campaign'}`); } }); setPurchaseToast(`Invitations sent to ${batchSendCreatorIds.size} creator${batchSendCreatorIds.size !== 1 ? 's' : ''}`); setTimeout(() => setPurchaseToast(null), 3000); setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:batchSendCreatorIds.size > 0 ? C.primary : C.border, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'13px', cursor: batchSendCreatorIds.size > 0 ? 'pointer' : 'not-allowed', opacity: batchSendCreatorIds.size > 0 ? 1 : 0.5 }}>Send to {batchSendCreatorIds.size} Creator{batchSendCreatorIds.size !== 1 ? 's' : ''}</button>
                           </div>
                         </div>
                       </div>
-                    )}
+                      );
+                    })()}
 
                     {/* Cancel Deal Modal */}
                     {showCancelDealModal && (
@@ -6812,6 +6888,27 @@ export default function MarketplaceDemoPage() {
                         <span style={{ fontSize:'12px', fontWeight:700, color:C.text, textTransform:'uppercase', letterSpacing:'0.5px', display:'flex', alignItems:'center', gap:'6px' }}>
                           Your Campaigns
                           {campaigns.length > 0 && <span style={{ fontSize:'10px', background:C.primary, color:'#fff', padding:'1px 5px', borderRadius:'8px' }}>{campaigns.length}</span>}
+                          {allCreators.length > 0 && (() => {
+                            const totalMatches = [...campaignMatches.values()].reduce((sum, m) => sum + m.length, 0);
+                            return (
+                              <span
+                                title={`${totalMatches} total creator matches across all campaigns — live updated every 30s`}
+                                style={{ fontSize:'10px', background: totalMatches > 0 ? `${C.primary}15` : C.surfaceAlt, color: totalMatches > 0 ? C.primary : C.textMuted, padding:'1px 6px', borderRadius:'8px', fontWeight:600 }}
+                              >
+                                {totalMatches} match{totalMatches !== 1 ? 'es' : ''}
+                              </span>
+                            );
+                          })()}
+                          <button
+                            onClick={fetchAllCreators}
+                            title="Refresh creator list for live matching"
+                            style={{ background:'none', border:'none', cursor:'pointer', padding:'2px', display:'flex', alignItems:'center' }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2.5" style={{ opacity: allCreatorsLoading ? 0.5 : 0.7 }}>
+                              <polyline points="23 4 23 10 17 10"/>
+                              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                          </button>
                         </span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2.5" style={{ transform: campaignsSectionOpen ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}><polyline points="6 9 12 15 18 9"/></svg>
                       </button>
@@ -6876,12 +6973,25 @@ export default function MarketplaceDemoPage() {
                             <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px', lineHeight:1.4 }}>{c.description}</div>
                             <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'6px' }}>
                               {c.requiredProfessions.map(p => <span key={p} style={{ fontSize:'10px', fontWeight:600, color:C.primary, background:`${C.primary}12`, padding:'2px 7px', borderRadius:'6px', border:`1px solid ${C.primary}30` }}>{p}</span>)}
+                              {c.country && <span style={{ fontSize:'10px', fontWeight:600, color:C.text, background:C.surfaceAlt, padding:'2px 7px', borderRadius:'6px', border:`1px solid ${C.border}` }}>{c.country} only</span>}
                             </div>
                             <div style={{ display:'flex', gap:'12px', flexWrap:'wrap', fontSize:'10px', color:C.textMuted, marginBottom: c.nonNegotiables?.length ? '6px':'8px' }}>
                               <span>Level: L{c.minLevel||1}{(c.maxLevel && c.maxLevel !== c.minLevel) ? `–L${c.maxLevel}` : ''}</span>
                               {c.location && <span>{c.location}</span>}
                               {c.deliverables && <span>{c.deliverables}</span>}
                             </div>
+                            {(campaignMatches.get(c.id)?.length ?? 0) > 0 && (
+                              <div style={{ marginBottom:'8px' }}>
+                                <span
+                                  title={`${campaignMatches.get(c.id)?.length ?? 0} creators match this campaign — updated live as new creators join`}
+                                  style={{ fontSize:'10px', fontWeight:700, color:C.primary, background:`${C.primary}10`, border:`1px solid ${C.primary}30`, padding:'2px 8px', borderRadius:'6px', display:'inline-flex', alignItems:'center', gap:'4px', cursor:'default' }}
+                                >
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2"/></svg>
+                                  {campaignMatches.get(c.id)?.length ?? 0} creator{(campaignMatches.get(c.id)?.length ?? 0) !== 1 ? 's' : ''} matched
+                                  <span style={{ fontSize:'8px', opacity:0.6 }}>● live</span>
+                                </span>
+                              </div>
+                            )}
                             {c.nonNegotiables && c.nonNegotiables.length > 0 && (
                               <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'8px' }}>
                                 {c.nonNegotiables.map(n=><span key={n} style={{ fontSize:'10px', color:C.textMuted, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', padding:'2px 7px', borderRadius:'6px' }}>{n}</span>)}

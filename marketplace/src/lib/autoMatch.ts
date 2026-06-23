@@ -18,6 +18,7 @@ export interface Campaign {
   exclusivity?: string;
   usageRights?: string;
   aboutDescription?: string;
+  country?: string;
 }
 
 export interface Creator {
@@ -39,6 +40,7 @@ export interface Creator {
   languages?: string[];
   niche?: string;
   platforms?: string[];
+  country?: string;
 }
 
 export interface AutoMatchResult {
@@ -89,6 +91,13 @@ export function autoMatchCreators(
  * Calculate match score (0-100) between a campaign and creator
  */
 function calculateMatchScore(campaign: Campaign, creator: Creator): number {
+  // HARD GATE: Country must match if both are specified
+  const campaignCountry = (campaign.country || '').toLowerCase().trim();
+  const creatorCountry = (creator.country || '').toLowerCase().trim();
+  if (campaignCountry && creatorCountry && campaignCountry !== creatorCountry) {
+    return 0;
+  }
+
   let score = 0;
   let weightSum = 0;
 
@@ -232,6 +241,11 @@ function getMatchReasons(campaign: Campaign, creator: Creator, matchScore: numbe
   // Location
   if (creator.audienceLocation) {
     reasons.push(`Audience in: ${creator.audienceLocation}`);
+  }
+
+  // Country
+  if (creator.country && campaign.country && creator.country === campaign.country) {
+    reasons.push(`Same country: ${creator.country}`);
   }
 
   // Barter

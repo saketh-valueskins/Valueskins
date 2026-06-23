@@ -1,5 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import PROFESSIONS from '@/lib/professions';
+import type { ProfessionCount } from '@/pages/api/creators/count-by-profession';
 
 const C = {
   bg: '#0f172a', surface: '#1e293b', surfaceAlt: '#334155',
@@ -17,6 +19,8 @@ const PLATFORMS = [
 
 const CONTENT_TYPES = ['photo', 'video', 'story', 'live', 'carousel', 'text'];
 
+const CATEGORIES = ['Tech', 'Art', 'Law', 'Medical', 'Gaming', 'Finance', 'Fitness', 'Content'] as const;
+
 export default function BriefForm({ onSaved }: { onSaved: () => void }) {
   const [form, setForm] = useState({
     title: '', description: '', campaign_goals: '', target_audience: '',
@@ -25,13 +29,36 @@ export default function BriefForm({ onSaved }: { onSaved: () => void }) {
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [nicheInput, setNicheInput] = useState('');
+  const [professionCounts, setProfessionCounts] = useState<Map<string, number>>(new Map());
+  const [loadingCounts, setLoadingCounts] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const addNiche = () => {
-    if (nicheInput.trim() && !form.required_niches.includes(nicheInput.trim())) {
-      setForm({ ...form, required_niches: [...form.required_niches, nicheInput.trim()] });
-      setNicheInput('');
+  useEffect(() => {
+    async function loadCounts() {
+      try {
+        const res = await fetch('/api/creators/count-by-profession');
+        if (res.ok) {
+          const data: ProfessionCount[] = await res.json();
+          const map = new Map<string, number>();
+          data.forEach(pc => map.set(pc.profession, pc.count));
+          setProfessionCounts(map);
+        }
+      } catch {
+        // silently fail — counts are non-critical
+      } finally {
+        setLoadingCounts(false);
+      }
     }
+    loadCounts();
+  }, []);
+
+  const toggleNiche = (niche: string) => {
+    setForm(prev => ({
+      ...prev,
+      required_niches: prev.required_niches.includes(niche)
+        ? prev.required_niches.filter(n => n !== niche)
+        : [...prev.required_niches, niche],
+    }));
   };
 
   const togglePlatform = (pid: string) => {
@@ -56,6 +83,11 @@ export default function BriefForm({ onSaved }: { onSaved: () => void }) {
     } catch (err: any) { setMessage(err.message); }
     finally { setSaving(false); setTimeout(() => setMessage(''), 3000); }
   };
+
+  const groupedProfessions = CATEGORIES.map(cat => ({
+    category: cat,
+    professions: PROFESSIONS.filter(p => p.category === cat),
+  }));
 
   return (
     <div style={{ color: C.text, fontFamily: 'system-ui, sans-serif' }}>
@@ -82,14 +114,75 @@ export default function BriefForm({ onSaved }: { onSaved: () => void }) {
         </div>
 
         <div>
-          <label style={{ fontSize: '12px', color: C.textMuted, marginBottom: '6px', display: 'block' }}>Required Niches (press Enter to add)</label>
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '6px' }}>
-            {form.required_niches.map(n => <span key={n} style={{ padding: '4px 8px', background: `${C.primary}20`, borderRadius: '4px', fontSize: '12px', color: C.primary }}>{n} <span onClick={() => setForm({ ...form, required_niches: form.required_niches.filter(x => x !== n) })} style={{ cursor: 'pointer', marginLeft: '4px' }}>x</span></span>)}
+          <label style={{ fontSize: '12px', color: C.textMuted, marginBottom: '8px', display: 'block' }}>
+            Creator Niches <span style={{ color: '#555' }}>({form.required_niches.length} selected)</span>
+          </label>
+
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
+            {form.required_niches.map(n => <span key={n} style={{ padding: '4px 8px', background: `${C.primary}20`, borderRadius: '4px', fontSize: '12px', color: C.primary }}>{n} <span onClick={() => toggleNiche(n)} style={{ cursor: 'pointer', marginLeft: '4px' }}>x</span></span>)}
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <input placeholder="e.g., Fashion, Tech, Fitness" value={nicheInput} onChange={e => setNicheInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addNiche())}
-              style={{ flex: 1, padding: '8px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', color: C.text, fontSize: '13px' }} />
-            <button onClick={addNiche} style={{ padding: '8px 12px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: '6px', color: C.text, cursor: 'pointer', fontSize: '13px' }}>Add</button>
+
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
+            {CATEGORIES.map(cat => (
+              <button key={cat} onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
+                style={{
+                  padding: '5px 10px', borderRadius: '5px', border: `1px solid ${selectedCategory === cat ? C.primary : C.border}`,
+                  background: selectedCategory === cat ? `${C.primary}20` : 'transparent',
+                  color: selectedCategory === cat ? C.primary : C.textMuted, cursor: 'pointer', fontSize: '11px', fontWeight: 600,
+                  textTransform: 'uppercase',
+                }}>
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div style={{
+            maxHeight: '200px', overflowY: 'auto', border: `1px solid ${C.border}`, borderRadius: '6px', padding: '6px',
+            background: C.bg,
+          }}>
+            {groupedProfessions.map(group => (
+              <div key={group.category} style={{ display: selectedCategory && selectedCategory !== group.category ? 'none' : 'block' }}>
+                {!selectedCategory && (
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, padding: '6px 4px 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {group.category}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', padding: '2px 0 6px' }}>
+                  {group.professions.map(p => {
+                    const isSelected = form.required_niches.includes(p.name);
+                    const count = professionCounts.get(p.name);
+                    return (
+                      <button key={p.id} onClick={() => toggleNiche(p.name)}
+                        style={{
+                          padding: '5px 8px', borderRadius: '5px',
+                          border: `1px solid ${isSelected ? C.primary : C.border}`,
+                          background: isSelected ? `${C.primary}20` : 'transparent',
+                          color: isSelected ? C.primary : C.text,
+                          cursor: 'pointer', fontSize: '11px',
+                          display: 'flex', alignItems: 'center', gap: '4px',
+                          opacity: loadingCounts ? 0.7 : 1,
+                        }}>
+                        <span>{p.name}</span>
+                        {count !== undefined && (
+                          <span style={{
+                            fontSize: '10px', color: isSelected ? C.primary : '#555',
+                            background: 'rgba(255,255,255,0.05)', padding: '1px 5px',
+                            borderRadius: '8px',
+                          }}>
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            {loadingCounts && (
+              <div style={{ fontSize: '11px', color: C.textMuted, padding: '8px', textAlign: 'center' }}>
+                Loading creator counts...
+              </div>
+            )}
           </div>
         </div>
 

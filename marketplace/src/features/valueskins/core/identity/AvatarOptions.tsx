@@ -136,6 +136,7 @@ export function ProfessionSticker({
   onValueSkinsChange,
   clickable = true,
   level,
+  hideSlotLabel,
 }: {
   profession: string;
   slot: ValueSkinSlot;
@@ -144,6 +145,7 @@ export function ProfessionSticker({
   onValueSkinsChange?: (updated: ValueSkinMap) => void;
   clickable?: boolean;
   level?: number;
+  hideSlotLabel?: boolean;
 }) {
   const defined = PROFESSION_BADGES[profession];
   const badge: ProfessionBadge = defined ?? {
@@ -174,7 +176,7 @@ export function ProfessionSticker({
   return (
     <>
       <div
-        title={clickable ? `${SLOT_LABELS[slot]}: ${badge.label} — click to view` : badge.label}
+        title={clickable ? `${hideSlotLabel ? '' : SLOT_LABELS[slot] + ': '}${badge.label} — click to view` : badge.label}
         onClick={clickable ? () => setShowPanel(true) : undefined}
         style={{
           display: 'inline-flex',
@@ -209,6 +211,7 @@ export function ProfessionSticker({
           onValueSkinsChange={onValueSkinsChange}
           onClose={() => setShowPanel(false)}
           level={level}
+          hideSlotLabel={hideSlotLabel}
         />
       )}
     </>
@@ -225,6 +228,7 @@ function AboutMePanel({
   onValueSkinsChange,
   onClose,
   level,
+  hideSlotLabel,
 }: {
   slot: ValueSkinSlot;
   profession: string;
@@ -233,6 +237,7 @@ function AboutMePanel({
   onValueSkinsChange?: (updated: ValueSkinMap) => void;
   onClose: () => void;
   level?: number;
+  hideSlotLabel?: boolean;
 }) {
   const [editingSlot, setEditingSlot] = useState<ValueSkinSlot | null>(null);
   const [draft, setDraft] = useState('');
@@ -333,15 +338,17 @@ function AboutMePanel({
                 border: '1px solid #262626',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                  <span style={{
-                    fontSize: '10px', fontWeight: 700, letterSpacing: '0.8px',
-                    textTransform: 'uppercase', color: SLOT_COLORS[s],
-                  }}>
-                    {SLOT_LABELS[s]}
-                  </span>
+                  {!hideSlotLabel && (
+                    <span style={{
+                      fontSize: '10px', fontWeight: 700, letterSpacing: '0.8px',
+                      textTransform: 'uppercase', color: SLOT_COLORS[s],
+                    }}>
+                      {SLOT_LABELS[s]}
+                    </span>
+                  )}
                 </div>
                 <div style={{ fontSize: '13px', color: '#444', fontStyle: 'italic' }}>
-                  No {SLOT_LABELS[s].toLowerCase()} badge active. Visit the Store to add one.
+                  No {hideSlotLabel ? 'badge' : SLOT_LABELS[s].toLowerCase()} active.
                 </div>
               </div>
             );
@@ -382,9 +389,11 @@ function AboutMePanel({
                   )
                 )}
                 <div>
-                  <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', color: SLOT_COLORS[s] }}>
-                    {SLOT_LABELS[s]}
-                  </div>
+                  {!hideSlotLabel && (
+                    <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', color: SLOT_COLORS[s] }}>
+                      {SLOT_LABELS[s]}
+                    </div>
+                  )}
                   <div style={{ fontSize: '13px', fontWeight: 600, color: '#C0C0C0' }}>
                     {entry.profession}
                   </div>
@@ -741,12 +750,14 @@ export function ValueSkinStickers({
   size = 'default',
   level,
   onSkinClick,
+  hideSlotLabel,
 }: {
   valueSkins: ValueSkinMap;
   onValueSkinsChange?: (updated: ValueSkinMap) => void;
   size?: 'small' | 'default' | 'large';
   level?: number;
   onSkinClick?: (profession: string) => void;
+  hideSlotLabel?: boolean;
 }) {
   const slots: ValueSkinSlot[] = ['profession', 'passion', 'hobby'];
   const active = slots.filter((s) => valueSkins[s]);
@@ -764,6 +775,7 @@ export function ValueSkinStickers({
             onValueSkinsChange={onValueSkinsChange}
             level={level}
             clickable={!onSkinClick}
+            hideSlotLabel={hideSlotLabel}
           />
         </div>
       ))}

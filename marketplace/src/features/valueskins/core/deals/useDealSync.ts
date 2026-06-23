@@ -192,14 +192,14 @@ export type Campaign = {
   requirements?: string[];
   scriptMode?: 'non_negotiable' | 'discussion' | 'creator_freedom';
   scriptText?: string;
-  allowContentApprovalPayment?: boolean; // If true, brand must approve content for final 30% payout
+  allowContentApprovalPayment?: boolean;
   status: 'open' | 'closed' | 'expired';
   applicants: number;
-  creatorCount?: number;       // how many creators brand intends to hire
-  escrowFunded?: boolean;      // brand has deposited total escrow
-  escrowPool?: number;         // total amount deposited (budget × creatorCount)
-  escrowAllocated?: number;    // amount allocated to accepted deals so far
-  // Point of Contact for this campaign — set at creation, visible in all deal rooms
+  creatorCount?: number;
+  escrowFunded?: boolean;
+  escrowPool?: number;
+  escrowAllocated?: number;
+  country?: string;
   poc?: { name: string; contactHandle: string; role: string };
 };
 
