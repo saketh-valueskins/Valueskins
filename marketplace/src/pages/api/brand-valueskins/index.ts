@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'GET') {
       const skinsResult = await query(
-        `SELECT id, category, slot, xp, level, description, created_at, updated_at
+        `SELECT id, category, slot, level, description, created_at, updated_at
          FROM brand_valueskins WHERE user_id = $1 ORDER BY slot ASC, created_at DESC`,
         [userId]
       );
@@ -41,7 +41,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: skin.id,
         category: skin.category,
         slot: skin.slot,
-        xp: parseInt(skin.xp) || 0,
         level: parseInt(skin.level) || 1,
         description: skin.description,
         createdAt: skin.created_at,
@@ -68,8 +67,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const insertResult = await query(
-        `INSERT INTO brand_valueskins (user_id, category, slot, xp, level, description, created_at)
-         VALUES ($1, $2, $3, 0, 1, $4, NOW()) RETURNING id, category, slot, xp, level, description, created_at`,
+        `INSERT INTO brand_valueskins (user_id, category, slot, level, description, created_at)
+         VALUES ($1, $2, $3, 1, $4, NOW()) RETURNING id, category, slot, level, description, created_at`,
         [userId, category, slot, description || '']
       );
 

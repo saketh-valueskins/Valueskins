@@ -8,7 +8,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-import { useLevelConfig, useReputationConfig } from '@/lib/useConfigStorage';
+import { getLevel, getProgressToNext } from '@/lib/levels';
+import { useReputationConfig } from '@/lib/useConfigStorage';
 import { useDealSync, type DealState, type DealRoomPhase, type SharedApplication, type Campaign, type ChatMessage } from '@/features/valueskins/core/deals/useDealSync';
 import { useFirebaseRoom } from '@/features/valueskins/core/realtime/useFirebaseRoom';
 import { autoMatchCreators, type AutoMatchResult } from '@/lib/autoMatch';
@@ -333,30 +334,6 @@ export default function MarketplaceDemoPage() {
     ],
   });
 
-  // Skin XP for leveling — each skin levels independently
-  // Level is driven purely by engagement signals: deal completions, community engagement, link/purchase activity
-  // Followers and views are NOT factors — reach is a vanity metric, not a quality signal
-  const [skinXP, setSkinXP] = useState<Record<string, number>>({});
-  const getSkinLevel = (profession: string, _followerCount?: number, _totalSkins?: number) => {
-    const xp = skinXP[profession] || 0;
-    if (xp >= 1000) return 5;
-    if (xp >= 500) return 4;
-    if (xp >= 200) return 3;
-    if (xp >= 50) return 2;
-    return 1;
-  };
-  const getSkinXPProgress = (profession: string, _followerCount?: number, _totalSkins?: number) => {
-    const xp = skinXP[profession] || 0;
-    const thresholds = [0, 50, 200, 500, 1000];
-    const level = getSkinLevel(profession);
-    if (level >= 5) return 100;
-    const current = xp - thresholds[level - 1];
-    const needed = thresholds[level] - thresholds[level - 1];
-    return Math.round((current / needed) * 100);
-  };
-  const addSkinXP = useCallback((profession: string, amount: number) => {
-    setSkinXP(prev => ({ ...prev, [profession]: (prev[profession] || 0) + amount }));
-  }, []);
 
   // 3-slot ValueSkin state — persisted to localStorage
   const [valueSkins, setValueSkins] = useState<ValueSkinMap>({});
@@ -433,7 +410,6 @@ export default function MarketplaceDemoPage() {
         if (d.joinedCommunities) setJoinedCommunities(d.joinedCommunities);
         if (d.dmMessages) setDmMessages(d.dmMessages);
         if (d.communityMessages) setCommunityMessages(d.communityMessages);
-        if (d.skinXP) setSkinXP(d.skinXP);
         if (d.skinPitchTexts) setSkinPitchTexts(d.skinPitchTexts);
         if (d.skinPitchVideos) setSkinPitchVideos(d.skinPitchVideos);
         if (d.brandProfileSelections) setBrandProfileSelections(d.brandProfileSelections);
@@ -447,10 +423,8 @@ export default function MarketplaceDemoPage() {
 
   const [showSkinManageModal, setShowSkinManageModal] = useState<ValueSkinSlot | null>(null);
 
-  useLevelConfig();
   const { factors } = useReputationConfig();
 
-  const [showLevelModal, setShowLevelModal] = useState(false);
   const [showMetricsModal, setShowMetricsModal] = useState(false);
   const [showReputationModal, setShowReputationModal] = useState(false);
   const [showStoreModal, setShowStoreModal] = useState(false);
@@ -1514,14 +1488,14 @@ export default function MarketplaceDemoPage() {
         marketplaceRole, brandValueSkins, activeBrandSkin, profileName, profileBio, profileAvatar,
         selectedCountry, selectedLanguages, rateCard, profileDealTypes, willingToBarter,
         notifications, joinedCommunities, dmMessages, communityMessages,
-        skinXP, brandProfileSelections, creatorEnergy, metrics, skinPitchTexts, skinPitchVideos,
+        brandProfileSelections, creatorEnergy, metrics, skinPitchTexts, skinPitchVideos,
         skinPositions,
       }));
     } catch (e) { /* ignore */ }
   }, [marketplaceRole, brandValueSkins, activeBrandSkin, profileName, profileBio, profileAvatar,
       selectedCountry, selectedLanguages, rateCard, profileDealTypes, willingToBarter,
       notifications, joinedCommunities, dmMessages, communityMessages,
-      skinXP, brandProfileSelections, creatorEnergy, metrics, skinsLoaded, skinPitchTexts, skinPitchVideos,
+      brandProfileSelections, creatorEnergy, metrics, skinsLoaded, skinPitchTexts, skinPitchVideos,
       skinPositions]);
 
   // Fetch profile stats from API instead of using hardcoded values
@@ -1645,12 +1619,6 @@ export default function MarketplaceDemoPage() {
       setBrandValueSkins(prev => [...prev, profession]);
       if (!activeBrandSkin) setActiveBrandSkin(profession);
     }
-    // Seed demo XP — different per slot so levels visibly differ
-    // Profession: 350 XP (Lv.3), Passion: 120 XP (Lv.2), Hobby: 30 XP (Lv.1)
-    if (!skinXP[profession]) {
-      const demoXP: Record<ValueSkinSlot, number> = { profession: 350, passion: 120, hobby: 30 };
-      addSkinXP(profession, demoXP[assigningSlot]);
-    }
     setShowStoreModal(false);
     setAssigningSlot(null);
     setActiveView('profile');
@@ -1677,24 +1645,13 @@ export default function MarketplaceDemoPage() {
     setMetrics(updatedMetrics);
     setCompletedDeals(prev => [...prev, { id: Date.now(), brand: brandName, amount: earnedAmount, completedAt: new Date().toLocaleDateString(), deliverable, usageRightsDays, exclusivityDays, exclusivitySkin, contractSignedAt: contractSignature ? new Date().toISOString() : undefined }]);
 
-    // Add XP to the skin this deal was completed under
-    const targetSkin = skinProfession || selectedMarketplaceSkin || ownedSkins[0]?.profession;
-    if (targetSkin) {
-      const prevLevel = getSkinLevel(targetSkin);
-      // Deal completion = major XP: base 100 + bonus scaled by deal value
-      // Views are not a factor — XP reflects engagement quality: deal completions, conversions, audience trust
-      const xpGain = 100 + Math.round(earnedAmount / 100);
-      addSkinXP(targetSkin, xpGain);
-      const newXP = (skinXP[targetSkin] || 0) + xpGain;
-      const newLevel = newXP >= 1000 ? 5 : newXP >= 500 ? 4 : newXP >= 200 ? 3 : newXP >= 50 ? 2 : 1;
-      if (newLevel > prevLevel) {
-        setLevelUpFrom(prevLevel);
-        setLevelUpTo(newLevel);
-        setShowLevelUpModal(true);
-      } else {
-        setPurchaseToast('Deal complete — earnings added to your balance');
-        setTimeout(() => setPurchaseToast(null), 3000);
-      }
+    // Check for level-up based on deal completions
+    const prevLevel = getLevel(metrics.dealsCompleted);
+    const newLevel = getLevel(updatedMetrics.dealsCompleted);
+    if (newLevel > prevLevel) {
+      setLevelUpFrom(prevLevel);
+      setLevelUpTo(newLevel);
+      setShowLevelUpModal(true);
     } else {
       setPurchaseToast('Deal complete — earnings added to your balance');
       setTimeout(() => setPurchaseToast(null), 3000);
@@ -1769,10 +1726,8 @@ export default function MarketplaceDemoPage() {
     .filter(([, entry]) => entry?.profession)
     .map(([slot, entry]) => ({ slot: slot as ValueSkinSlot, profession: entry!.profession }));
 
-  // Per-skin level: highest owned skin level used as the "profile level"
-  const currentLevel = ownedSkins.length > 0
-    ? Math.max(...ownedSkins.map(s => getSkinLevel(s.profession, metrics.followers, ownedSkins.length)))
-    : 1;
+  // Profile level based on deals completed
+  const currentLevel = getLevel(metrics.dealsCompleted);
 
   // Auto-expire campaigns past deadline
   const today = new Date().toISOString().split('T')[0];
@@ -1946,9 +1901,8 @@ export default function MarketplaceDemoPage() {
             {(() => {
               const skinBadge = PROFESSION_BADGES[showSkinShowcaseModal];
               const skinColor = skinBadge?.color ?? C.primary;
-              const skinLevel = getSkinLevel(showSkinShowcaseModal, metrics.followers, ownedSkins.length);
-              const skinProgress = getSkinXPProgress(showSkinShowcaseModal, metrics.followers, ownedSkins.length);
-              const rawXP = skinXP[showSkinShowcaseModal] || 0;
+              const skinLevel = getLevel(metrics.dealsCompleted);
+              const skinProgress = getProgressToNext(metrics.dealsCompleted);
               return (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
@@ -1964,7 +1918,7 @@ export default function MarketplaceDemoPage() {
                         <div style={{ flex: 1, height: '4px', borderRadius: '2px', background: C.border, overflow: 'hidden', maxWidth: '120px' }}>
                           <div style={{ width: `${skinProgress}%`, height: '100%', background: skinColor, borderRadius: '2px', transition: 'width 0.3s' }} />
                         </div>
-                        <span style={{ fontSize: '10px', color: C.textMuted }}>{rawXP} XP</span>
+                        <span style={{ fontSize: '10px', color: C.textMuted }}>{metrics.dealsCompleted} deals</span>
                       </div>
                     </div>
                   </div>
@@ -2352,7 +2306,7 @@ export default function MarketplaceDemoPage() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {ownedSkins.map(({ slot, profession }) => {
                           const badge = PROFESSION_BADGES[profession];
-                          const level = getSkinLevel(profession, metrics.followers, ownedSkins.length);
+                          const level = getLevel(metrics.dealsCompleted);
                           return (
                             <div key={slot} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: C.bg, borderRadius: '10px', border: `1px solid ${C.border}` }}>
                               <div style={{ fontSize: '28px' }}>{badge?.emoji ?? '⭐'}</div>
@@ -3192,7 +3146,7 @@ export default function MarketplaceDemoPage() {
                                                 creatorName: profileName || 'Demo Creator',
                                                 creatorFollowers: `${(metrics.followers / 1000).toFixed(metrics.followers >= 1000000 ? 1 : 0)}${metrics.followers >= 1000000 ? 'M' : 'K'}`,
                                                 creatorEngagement: `${metrics.engagement.toFixed(1)}%`,
-                                                creatorLevel: ownedSkins.length > 0 ? getSkinLevel(selectedMarketplaceSkin || ownedSkins[0].profession, metrics.followers, ownedSkins.length) : 1,
+                                                creatorLevel: getLevel(metrics.dealsCompleted),
                                                 creatorMatchScore: '94%', creatorRate: rateCard.reel ? `$${rateCard.reel}` : '$3,000',
                                                 creatorDealCompletionRate: 95, creatorPortfolio: [],
                                                 creatorAudienceLocation: selectedCountry || 'USA', creatorAudienceAge: '25-34',
@@ -7349,7 +7303,7 @@ export default function MarketplaceDemoPage() {
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
                                   <span style={{ fontSize: '11px', color: C.textMuted }}>{ch.lastMessage.time}</span>
                                   {!joined && (
-                                    <button onClick={e => { e.stopPropagation(); setJoinedCommunities([...joinedCommunities, ch.id]); if (ch.requiredSkin) addSkinXP(ch.requiredSkin, 25); }}
+                                    <button onClick={e => { e.stopPropagation(); setJoinedCommunities([...joinedCommunities, ch.id]); }}
                                       style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', background: C.primary, color: '#fff', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
                                       Join
                                     </button>
@@ -7454,9 +7408,7 @@ export default function MarketplaceDemoPage() {
                       const newMsg = { id: Date.now(), sender: 'me' as const, text: dmInput, time: timeStr };
                       setDmMessages(prev => ({ ...prev, [activeDmId!]: [...(prev[activeDmId!] || []), newMsg] }));
                       setDmInput('');
-                      // Small XP for engagement — first owned skin gets credit
-                      const firstSkin = ownedSkins[0];
-                      if (firstSkin) addSkinXP(firstSkin.profession, 2);
+
                     };
                     return (
                       <>
@@ -7567,7 +7519,7 @@ export default function MarketplaceDemoPage() {
                               [channel.id]: [...(prev[channel.id] || channel.messages), newMsg],
                             }));
                             setDmInput('');
-                            if (channel.requiredSkin) addSkinXP(channel.requiredSkin, 5);
+
                           };
                           return (
                             <div style={{ padding: '10px 16px', borderTop: `1px solid ${C.border}`, display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -8301,11 +8253,8 @@ export default function MarketplaceDemoPage() {
                             {current ? (PROFESSION_BADGES[current.profession]?.abbreviation ?? current.profession) : 'Empty'}
                           </div>
                           {current && (() => {
-                            const level = getSkinLevel(current.profession);
-                            const progress = getSkinXPProgress(current.profession);
-                            const xp = skinXP[current.profession] || 0;
-                            const thresholds = [0, 50, 200, 500, 1000];
-                            const nextXP = level >= 5 ? 1000 : thresholds[level];
+                            const level = getLevel(metrics.dealsCompleted);
+                            const progress = getProgressToNext(metrics.dealsCompleted);
                             return (
                               <div style={{ marginTop: '4px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -8314,7 +8263,7 @@ export default function MarketplaceDemoPage() {
                                     <div style={{ width: `${progress}%`, height: '100%', background: slotColor, borderRadius: '2px' }} />
                                   </div>
                                 </div>
-                                <div style={{ fontSize: '8px', color: C.textMuted, marginTop: '1px' }}>{level >= 5 ? 'MAX' : `${xp}/${nextXP} XP`}</div>
+                                <div style={{ fontSize: '8px', color: C.textMuted, marginTop: '1px' }}>{level >= 5 ? 'MAX' : `${progress}%`}</div>
                               </div>
                             );
                           })()}
@@ -9415,90 +9364,6 @@ export default function MarketplaceDemoPage() {
       </div>
 
       {/* ── MODALS ──────────────────────────────────────────── */}
-
-      {showLevelModal && (
-        <Modal onClose={() => setShowLevelModal(false)}>
-          <h2 style={{ fontSize: '22px', fontWeight: 'bold', marginBottom: '20px', color: C.text }}>How Skin Levels Work</h2>
-          <p style={{ color: C.textSecondary, marginBottom: '12px', fontSize: '14px', lineHeight: 1.5 }}>
-            Each ValueSkin levels up independently based on your activity within that skin. Followers do not determine skill.
-          </p>
-          {ownedSkins.length === 1 && (
-            <div style={{ background: 'rgba(0,102,204,0.06)', border: `1px solid rgba(0,102,204,0.2)`, borderRadius: '8px', padding: '10px 12px', marginBottom: '14px', fontSize: '12px', color: C.textSecondary, lineHeight: 1.5 }}>
-              Since you have a single ValueSkin, your follower count contributes bonus XP — your audience is clearly about this one skin.
-            </div>
-          )}
-          {ownedSkins.length > 1 && (
-            <div style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '8px', padding: '10px 12px', marginBottom: '14px', fontSize: '12px', color: C.textSecondary, lineHeight: 1.5 }}>
-              With multiple ValueSkins, followers are not factored — they cannot be attributed to a specific skin.
-            </div>
-          )}
-          <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>XP Sources</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
-            {[
-              { action: 'Deal completed', xp: '100+ XP', desc: 'Scales with deal value' },
-              { action: 'Community joined', xp: '25 XP', desc: 'Skin-gated communities' },
-              { action: 'Community message', xp: '5 XP', desc: 'Active participation' },
-              { action: 'DM sent', xp: '2 XP', desc: 'Networking engagement' },
-              ...(ownedSkins.length === 1 ? [{ action: 'Follower bonus', xp: 'Variable', desc: 'Only with 1 skin equipped' }] : []),
-            ].map(s => (
-              <div key={s.action} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', background: C.surfaceAlt, borderRadius: '6px' }}>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: C.text }}>{s.action}</div>
-                  <div style={{ fontSize: '10px', color: C.textMuted }}>{s.desc}</div>
-                </div>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: C.primary }}>{s.xp}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Level Thresholds</div>
-          {[
-            { level: 1, name: 'Newcomer', xp: '0 XP' },
-            { level: 2, name: 'Active', xp: '50 XP' },
-            { level: 3, name: 'Established', xp: '200 XP' },
-            { level: 4, name: 'Expert', xp: '500 XP' },
-            { level: 5, name: 'Authority', xp: '1,000 XP' },
-          ].map(t => (
-            <div key={t.level} style={{ background: C.surfaceAlt, padding: '12px 14px', borderRadius: '10px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              borderLeft: ownedSkins.some(s => getSkinLevel(s.profession, metrics.followers, ownedSkins.length) === t.level) ? `4px solid ${C.primary}` : '4px solid transparent' }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '14px', color: C.text }}>Level {t.level}: {t.name}</div>
-              </div>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted }}>{t.xp}</span>
-            </div>
-          ))}
-          {/* Per-skin status */}
-          {ownedSkins.length > 0 && (
-            <>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', marginTop: '8px' }}>Your Skins</div>
-              {ownedSkins.map(({ profession }) => {
-                const level = getSkinLevel(profession, metrics.followers, ownedSkins.length);
-                const progress = getSkinXPProgress(profession, metrics.followers, ownedSkins.length);
-                const badge = PROFESSION_BADGES[profession];
-                const color = badge?.color ?? C.primary;
-                return (
-                  <div key={profession} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: C.card, borderRadius: '12px', marginBottom: '6px', border: `1px solid ${C.border}` }}>
-                    {getStickerForProfession(profession) ? (
-                      <img src={getStickerForProfession(profession)!} alt={profession} style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
-                    ) : (
-                      <span style={{ fontSize: '13px', fontWeight: 700, color }}>{badge?.abbreviation ?? '?'}</span>
-                    )}
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: C.text }}>{profession}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
-                        <span style={{ fontSize: '10px', fontWeight: 700, color }}>Lv.{level}</span>
-                        <div style={{ flex: 1, height: '4px', borderRadius: '2px', background: C.border, overflow: 'hidden' }}>
-                          <div style={{ width: `${progress}%`, height: '100%', background: color, borderRadius: '2px' }} />
-                        </div>
-                        <span style={{ fontSize: '9px', color: C.textMuted }}>{progress}%</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </>
-          )}
-        </Modal>
-      )}
 
       {showMetricsModal && (
         <Modal onClose={() => setShowMetricsModal(false)}>

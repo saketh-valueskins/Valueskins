@@ -31,8 +31,8 @@ export async function syncSkinPurchase(params: {
 
   if (!existing.rows.length) {
     await query(
-      `INSERT INTO user_valueskins (user_id, profession, slot, xp, level, about_me, pitch_text, pitch_video, is_default, created_at)
-       VALUES ($1, $2, $3, 0, 1, '', '', '', FALSE, NOW())
+      `INSERT INTO user_valueskins (user_id, profession, slot, level, about_me, pitch_text, pitch_video, is_default, created_at)
+       VALUES ($1, $2, $3, 1, '', '', '', FALSE, NOW())
        ON CONFLICT DO NOTHING`,
       [userIdStr, professionName, 0]
     ).catch(err => console.error('sync user_valueskins failed', err));

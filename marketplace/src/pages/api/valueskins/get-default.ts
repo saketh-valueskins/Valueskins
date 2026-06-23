@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let defaultSkin;
     if (userRole === 'brand') {
       const skinResult = await query(
-        `SELECT id, category, slot, xp, level, description, pitch_text, pitch_video, created_at, updated_at
+        `SELECT id, category, slot, level, description, pitch_text, pitch_video, created_at, updated_at
          FROM brand_valueskins
          WHERE user_id = $1 AND is_default = true
          LIMIT 1`,
@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       defaultSkin = skinResult.rows[0];
     } else {
       const skinResult = await query(
-        `SELECT id, profession, slot, xp, level, about_me, pitch_text, pitch_video, created_at, updated_at
+        `SELECT id, profession, slot, level, about_me, pitch_text, pitch_video, created_at, updated_at
          FROM user_valueskins
          WHERE user_id = $1 AND is_default = true
          LIMIT 1`,

@@ -3,7 +3,7 @@ import { query } from '@/lib/db';
 
 /**
  * GET /api/valueskins/[id] - Fetch specific ValueSkin
- * PUT /api/valueskins/[id] - Update ValueSkin (edit profession, xp, bio, pitch)
+ * PUT /api/valueskins/[id] - Update ValueSkin (edit profession, bio, pitch)
  * DELETE /api/valueskins/[id] - Remove ValueSkin
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -43,7 +43,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: skin.id,
         profession: skin.profession,
         slot: skin.slot,
-        xp: parseInt(skin.xp) || 0,
         level: parseInt(skin.level) || 1,
         aboutMe: skin.about_me,
         pitchText: skin.pitch_text,
@@ -54,11 +53,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
-      const { profession, xp, level, aboutMe, pitchText, pitchVideo } = req.body;
+      const { profession, level, aboutMe, pitchText, pitchVideo } = req.body;
 
       // Prepare new values (using provided or existing)
       const newProfession = profession !== undefined ? profession : skin.profession;
-      const newXp = xp !== undefined ? xp : skin.xp;
       const newLevel = level !== undefined ? level : skin.level;
       const newAboutMe = aboutMe !== undefined ? aboutMe : skin.about_me;
       const newPitchText = pitchText !== undefined ? pitchText : skin.pitch_text;
@@ -67,7 +65,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Track changes for audit log
       const changedFields: string[] = [];
       if (profession !== undefined && profession !== skin.profession) changedFields.push('profession');
-      if (xp !== undefined && xp !== skin.xp) changedFields.push('xp');
       if (level !== undefined && level !== skin.level) changedFields.push('level');
       if (aboutMe !== undefined && aboutMe !== skin.about_me) changedFields.push('about_me');
       if (pitchText !== undefined && pitchText !== skin.pitch_text) changedFields.push('pitch_text');
@@ -76,10 +73,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Update ValueSkin
       const updateResult = await query(
         `UPDATE user_valueskins
-         SET profession = $1, xp = $2, level = $3, about_me = $4, pitch_text = $5, pitch_video = $6, updated_at = NOW()
-         WHERE id = $7
+         SET profession = $1, level = $2, about_me = $3, pitch_text = $4, pitch_video = $5, updated_at = NOW()
+         WHERE id = $6
          RETURNING *`,
-        [newProfession, newXp, newLevel, newAboutMe, newPitchText, newPitchVideo, id]
+        [newProfession, newLevel, newAboutMe, newPitchText, newPitchVideo, id]
       );
 
       const updated = updateResult.rows[0];
@@ -88,7 +85,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (changedFields.length > 0) {
         const oldValues = {
           profession: skin.profession,
-          xp: skin.xp,
           level: skin.level,
           about_me: skin.about_me,
           pitch_text: skin.pitch_text,
@@ -97,7 +93,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const newValues = {
           profession: newProfession,
-          xp: newXp,
           level: newLevel,
           about_me: newAboutMe,
           pitch_text: newPitchText,
@@ -116,7 +111,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: updated.id,
         profession: updated.profession,
         slot: updated.slot,
-        xp: parseInt(updated.xp),
         level: parseInt(updated.level),
         aboutMe: updated.about_me,
         pitchText: updated.pitch_text,

@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Fetch all ValueSkins for this user
       const skinsResult = await query(
         `SELECT
-          id, user_id, profession, slot, xp, level, about_me, pitch_text, pitch_video,
+          id, user_id, profession, slot, level, about_me, pitch_text, pitch_video,
           created_at, updated_at
          FROM user_valueskins
          WHERE user_id = $1
@@ -48,7 +48,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         id: skin.id,
         profession: skin.profession,
         slot: skin.slot, // 'profession', 'passion', 'hobby'
-        xp: parseInt(skin.xp) || 0,
         level: parseInt(skin.level) || 1,
         aboutMe: skin.about_me,
         pitchText: skin.pitch_text,
@@ -89,10 +88,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Create ValueSkin
       const insertResult = await query(
-        `INSERT INTO user_valueskins (user_id, profession, slot, xp, level, about_me, pitch_text, pitch_video, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
-         RETURNING id, profession, slot, xp, level, about_me, pitch_text, pitch_video, created_at`,
-        [userId, profession, slot, 0, 1, aboutMe || '', pitchText || '', pitchVideo || '']
+        `INSERT INTO user_valueskins (user_id, profession, slot, level, about_me, pitch_text, pitch_video, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+         RETURNING id, profession, slot, level, about_me, pitch_text, pitch_video, created_at`,
+        [userId, profession, slot, 1, aboutMe || '', pitchText || '', pitchVideo || '']
       );
 
       const newSkin = insertResult.rows[0];

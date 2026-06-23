@@ -50,17 +50,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let newSkin;
     if (userRole === 'brand') {
       const insertResult = await query(
-        `INSERT INTO brand_valueskins (user_id, category, slot, xp, level, description, is_default, created_at)
-         VALUES ($1, $2, $3, 0, 1, $4, true, NOW())
-         RETURNING id, category, slot, xp, level, description, is_default, created_at`,
+        `INSERT INTO brand_valueskins (user_id, category, slot, level, description, is_default, created_at)
+         VALUES ($1, $2, $3, 1, $4, true, NOW())
+         RETURNING id, category, slot, level, description, is_default, created_at`,
         [userId, 'Brand', 'profession', 'Brand default category']
       );
       newSkin = insertResult.rows[0];
     } else {
       const insertResult = await query(
-        `INSERT INTO user_valueskins (user_id, profession, slot, xp, level, about_me, pitch_text, pitch_video, is_default, created_at)
-         VALUES ($1, $2, $3, 0, 1, $4, $5, $6, true, NOW())
-         RETURNING id, profession, slot, xp, level, about_me, pitch_text, pitch_video, is_default, created_at`,
+        `INSERT INTO user_valueskins (user_id, profession, slot, level, about_me, pitch_text, pitch_video, is_default, created_at)
+         VALUES ($1, $2, $3, 1, $4, $5, $6, true, NOW())
+         RETURNING id, profession, slot, level, about_me, pitch_text, pitch_video, is_default, created_at`,
         [userId, 'Creator', 'profession', 'Tell your story...', 'Your pitch here', '']
       );
       newSkin = insertResult.rows[0];
