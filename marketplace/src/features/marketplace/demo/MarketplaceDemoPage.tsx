@@ -123,18 +123,17 @@ function currencyForCountry(country: string): { code: string; symbol: string } {
 }
 
 const PROFESSIONS = {
-  'Fashion':        { name: 'Fashion',        subProfessions: ['Boutique','Streetwear Brand','Luxury Fashion','Sustainable Fashion','Activewear','Accessories Brand','Vintage & Thrift','Tailoring & Alterations'] },
-  'Beauty':         { name: 'Beauty',         subProfessions: ['Cosmetics Brand','Skincare Line','Haircare Brand','Fragrance House','Beauty Clinic','Salon','Spa & Wellness','Organic Beauty'] },
-  'Travel':         { name: 'Travel',         subProfessions: ['Hotel','Resort','Travel Agency','Airline','Tour Operator','Vacation Rental','Cruise Line','Destination Marketing'] },
-  'Food & Beverage':{ name: 'Food & Beverage',subProfessions: ['Restaurant','Cafe','Bakery','Fast Casual','Fine Dining','Food Truck','Bar & Lounge','Catering'] },
-  'Fitness':        { name: 'Fitness',        subProfessions: ['Gym','Fitness Studio','Wellness Center','Sports Brand','Athletic Apparel','Supplement Company','Yoga Studio','Outdoor Gear'] },
-  'Lifestyle':      { name: 'Lifestyle',      subProfessions: ['Home Goods','Subscription Box','Lifestyle App','Magazine & Media','Event Brand','Wellness Product','Luxury Goods','Sustainable Living'] },
-  'Photography':    { name: 'Photography',    subProfessions: ['Photo Studio','Camera Brand','Print Shop','Stock Photography','Event Photography','Film Lab','Photo Tech','Art Gallery'] },
-  'Interior Design':{ name: 'Interior Design',subProfessions: ['Furniture Brand','Home Decor','Lighting Design','Textile Brand','Paint & Finishes','Architecture Firm','Staging Company','Outdoor Living'] },
-  'Technology':     { name: 'Technology',     subProfessions: ['SaaS Company','Mobile App','Agency','E-Commerce','Dev Tool','Game Studio','Hardware Brand','EdTech Platform'] },
-  'Entertainment':  { name: 'Entertainment',  subProfessions: ['Record Label','Streaming Service','Production Company','Event Venue','Talent Agency','Gaming Brand','Media Network','Experiential Marketing'] },
-  'Sports':         { name: 'Sports',         subProfessions: ['Sports Team','League','Stadium & Arena','Sporting Goods','Fan Merch','Training Facility','Sports Media','Esports Organization'] },
-  'Business':       { name: 'Business',       subProfessions: ['Consulting Firm','Agency','SaaS','Marketplace','E-Commerce','FinTech','SaaS Platform','B2B Service'] },
+  'Technology':        { name: 'Technology',        subProfessions: ['Software Engineer', 'Data Scientist', 'Product Manager', 'DevOps Engineer', 'UX/UI Designer', 'AI/ML Specialist', 'Security Researcher'] },
+  'Entertainment':     { name: 'Entertainment',     subProfessions: ['Actor', 'Comedian', 'Musician', 'Producer', 'Director', 'Screenwriter', 'Animator', 'Voice Actor'] },
+  'Healthcare':        { name: 'Healthcare',        subProfessions: ['Doctor', 'Surgeon', 'Nurse', 'Pharmacist', 'Therapist', 'Nutritionist'] },
+  'Legal':             { name: 'Legal',             subProfessions: ['Lawyer', 'Attorney', 'Judge', 'Corporate Lawyer'] },
+  'Business & Finance':{ name: 'Business & Finance',subProfessions: ['CEO', 'Entrepreneur', 'Tech Entrepreneur', 'Operations Manager', 'Consultant', 'Financial Advisor', 'Trader', 'Investment Banker', 'Crypto Analyst', 'Finance Student'] },
+  'Education':         { name: 'Education',         subProfessions: ['Teacher', 'Professor', 'Tutor', 'EdTech Creator'] },
+  'Food & Beverage':   { name: 'Food & Beverage',   subProfessions: ['Chef', 'Pastry Chef', 'Food Critic', 'Food Photographer', 'Restaurant Owner', 'Sommelier', 'Culinary Student'] },
+  'Sports & Fitness':  { name: 'Sports & Fitness',  subProfessions: ['Professional Athlete', 'Fitness Coach', 'Yoga Instructor', 'Sports Manager'] },
+  'Aviation':          { name: 'Aviation',          subProfessions: ['Commercial Pilot', 'Air Traffic Controller', 'Aircraft Engineer', 'Aviation Student', 'Cabin Crew Manager'] },
+  'Real Estate':       { name: 'Real Estate',       subProfessions: ['Real Estate Agent', 'Real Estate Developer'] },
+  'Creative':          { name: 'Creative',          subProfessions: ['Graphic Designer', 'Digital Artist', 'Illustrator', 'Photographer'] },
 };
 
 // Creator data is now fetched from backend via /api/creators/match
@@ -1124,9 +1123,6 @@ export default function MarketplaceDemoPage() {
   const [usageRightsDays, setUsageRightsDays] = useState(90);
   const [exclusivityUntil, setExclusivityUntil] = useState('');
   const [revisionLimit, setRevisionLimit] = useState(2);
-  const [savedDealTemplates, setSavedDealTemplates] = useState([
-    { id: 1, name: 'Q2 Standard Review', type: 'Product Review', deliverables: '2x Reels, 3x Stories', budget: '4000' },
-  ]);
   const [savedSearches, setSavedSearches] = useState([
     { id: 1, label: 'Fitness Coach, 18-24, USA', profession: 'Fitness Coach', age: '18-24', loc: 'USA' },
   ]);
@@ -1141,7 +1137,6 @@ export default function MarketplaceDemoPage() {
   const [adminShowUsageRightsDuration, setAdminShowUsageRightsDuration] = useState(true);
   const [adminShowAvailabilityCalendar, setAdminShowAvailabilityCalendar] = useState(true);
   const [adminShowSavedSearches, setAdminShowSavedSearches] = useState(true);
-  const [adminShowDealTemplates, setAdminShowDealTemplates] = useState(true);
   const [adminShowSimilarCreators, setAdminShowSimilarCreators] = useState(true);
   const [adminShowBrandTrackRecord, setAdminShowBrandTrackRecord] = useState(true);
   const [adminShowMutualRating, setAdminShowMutualRating] = useState(true);
@@ -5100,10 +5095,12 @@ export default function MarketplaceDemoPage() {
                               ))}
                               </>)})()}
                             </div>
+                            {(() => { const c = currencyForCountry(pendingCampaignForEscrow.country || brandCountry); return (
                             <div style={{ marginTop:'10px', padding:'10px', background:'rgba(0,212,106,0.06)', border:'1px solid rgba(0,212,106,0.2)', borderRadius:'8px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                               <span style={{ fontSize:'12px', color:C.textSecondary, fontWeight:600 }}>Total escrow deposit</span>
-                              <span style={{ fontSize:'20px', fontWeight:800, color:C.success }}>${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()}</span>
+                              <span style={{ fontSize:'20px', fontWeight:800, color:C.success }}>{c.symbol}{(pendingCampaignForEscrow.escrowPool||0).toLocaleString()}</span>
                             </div>
+                            )})()}
                           </div>
 
                           {/* Payment milestone breakdown */}
@@ -5472,21 +5469,6 @@ export default function MarketplaceDemoPage() {
                             style={{ padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'transparent', color: C.textMuted, border: `1px solid ${C.border}` }}>
                             + Save current search
                           </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Deal Templates */}
-                    {adminShowDealTemplates && savedDealTemplates.length > 0 && (
-                      <div style={{ marginBottom: '14px' }}>
-                        <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '6px' }}>Deal Templates</div>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                          {savedDealTemplates.map(t => (
-                            <button key={t.id} onClick={() => { setBrandBriefTitle(t.name); setBrandBriefDeliverables(t.deliverables); setBrandBudget(t.budget); setBrandCampaignType(t.type); }}
-                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'rgba(230,81,0,0.08)', color: C.textSecondary, border: '1px solid rgba(230,81,0,0.25)' }}>
-                              {t.name}
-                            </button>
-                          ))}
                         </div>
                       </div>
                     )}
@@ -8060,7 +8042,6 @@ export default function MarketplaceDemoPage() {
                   { label: 'Usage Rights Duration', desc: 'Days of usage rights shown before deal accepted', value: adminShowUsageRightsDuration, set: setAdminShowUsageRightsDuration },
                   { label: 'Brand Track Record', desc: 'Brand deals completed + avg payment time + creator ratings of brand', value: adminShowBrandTrackRecord, set: setAdminShowBrandTrackRecord },
                   { label: 'Mutual Rating System', desc: 'Both parties rate each other after deal close', value: adminShowMutualRating, set: setAdminShowMutualRating },
-                  { label: 'Deal Templates', desc: 'Brands can save and reuse campaign brief templates', value: adminShowDealTemplates, set: setAdminShowDealTemplates },
                   { label: 'Saved Searches', desc: 'Brands get notified when a matching creator joins', value: adminShowSavedSearches, set: setAdminShowSavedSearches },
                   { label: 'Similar Creators', desc: 'Suggest creators similar to ones a brand already worked with', value: adminShowSimilarCreators, set: setAdminShowSimilarCreators },
                   { label: 'Long-Term Contracts', desc: 'Multi-month ambassador deals with recurring escrow milestones', value: adminAllowLongTermContracts, set: setAdminAllowLongTermContracts },
