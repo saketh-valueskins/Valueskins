@@ -1179,6 +1179,12 @@ export default function MarketplaceDemoPage() {
     }
   }, [setCampaigns]);
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchAllCreators(), forceRefreshCampaigns()]);
+    setRefreshing(false);
+  }, [fetchAllCreators, forceRefreshCampaigns]);
+
   // Merge Firebase state into local state when in room mode (cross-device sync)
   useEffect(() => {
     // Firebase always active
@@ -1253,6 +1259,7 @@ export default function MarketplaceDemoPage() {
   // All creators across all professions — used for continuous live auto-matching
   const [allCreators, setAllCreators] = useState<any[]>([]);
   const [allCreatorsLoading, setAllCreatorsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [hiddenSentDealIds, setHiddenSentDealIds] = useState<Set<number>>(new Set());
   const [showCampaignCreator, setShowCampaignCreator] = useState(false);
   const [newCampaignTitle, setNewCampaignTitle] = useState('');
@@ -1652,16 +1659,6 @@ export default function MarketplaceDemoPage() {
     setActiveView('profile');
     setPurchaseToast(`${label} applied as your ${slotLabel}`);
     setTimeout(() => setPurchaseToast(null), 3000);
-  };
-
-  // Rate intelligence — market rate range based on skin, followers, engagement
-  const getMarketRate = (skin: string): { low: number; mid: number; high: number } => {
-    const followerK = metrics.followers / 1000;
-    const base = followerK < 10 ? 200 : followerK < 50 ? 800 : followerK < 200 ? 2500 : followerK < 1000 ? 8000 : 25000;
-    const engagementMultiplier = metrics.engagement > 5 ? 1.4 : metrics.engagement > 3 ? 1.15 : 1;
-    const skinMultiplier = ['Software Engineer', 'Doctor', 'Lawyer', 'Investment Banker', 'CEO'].includes(skin) ? 1.5 : ['Actor', 'Musician', 'Professional Athlete'].includes(skin) ? 1.3 : 1;
-    const mid = Math.round(base * engagementMultiplier * skinMultiplier);
-    return { low: Math.round(mid * 0.6), mid, high: Math.round(mid * 1.5) };
   };
 
   const handleDealComplete = (earnedAmount: number, brandName: string, deliverable: string, skinProfession?: string, usageRightsDays?: number, exclusivityDays?: number, exclusivitySkin?: string) => {
@@ -2526,7 +2523,7 @@ export default function MarketplaceDemoPage() {
                             {tab === 'opportunities' ? 'Opportunities' : 'My Pipeline'}
                           </button>
                         ))}
-                        <button onClick={() => { fetchAllCreators(); forceRefreshCampaigns(); }} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 6px', display:'flex', alignItems:'center', color:C.textMuted, fontSize:'11px', fontWeight:600 }}>⟳</button>
+                        <button onClick={handleRefresh} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 6px', display:'flex', alignItems:'center', color:C.textMuted, fontSize:'11px', fontWeight:600, opacity: refreshing ? 0.5 : 1 }}>{refreshing ? '↻' : '⟳'}</button>
                       </div>
                     </div>
 
@@ -2594,35 +2591,6 @@ export default function MarketplaceDemoPage() {
                         </div>
                       </div>
                     )}
-
-                    {/* Feature 3: Market rate intelligence panel (based on historical creator collaboration rates) */}
-                    {selectedMarketplaceSkin && creatorMarketplaceTab === 'opportunities' && (() => {
-                      const rate = getMarketRate(selectedMarketplaceSkin);
-                      return (
-                        <div style={{ background: `${C.primary}06`, border: `1px solid ${C.primary}20`, borderRadius: '10px', padding: '12px 14px', marginBottom: '14px' }}>
-                          <details style={{ cursor: 'pointer' }}>
-                            <summary style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: C.textSecondary, textTransform: 'uppercase', userSelect: 'none' }}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                              Market Rate Intelligence
-                            </summary>
-                            <div style={{ marginTop: '10px', fontSize: '11px', color: C.textSecondary, lineHeight: 1.6 }}>
-                              <div style={{ marginBottom: '6px' }}><strong style={{ color: C.text }}>Typical rates for {selectedMarketplaceSkin}:</strong></div>
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '6px' }}>
-                                <div style={{ background: C.card, padding: '6px 8px', borderRadius: '6px', border: `1px solid ${C.border}` }}>
-                                  <div style={{ fontSize: '10px', color: C.textMuted }}>25th percentile</div>
-                                  <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>${rate.low.toLocaleString()}</div>
-                                </div>
-                                <div style={{ background: C.card, padding: '6px 8px', borderRadius: '6px', border: `1px solid ${C.border}` }}>
-                                  <div style={{ fontSize: '10px', color: C.textMuted }}>75th percentile</div>
-                                  <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>${rate.high.toLocaleString()}</div>
-                                </div>
-                              </div>
-                              <div style={{ fontSize: '10px', color: C.textMuted }}>Mock data: {(Math.random() * 200 + 50).toFixed(0)} deals. Meta will replace with aggregated completion data.</div>
-                            </div>
-                          </details>
-                        </div>
-                      );
-                    })()}
 
                     {/* Feature 6: Creator Pipeline View (Meta data source: deal states from backend) */}
                     {selectedMarketplaceSkin && creatorMarketplaceTab === 'pipeline' && (() => {
@@ -3030,34 +2998,6 @@ export default function MarketplaceDemoPage() {
                                           <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Agreed Total</div>
                                           <div style={{ fontSize: '24px', fontWeight: 800, color: C.text }}>${totalPrice.toLocaleString()}</div>
                                           <div style={{ fontSize: '11px', color: C.textSecondary, marginTop: '2px' }}>{opp.type}</div>
-                                          {/* Rate intelligence */}
-                                          {(() => {
-                                            const rate = getMarketRate(selectedMarketplaceSkin || 'Creator');
-                                            const isBelow = totalPrice < rate.low;
-                                            const isAbove = totalPrice > rate.high;
-                                            const isWithin = !isBelow && !isAbove;
-                                            return (
-                                              <div style={{ marginTop:'8px', background: isBelow ? 'rgba(239,68,68,0.08)' : isAbove ? 'rgba(46,125,50,0.08)' : 'rgba(0,102,204,0.06)', border:`1px solid ${isBelow ? 'rgba(239,68,68,0.2)' : isAbove ? 'rgba(46,125,50,0.2)' : 'rgba(0,102,204,0.15)'}`, borderRadius:'6px', padding:'8px' }}>
-                                                <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'4px' }}>Market Rate Intelligence</div>
-                                                <div style={{ fontSize:'11px', color:C.text }}>
-                                                  Creators with your profile typically charge <strong>${rate.low.toLocaleString()} — ${rate.high.toLocaleString()}</strong>
-                                                </div>
-                                                <div style={{ fontSize:'11px', fontWeight:600, color: isBelow ? '#ef4444' : isAbove ? C.success : C.primary, marginTop:'2px' }}>
-                                                  {isBelow ? 'This offer is below market rate' : isAbove ? 'This offer is above market rate' : 'This offer is within market range'}
-                                                </div>
-                                                <details style={{ marginTop:'6px' }}>
-                                                  <summary style={{ fontSize:'10px', color:C.primary, cursor:'pointer', fontWeight:600 }}>How is this calculated?</summary>
-                                                  <div style={{ marginTop:'6px', fontSize:'10px', color:C.textSecondary, lineHeight:1.6 }}>
-                                                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'2px' }}><span>Follower tier ({(metrics.followers/1000).toFixed(0)}K)</span><span style={{ color:C.text, fontWeight:600 }}>Base: ${(metrics.followers/1000 < 10 ? 200 : metrics.followers/1000 < 50 ? 800 : metrics.followers/1000 < 200 ? 2500 : metrics.followers/1000 < 1000 ? 8000 : 25000).toLocaleString()}</span></div>
-                                                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'2px' }}><span>Engagement ({metrics.engagement.toFixed(1)}%)</span><span style={{ color:C.text, fontWeight:600 }}>x{metrics.engagement > 5 ? '1.4' : metrics.engagement > 3 ? '1.15' : '1.0'}</span></div>
-                                                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'2px' }}><span>Skin premium ({selectedMarketplaceSkin || 'Standard'})</span><span style={{ color:C.text, fontWeight:600 }}>x{['Software Engineer','Doctor','Lawyer','Investment Banker','CEO'].includes(selectedMarketplaceSkin||'') ? '1.5' : ['Actor','Musician','Professional Athlete'].includes(selectedMarketplaceSkin||'') ? '1.3' : '1.0'}</span></div>
-                                                    <div style={{ borderTop:`1px solid ${C.border}`, paddingTop:'3px', marginTop:'3px', display:'flex', justifyContent:'space-between', fontWeight:700, color:C.text }}><span>Mid-range</span><span>${rate.mid.toLocaleString()}</span></div>
-                                                    <div style={{ display:'flex', justifyContent:'space-between' }}><span>Range (60% — 150%)</span><span>${rate.low.toLocaleString()} — ${rate.high.toLocaleString()}</span></div>
-                                                  </div>
-                                                </details>
-                                              </div>
-                                            );
-                                          })()}
                                         </div>
 
                                         {/* Payment split */}
@@ -6905,11 +6845,11 @@ export default function MarketplaceDemoPage() {
                             );
                           })()}
                           <button
-                            onClick={() => { fetchAllCreators(); forceRefreshCampaigns(); }}
+                            onClick={handleRefresh}
                             title="Refresh creator list + campaigns"
                             style={{ background:'none', border:'none', cursor:'pointer', padding:'2px', display:'flex', alignItems:'center' }}
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2.5" style={{ opacity: allCreatorsLoading ? 0.5 : 0.7 }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2.5" style={{ opacity: refreshing ? 0.5 : 0.7, animation: refreshing ? 'spin 1s linear infinite' : 'none' }}>
                               <polyline points="23 4 23 10 17 10"/>
                               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                             </svg>
