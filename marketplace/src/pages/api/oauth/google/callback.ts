@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import crypto from 'crypto';
 import { exchangeGoogleCode, getGoogleUserInfo } from '@/lib/oauth';
-import { getSupabase } from '@/lib/supabase';
+import { query } from '@/lib/db';
 
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
@@ -12,8 +13,6 @@ interface GoogleUser {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  console.log('🔐 OAuth callback hit');
-
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -21,120 +20,92 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { code, error } = req.query;
 
   if (error) {
-    console.log('❌ Google error:', error);
-    return res.redirect(`/?error=${error}`);
+    return res.redirect(`/?error=${encodeURIComponent(String(error))}`);
   }
 
   if (!code || typeof code !== 'string') {
-    console.log('❌ Missing code');
     return res.status(400).json({ error: 'Missing code' });
   }
 
   try {
-    console.log('🔄 Exchanging code for tokens...');
     const tokens = await exchangeGoogleCode(code);
     if (!tokens.access_token) {
-      console.log('❌ No access token');
       return res.status(400).json({ error: 'token_failed' });
     }
 
-    console.log('✅ Got tokens');
     const googleUser = (await getGoogleUserInfo(tokens.access_token)) as GoogleUser;
-    console.log('✅ Got user:', googleUser.email);
 
     if (!googleUser.email) {
-      console.log('❌ No email');
       return res.status(400).json({ error: 'no_email' });
     }
 
-    // Use email as instagram_user_id for OAuth users
     const instagramUserId = googleUser.email;
-
-    const supabase = getSupabase();
-
     let userId: number;
-    const { data: existing } = await supabase
-      .from('users')
-      .select('id')
-      .eq('instagram_user_id', instagramUserId)
-      .maybeSingle();
 
-    if (existing) {
-      userId = existing.id;
-      console.log('✅ Found user:', userId);
-      await supabase
-        .from('users')
-        .update({ last_login_at: new Date().toISOString() })
-        .eq('id', userId);
+    const existing = await query(
+      'SELECT id FROM users WHERE instagram_user_id = $1',
+      [instagramUserId]
+    );
+
+    if (existing.rows.length > 0) {
+      userId = existing.rows[0].id;
+      await query(
+        'UPDATE users SET last_login_at = NOW() WHERE id = $1',
+        [userId]
+      );
     } else {
-      console.log('🆕 Creating new user for:', googleUser.email);
-      const { data: created, error: createErr } = await supabase
-        .from('users')
-        .insert({
-          instagram_user_id: instagramUserId,
-          username: googleUser.email.split('@')[0],
-          display_name: googleUser.name || googleUser.email,
-          avatar_url: googleUser.picture || null,
-          is_active: true,
-          onboarding_stage: 'pending',
-        })
-        .select('id')
-        .single();
+      const created = await query(
+        `INSERT INTO users (instagram_user_id, email, username, display_name, avatar_url, is_active, onboarding_stage)
+         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+        [
+          instagramUserId,
+          googleUser.email,
+          googleUser.email.split('@')[0],
+          googleUser.name || googleUser.email,
+          googleUser.picture || null,
+          true,
+          'pending',
+        ]
+      );
 
-      if (createErr || !created) {
-        // Fallback without onboarding_stage
-        const { data: created2, error: createErr2 } = await supabase
-          .from('users')
-          .insert({
-            instagram_user_id: instagramUserId,
-            username: googleUser.email.split('@')[0],
-            display_name: googleUser.name || googleUser.email,
-            avatar_url: googleUser.picture || null,
-            is_active: true,
-          })
-          .select('id')
-          .single();
-        if (createErr2 || !created2) throw createErr2 || new Error('Failed to create user');
-        userId = created2.id;
+      if (!created.rows[0]) {
+        const created2 = await query(
+          `INSERT INTO users (instagram_user_id, email, username, display_name, avatar_url, is_active)
+           VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+          [
+            instagramUserId,
+            googleUser.email,
+            googleUser.email.split('@')[0],
+            googleUser.name || googleUser.email,
+            googleUser.picture || null,
+            true,
+          ]
+        );
+        if (!created2.rows[0]) throw new Error('Failed to create user');
+        userId = created2.rows[0].id;
       } else {
-        userId = created.id;
+        userId = created.rows[0].id;
       }
-      console.log('✅ Created user:', userId);
     }
 
-    const sessionId = generateUUID();
+    const sessionId = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
 
-    console.log('🔐 Creating session:', sessionId);
-    await supabase
-      .from('auth_sessions')
-      .insert({
-        id: sessionId,
-        user_id: userId,
-        is_active: true,
-        expires_at: expiresAt.toISOString(),
-      });
+    await query(
+      'INSERT INTO auth_sessions (id, user_id, is_active, expires_at) VALUES ($1, $2, $3, $4)',
+      [sessionId, userId, true, expiresAt]
+    );
 
     const isSecure = req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';
     const cookieStr = `valueskins_session=${sessionId}; HttpOnly${isSecure ? '; Secure' : ''}; SameSite=Lax; Path=/; Max-Age=${COOKIE_MAX_AGE}`;
     res.setHeader('Set-Cookie', cookieStr);
-    console.log('✅ Session cookie set');
 
-    console.log('🚀 Redirecting to /');
     return res.redirect('/');
   } catch (error) {
-    console.error('❌ OAuth error:', error);
+    console.error('OAuth error:', error);
     return res.status(500).json({
       error: 'auth_failed',
       details: error instanceof Error ? error.message : String(error),
     });
   }
-}
-
-function generateUUID(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
 }
