@@ -42,6 +42,7 @@ async function ensureSchema() {
   await query(`ALTER TABLE deals ADD COLUMN IF NOT EXISTS advance_pct DECIMAL(5,2) DEFAULT 30`);
   await query(`ALTER TABLE deals ADD COLUMN IF NOT EXISTS review_period_days INTEGER DEFAULT 7`);
   await query(`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS usage_rights_days INTEGER DEFAULT NULL`);
+  await query(`ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS required_niches TEXT[] DEFAULT '{}'`);
   await query(`CREATE TABLE IF NOT EXISTS delivery_tracking (
     id SERIAL PRIMARY KEY,
     deal_id INTEGER NOT NULL REFERENCES deals(id) ON DELETE CASCADE,
@@ -106,17 +107,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       if (req.method === 'POST') {
-        const { title, description, brief_id, budget_per_creator, total_budget, deadline, delivery_type, usage_rights_days } = req.body;
+        const { title, description, brief_id, budget_per_creator, total_budget, deadline, delivery_type, usage_rights_days, required_niches } = req.body;
         if (!title || title.trim().length < 3) return bad(res, 'Title must be at least 3 characters');
         if (title.length > 200) return bad(res, 'Title max 200 characters');
         const dt = ['no_delivery', 'digital_access', 'physical_product'].includes(delivery_type) ? delivery_type : 'no_delivery';
         const urd = typeof usage_rights_days === 'number' && usage_rights_days >= 0 && usage_rights_days <= 3650
           ? usage_rights_days : null;
 
-        const r = await query(`INSERT INTO campaigns (brand_id, title, description, brief_id, budget_per_creator, total_budget, deadline, status, delivery_type, usage_rights_days)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+        const r = await query(`INSERT INTO campaigns (brand_id, title, description, brief_id, budget_per_creator, total_budget, deadline, status, delivery_type, usage_rights_days, required_niches)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
           [userId, title.trim(), description || '', brief_id || null, budget_per_creator || 0, total_budget || 0,
-           deadline ? new Date(deadline) : null, 'draft', dt, urd]);
+           deadline ? new Date(deadline) : null, 'active', dt, urd, required_niches || []]);
         return created(res, { campaign: r.rows[0] });
       }
     }
@@ -134,7 +135,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       if (req.method === 'PATCH') {
-        const { title, description, budget_per_creator, total_budget, deadline, status, delivery_type, usage_rights_days } = req.body;
+        const { title, description, budget_per_creator, total_budget, deadline, status, delivery_type, usage_rights_days, required_niches } = req.body;
         const sets: string[] = [];
         const params: any[] = [];
         let p = 1;
@@ -146,6 +147,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (status !== undefined) { sets.push(`status = $${p++}`); params.push(status); }
         if (delivery_type !== undefined) { sets.push(`delivery_type = $${p++}`); params.push(delivery_type); }
         if (usage_rights_days !== undefined) { sets.push(`usage_rights_days = $${p++}`); params.push(usage_rights_days); }
+        if (required_niches !== undefined) { sets.push(`required_niches = $${p++}`); params.push(required_niches); }
         if (sets.length === 0) return bad(res, 'No fields to update');
         sets.push('updated_at = NOW()');
         params.push(id, userId);
