@@ -445,7 +445,14 @@ export function useDealSync(userId?: number) {
           });
         }
         if (Array.isArray(data.applications)) setApplications(data.applications);
-        if (Array.isArray(data.campaigns)) setCampaigns(data.campaigns);
+        if (Array.isArray(data.campaigns)) {
+          setCampaigns(prev => {
+            const localIds = new Set(prev.map(c => c.id));
+            const newOnes = (data.campaigns as Campaign[]).filter(c => !localIds.has(c.id));
+            if (newOnes.length === 0) return prev;
+            return [...prev, ...newOnes];
+          });
+        }
         setTimeout(() => { externalUpdateRef.current = false; }, 200);
       } catch { /* shared DB not reachable — no-op */ }
     }
@@ -502,7 +509,14 @@ export function useDealSync(userId?: number) {
           });
         }
         if (Array.isArray(data.applications)) setApplications(data.applications);
-        if (Array.isArray(data.campaigns)) setCampaigns(data.campaigns);
+        if (Array.isArray(data.campaigns)) {
+          setCampaigns(prev => {
+            const localIds = new Set(prev.map(c => c.id));
+            const newOnes = (data.campaigns as Campaign[]).filter(c => !localIds.has(c.id));
+            if (newOnes.length === 0) return prev;
+            return [...prev, ...newOnes];
+          });
+        }
         setTimeout(() => { externalUpdateRef.current = false; }, 200);
       } catch { /* no-op */ }
     }, POLL_INTERVAL_MS);

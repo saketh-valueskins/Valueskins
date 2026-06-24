@@ -1198,11 +1198,16 @@ export default function MarketplaceDemoPage() {
     setRefreshing(false);
   }, [fetchAllCreators, forceRefreshCampaigns]);
 
-  // Merge Firebase state into local state when in room mode (cross-device sync)
+  // Merge Firebase campaigns into local state (cross-device sync)
   useEffect(() => {
-    // Firebase always active
     if (firebaseState.campaigns.length > 0) {
-      setCampaigns(firebaseState.campaigns as Campaign[]);
+      setCampaigns(prev => {
+        const localIds = new Set(prev.map(c => c.id));
+        const fbCampaigns = firebaseState.campaigns as Campaign[];
+        const newOnes = fbCampaigns.filter(c => !localIds.has(c.id));
+        if (newOnes.length === 0) return prev;
+        return [...prev, ...newOnes];
+      });
     }
   }, [firebaseState.campaigns, setCampaigns]);
 
@@ -8290,7 +8295,7 @@ export default function MarketplaceDemoPage() {
                   </div>
                 )}
 
-                {marketplaceRole !== 'brand' && !assigningSlot && (
+                {marketplaceRole !== 'brand' && !assigningSlot && ownedSkins.length === 0 && (
                   <div style={{ fontSize: '13px', color: C.warning, marginBottom: '12px', fontWeight: 600 }}>
                     Select a slot above to assign a ValueSkin
                   </div>
