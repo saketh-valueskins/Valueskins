@@ -1344,7 +1344,14 @@ export default function MarketplaceDemoPage() {
   const [selectedProfileCreator, setSelectedProfileCreator] = useState<typeof BRAND_MARKETPLACE_CREATORS[0] | null>(null);
 
   // Convenience aliases for backward compatibility
-  const persistCampaigns = (updated: Campaign[]) => { setCampaigns(updated); };
+  const persistCampaigns = (updated: Campaign[]) => {
+    setCampaigns(updated);
+    fetch('/api/realtime/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: { campaigns: updated } }),
+    }).catch(() => {});
+  };
   const persistApplications = (updated: SharedApplication[]) => {
     setSharedApplications(updated);
     updated.forEach(a => firebaseCreateApplication(a));
