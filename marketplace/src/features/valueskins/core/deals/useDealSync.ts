@@ -425,7 +425,7 @@ export function useDealSync(userId?: number) {
 
   // 1. Load from shared database on mount
   useEffect(() => {
-    if (!userIdRef.current) return;
+    if (!userId) return;
     let cancelled = false;
 
     async function loadShared() {
@@ -452,7 +452,7 @@ export function useDealSync(userId?: number) {
 
     loadShared();
     return () => { cancelled = true; };
-  }, []);
+  }, [userId]);
 
   // 2. Debounced persist to shared database after local mutations
   //    Skipped when the update originated from external sync (prevents echo)
@@ -480,7 +480,7 @@ export function useDealSync(userId?: number) {
 
   // 3. Poll for external changes
   useEffect(() => {
-    if (!userIdRef.current) return;
+    if (!userId) return;
     let cancelled = false;
     const interval = setInterval(async () => {
       try {
@@ -507,11 +507,11 @@ export function useDealSync(userId?: number) {
       } catch { /* no-op */ }
     }, POLL_INTERVAL_MS);
     return () => { cancelled = true; clearInterval(interval); };
-  }, []);
+  }, [userId]);
 
   // 4. Subscribe to real-time events from other users (shared app channel)
   useEffect(() => {
-    if (!userIdRef.current) return;
+    if (!userId) return;
     const unsubscribe = subscribeToAppEvents((event: RealtimeEvent) => {
       if (event.user_id === userIdRef.current) return; // skip own events
       const data = event.data;
@@ -532,6 +532,12 @@ export function useDealSync(userId?: number) {
             return merged;
           });
         }
+        if (data.campaigns && Array.isArray(data.campaigns)) {
+          setCampaigns(data.campaigns);
+        }
+        if (data.applications && Array.isArray(data.applications)) {
+          setApplications(data.applications);
+        }
       }
       if (event.event_type === 'campaign_created' && data.campaign) {
         setCampaigns(prev => [...prev, data.campaign]);
@@ -549,7 +555,7 @@ export function useDealSync(userId?: number) {
       setTimeout(() => { externalUpdateRef.current = false; }, 200);
     });
     return unsubscribe;
-  }, []);
+  }, [userId]);
 
   // ---- Deal state helpers ----
 

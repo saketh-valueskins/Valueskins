@@ -369,7 +369,7 @@ export default function MarketplaceDemoPage() {
       if (stored) setValueSkins(JSON.parse(stored));
     } catch (e) { /* ignore corrupted data */ }
     setSkinsLoaded(true);
-  }, [loading]);
+  }, [loading, SK.valueSkins]);
 
   // Persist valueSkins to localStorage — only after initial load
   useEffect(() => {
@@ -404,7 +404,7 @@ export default function MarketplaceDemoPage() {
       if (stored) setHiddenSkins(new Set(JSON.parse(stored)));
     } catch (e) { /* ignore */ }
     setHiddenLoaded(true);
-  }, [loading]);
+  }, [loading, SK.hiddenSkins]);
 
   useEffect(() => {
     if (!hiddenLoaded || loading) return;
@@ -443,7 +443,7 @@ export default function MarketplaceDemoPage() {
         if (d.skinPositions) setSkinPositions(d.skinPositions);
       }
     } catch (e) { /* ignore */ }
-  }, [loading]);
+  }, [loading, SK.persist]);
 
   const [showSkinManageModal, setShowSkinManageModal] = useState<ValueSkinSlot | null>(null);
 
@@ -581,7 +581,7 @@ export default function MarketplaceDemoPage() {
       setActiveBrandSkin(null);
       setSelectedMarketplaceSkin(null);
     }
-  }, [loading]);
+  }, [loading, SK.version, SK.valueSkins, SK.persist, SK.dealSync, SK.hiddenSkins]);
 
   // ValueSkin edit handlers
   const { update: updateValueSkin, loading: updateLoading } = useUpdateValueSkin(editingValueSkinId || '');
