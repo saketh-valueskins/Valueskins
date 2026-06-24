@@ -1798,8 +1798,21 @@ export default function MarketplaceDemoPage() {
   // Check if creator matches campaign requirements
   const creatorMatchesCampaignRequirements = (campaign: Campaign, creatorProfession: string, creatorData?: any): boolean => {
     // Must have matching profession
-    if (campaign.requiredValueskin && campaign.requiredValueskin !== creatorProfession) return false;
-    if (!campaign.requiredProfessions.includes(creatorProfession)) return false;
+    if (!campaign.requiredProfessions.includes(creatorProfession)) {
+      // Try partial match
+      const skinLower = creatorProfession.toLowerCase();
+      const match = campaign.requiredProfessions.some(r => {
+        const rLower = r.toLowerCase();
+        // handle 'Video Editor' vs 'Video editing'
+        if (skinLower.includes('video') && rLower.includes('video')) return true;
+        if (skinLower.includes('ugc') && rLower.includes('ugc')) return true;
+        if (skinLower.includes('software') && rLower.includes('software')) return true;
+        if (skinLower.includes('design') && rLower.includes('design')) return true;
+        if (skinLower.includes('write') && rLower.includes('write')) return true;
+        return skinLower.includes(rLower) || rLower.includes(skinLower);
+      });
+      if (!match) return false;
+    }
 
     // If creator data provided, check other requirements
     if (creatorData) {
