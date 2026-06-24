@@ -1660,7 +1660,6 @@ export default function MarketplaceDemoPage() {
       if (!activeBrandSkin) setActiveBrandSkin(profession);
     }
     setShowStoreModal(false);
-    setAssigningSlot(null);
     setActiveView('profile');
     setPurchaseToast(`${label} applied as your ${slotLabel}`);
     setTimeout(() => setPurchaseToast(null), 3000);
@@ -4712,12 +4711,17 @@ export default function MarketplaceDemoPage() {
                         {(() => {
                           const completedDeals = Object.entries(dealStates).filter(([_, d]) => d.brandApprovalPhase === 'approved' || d.creatorDealLifecycle === 'approved').map(([key, deal]) => ({key, ...deal}));
                           if (completedDeals.length === 0) {
-                            return <div style={{ fontSize:'12px', color:C.textSecondary, padding:'16px', textAlign:'center' }}>No completed deals yet</div>;
-                          }
-                          return (
-                            <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                              {completedDeals.map((deal) => {
-                                const [creatorName, skinName] = deal.key.split('|');
+                             return <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'12px', padding:'16px' }}>
+                               <div style={{ fontSize:'12px', color:C.textSecondary, textAlign:'center' }}>No completed deals yet</div>
+                               <button onClick={handleRefresh} disabled={refreshing} style={{ fontSize:'11px', fontWeight:600, color:C.primary, background:`${C.primary}12`, border:'none', borderRadius:'8px', padding:'8px 16px', cursor:'pointer' }}>
+                                 {refreshing ? 'Refreshing...' : '⟳ Find matching deals'}
+                               </button>
+                             </div>;
+                           }
+                           return (
+                             <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+                               {completedDeals.map((deal) => {
+                                 const [creatorName, skinName] = deal.key.split('|');
                                 const dealAmount = deal.agreementAmount || deal.offerAmount || '0';
                                 const creatorRating = deal.creatorRating || 0;
                                 const brandRating = deal.brandRating || 0;
@@ -7111,12 +7115,17 @@ export default function MarketplaceDemoPage() {
                 {(() => {
                   const completedDeals = Object.entries(dealStates).filter(([_, d]) => d.brandApprovalPhase === 'approved' || d.creatorDealLifecycle === 'approved').map(([key, deal]) => ({key, ...deal}));
                   if (completedDeals.length === 0) {
-                    return <div style={{ fontSize:'12px', color:C.textSecondary, padding:'16px', textAlign:'center' }}>No completed deals yet</div>;
-                  }
-                  return (
-                    <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                      {completedDeals.map((deal) => {
-                        const [creatorName, skinName] = deal.key.split('|');
+                     return <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'12px', padding:'16px' }}>
+                       <div style={{ fontSize:'12px', color:C.textSecondary, textAlign:'center' }}>No completed deals yet</div>
+                       <button onClick={handleRefresh} disabled={refreshing} style={{ fontSize:'11px', fontWeight:600, color:C.primary, background:`${C.primary}12`, border:'none', borderRadius:'8px', padding:'8px 16px', cursor:'pointer' }}>
+                         {refreshing ? 'Refreshing...' : '⟳ Find matching deals'}
+                       </button>
+                     </div>;
+                   }
+                   return (
+                     <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
+                       {completedDeals.map((deal) => {
+                         const [creatorName, skinName] = deal.key.split('|');
                         const dealAmount = deal.agreementAmount || deal.offerAmount || '0';
                         const creatorRating = deal.creatorRating || 0;
                         const brandRating = deal.brandRating || 0;
@@ -8198,7 +8207,7 @@ export default function MarketplaceDemoPage() {
                       return (
                         <button
                           key={slot}
-                          onClick={() => setAssigningSlot(active ? null : slot)}
+                          onClick={() => setAssigningSlot(slot)}
                           style={{
                             flex: 1, padding: '10px 8px', borderRadius: '12px', cursor: 'pointer',
                             background: active ? `${slotColor}20` : C.card,
