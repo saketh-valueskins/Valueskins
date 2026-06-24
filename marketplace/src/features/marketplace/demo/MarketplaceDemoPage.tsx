@@ -1575,7 +1575,10 @@ export default function MarketplaceDemoPage() {
             data.skins.forEach((s: any) => {
               skinsMap[s.slot] = { profession: s.profession, aboutMe: s.aboutMe || "" };
             });
-            setValueSkins(skinsMap);
+            // Only overwrite if backend returned data, to avoid wiping localStorage state
+            if (Object.keys(skinsMap).length > 0) {
+              setValueSkins(skinsMap);
+            }
           }
         }
       } catch (err) {

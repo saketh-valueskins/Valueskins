@@ -1,6 +1,30 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db-pool';
 
+async function syncValueSkin(userId: string, valueSkin: string) {
+  try {
+    // Sync to user_valueskins for campaign matching + profile display
+    await query(
+      `INSERT INTO user_valueskins (user_id, profession, slot, level, about_me, pitch_text, pitch_video, is_default, created_at)
+       VALUES ($1, $2, 'profession', 1, '', '', '', FALSE, NOW())
+       ON CONFLICT DO NOTHING`,
+      [userId, valueSkin]
+    );
+  } catch (err) {
+    console.error('user_valueskins sync error:', err);
+  }
+
+  try {
+    // Sync niche to users table for profile display
+    await query(
+      'UPDATE users SET niche = $1, updated_at = NOW() WHERE id = $2',
+      [valueSkin, userId]
+    );
+  } catch (err) {
+    console.error('niche sync error:', err);
+  }
+}
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Allow CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -36,7 +60,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           'INSERT INTO user_value_skins (user_id, value_skin, purchased_at) VALUES ($1, $2, NOW())',
           [userId, valueSkin]
         );
-        return res.status(200).json({ success: true });
       } catch (insertErr: any) {
         console.error('Insert error:', insertErr);
         if (insertErr.code === '23505') {
@@ -44,6 +67,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         }
         return res.status(500).json({ error: 'Failed to save skin' });
       }
+
+      // Sync to campaign-matching tables
+      await syncValueSkin(userId, valueSkin);
+
+      return res.status(200).json({ success: true });
     }
 
     if (req.method === 'GET') {
