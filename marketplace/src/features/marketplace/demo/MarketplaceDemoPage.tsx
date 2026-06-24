@@ -1181,11 +1181,18 @@ export default function MarketplaceDemoPage() {
           body: JSON.stringify({ value: { campaigns } }),
         });
       }
-      // 2. Pull latest from shared DB
+      // 2. Pull latest from shared DB (merge, don't replace)
       const res = await fetch('/api/realtime/state');
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data.campaigns)) setCampaigns(data.campaigns);
+        if (Array.isArray(data.campaigns)) {
+          setCampaigns(prev => {
+            const localIds = new Set(prev.map(c => c.id));
+            const newOnes = (data.campaigns as Campaign[]).filter(c => !localIds.has(c.id));
+            if (newOnes.length === 0) return prev;
+            return [...prev, ...newOnes];
+          });
+        }
       }
     } catch (e) {
       console.error('Failed to refresh campaigns:', e);
