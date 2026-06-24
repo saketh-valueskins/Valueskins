@@ -361,22 +361,23 @@ export default function MarketplaceDemoPage() {
   const [valueSkins, setValueSkins] = useState<ValueSkinMap>({});
   const [skinsLoaded, setSkinsLoaded] = useState(false);
 
-  // Restore valueSkins from localStorage on mount
+  // Restore valueSkins from localStorage on mount (wait for auth so uid is stable)
   useEffect(() => {
+    if (loading) return;
     try {
       const stored = localStorage.getItem(SK.valueSkins);
       if (stored) setValueSkins(JSON.parse(stored));
     } catch (e) { /* ignore corrupted data */ }
     setSkinsLoaded(true);
-  }, []);
+  }, [loading]);
 
   // Persist valueSkins to localStorage — only after initial load
   useEffect(() => {
-    if (!skinsLoaded) return;
+    if (!skinsLoaded || loading) return;
     try {
       localStorage.setItem(SK.valueSkins, JSON.stringify(valueSkins));
     } catch (e) { /* quota exceeded — safe to ignore */ }
-  }, [valueSkins, skinsLoaded]);
+  }, [valueSkins, skinsLoaded, loading]);
 
   // Which slot is being assigned in the Store modal
   const [assigningSlot, setAssigningSlot] = useState<ValueSkinSlot | null>(null);
@@ -397,22 +398,24 @@ export default function MarketplaceDemoPage() {
   const [hiddenLoaded, setHiddenLoaded] = useState(false);
 
   useEffect(() => {
+    if (loading) return;
     try {
       const stored = localStorage.getItem(SK.hiddenSkins);
       if (stored) setHiddenSkins(new Set(JSON.parse(stored)));
     } catch (e) { /* ignore */ }
     setHiddenLoaded(true);
-  }, []);
+  }, [loading]);
 
   useEffect(() => {
-    if (!hiddenLoaded) return;
+    if (!hiddenLoaded || loading) return;
     try {
       localStorage.setItem(SK.hiddenSkins, JSON.stringify([...hiddenSkins]));
     } catch (e) { /* ignore */ }
-  }, [hiddenSkins, hiddenLoaded]);
+  }, [hiddenSkins, hiddenLoaded, loading]);
 
-  // ── Persist key states to localStorage ───────────────────────
+  // ── Persist key states to localStorage (only after auth resolves) ──
   useEffect(() => {
+    if (loading) return;
     try {
       const s = localStorage.getItem(SK.persist);
       if (s) {
@@ -440,8 +443,7 @@ export default function MarketplaceDemoPage() {
         if (d.skinPositions) setSkinPositions(d.skinPositions);
       }
     } catch (e) { /* ignore */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loading]);
 
   const [showSkinManageModal, setShowSkinManageModal] = useState<ValueSkinSlot | null>(null);
 
@@ -565,8 +567,8 @@ export default function MarketplaceDemoPage() {
 
   // Clear stale localStorage on version bump — reset all in-memory state
   useEffect(() => {
+    if (loading || typeof window === 'undefined') return;
     const VERSION = 'v2';
-    if (typeof window === 'undefined') return;
     if (localStorage.getItem(SK.version) !== VERSION) {
       localStorage.removeItem(SK.valueSkins);
       localStorage.removeItem(SK.persist);
@@ -579,7 +581,7 @@ export default function MarketplaceDemoPage() {
       setActiveBrandSkin(null);
       setSelectedMarketplaceSkin(null);
     }
-  }, []);
+  }, [loading]);
 
   // ValueSkin edit handlers
   const { update: updateValueSkin, loading: updateLoading } = useUpdateValueSkin(editingValueSkinId || '');
@@ -1535,7 +1537,7 @@ export default function MarketplaceDemoPage() {
 
   // Persist state to localStorage — must be declared after ALL state variables it references
   useEffect(() => {
-    if (!skinsLoaded) return;
+    if (!skinsLoaded || loading) return;
     try {
       localStorage.setItem(SK.persist, JSON.stringify({
         marketplaceRole, brandValueSkins, activeBrandSkin, profileName, profileBio, profileAvatar,
@@ -1549,7 +1551,7 @@ export default function MarketplaceDemoPage() {
       selectedCountry, selectedLanguages, rateCard, profileDealTypes, willingToBarter,
       notifications, joinedCommunities, dmMessages, communityMessages,
       brandProfileSelections, creatorEnergy, metrics, skinsLoaded, skinPitchTexts, skinPitchVideos,
-      skinPositions]);
+      skinPositions, loading]);
 
   // Fetch profile stats from API instead of using hardcoded values
   useEffect(() => {
