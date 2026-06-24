@@ -1171,6 +1171,15 @@ export default function MarketplaceDemoPage() {
 
   const forceRefreshCampaigns = useCallback(async () => {
     try {
+      // 1. Push local campaigns to shared DB (so old localStorage-only campaigns appear)
+      if (campaigns.length > 0) {
+        await fetch('/api/realtime/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ value: { campaigns } }),
+        });
+      }
+      // 2. Pull latest from shared DB
       const res = await fetch('/api/realtime/state');
       if (res.ok) {
         const data = await res.json();
@@ -1179,7 +1188,7 @@ export default function MarketplaceDemoPage() {
     } catch (e) {
       console.error('Failed to refresh campaigns:', e);
     }
-  }, [setCampaigns]);
+  }, [campaigns, setCampaigns]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
