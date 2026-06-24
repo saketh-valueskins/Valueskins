@@ -2,6 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db';
 import { getAccountId } from '@/lib/session';
 import { autoMatchCreators, type AutoMatchResult } from '@/lib/autoMatch';
+import { matchCache } from '@/lib/cache';
+
+const CACHE_TTL = 30_000;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const userId = await getAccountId(req.headers.cookie || '');
@@ -11,6 +14,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const campaignId = req.query.campaignId ? parseInt(req.query.campaignId as string) : null;
   if (!campaignId) return res.status(400).json({ error: 'campaignId required' });
+
+  const forceRefresh = req.query.refresh === 'true';
+  const cacheKey = `campaign_match:${campaignId}`;
+
+  if (!forceRefresh) {
+    const cached = matchCache.get(cacheKey);
+    if (cached) {
+      return res.json({ ...cached, cached: true });
+    }
+  }
 
   try {
     const campaign = await query('SELECT * FROM campaigns WHERE id = $1 AND brand_id = $2', [campaignId, userId]);
@@ -26,12 +39,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const creators = await query(`
-      SELECT u.id, u.display_name as name, u.username as handle, u.niche as value_skin,
+      SELECT DISTINCT ON (u.id)
+        u.id, u.display_name as name, u.username as handle,
+        COALESCE(uv.profession, u.niche, 'Creator') as value_skin,
         u.followers_count, u.engagement_rate, u.min_deal_value as rate,
         u.location, u.country, u.bio
       FROM users u
-      WHERE EXISTS (SELECT 1 FROM account_modules am WHERE am.user_id = u.id AND am.module_code = 'valueskin' AND am.is_active = true)
+      LEFT JOIN user_valueskins uv ON uv.user_id = u.id
+      WHERE EXISTS (
+        SELECT 1 FROM account_modules am
+        WHERE am.user_id = u.id AND am.module_code = 'valueskin' AND am.is_active = true
+      )
         AND u.id != $1
+      ORDER BY u.id
       LIMIT 200
     `, [userId]);
 
@@ -41,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       description: c.description || '',
       budget: Number(c.budget_per_creator) || 0,
       deadline: c.deadline ? new Date(c.deadline).toISOString() : '',
-      requiredProfessions: requiredProfessions.length > 0 ? requiredProfessions : ['Creator'],
+      requiredProfessions,
       compensationType: 'paid',
       status: 'open' as const,
     };
@@ -53,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       followers: cr.followers_count?.toString() || '0',
       engagement: cr.engagement_rate?.toString() || '0',
       rate: cr.rate?.toString() || '0',
-      niche: cr.niche || '',
+      niche: cr.value_skin || '',
       audienceLocation: cr.location || cr.country || '',
     }));
 
@@ -71,11 +91,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       };
     });
 
-    return res.json({
+    const result = {
       campaign: c,
       matches: enriched,
       total_matches: enriched.length,
-    });
+    };
+
+    matchCache.set(cacheKey, result, CACHE_TTL);
+
+    return res.json(result);
   } catch (err: any) {
     console.error('Campaign match error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });

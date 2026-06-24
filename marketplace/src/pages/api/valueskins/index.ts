@@ -96,6 +96,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const newSkin = insertResult.rows[0];
 
+      // Sync profession to users.niche for matching queries
+      await query('UPDATE users SET niche = $1 WHERE id = $2', [profession, userId]);
+
+      // Sync to user_value_skins for marketplace discovery
+      await query(
+        `INSERT INTO user_value_skins (user_id, value_skin)
+         VALUES ($1, $2) ON CONFLICT (user_id, value_skin) DO NOTHING`,
+        [userId, profession]
+      );
+
       return res.status(201).json({
         id: newSkin.id,
         profession: newSkin.profession,

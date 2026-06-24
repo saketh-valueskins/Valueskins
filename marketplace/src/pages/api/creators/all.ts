@@ -1,10 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db';
 import { setupCors } from '@/lib/cors';
+import { creatorCache } from '@/lib/cache';
+
+const CACHE_TTL = 30_000;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (setupCors(req, res)) return;
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  const forceRefresh = req.query.refresh === 'true';
+  const cacheKey = 'all_creators';
+
+  if (!forceRefresh) {
+    const cached = creatorCache.get(cacheKey);
+    if (cached) return res.status(200).json({ creators: cached, cached: true });
+  }
 
   try {
     const creators = await query(`
@@ -12,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         u.id,
         u.display_name as name,
         u.username as handle,
-        uv.value_skin as value_skin,
+        COALESCE(uvs.value_skin, uv.profession, u.niche, 'Creator') as value_skin,
         u.followers_count,
         u.engagement_rate,
         u.min_deal_value as rate,
@@ -24,9 +35,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         u.niche,
         u.languages
       FROM users u
-      JOIN user_value_skins uv ON uv.user_id = u.id
+      LEFT JOIN user_value_skins uvs ON uvs.user_id = u.id
+      LEFT JOIN user_valueskins uv ON uv.user_id = u.id
       WHERE u.is_deleted = FALSE
-      ORDER BY u.id, uv.value_skin
+        AND (uvs.id IS NOT NULL OR uv.id IS NOT NULL)
+      ORDER BY u.id, COALESCE(uvs.value_skin, uv.profession, u.niche, 'Creator')
       LIMIT 500
     `);
 
@@ -44,7 +57,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       languages: c.languages ? (typeof c.languages === 'string' ? JSON.parse(c.languages) : c.languages) : undefined,
     }));
 
-    return res.status(200).json({ creators: mapped });
+    creatorCache.set(cacheKey, mapped, CACHE_TTL);
+
+    return res.status(200).json({ creators: mapped, cached: false });
   } catch (error) {
     console.error('Failed to fetch all creators:', error);
     return res.status(500).json({ error: 'Failed to fetch creators' });

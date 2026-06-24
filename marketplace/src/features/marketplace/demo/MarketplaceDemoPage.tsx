@@ -502,10 +502,10 @@ export default function MarketplaceDemoPage() {
   }, [activeBrandSkin]);
 
   // Fetch all creators for continuous auto-matching (picks up new signups)
-  const fetchAllCreators = useCallback(async () => {
+  const fetchAllCreators = useCallback(async (force = false) => {
     setAllCreatorsLoading(true);
     try {
-      const res = await fetch('/api/creators/all');
+      const res = await fetch(`/api/creators/all${force ? '?refresh=true' : ''}`);
       if (res.ok) {
         const data = await res.json();
         if (data.creators && Array.isArray(data.creators)) {
@@ -1183,7 +1183,7 @@ export default function MarketplaceDemoPage() {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchAllCreators(), forceRefreshCampaigns()]);
+    await Promise.all([fetchAllCreators(true), forceRefreshCampaigns()]);
     setRefreshing(false);
   }, [fetchAllCreators, forceRefreshCampaigns]);
 

@@ -35,6 +35,8 @@ class Cache<T> {
 export const sessionCache = new Cache<any>();
 export const userCache = new Cache<any>();
 export const dealCache = new Cache<any>();
+export const creatorCache = new Cache<any>();
+export const matchCache = new Cache<any>();
 
 // Cleanup expired entries every 10 minutes
 setInterval(() => {
@@ -49,4 +51,6 @@ setInterval(() => {
   cleanup(sessionCache['store']);
   cleanup(userCache['store']);
   cleanup(dealCache['store']);
+  cleanup(creatorCache['store']);
+  cleanup(matchCache['store']);
 }, 10 * 60 * 1000);

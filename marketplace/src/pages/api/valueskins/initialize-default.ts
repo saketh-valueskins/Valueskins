@@ -66,6 +66,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       newSkin = insertResult.rows[0];
     }
 
+    // Sync profession to users.niche for matching queries (creators only)
+    if (userRole !== 'brand') {
+      const professionName = newSkin.profession || 'Creator';
+      await query('UPDATE users SET niche = $1 WHERE id = $2', [professionName, userId]);
+      await query(
+        `INSERT INTO user_value_skins (user_id, value_skin)
+         VALUES ($1, $2) ON CONFLICT (user_id, value_skin) DO NOTHING`,
+        [userId, professionName]
+      );
+    }
+
     // Log audit entry
     await query(
       `INSERT INTO valueskin_audit_log (user_id, valueskin_id, action, old_values, new_values, changed_at)

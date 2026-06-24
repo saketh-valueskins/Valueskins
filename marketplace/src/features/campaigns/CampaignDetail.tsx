@@ -110,11 +110,11 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
     } catch { setMessage('Network error'); }
   };
 
-  const fetchMatches = async () => {
+  const fetchMatches = async (force = false) => {
     setShowMatches(!showMatches);
-    if (matchResults.length > 0) { setShowMatches(true); return; }
+    if (!force && matchResults.length > 0) { setShowMatches(true); return; }
     try {
-      const res = await fetch(`/api/campaigns/match?campaignId=${campaignId}`, { credentials: 'include' });
+      const res = await fetch(`/api/campaigns/match?campaignId=${campaignId}${force ? '&refresh=true' : ''}`, { credentials: 'include' });
       if (res.ok) {
         const d = await res.json();
         setMatchResults(d.matches || []);
@@ -169,7 +169,7 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
 
       {isBrandOwner && (
         <div style={{ marginBottom: '20px' }}>
-          <button onClick={fetchMatches}
+          <button onClick={() => fetchMatches(true)}
             style={{ padding: '8px 16px', background: C.primary, color: '#000', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '13px', marginRight: '8px' }}>
             {showMatches ? 'Hide Matches' : 'Find Matching Creators'}
           </button>
