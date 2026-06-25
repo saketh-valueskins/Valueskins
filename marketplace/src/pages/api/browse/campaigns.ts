@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const maxBudget = req.query.maxBudget ? parseInt(req.query.maxBudget as string) : null;
     const search = req.query.search as string;
 
-    const conditions: string[] = ["c.status = 'active'"];
+    const conditions: string[] = ["c.status = 'active'", "(c.deadline IS NULL OR c.deadline >= NOW())"];
     const params: any[] = [];
     let p = 1;
 

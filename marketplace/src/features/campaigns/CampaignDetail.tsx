@@ -141,6 +141,8 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
   if (!campaign) return <div style={{ padding: '20px', color: C.danger }}>Campaign not found</div>;
 
   const isBrandOwner = campaign.brand_id === currentUser?.id || false;
+  const deadlineDate = campaign.deadline ? new Date(campaign.deadline) : null;
+  const isDeadlinePassed = deadlineDate && deadlineDate < new Date();
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', color: C.text, fontFamily: 'system-ui, sans-serif' }}>
@@ -156,6 +158,11 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
           <span>Delivery: <strong style={{ color: C.primary }}>
             {campaign.delivery_type === 'digital_access' ? 'Digital Access' : campaign.delivery_type === 'physical_product' ? 'Physical Product' : 'No Delivery'}
           </strong></span>
+          {deadlineDate && (
+            <span>Apply by: <strong style={{ color: isDeadlinePassed ? C.danger : C.warning }}>
+              {deadlineDate.toLocaleDateString()} {isDeadlinePassed ? '(Closed)' : ''}
+            </strong></span>
+          )}
         </div>
       </div>
 
@@ -206,7 +213,11 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
             {bids.length > 0 && ['pending', 'accepted'].includes(bids[0].status) ? 'Your Bid' : 'Place a Bid'}
           </h3>
 
-          {bids.length > 0 ? (
+          {isDeadlinePassed && bids.length === 0 ? (
+            <div style={{ padding: '12px', background: `${C.danger}15`, borderRadius: '6px', color: C.danger, fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>
+              This campaign's deadline has passed. Bidding is closed.
+            </div>
+          ) : bids.length > 0 ? (
             <div>
               {bids.map((bid) => (
                 <div key={bid.id} style={{ padding: '10px', background: C.surfaceAlt, borderRadius: '6px', marginBottom: '8px' }}>

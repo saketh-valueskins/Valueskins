@@ -47,6 +47,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const campaign = await query('SELECT * FROM campaigns WHERE id = $1', [campaign_id]);
       if (!campaign.rows[0]) return bad(res, 'Campaign not found');
 
+      if (campaign.rows[0].deadline && new Date(campaign.rows[0].deadline) < new Date()) {
+        return bad(res, 'Campaign deadline has passed');
+      }
+
       const existing = await query('SELECT * FROM campaign_bids WHERE campaign_id = $1 AND creator_id = $2', [campaign_id, userId]);
       if (existing.rows[0]) {
         const updated = await query(
