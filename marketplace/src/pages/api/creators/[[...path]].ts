@@ -144,26 +144,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               [creatorId]
             );
 
-            // Get events hosted OR tagged (marketplace integration)
-            let events = { rows: [] };
-            try {
-              events = await query(
-                `SELECT DISTINCT
-                  e.id, e.title, e.status, e.event_date as completed_at,
-                  CASE WHEN e.host_id = $1 THEN 'host' ELSE 'performer' END as role,
-                  a.display_name as host_name
-                FROM events e
-                LEFT JOIN accounts a ON e.host_id = a.id
-                WHERE e.host_id = $1
-                  OR e.tagged_creators @> $2::jsonb
-                ORDER BY e.event_date DESC`,
-                [creatorId, JSON.stringify([{ creatorId }])]
-              );
-            } catch (eventErr) {
-              // Events table may not exist, just continue with empty events
-              events = { rows: [] };
-            }
-
             const workItems = [
               ...contentDeals.rows.map((row: any) => ({
                 id: row.id,
@@ -174,16 +154,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 rating: row.rating ? parseFloat(row.rating).toFixed(1) : undefined,
                 partnerId: 0,
                 partnerName: row.partner_name,
-              })),
-              ...events.rows.map((row: any) => ({
-                id: row.id,
-                title: row.title,
-                type: 'event',
-                status: row.status || 'completed',
-                completedAt: row.completed_at,
-                partnerId: 0,
-                partnerName: row.host_name || '',
-                role: row.role || 'performer',
               })),
             ];
 

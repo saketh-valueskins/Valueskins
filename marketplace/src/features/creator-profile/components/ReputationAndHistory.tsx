@@ -2,12 +2,6 @@ import React, { useEffect, useState } from 'react';
 
 interface UserReputation {
   userId: number;
-  eventsHosted: number;
-  eventsAttended: number;
-  avgHostProfessionalism: number;
-  avgEventQuality: number;
-  avgOverallExperience: number;
-  avgRating: number;
   totalReviews: number;
   dealsCompleted: number;
   avgDealRating: number;
@@ -92,9 +86,6 @@ const ReputationAndHistory: React.FC<Props> = ({ userId }) => {
 
   const formatActivityType = (type: string) => {
     const typeMap: Record<string, string> = {
-      event_hosted: '🎪 Hosted Event',
-      event_attended: '👥 Attended Event',
-      event_reviewed: '⭐ Left Review',
       deal_completed: '🤝 Deal Completed',
       profile_updated: '✏️ Profile Updated',
       valueskin_added: '🎨 Valueskin Added',
@@ -152,41 +143,6 @@ const ReputationAndHistory: React.FC<Props> = ({ userId }) => {
               </div>
             </div>
             <div className="text-sm text-gray-400">{trustTier.label} Member</div>
-
-            {/* Event Stats */}
-            {(reputation.eventsHosted > 0 || reputation.eventsAttended > 0) && (
-              <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-700">
-                <div className="bg-gray-700/30 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-white">{reputation.eventsHosted}</div>
-                  <div className="text-xs text-gray-400">Events Hosted</div>
-                </div>
-                <div className="bg-gray-700/30 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-white">{reputation.eventsAttended}</div>
-                  <div className="text-xs text-gray-400">Events Attended</div>
-                </div>
-              </div>
-            )}
-
-            {/* Event Ratings */}
-            {reputation.totalReviews > 0 && (
-              <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-700 text-xs">
-                <div className="bg-gray-700/30 rounded p-2">
-                  <div className="flex items-center gap-1 text-yellow-400 font-semibold">
-                    <span>⭐</span>
-                    {reputation.avgRating.toFixed(1)}
-                  </div>
-                  <div className="text-gray-400 text-xs mt-1">Overall</div>
-                </div>
-                <div className="bg-gray-700/30 rounded p-2">
-                  <div className="text-blue-400 font-semibold">{reputation.avgHostProfessionalism.toFixed(1)}</div>
-                  <div className="text-gray-400 text-xs mt-1">Host Pro</div>
-                </div>
-                <div className="bg-gray-700/30 rounded p-2">
-                  <div className="text-green-400 font-semibold">{reputation.avgEventQuality.toFixed(1)}</div>
-                  <div className="text-gray-400 text-xs mt-1">Quality</div>
-                </div>
-              </div>
-            )}
 
             {/* Deal Stats */}
             {reputation.dealsCompleted > 0 && (

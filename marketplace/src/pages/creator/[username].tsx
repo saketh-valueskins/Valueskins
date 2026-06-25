@@ -50,7 +50,7 @@ export default function CreatorProfilePage() {
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<'content' | 'events' | 'reviews'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'reviews'>('content');
 
   useEffect(() => {
     if (username) {
@@ -300,7 +300,6 @@ export default function CreatorProfilePage() {
   }
 
   const contentWork = workItems.filter(w => w.type === 'content');
-  const eventWork = workItems.filter(w => w.type === 'event');
 
   return (
     <>
@@ -411,93 +410,44 @@ export default function CreatorProfilePage() {
           </div>
 
           {/* Work History */}
-          {(contentWork.length > 0 || eventWork.length > 0) && (
+          {contentWork.length > 0 && (
             <div>
               <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px' }}>
                 Work They've Done
               </h2>
 
-              <div style={tabsStyle}>
-                <button
-                  onClick={() => setActiveTab('content')}
-                  style={tabStyle(activeTab === 'content')}
-                >
-                  Content ({contentWork.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab('events')}
-                  style={tabStyle(activeTab === 'events')}
-                >
-                  Events ({eventWork.length})
-                </button>
-              </div>
-
               <div style={workGridStyle}>
-                {activeTab === 'content' && (
-                  <>
-                    {contentWork.length === 0 ? (
-                      <div style={{
-                        padding: '32px',
-                        textAlign: 'center',
-                        color: C.textSecondary,
-                        background: C.surface,
-                        borderRadius: '8px',
-                      }}>
-                        No content deals yet
-                      </div>
-                    ) : (
-                      contentWork.map((item) => (
-                        <div key={item.id} style={workItemStyle}>
-                          <div>
-                            <div style={workTitleStyle}>{item.title}</div>
-                            <div style={workTypeStyle}>
-                              With {item.partnerName} • {new Date(item.completedAt || '').toLocaleDateString()}
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                            {item.rating && (
-                              <div style={{ fontSize: '14px', fontWeight: '600' }}>
-                                {item.rating}⭐
-                              </div>
-                            )}
-                            <div style={statusBadgeStyle(item.status)}>
-                              {item.status}
-                            </div>
-                          </div>
+                {contentWork.length === 0 ? (
+                  <div style={{
+                    padding: '32px',
+                    textAlign: 'center',
+                    color: C.textSecondary,
+                    background: C.surface,
+                    borderRadius: '8px',
+                  }}>
+                    No content deals yet
+                  </div>
+                ) : (
+                  contentWork.map((item) => (
+                    <div key={item.id} style={workItemStyle}>
+                      <div>
+                        <div style={workTitleStyle}>{item.title}</div>
+                        <div style={workTypeStyle}>
+                          With {item.partnerName} • {new Date(item.completedAt || '').toLocaleDateString()}
                         </div>
-                      ))
-                    )}
-                  </>
-                )}
-
-                {activeTab === 'events' && (
-                  <>
-                    {eventWork.length === 0 ? (
-                      <div style={{
-                        padding: '32px',
-                        textAlign: 'center',
-                        color: C.textSecondary,
-                        background: C.surface,
-                        borderRadius: '8px',
-                      }}>
-                        No events hosted yet
                       </div>
-                    ) : (
-                      eventWork.map((item) => (
-                        <div key={item.id} style={workItemStyle}>
-                          <div>
-                            <div style={workTitleStyle}>{item.title}</div>
-                            <div style={workTypeStyle}>
-                              {new Date(item.completedAt || '').toLocaleDateString()}
-                            </div>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        {item.rating && (
+                          <div style={{ fontSize: '14px', fontWeight: '600' }}>
+                            {item.rating}⭐
                           </div>
-                          <div style={statusBadgeStyle(item.status)}>
-                            {item.status}
-                          </div>
+                        )}
+                        <div style={statusBadgeStyle(item.status)}>
+                          {item.status}
                         </div>
-                      ))
-                    )}
-                  </>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             </div>

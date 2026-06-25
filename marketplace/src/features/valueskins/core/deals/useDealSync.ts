@@ -20,7 +20,6 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api } from '@/lib/api';
 import { subscribeToAppEvents, broadcastEvent, type RealtimeEvent } from '@/lib/supabase-realtime';
 
 // ---- Types matching the demo page's DealState ----
@@ -223,23 +222,23 @@ if (typeof window !== 'undefined') {
 }
 
 // ---- Backend connectivity check ----
-let backendOnline: boolean | null = null;
+let pgBackendOnline: boolean | null = null;
 let lastCheck = 0;
-const CHECK_INTERVAL = 30_000; // re-check every 30s
+const CHECK_INTERVAL = 30_000;
 
-async function isBackendOnline(): Promise<boolean> {
+async function isBackendOnline(pingPath = '/api/campaigns/list'): Promise<boolean> {
   const now = Date.now();
-  if (backendOnline !== null && now - lastCheck < CHECK_INTERVAL) {
-    return backendOnline;
+  if (pgBackendOnline !== null && now - lastCheck < CHECK_INTERVAL) {
+    return pgBackendOnline;
   }
   try {
-    const res = await api.system.health();
-    backendOnline = !res.error;
+    const res = await fetch(pingPath, { method: 'HEAD', credentials: 'include' });
+    pgBackendOnline = res.ok || res.status < 500;
   } catch {
-    backendOnline = false;
+    pgBackendOnline = false;
   }
   lastCheck = now;
-  return backendOnline ?? false;
+  return pgBackendOnline ?? false;
 }
 
 // ---- localStorage helpers ----
@@ -303,72 +302,112 @@ export function useDealSync(userId?: number) {
       setOnline(backendUp);
 
       if (backendUp) {
-        // Try to load deal rooms from backend
-        try {
-          const roomsRes = await api.dealRooms.listMyRooms();
-          if (!cancelled && roomsRes.data?.deal_rooms) {
-            const backendDeals: Record<string, DealState> = {};
-            for (const room of roomsRes.data.deal_rooms) {
-              const key = `${room.opportunity_title || 'deal'}:${room.id}`;
-              backendDeals[key] = {
-                phase: mapStatusToPhase(room.status),
-                intent: 'campaign',
-                briefFilled: true,
-                briefTitle: room.opportunity_title || '',
-                offerAmount: '',
-                counterAmount: '',
-                brandResponseAmount: '',
-                chatMessages: [],
-                chatInput: '',
-                performanceClause: false,
-                advancePercent: 30,
-                uploadPercent: 40,
-                approvalPercent: 30,
-                backendDealRoomId: room.id,
-              };
-            }
-            // Merge with localStorage (localStorage has UI state not in backend)
-            const localDeals = loadFromStorage<Record<string, DealState>>(STORAGE_DEALS, {});
-            const merged = { ...localDeals, ...backendDeals };
-            setDealStates(merged);
-            saveToStorage(STORAGE_DEALS, merged);
-          }
-        } catch {
-          // Backend returned error — load from localStorage
-          setDealStates(loadFromStorage(STORAGE_DEALS, {}));
-        }
+        // ── Try PostgreSQL API endpoints (Next.js API routes → DB) ──
 
-        // Try to load applications from backend
+        // 1. Load campaigns from PostgreSQL
         try {
-          const appsRes = await api.marketplace.getMyApplications();
-          if (!cancelled && appsRes.data?.applications) {
-            const backendApps: SharedApplication[] = appsRes.data.applications.map(a => ({
-              id: a.id,
-              campaignId: a.opportunity_id,
-              campaignTitle: a.opportunity_title || '',
-              creatorProfession: '',
-              creatorHandle: a.username || '',
-              status: (a.status === 'applied' ? 'pending' : a.status) as SharedApplication['status'],
-              appliedAt: a.created_at || new Date().toISOString(),
-            }));
-            const localApps = loadFromStorage<SharedApplication[]>(STORAGE_APPLICATIONS, []);
-            // Merge: backend wins for matching IDs, keep local-only entries
-            const backendIds = new Set(backendApps.map(a => a.id));
-            const localOnly = localApps.filter(a => !backendIds.has(a.id));
-            const merged = [...backendApps, ...localOnly];
-            setApplications(merged);
-            saveToStorage(STORAGE_APPLICATIONS, merged);
+          const campRes = await fetch('/api/campaigns/list', { credentials: 'include' });
+          if (!cancelled && campRes.ok) {
+            const campData = await campRes.json();
+            if (campData.campaigns) {
+              const dbCampaigns: Campaign[] = campData.campaigns.map((c: any) => ({
+                id: c.id,
+                brandName: '',
+                brandProfession: '',
+                title: c.title || '',
+                description: c.description || '',
+                requiredProfessions: [],
+                minLevel: 0,
+                maxLevel: 0,
+                budget: String(c.budget_per_creator || '0'),
+                deadline: c.deadline || '',
+                location: '',
+                nonNegotiables: [],
+                deliverables: '',
+                status: c.status === 'active' ? 'open' : 'closed',
+                applicants: Number(c.invite_count || 0),
+              }));
+              const localCampaigns = loadFromStorage<Campaign[]>(STORAGE_CAMPAIGNS, []);
+              const dbIds = new Set(dbCampaigns.map(c => c.id));
+              const localOnly = localCampaigns.filter(c => !dbIds.has(c.id));
+              const merged = [...dbCampaigns, ...localOnly];
+              setCampaigns(merged);
+              saveToStorage(STORAGE_CAMPAIGNS, merged);
+            }
           }
-        } catch {
-          setApplications(loadFromStorage(STORAGE_APPLICATIONS, []));
-        }
+        } catch { /* fall through */ }
+
+        // 2. Load deals from PostgreSQL
+        try {
+          const dealRes = await fetch('/api/deals/my-deals', { credentials: 'include' });
+          if (!cancelled && dealRes.ok) {
+            const dealData = await dealRes.json();
+            if (dealData.deals) {
+              const dbDeals: Record<string, DealState> = {};
+              for (const d of dealData.deals) {
+                const key = `${d.title || 'Deal'}:${d.id}`;
+                dbDeals[key] = {
+                  phase: mapDbDealPhase(d.status),
+                  intent: 'campaign',
+                  briefFilled: true,
+                  briefTitle: d.title || '',
+                  offerAmount: String(d.offerAmount || ''),
+                  counterAmount: '',
+                  brandResponseAmount: '',
+                  chatMessages: [],
+                  chatInput: '',
+                  performanceClause: false,
+                  advancePercent: 30,
+                  uploadPercent: 40,
+                  approvalPercent: 30,
+                  backendDealRoomId: typeof d.id === 'number' ? d.id : undefined,
+                  creatorName: d.partnerName,
+                };
+              }
+              const localDeals = loadFromStorage<Record<string, DealState>>(STORAGE_DEALS, {});
+              const merged = { ...localDeals, ...dbDeals };
+              setDealStates(merged);
+              saveToStorage(STORAGE_DEALS, merged);
+            }
+          }
+        } catch { /* fall through */ }
+
+        // 3. Load bids (applications) from PostgreSQL
+        try {
+          const bidRes = await fetch('/api/bids/', { credentials: 'include' });
+          if (!cancelled && bidRes.ok) {
+            const bidData = await bidRes.json();
+            if (bidData.bids) {
+              const dbApps: SharedApplication[] = bidData.bids.map((b: any) => ({
+                id: b.id,
+                campaignId: b.campaign_id,
+                campaignTitle: b.campaign_title || '',
+                creatorProfession: '',
+                creatorHandle: '',
+                status: mapBidStatus(b.status),
+                appliedAt: b.created_at || new Date().toISOString(),
+              }));
+              const localApps = loadFromStorage<SharedApplication[]>(STORAGE_APPLICATIONS, []);
+              const dbIds = new Set(dbApps.map(a => a.id));
+              const localOnly = localApps.filter(a => !dbIds.has(a.id));
+              const merged = [...dbApps, ...localOnly];
+              setApplications(merged);
+              saveToStorage(STORAGE_APPLICATIONS, merged);
+            }
+          }
+        } catch { /* fall through */ }
+
       } else {
         // Offline mode — load everything from localStorage
         setDealStates(loadFromStorage(STORAGE_DEALS, {}));
         setApplications(loadFromStorage(STORAGE_APPLICATIONS, []));
       }
 
-      setCampaigns(loadFromStorage(STORAGE_CAMPAIGNS, []));
+      // Load campaigns from localStorage if PG load didn't populate them
+      setCampaigns(prev => {
+        if (prev.length > 0) return prev;
+        return loadFromStorage(STORAGE_CAMPAIGNS, []);
+      });
       if (!cancelled) setLoaded(true);
     }
 
@@ -631,7 +670,7 @@ export function useDealSync(userId?: number) {
 
   // ---- API-backed mutations ----
 
-  /** Open a deal room — tries backend first, falls back to localStorage-only */
+  /** Open a deal room — tries PostgreSQL API first, then Rust backend, falls back to localStorage-only */
   const openDealRoom = useCallback(async (
     key: string,
     creatorPersonaId: number,
@@ -644,31 +683,32 @@ export function useDealSync(userId?: number) {
       compensationType?: string;
     }
   ) => {
-    const backendUp = await isBackendOnline();
-
-    if (backendUp) {
-      try {
-        const res = await api.dealRooms.openDealRoom({
-          creator_persona_id: creatorPersonaId,
-          intent: briefData.intent,
-          brief_title: briefData.title,
-          brief_description: briefData.description,
-          brief_deliverables: briefData.deliverables,
-          brief_campaign_type: briefData.campaignType,
-          compensation_type: briefData.compensationType,
+    // Try PostgreSQL deals API first
+    try {
+      const skinParts = key.split(':');
+      const valueSkin = skinParts.length > 1 ? skinParts[skinParts.length - 1] : '';
+      const res = await fetch('/api/deals/create-with-skin', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({
+          title: briefData.title,
+          description: briefData.description,
+          budget: Number(briefData.compensationType) || 0,
+          valueSkin,
+          creatorId: creatorPersonaId,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.dealId) {
+        updateDeal(key, {
+          phase: 'offer',
+          intent: briefData.intent as DealState['intent'],
+          briefFilled: true,
+          briefTitle: briefData.title,
+          backendDealRoomId: typeof data.dealId === 'number' ? data.dealId : parseInt(String(data.dealId)) || undefined,
         });
-        if (res.data?.deal_room_id) {
-          updateDeal(key, {
-            phase: 'offer',
-            intent: briefData.intent as DealState['intent'],
-            briefFilled: true,
-            briefTitle: briefData.title,
-            backendDealRoomId: res.data.deal_room_id,
-          });
-          return res.data.deal_room_id;
-        }
-      } catch { /* fall through to localStorage */ }
-    }
+        return data.dealId;
+      }
+    } catch { /* fall through */ }
 
     // Offline fallback
     updateDeal(key, {
@@ -680,14 +720,14 @@ export function useDealSync(userId?: number) {
     return null;
   }, [updateDeal]);
 
-  /** Send a chat message — tries backend first, always updates localStorage */
+  /** Send a chat message — persists to PostgreSQL via /api/deals/message */
   const sendMessage = useCallback(async (
     key: string,
     text: string,
     sender: 'me' | 'brand' = 'me'
   ) => {
     const deal = dealStates[key];
-    const backendRoomId = deal?.backendDealRoomId;
+    const dealId = deal?.backendDealRoomId;
     const newMsg: ChatMessage = {
       id: Date.now(),
       sender,
@@ -711,123 +751,128 @@ export function useDealSync(userId?: number) {
       };
     });
 
-    // Try backend
-    if (backendRoomId) {
+    // Persist to PostgreSQL
+    if (dealId) {
       try {
-        await api.dealRooms.sendMessage(backendRoomId, text, 'text');
-      } catch { /* message saved locally, will sync later */ }
+        await fetch('/api/deals/message', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ dealId, message: text }),
+        });
+      } catch { /* message saved locally */ }
     }
   }, [dealStates]);
 
-  /** Make an offer — tries backend, falls back to local */
+  /** Make an offer — persists offer message to PostgreSQL */
   const makeOffer = useCallback(async (
     key: string,
     amountCents: number,
     note?: string
   ) => {
     const deal = dealStates[key];
-    const backendRoomId = deal?.backendDealRoomId;
+    const dealId = deal?.backendDealRoomId;
+    const offerText = `Offer: $${(amountCents / 100).toFixed(0)}${note ? ` - ${note}` : ''}`;
 
-    if (backendRoomId) {
+    if (dealId) {
       try {
-        const res = await api.marketplace.postMessage(backendRoomId, {
-          content: `Offer: $${(amountCents / 100).toFixed(0)}${note ? ` - ${note}` : ''}`,
-          message_type: 'offer_made',
+        await fetch('/api/deals/message', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ dealId, message: offerText }),
         });
-        if (res.data) {
-          updateDeal(key, { phase: 'counter', offerAmount: String(amountCents / 100) });
-          return;
-        }
-      } catch { /* fall through */ }
+      } catch { /* local fallback */ }
     }
 
-    // Offline fallback
     updateDeal(key, { phase: 'counter', offerAmount: String(amountCents / 100) });
   }, [dealStates, updateDeal]);
 
-  /** Submit application — tries backend first */
+  /** Submit application — writes to PostgreSQL via bids API */
   const submitApplication = useCallback(async (
     opportunityId: number,
     personaId: number,
     pitch: string,
     appData: Omit<SharedApplication, 'id'>
   ) => {
-    const backendUp = await isBackendOnline();
     let appId = Date.now();
 
-    if (backendUp) {
-      try {
-        const res = await api.marketplace.applyToOpportunity(opportunityId, personaId, pitch);
-        if (res.data?.application_id) {
-          appId = res.data.application_id;
-        }
-      } catch { /* fall through to localStorage */ }
-    }
+    try {
+      const res = await fetch('/api/bids/', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({
+          campaign_id: opportunityId,
+          bid_amount: 0,
+          proposal: pitch,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.bid) {
+        appId = data.bid.id;
+      }
+    } catch { /* fall through to local fallback */ }
 
     const newApp: SharedApplication = { ...appData, id: appId };
     setApplications(prev => [...prev, newApp]);
   }, []);
 
-  /** Accept application (brand side) — tries backend first */
+  /** Accept application (brand side) — upserts to PostgreSQL via bids API */
   const acceptApplication = useCallback(async (
     applicationId: number,
     opportunityId: number,
     personaId: number
   ) => {
-    const backendUp = await isBackendOnline();
-
-    if (backendUp) {
-      try {
-        await api.brand.acceptApplication(opportunityId, personaId);
-      } catch { /* fall through */ }
-    }
+    try {
+      await fetch('/api/bids/', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ bid_id: applicationId, action: 'accept' }),
+      });
+    } catch { /* local update still applies */ }
 
     setApplications(prev =>
       prev.map(a => a.id === applicationId ? { ...a, status: 'accepted' as const } : a)
     );
   }, []);
 
-  /** Create campaign (brand side) — tries backend first */
+  /** Create campaign (brand side) — writes to PostgreSQL via campaigns API */
   const createCampaign = useCallback(async (campaign: Omit<Campaign, 'id'>) => {
-    const backendUp = await isBackendOnline();
     let campId = Date.now();
 
-    if (backendUp) {
-      try {
-        const res = await api.brand.createOpportunity({
+    try {
+      const res = await fetch('/api/campaigns/list', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({
           title: campaign.title,
           description: campaign.description,
-          category: campaign.brandProfession,
-          required_profession_id: 0,
-          required_level: campaign.minLevel,
-          reward_amount: campaign.budget,
-          duration_days: 30,
-        });
-        if (res.data?.opportunity_id) {
-          campId = res.data.opportunity_id;
-        }
-      } catch { /* fall through */ }
-    }
+          budget_per_creator: Number(campaign.budget) || 0,
+          total_budget: Number(campaign.budget) || 0,
+          delivery_type: campaign.deliverables?.includes('digital') ? 'digital_access' : 'no_delivery',
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.campaign) {
+        campId = data.campaign.id;
+      }
+    } catch { /* fall through to local fallback */ }
 
     const newCampaign: Campaign = { ...campaign, id: campId };
     setCampaigns(prev => [...prev, newCampaign]);
   }, []);
 
-  /** Finalize deal — tries backend first */
+  /** Finalize deal — updates local state (PostgreSQL completion handled by escrow/release flow) */
   const finalizeDeal = useCallback(async (key: string) => {
     const deal = dealStates[key];
-    const backendRoomId = deal?.backendDealRoomId;
+    const dealId = deal?.backendDealRoomId;
 
-    if (backendRoomId) {
+    if (dealId) {
       try {
-        await api.dealRooms.finalizeDeal(backendRoomId, 'Deal completed');
-      } catch { /* fall through */ }
+        await fetch('/api/deals/complete-with-release', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ dealId }),
+        });
+      } catch { /* local update still applies */ }
     }
 
     updateDeal(key, { phase: 'accepted' });
   }, [dealStates, updateDeal]);
 
-  /** Background sync — periodically pushes local state to backend */
+  /** Background sync — creates PostgreSQL records for local-only deals */
   const syncToBackend = useCallback(async () => {
     if (syncInProgress.current) return;
     syncInProgress.current = true;
@@ -837,22 +882,28 @@ export function useDealSync(userId?: number) {
       if (!backendUp) return;
       setOnline(true);
 
-      // Sync deals that have local state but no backend ID
       for (const [key, deal] of Object.entries(dealStates)) {
         if (deal.backendDealRoomId || deal.phase === 'brief') continue;
 
-        // This deal exists locally but not on backend — create it
+        const skinParts = key.split(':');
+        const valueSkin = skinParts.length > 1 ? skinParts[skinParts.length - 1] : '';
+
         try {
-          const res = await api.dealRooms.openDealRoom({
-            creator_persona_id: 1, // placeholder — real ID needed
-            intent: deal.intent,
-            brief_title: deal.briefTitle || key.split(':')[0],
-            brief_description: 'Synced from local state',
-            brief_deliverables: '',
-            brief_campaign_type: 'Product Review',
+          const res = await fetch('/api/deals/create-with-skin', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            body: JSON.stringify({
+              title: deal.briefTitle || key.split(':')[0],
+              description: 'Synced from local state',
+              budget: Number(deal.offerAmount) || 0,
+              valueSkin,
+              creatorId: 1,
+            }),
           });
-          if (res.data?.deal_room_id) {
-            updateDeal(key, { backendDealRoomId: res.data.deal_room_id });
+          const data = await res.json();
+          if (res.ok && data.dealId) {
+            updateDeal(key, {
+              backendDealRoomId: typeof data.dealId === 'number' ? data.dealId : parseInt(String(data.dealId)) || undefined,
+            });
           }
         } catch { /* skip this deal */ }
       }
@@ -906,5 +957,30 @@ function mapStatusToPhase(status: string): DealRoomPhase {
     case 'expired':
     case 'rejected': return 'brief';
     default: return 'brief';
+  }
+}
+
+function mapDbDealPhase(status: string): DealRoomPhase {
+  switch (status) {
+    case 'offer':
+    case 'negotiation': return 'offer';
+    case 'active':
+    case 'in_progress': return 'chatroom';
+    case 'checklist': return 'checklist';
+    case 'accepted':
+    case 'completed': return 'accepted';
+    case 'rejected':
+    case 'cancelled': return 'rejected';
+    default: return 'brief';
+  }
+}
+
+function mapBidStatus(status: string): SharedApplication['status'] {
+  switch (status) {
+    case 'pending': return 'pending';
+    case 'accepted': return 'accepted';
+    case 'rejected': return 'rejected';
+    case 'withdrawn': return 'pending';
+    default: return 'pending';
   }
 }

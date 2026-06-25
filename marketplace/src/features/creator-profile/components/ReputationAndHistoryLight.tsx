@@ -2,12 +2,6 @@ import React, { useEffect, useState } from 'react';
 
 interface UserReputation {
   userId: number;
-  eventsHosted: number;
-  eventsAttended: number;
-  avgHostProfessionalism: number;
-  avgEventQuality: number;
-  avgOverallExperience: number;
-  avgRating: number;
   totalReviews: number;
   dealsCompleted: number;
   avgDealRating: number;
@@ -113,9 +107,6 @@ const ReputationAndHistoryLight: React.FC<Props> = ({ userId }) => {
 
   const formatActivityType = (type: string) => {
     const typeMap: Record<string, string> = {
-      event_hosted: '🎪 Hosted Event',
-      event_attended: '👥 Attended Event',
-      event_reviewed: '⭐ Left Review',
       deal_completed: '🤝 Deal Completed',
       profile_updated: '✏️ Profile Updated',
       valueskin_added: '🎨 Valueskin Added',
@@ -189,64 +180,7 @@ const ReputationAndHistoryLight: React.FC<Props> = ({ userId }) => {
               </div>
             </div>
 
-            {/* Event Stats */}
-            {(reputation.eventsHosted > 0 || reputation.eventsAttended > 0) && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                <div style={{
-                  padding: '14px',
-                  background: C.surfaceAlt,
-                  borderRadius: '10px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: C.text }}>
-                    {reputation.eventsHosted}
-                  </div>
-                  <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '4px' }}>
-                    Events Hosted
-                  </div>
-                </div>
-                <div style={{
-                  padding: '14px',
-                  background: C.surfaceAlt,
-                  borderRadius: '10px',
-                  textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: C.text }}>
-                    {reputation.eventsAttended}
-                  </div>
-                  <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '4px' }}>
-                    Events Attended
-                  </div>
-                </div>
-              </div>
-            )}
 
-            {/* Event Ratings */}
-            {reputation.totalReviews > 0 && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                <div style={{ padding: '12px', background: C.surfaceAlt, borderRadius: '10px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '12px', color: C.textMuted }}>Overall Rating</div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: C.warning, marginTop: '4px' }}>
-                    {'★'.repeat(Math.round(reputation.avgRating))}
-                  </div>
-                  <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '2px' }}>
-                    {reputation.avgRating.toFixed(1)}/5
-                  </div>
-                </div>
-                <div style={{ padding: '12px', background: C.surfaceAlt, borderRadius: '10px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '12px', color: C.textMuted }}>Professionalism</div>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: C.primary, marginTop: '4px' }}>
-                    {reputation.avgHostProfessionalism.toFixed(1)}
-                  </div>
-                </div>
-                <div style={{ padding: '12px', background: C.surfaceAlt, borderRadius: '10px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '12px', color: C.textMuted }}>Event Quality</div>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: C.success, marginTop: '4px' }}>
-                    {reputation.avgEventQuality.toFixed(1)}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>
