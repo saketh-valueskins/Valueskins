@@ -392,6 +392,7 @@ export default function MarketplaceDemoPage() {
   const draggingOffset = useRef<{x: number, y: number}>({x: 0, y: 0});
   const dragMoved = useRef(false);
   const profileAreaRef = useRef<HTMLDivElement>(null);
+  const dealRoomRef = useRef<HTMLDivElement>(null);
   const [showAvatarSettings, setShowAvatarSettings] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [purchaseToast, setPurchaseToast] = useState<string | null>(null);
@@ -661,6 +662,15 @@ export default function MarketplaceDemoPage() {
       });
     }
   }, [firebaseState.deals, setDealStates]);
+
+  // Auto-scroll deal room into view when it opens
+  useEffect(() => {
+    if (negotiatingOpp !== null && dealRoomRef.current) {
+      setTimeout(() => {
+        dealRoomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [negotiatingOpp]);
 
   // Sync Firebase messages back to local deal state (using new key format: creatorName|creatorSkin)
   useEffect(() => {
@@ -1113,18 +1123,7 @@ export default function MarketplaceDemoPage() {
   const [willingToBarter, setWillingToBarter] = useState(false);
   const [filterBarterOnly, setFilterBarterOnly] = useState(false);
   const [filterOppsBarterOnly, setFilterOppsBarterOnly] = useState(false);
-  const [creatorMarketplaceMode, setCreatorMarketplaceMode] = useState<'brand' | 'collab'>('brand');
-  const [collabRequestOpen, setCollabRequestOpen] = useState<number | null>(null);
-  const [collabIdea, setCollabIdea] = useState('');
-  const [collabFormat, setCollabFormat] = useState('');
-  const [collabBudget, setCollabBudget] = useState('');
-  const [collabPaid, setCollabPaid] = useState(false);
-  const [collabNegotiable, setCollabNegotiable] = useState(true);
-  const [collabSentNames, setCollabSentNames] = useState<string[]>([]);
-  const [collabTargetSkin, setCollabTargetSkin] = useState<string | null>(null);
-  const [collabView, setCollabView] = useState<'browse' | 'sent'>('browse');
-  const [collabCompFilter, setCollabCompFilter] = useState<'all' | 'paid' | 'unpaid' | 'barter'>('all');
-  const [c2cDealType, setC2cDealType] = useState<'c2c'>('c2c');
+
   const [firebaseNotifications, setFirebaseNotifications] = useState<Array<{id: string; type: 'campaign' | 'application' | 'message'; message: string; createdAt: number; read: boolean}>>([]);
 
   // Brand field filter — which ValueSkin profession the brand wants to target
@@ -2484,23 +2483,7 @@ export default function MarketplaceDemoPage() {
                       <button onClick={() => { setMarketplaceRole('none'); setSelectedMarketplaceSkin(null); setNegotiatingOpp(null); }} style={{ background: 'none', border: 'none', fontSize: '13px', color: C.textSecondary, cursor: 'pointer', padding: '4px 0' }}>Switch</button>
                     </div>
 
-                    {/* Brand Deals / Creator Collabs tab toggle */}
-                    <div style={{ display: 'flex', background: C.card, borderRadius: '10px', padding: '3px', marginBottom: '14px' }}>
-                      {(['brand', 'collab'] as const).map(mode => (
-                        <button
-                          key={mode}
-                          onClick={() => setCreatorMarketplaceMode(mode)}
-                          style={{
-                            flex: 1, padding: '10px 0', borderRadius: '8px', border: 'none',
-                            background: creatorMarketplaceMode === mode ? C.primary : 'transparent',
-                            color: creatorMarketplaceMode === mode ? '#fff' : C.textSecondary,
-                            fontWeight: 600, fontSize: '14px', cursor: 'pointer', transition: 'all 0.15s',
-                          }}
-                        >
-                          {mode === 'brand' ? 'Brand Deals' : 'Creator Collabs'}
-                        </button>
-                      ))}
-                    </div>
+
 
                     {/* Available for deals toggle + tab selector */}
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px', gap:'8px' }}>
@@ -2644,7 +2627,7 @@ export default function MarketplaceDemoPage() {
                     })()}
 
                     {/* Opportunities for selected skin */}
-                    {creatorMarketplaceMode === 'brand' && selectedMarketplaceSkin && (
+                    {selectedMarketplaceSkin && (
                       <>
                         {activeOpportunities.filter(opp => (!filterOppsBarterOnly || opp.willingToBarter) && (!creatorCampaignSearch.trim() || opp.brand.toLowerCase().includes(creatorCampaignSearch.trim().toLowerCase()) || (opp.about||'').toLowerCase().includes(creatorCampaignSearch.trim().toLowerCase()) || (opp.budget||'').toLowerCase().includes(creatorCampaignSearch.trim().toLowerCase()))).length === 0 && (
                           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
@@ -2741,7 +2724,7 @@ export default function MarketplaceDemoPage() {
 
                               {/* Deal Room — shown when: negotiating this opp OR there's an active deal for this opp */}
                               {(negotiatingOpp === actualOppIndex) && (
-                                <div style={{ background: C.card, borderRadius: '16px', padding: '16px', border: `1px solid ${C.border}` }}>
+                                <div ref={dealRoomRef} style={{ background: C.card, borderRadius: '16px', padding: '16px', border: `1px solid ${C.border}` }}>
                                   {/* Deal Room Back Button */}
                                   <button onClick={() => setNegotiatingOpp(null)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: C.textSecondary, cursor: 'pointer', fontSize: '12px', fontWeight: 600, padding: '0 0 10px', marginBottom: '2px' }}>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textSecondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -2833,12 +2816,12 @@ export default function MarketplaceDemoPage() {
                                   </div>
 
                                   {/* Creator sees brand's offer — respond with accept or counter */}
-                                  {dealRoomPhase === 'pending' && (
+                                  {(dealRoomPhase === 'pending' || dealRoomPhase === 'brief') && (
                                     <>
                                       <div style={{ background: 'rgba(0,149,246,0.06)', borderRadius: '8px', padding: '12px', marginBottom: '12px', border: `1px solid rgba(0,149,246,0.2)` }}>
                                         <div style={{ fontSize: '11px', fontWeight: 700, color: C.primary, marginBottom: '6px' }}>Brand Offer Received</div>
                                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
-                                          <span style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>${parseInt(dealOfferAmount || '0').toLocaleString()}</span>
+                                          <span style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}</span>
                                           <span style={{ fontSize: '12px', color: C.textMuted }}>/post</span>
                                         </div>
                                         {activeDeal?.briefTitle && <div style={{ fontSize: '11px', color: C.textSecondary, marginTop: '4px' }}>Campaign: {activeDeal.briefTitle}</div>}
@@ -2849,7 +2832,7 @@ export default function MarketplaceDemoPage() {
                                             if (activeDealKey) {
                                               const now = new Date();
                                               const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                              const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator accepted offer: $${parseInt(dealOfferAmount || '0').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
+                                              const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator accepted offer: $${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                               const existingMsgs = activeDeal?.chatMessages || [];
                                               updateDeal(activeDealKey, { phase: 'accepted', chatMessages: [...(existingMsgs as any[]), acceptMsg] });
                                             }
@@ -2858,13 +2841,18 @@ export default function MarketplaceDemoPage() {
                                           }}
                                           style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
                                         >
-                                          Accept ${parseInt(dealOfferAmount || '0').toLocaleString()}
+                                          Accept ${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}
                                         </button>
                                         <button
-                                          onClick={() => setDealRoomPhase('chatroom')}
+                                          onClick={() => {
+                                            if (dealRoomPhase === 'brief' && activeDealKey) {
+                                              updateDeal(activeDealKey, { phase: 'pending', offerAmount: opp.budget?.replace(/[^0-9]/g, '') || '5000' });
+                                            }
+                                            setDealRoomPhase('chatroom');
+                                          }}
                                           style={{ flex: 1, background: C.primary, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
                                         >
-                                          Counter
+                                          Negotiate
                                         </button>
                                         <button
                                           onClick={() => {
@@ -4483,8 +4471,11 @@ export default function MarketplaceDemoPage() {
                                     </div>
                                   )}
 
-                                  {!['offer','counter','brand_considering','brand_countered','brand_rejected','accepted','chatroom','checklist','softhold'].includes(dealRoomPhase) && (
-                                    <button onClick={() => setNegotiatingOpp(null)} style={{ width: '100%', background: 'none', border: `1px solid ${C.border}`, padding: '8px', borderRadius: '8px', color: C.textSecondary, cursor: 'pointer', fontSize: '12px' }}>Close</button>
+                                  {!['brief','pending','offer','counter','brand_considering','brand_countered','brand_rejected','accepted','chatroom','checklist','softhold'].includes(dealRoomPhase) && (
+                                    <div style={{ textAlign: 'center', padding: '18px 8px' }}>
+                                      <div style={{ fontSize: '12px', color: C.textSecondary, marginBottom: '8px' }}>Deal phase: {dealRoomPhase}</div>
+                                      <button onClick={() => setNegotiatingOpp(null)} style={{ background: 'none', border: `1px solid ${C.border}`, padding: '8px 16px', borderRadius: '8px', color: C.textSecondary, cursor: 'pointer', fontSize: '12px' }}>Close</button>
+                                    </div>
                                   )}
                                 </div>
                               )}
@@ -4495,250 +4486,7 @@ export default function MarketplaceDemoPage() {
                     )}
                     </>)}
 
-                    {/* Creator Collab Mode */}
-                    {creatorMarketplaceMode === 'collab' && (
-                      <>
-                        {/* Browse / Sent tabs */}
-                        <div style={{ display: 'flex', background: C.card, borderRadius: '10px', padding: '3px', marginBottom: '14px' }}>
-                          {(['browse', 'sent'] as const).map(tab => (
-                            <button
-                              key={tab}
-                              onClick={() => setCollabView(tab)}
-                              style={{ flex: 1, padding: '9px 0', borderRadius: '8px', border: 'none', background: collabView === tab ? C.surfaceAlt : 'transparent', color: collabView === tab ? C.text : C.textSecondary, fontWeight: 600, fontSize: '13px', cursor: 'pointer', transition: 'all 0.15s', position: 'relative' }}
-                            >
-                              {tab === 'browse' ? 'Browse' : 'Sent'}
-                              {tab === 'sent' && collabSentNames.length > 0 && (
-                                <span style={{ position: 'absolute', top: '6px', right: '12px', width: '16px', height: '16px', borderRadius: '50%', background: C.primary, color: '#fff', fontSize: '9px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{collabSentNames.length}</span>
-                              )}
-                            </button>
-                          ))}
-                        </div>
 
-                        {/* Sent requests view */}
-                        {collabView === 'sent' && (
-                          <div>
-                            {collabSentNames.length === 0 ? (
-                              <div style={{ textAlign: 'center', padding: '40px 20px', color: C.textMuted, fontSize: '13px' }}>No collab requests sent yet.</div>
-                            ) : (
-                              collabSentNames.map((name, i) => {
-                                const creator = BRAND_MARKETPLACE_CREATORS.find(c => c.name === name);
-                                const badge = creator ? PROFESSION_BADGES[creator.valueSkin] : null;
-                                const badgeColor = badge?.color ?? C.accent;
-                                const abbr = badge?.abbreviation ?? (creator?.valueSkin ?? '').split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 3);
-                                return (
-                                  <div key={i} style={{ background: C.card, borderRadius: '12px', padding: '14px', marginBottom: '10px', border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${name.replace(/\s/g,'')}`} alt={name} style={{ width: '40px', height: '40px', borderRadius: '50%', background: C.surfaceAlt, border: `2px solid ${badgeColor}`, flexShrink: 0 }} />
-                                    <div style={{ flex: 1 }}>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                                        <span style={{ fontWeight: 700, fontSize: '14px', color: C.text }}>{name}</span>
-                                        {creator && (
-                                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '4px', background: badgeColor, color: '#fff', fontSize: '7px', fontWeight: 700 }}>{abbr}</span>
-                                        )}
-                                      </div>
-                                      <div style={{ fontSize: '11px', color: C.textSecondary }}>{creator?.handle ?? ''}</div>
-                                    </div>
-                                    <span style={{ fontSize: '11px', fontWeight: 600, color: C.textSecondary, background: C.surfaceAlt, padding: '4px 10px', borderRadius: '6px', flexShrink: 0 }}>Pending</span>
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        )}
-
-                        {collabView === 'browse' && <>
-                        {campaigns.length === 0 ? (
-                          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:'12px', padding:'22px 18px', textAlign:'center' }}>
-                            <div style={{ fontSize:'16px', fontWeight:700, color:C.text, marginBottom:'6px' }}>Create a campaign first</div>
-                            <div style={{ fontSize:'12px', color:C.textSecondary, lineHeight:1.5, marginBottom:'14px' }}>
-                              Creator browsing unlocks after you publish your first campaign brief.
-                            </div>
-                            <button onClick={() => setMarketplaceTab('campaigns')} style={{ background:C.primary, border:'none', borderRadius:'8px', padding:'10px 14px', color:'#fff', fontWeight:700, fontSize:'12px', cursor:'pointer' }}>
-                              Create Campaign
-                            </button>
-                          </div>
-                        ) : (
-                        <>
-                        {/* Compensation type filter chips */}
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-                          {(['all', 'paid', 'unpaid', 'barter'] as const).map(f => {
-                            const labels: Record<string, string> = { all: 'All', paid: 'Paid', unpaid: 'Unpaid', barter: 'Barter' };
-                            const active = collabCompFilter === f;
-                            return (
-                              <button
-                                key={f}
-                                onClick={() => { setCollabCompFilter(f); setCollabRequestOpen(null); }}
-                                style={{ padding: '7px 16px', borderRadius: '20px', border: 'none', whiteSpace: 'nowrap', background: active ? C.text : C.card, color: active ? C.bg : C.textSecondary, fontWeight: 600, fontSize: '13px', cursor: 'pointer', transition: 'all 0.15s' }}
-                              >
-                                {labels[f]}
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {BRAND_MARKETPLACE_CREATORS.filter(c => {
-                          if (collabCompFilter === 'all') return true;
-                          if (collabCompFilter === 'barter') return c.willingToBarter || c.dealTypes.includes('Barter');
-                          if (collabCompFilter === 'paid') return c.dealTypes.includes('Paid');
-                          if (collabCompFilter === 'unpaid') return !c.dealTypes.includes('Paid') && !c.willingToBarter;
-                          return true;
-                        }).map((creator, i) => {
-                          const sent = collabSentNames.includes(creator.name);
-                          const open = collabRequestOpen === i;
-                          const badge = PROFESSION_BADGES[creator.valueSkin];
-                          const abbr = badge?.abbreviation ?? creator.valueSkin.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 3);
-                          const badgeColor = badge?.color ?? C.primary;
-                          return (
-                            <div key={i} style={{ background: C.card, borderRadius: '12px', padding: '14px', marginBottom: '10px', border: `1px solid ${open ? 'rgba(94,106,210,0.4)' : C.border}` }}>
-                              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-                                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${creator.name.replace(/\s/g,'')}`} alt={creator.name} style={{ width: '40px', height: '40px', borderRadius: '50%', background: C.surfaceAlt, border: `2px solid ${badgeColor}` }} />
-                                <div style={{ flex: 1 }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span style={{ fontWeight: 700, fontSize: '14px' }}>{creator.name}</span>
-                                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '18px', height: '18px', borderRadius: '4px', background: badgeColor, color: '#fff', fontSize: '7px', fontWeight: 700 }}>{abbr}</span>
-                                  </div>
-                                  <div style={{ fontSize: '11px', color: C.textSecondary }}>{creator.handle} · {creator.followers} followers</div>
-                                </div>
-                                {sent ? (
-                                  <span style={{ fontSize: '11px', fontWeight: 600, color: C.textSecondary, background: C.surfaceAlt, padding: '4px 10px', borderRadius: '6px' }}>Sent</span>
-                                ) : (
-                                  <button
-                                    onClick={() => setCollabRequestOpen(open ? null : i)}
-                                    style={{ fontSize: '12px', fontWeight: 600, color: '#fff', background: C.accent, border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}
-                                  >
-                                    {open ? 'Cancel' : 'Collab'}
-                                  </button>
-                                )}
-                              </div>
-                              {open && (
-                                <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: '12px' }}>
-                                  <div style={{ marginBottom: '8px' }}>
-                                    <div style={{ fontSize: '11px', color: C.textMuted, fontWeight: 600, marginBottom: '4px' }}>Collab idea *</div>
-                                    <textarea
-                                      placeholder="What do you want to create together?"
-                                      value={collabIdea}
-                                      onChange={e => setCollabIdea(e.target.value)}
-                                      rows={2}
-                                      style={{ width: '100%', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, padding: '7px 10px', fontSize: '12px', fontFamily: 'inherit', outline: 'none', resize: 'none', boxSizing: 'border-box' }}
-                                    />
-                                  </div>
-                                  <div style={{ marginBottom: '10px' }}>
-                                    <div style={{ fontSize: '11px', color: C.textMuted, fontWeight: 600, marginBottom: '4px' }}>Content format</div>
-                                    <input
-                                      type="text"
-                                      placeholder="e.g. Co-hosted Reel, Joint Story series"
-                                      value={collabFormat}
-                                      onChange={e => setCollabFormat(e.target.value)}
-                                      style={{ width: '100%', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, padding: '7px 10px', fontSize: '12px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
-                                    />
-                                  </div>
-                                  <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-                                    <button onClick={() => setCollabPaid(false)} style={{ flex: 1, padding: '7px', borderRadius: '8px', border: `1px solid ${!collabPaid ? C.primary : C.border}`, background: !collabPaid ? `${C.primary}12` : C.bg, color: !collabPaid ? C.primary : C.textSecondary, fontWeight: 600, fontSize: '11px', cursor: 'pointer' }}>Unpaid / Organic</button>
-                                    <button onClick={() => setCollabPaid(true)} style={{ flex: 1, padding: '7px', borderRadius: '8px', border: `1px solid ${collabPaid ? C.primary : C.border}`, background: collabPaid ? `${C.primary}12` : C.bg, color: collabPaid ? C.primary : C.textSecondary, fontWeight: 600, fontSize: '11px', cursor: 'pointer' }}>Paid</button>
-                                    <button onClick={() => setCollabNegotiable(p => !p)} style={{ flex: 1, padding: '7px', borderRadius: '8px', border: `1px solid ${collabNegotiable ? C.accent : C.border}`, background: collabNegotiable ? 'rgba(94,106,210,0.1)' : C.bg, color: collabNegotiable ? C.accent : C.textSecondary, fontWeight: 600, fontSize: '11px', cursor: 'pointer' }}>Negotiable</button>
-                                  </div>
-                                  {collabPaid && (
-                                    <div style={{ marginBottom: '12px' }}>
-                                      <div style={{ fontSize: '11px', color: C.textMuted, fontWeight: 600, marginBottom: '4px' }}>Budget</div>
-                                      <input
-                                        type="text"
-                                        placeholder="e.g. $1500"
-                                        value={collabBudget}
-                                        onChange={e => setCollabBudget(e.target.value)}
-                                        style={{ width: '100%', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, padding: '7px 10px', fontSize: '12px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
-                                      />
-                                    </div>
-                                  )}
-                                  <button
-                                    onClick={() => {
-                                      if (collabIdea.trim() && (!collabPaid || collabBudget.trim())) {
-                                        const c2cKey = `${profileName}:${creator.name}`;
-                                        const c2cDeal: Partial<DealState> = {
-                                          phase: 'chatroom',
-                                          intent: 'explore',
-                                          briefFilled: true,
-                                          briefTitle: collabIdea.trim(),
-                                          offerAmount: collabBudget || '0',
-                                          counterAmount: '',
-                                          brandResponseAmount: '',
-                                          chatMessages: [],
-                                          chatInput: '',
-                                          performanceClause: false,
-                                          advancePercent: 50,
-                                          dealType: collabPaid ? 'c2c_paid' : 'c2c_collab',
-                                          c2cContentStatus: collabPaid ? undefined : 'content_creating',
-                                        };
-                                        setDealStates(prev => ({ ...prev, [c2cKey]: { ...getOrCreateDeal(c2cKey), ...c2cDeal } }));
-                                        setCollabSentNames(p => [...p, creator.name]);
-                                        setCollabRequestOpen(null);
-                                        const msg = `C2C Collab: ${collabIdea.trim()} (${collabFormat || 'format TBD'}, ${collabPaid ? `$${collabBudget}` : 'Unpaid'})`;
-                                        setCollabIdea(''); setCollabFormat(''); setCollabBudget('');
-                                        firebaseSendNotification(creator.handle || '', 'message', msg);
-                                        setPurchaseToast('Collab request sent');
-                                        setTimeout(() => setPurchaseToast(null), 3000);
-                                      }
-                                    }}
-                                    style={{ width: '100%', background: collabIdea.trim() && (!collabPaid || collabBudget.trim()) ? C.accent : C.border, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: collabIdea.trim() && (!collabPaid || collabBudget.trim()) ? 'pointer' : 'not-allowed', fontSize: '13px' }}
-                                  >
-                                    Send Collab Request
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                        </>
-                        )}
-                        </>}
-                      {/* Past Deals section */}
-                      <div style={{ marginTop:'24px', paddingTop:'20px', borderTop:`1px solid ${C.border}` }}>
-                        <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'16px' }}>
-                          <span style={{ fontSize:'12px', fontWeight:700, color:C.text, textTransform:'uppercase', letterSpacing:'0.5px' }}>Past Deals</span>
-                          <span style={{ fontSize:'10px', background:C.primary, color:'#fff', padding:'2px 6px', borderRadius:'8px' }}>
-                            {Object.values(dealStates).filter(d => d.brandApprovalPhase === 'approved' || d.creatorDealLifecycle === 'approved').length}
-                          </span>
-                        </div>
-                        {(() => {
-                          const completedDeals = Object.entries(dealStates).filter(([_, d]) => d.brandApprovalPhase === 'approved' || d.creatorDealLifecycle === 'approved').map(([key, deal]) => ({key, ...deal}));
-                          if (completedDeals.length === 0) {
-                             return <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'12px', padding:'16px' }}>
-                               <div style={{ fontSize:'12px', color:C.textSecondary, textAlign:'center' }}>No completed deals yet</div>
-                               <button onClick={handleRefresh} disabled={refreshing} style={{ fontSize:'11px', fontWeight:600, color:C.primary, background:`${C.primary}12`, border:'none', borderRadius:'8px', padding:'8px 16px', cursor:'pointer' }}>
-                                 {refreshing ? 'Refreshing...' : '⟳ Find matching deals'}
-                               </button>
-                             </div>;
-                           }
-                           return (
-                             <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                               {completedDeals.map((deal) => {
-                                 const [creatorName, skinName] = deal.key.split('|');
-                                const dealAmount = deal.agreementAmount || deal.offerAmount || '0';
-                                const creatorRating = deal.creatorRating || 0;
-                                const brandRating = deal.brandRating || 0;
-                                const completedDate = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-                                return (
-                                  <div key={deal.key} style={{ background:C.card, borderRadius:'8px', padding:'12px', border:`1px solid ${C.border}` }}>
-                                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'start', marginBottom:'8px' }}>
-                                      <div>
-                                        <div style={{ fontSize:'13px', fontWeight:600, color:C.text, marginBottom:'2px' }}>Brand Deal · {deal.type || 'Unknown'}</div>
-                                        <div style={{ fontSize:'11px', color:C.textSecondary }}>{completedDate}</div>
-                                      </div>
-                                      <div style={{ fontSize:'13px', fontWeight:700, color:C.success }}>${parseInt(dealAmount).toLocaleString()}</div>
-                                    </div>
-                                    {(creatorRating > 0 || brandRating > 0) && (
-                                      <div style={{ display:'flex', gap:'16px', fontSize:'11px', color:C.textSecondary, paddingTop:'8px', borderTop:`1px solid ${C.border}` }}>
-                                        {creatorRating > 0 && <span>You rated: {'★'.repeat(creatorRating)}</span>}
-                                        {brandRating > 0 && <span>Brand rated: {'★'.repeat(brandRating)}</span>}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                      </>
-                    )}
 
                   </div>
                 </>
@@ -5676,9 +5424,7 @@ export default function MarketplaceDemoPage() {
                                         if (existingDeal?.briefTitle) setBrandBriefTitle(existingDeal.briefTitle);
                                         if (existingDeal?.offerAmount) setBrandBudget(existingDeal.offerAmount);
                                       } else {
-                                        // No active deal — brands must create a campaign first
-                                        setPurchaseToast('Create a campaign first to reach this creator');
-                                        setTimeout(() => setPurchaseToast(null), 3000);
+                                        setShowCampaignCreator(true);
                                       }
                                     }}
                                     style={{ width:'100%', background: hasMatch ? (creator.featured ? C.primary : C.surfaceAlt) : C.surfaceAlt, border: hasMatch && creator.featured ? 'none' : `1px solid ${hasMatch ? C.border : 'rgba(230,81,0,0.3)'}`, padding: '10px 16px', borderRadius: '8px', color: hasMatch ? '#fff' : C.warning, fontWeight: '600', cursor: 'pointer', fontSize: '14px', opacity: hasMatch ? 1 : 0.7 }}

@@ -237,7 +237,10 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
                     </button>
                   )}
                   {bid.status === 'accepted' && (
-                    <div style={{ marginTop: '8px', fontSize: '12px', color: C.success }}>Brand will contact you shortly. Check your deals.</div>
+                    <button onClick={() => router.push('/demo/marketplace')}
+                      style={{ marginTop: '8px', padding: '8px 16px', background: C.primary, color: '#000', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '12px', width: '100%' }}>
+                      View Deal Room →
+                    </button>
                   )}
                 </div>
               ))}
@@ -280,6 +283,14 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
                   </div>
                 </div>
                 {bid.proposal && <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '8px' }}>{bid.proposal}</div>}
+                {bid.status === 'accepted' && (
+                  <div style={{ marginTop: '8px' }}>
+                    <button onClick={() => router.push('/demo/marketplace')}
+                      style={{ padding: '8px 16px', background: C.primary, color: '#000', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontSize: '12px', width: '100%' }}>
+                      View Deal Room →
+                    </button>
+                  </div>
+                )}
                 {bid.status === 'pending' && (
                   <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
                     <button onClick={() => handleBidAction(bid.id, 'accept')}
