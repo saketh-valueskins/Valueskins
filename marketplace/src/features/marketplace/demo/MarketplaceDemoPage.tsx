@@ -8009,7 +8009,6 @@ export default function MarketplaceDemoPage() {
             <button
               key={view}
               onClick={() => {
-                if (view === 'mim') { setMarketplaceRole('none'); }
                 setActiveView(view);
               }}
               style={{

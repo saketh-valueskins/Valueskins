@@ -74,7 +74,7 @@ export default function Onboarding() {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '12px', color: C.textMuted }}>
-          {loading ? 'Setting up your account...' : 'You can always contact support to change this later.'}
+          {loading ? 'Setting up your account...' : 'This selection is permanent and cannot be changed later.'}
         </div>
       </div>
     </div>
