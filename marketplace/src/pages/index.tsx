@@ -68,12 +68,14 @@ export default function HomePage() {
             color="#8b5cf6"
           />
 
-          <DashboardCard
-            title="Events"
-            desc="Host, explore, and manage events"
-            link="/events"
-            color="#ec4899"
-          />
+          <div style={{ display: 'none' }}>
+            <DashboardCard
+              title="Events"
+              desc="Host, explore, and manage events"
+              link="/events"
+              color="#ec4899"
+            />
+          </div>
 
           <DashboardCard
             title="Preferences"

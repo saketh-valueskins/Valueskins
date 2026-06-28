@@ -106,7 +106,33 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
       });
       const d = await res.json();
       setMessage(d.message || d.error || 'Action completed');
-      if (res.ok) fetchCampaign();
+      if (res.ok) {
+        if (action === 'accept') {
+          const bid = bids.find(b => b.id === bidId);
+          if (bid) {
+            try {
+              await fetch('/api/realtime/state', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  value: {
+                    pendingDeals: [{
+                      creatorName: bid.creator_name || `Creator #${bid.creator_id}`,
+                      creatorId: bid.creator_id,
+                      bidAmount: bid.bid_amount,
+                      campaignTitle: campaign?.title || 'Campaign',
+                      dealKey: `campaign_bid_${bidId}`,
+                    }],
+                  },
+                }),
+              });
+            } catch {}
+          }
+          setMessage('Redirecting to deal room...');
+          setTimeout(() => router.push('/demo/marketplace'), 1000);
+        }
+        fetchCampaign();
+      }
     } catch { setMessage('Network error'); }
   };
 

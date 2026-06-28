@@ -478,6 +478,9 @@ export default function MarketplaceDemoPage() {
     }
   }, [isBrand, isCreator]);
   const [activeBrandSkin, setActiveBrandSkin] = useState<string | null>(null);
+  const [backendCreators, setBackendCreators] = useState<any[]>([]);
+  const [creatorsLoading, setCreatorsLoading] = useState(false);
+  const [pendingDealCreatorName, setPendingDealCreatorName] = useState<string | null>(null);
 
   // Fetch creators from backend API when brand skin changes
   useEffect(() => {
@@ -506,6 +509,37 @@ export default function MarketplaceDemoPage() {
       })
       .finally(() => setCreatorsLoading(false));
   }, [activeBrandSkin]);
+
+  // Check for pending deals from CampaignDetail bid acceptance
+  useEffect(() => {
+    fetch('/api/realtime/state')
+      .then(r => r.json())
+      .then(data => {
+        if (data?.pendingDeals?.length > 0) {
+          const deal = data.pendingDeals[0];
+          setPendingDealCreatorName(deal.creatorName);
+          setMarketplaceRole('brand');
+          fetch('/api/realtime/state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value: { pendingDeals: [] } }),
+          }).catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Auto-open deal room when pending deal creator is found in backendCreators
+  useEffect(() => {
+    if (pendingDealCreatorName && backendCreators.length > 0) {
+      const idx = backendCreators.findIndex((c: any) => c.name === pendingDealCreatorName);
+      if (idx >= 0) {
+        const origIdx = backendCreators[idx]._origIdx ?? idx;
+        setNegotiatingCreator(origIdx);
+        setPendingDealCreatorName(null);
+      }
+    }
+  }, [backendCreators, pendingDealCreatorName]);
 
   // Fetch all creators for continuous auto-matching (picks up new signups)
   const fetchAllCreators = useCallback(async (force = false) => {
@@ -1281,8 +1315,6 @@ export default function MarketplaceDemoPage() {
   // No seeded campaigns or applications — only real data from Firebase
 
   const [marketplaceTab, setMarketplaceTab] = useState<'creators' | 'campaigns' | 'applications' | 'sent' | 'pastDeals'>('creators');
-  const [backendCreators, setBackendCreators] = useState<any[]>([]);
-  const [creatorsLoading, setCreatorsLoading] = useState(false);
   // All creators across all professions — used for continuous live auto-matching
   const [allCreators, setAllCreators] = useState<any[]>([]);
   const [allCreatorsLoading, setAllCreatorsLoading] = useState(false);
@@ -2751,24 +2783,30 @@ export default function MarketplaceDemoPage() {
                                   <div style={{ marginBottom:'12px', padding:'10px 12px', background:C.bg, borderRadius:'10px', border:`1px solid ${C.border}` }}>
                                     <div style={{ fontSize:'9px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px', letterSpacing:'0.5px' }}>Deal Progression</div>
                                     <div style={{ display:'flex', alignItems:'center', gap:'4px' }}>
-                                      {(['offer_sent', 'countered', 'accepted', 'completed'] as const).map((phase, idx, arr) => {
-                                        const phaseNames = { offer_sent: 'Offer Sent', countered: 'Countered', accepted: 'Accepted', completed: 'Completed' };
-                                        const isActive = dealRoomPhase === phase || (dealRoomPhase === 'formal_offer' && phase === 'offer_sent') || (dealRoomPhase === 'brand_countered' && idx <= 1) || (dealRoomPhase === 'softhold' && phase === 'completed');
-                                        const isCompleted = (dealRoomPhase === 'accepted' && idx < 2) || (dealRoomPhase === 'softhold' && idx < 3);
-                                        return (
-                                          <React.Fragment key={phase}>
-                                            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
-                                              <div style={{ width:'28px', height:'28px', borderRadius:'50%', background:isCompleted?C.success:isActive?C.primary:C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'11px', fontWeight:700, color: isCompleted || isActive ? '#fff' : C.textMuted, transition:'all 0.2s' }}>
-                                                {isCompleted ? '✓' : idx + 1}
+                                      {(() => {
+                                        const STEPS = ['brief', 'offer', 'counter', 'accepted', 'completed'];
+                                        const LABELS: Record<string, string> = { brief:'Brief', offer:'Offer', counter:'Negotiating', accepted:'Accepted', completed:'Completed' };
+                                        const phaseOrder: Record<string, number> = { brief:0, offer:1, pending:1, brand_considering:1.5, brand_reviewing:1.5, brand_countered:2, counter:2, last_offer:2.5, formal_offer:3, checklist:3, accepted:3, softhold:4, rejected:-1, brand_rejected:-1 };
+                                        const current = phaseOrder[dealRoomPhase] ?? 0;
+                                        return STEPS.map((step, idx, arr) => {
+                                          const stepPos = idx;
+                                          const isActive = current >= 0 && Math.floor(current) === stepPos;
+                                          const isCompleted = current >= stepPos + 0.5;
+                                          return (
+                                            <React.Fragment key={step}>
+                                              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
+                                                <div style={{ width:'28px', height:'28px', borderRadius:'50%', background: dealRoomPhase === 'rejected' || dealRoomPhase === 'brand_rejected' ? C.danger : isCompleted ? C.success : !isActive && current < stepPos && current !== -1 ? C.border : isActive ? C.primary : C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'11px', fontWeight:700, color: isCompleted || isActive ? '#fff' : C.textMuted, transition:'all 0.2s' }}>
+                                                  {dealRoomPhase === 'rejected' || dealRoomPhase === 'brand_rejected' ? '✕' : isCompleted ? '✓' : idx + 1}
+                                                </div>
+                                                <div style={{ fontSize:'8px', color: isActive ? C.primary : C.textMuted, fontWeight: isActive ? 700 : 400, textAlign:'center', minWidth:'40px' }}>{LABELS[step]}</div>
                                               </div>
-                                              <div style={{ fontSize:'8px', color: isActive ? C.primary : C.textMuted, fontWeight: isActive ? 700 : 400, textAlign:'center', minWidth:'40px' }}>{phaseNames[phase]}</div>
-                                            </div>
-                                            {idx < arr.length - 1 && (
-                                              <div style={{ flex:1, height:'2px', background: isCompleted ? C.success : C.border, margin:'0 2px', marginTop:'-8px' }} />
-                                            )}
-                                          </React.Fragment>
-                                        );
-                                      })}
+                                              {idx < arr.length - 1 && (
+                                                <div style={{ flex:1, height:'2px', background: isCompleted ? C.success : C.border, margin:'0 2px', marginTop:'-8px' }} />
+                                              )}
+                                            </React.Fragment>
+                                          );
+                                        });
+                                      })()}
                                     </div>
                                   </div>
 
@@ -5483,22 +5521,28 @@ export default function MarketplaceDemoPage() {
                               <div style={{ marginBottom:'12px', padding:'8px 10px', background:C.bg, borderRadius:'8px', border:`1px solid ${C.border}` }}>
                                 <div style={{ fontSize:'9px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'6px', letterSpacing:'0.5px' }}>Deal Progression</div>
                                 <div style={{ display:'flex', alignItems:'center', gap:'3px' }}>
-                                  {(['brief', 'pending', 'counter', 'accepted'] as const).map((phase, idx, arr) => {
-                                    const phaseNames = { brief: 'Brief', pending: 'Sent', counter: 'Counter', accepted: 'Accepted' };
-                                    const phaseOrder = ['brief', 'pending', 'counter', 'accepted'];
-                                    const currentIdx = phaseOrder.indexOf(brandDealPhase);
-                                    const isCompleted = idx < currentIdx;
-                                    const isActive = idx === currentIdx;
-                                    return (
-                                      <React.Fragment key={phase}>
-                                        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'3px' }}>
-                                          <div style={{ width:'24px', height:'24px', borderRadius:'50%', background:isCompleted?C.success:isActive?C.primary:C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'10px', fontWeight:700, color:isCompleted||isActive?'#fff':C.textMuted }}>{isCompleted?'\u2713':idx+1}</div>
-                                          <div style={{ fontSize:'7px', color:isActive?C.primary:C.textMuted, fontWeight:isActive?700:400, textAlign:'center', minWidth:'36px' }}>{phaseNames[phase]}</div>
-                                        </div>
-                                        {idx < arr.length - 1 && <div style={{ flex:1, height:'2px', background:isCompleted?C.success:C.border, margin:'0 1px', marginTop:'-8px' }} />}
-                                      </React.Fragment>
-                                    );
-                                  })}
+                                  {(() => {
+                                    const STEPS = ['brief', 'offer', 'counter', 'accepted', 'completed'];
+                                    const LABELS: Record<string, string> = { brief:'Brief', offer:'Sent', counter:'Negotiating', accepted:'Accepted', completed:'Completed' };
+                                    const phaseOrder: Record<string, number> = { brief:0, offer:1, pending:1, brand_considering:1.5, brand_reviewing:1.5, brand_countered:2, counter:2, last_offer:2.5, formal_offer:3, checklist:3, accepted:3, softhold:4, rejected:-1, brand_rejected:-1 };
+                                    const current = phaseOrder[brandDealPhase] ?? 0;
+                                    return STEPS.map((step, idx, arr) => {
+                                      const stepPos = idx;
+                                      const isActive = current >= 0 && Math.floor(current) === stepPos;
+                                      const isCompleted = current >= stepPos + 0.5;
+                                      return (
+                                        <React.Fragment key={step}>
+                                          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'3px' }}>
+                                            <div style={{ width:'24px', height:'24px', borderRadius:'50%', background: brandDealPhase === 'rejected' || brandDealPhase === 'brand_rejected' ? C.danger : isCompleted ? C.success : !isActive && current < stepPos && current !== -1 ? C.border : isActive ? C.primary : C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'10px', fontWeight:700, color: isCompleted || isActive ? '#fff' : C.textMuted }}>
+                                              {brandDealPhase === 'rejected' || brandDealPhase === 'brand_rejected' ? '✕' : isCompleted ? '\u2713' : idx+1}
+                                            </div>
+                                            <div style={{ fontSize:'7px', color: isActive?C.primary:C.textMuted, fontWeight:isActive?700:400, textAlign:'center', minWidth:'36px' }}>{LABELS[step]}</div>
+                                          </div>
+                                          {idx < arr.length - 1 && <div style={{ flex:1, height:'2px', background: isCompleted ? C.success : C.border, margin:'0 1px', marginTop:'-8px' }} />}
+                                        </React.Fragment>
+                                      );
+                                    });
+                                  })()}
                                 </div>
                               </div>
 
