@@ -5200,120 +5200,6 @@ export default function MarketplaceDemoPage() {
                       </div>
                     ) : (<>
 
-                    {/* Search Bar */}
-                    <div style={{ marginBottom: '16px' }}>
-                      <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
-                        {(['profession', 'name', 'general'] as const).map(mode => (
-                          <button key={mode} onClick={() => { setBrandSearchMode(mode); setBrandSearchQuery(''); }}
-                            style={{ flex: 1, padding: '6px', borderRadius: '8px', fontSize: '11px', fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize',
-                              background: brandSearchMode === mode ? C.primary : C.card,
-                              color: brandSearchMode === mode ? '#fff' : C.textSecondary,
-                              border: `1px solid ${brandSearchMode === mode ? C.primary : C.border}`,
-                            }}>{mode}</button>
-                        ))}
-                      </div>
-                      <div style={{ position: 'relative' }}>
-                        <input
-                          value={brandSearchQuery}
-                          onChange={e => setBrandSearchQuery(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}
-                          placeholder={
-                            brandSearchMode === 'profession' ? 'Search by profession (e.g. Piano Player, Fitness Coach...)' :
-                            brandSearchMode === 'name' ? 'Search by creator name or handle...' :
-                            'Search creators, professions, or handles...'
-                          }
-                          style={{ width: '100%', padding: '10px 36px 10px 12px', background: C.card, border: `1px solid ${brandSearchQuery ? C.primary : C.border}`, borderRadius: '10px', color: C.text, fontSize: '13px', boxSizing: 'border-box' as const, outline: 'none' }}
-                        />
-                        {brandSearchQuery && (
-                          <button onClick={() => setBrandSearchQuery('')} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: C.textMuted, cursor: 'pointer', fontSize: '16px' }}>×</button>
-                        )}
-                      </div>
-                      {brandSearchQuery && brandSearchMode === 'profession' && (
-                        <div style={{ marginTop: '6px', padding: '8px 10px', background: 'rgba(0,102,204,0.06)', borderRadius: '8px', fontSize: '11px', color: C.textSecondary }}>
-                          Showing exact <strong style={{ color: C.text }}>{brandSearchQuery}</strong> matches first, then related professions
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Advanced Audience & Deal Filters */}
-                    <div style={{ marginBottom: '14px' }}>
-                      <button onClick={() => setShowAudienceFilters(p => !p)} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.card, border: `1px solid ${C.border}`, borderRadius: showAudienceFilters ? '10px 10px 0 0' : '10px', padding: '9px 14px', cursor: 'pointer', color: C.textSecondary, fontSize: '11px', fontWeight: 700 }}>
-                        <span style={{ textTransform: 'uppercase', letterSpacing: '0.6px' }}>Audience & Deal Filters</span>
-                        <span>{showAudienceFilters ? '▲' : '▼'}</span>
-                      </button>
-                      {showAudienceFilters && (
-                        <div style={{ background: C.card, border: `1px solid ${C.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '12px' }}>
-                          {/* Audience Age Range */}
-                          <div style={{ marginBottom: '10px' }}>
-                            <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Audience Age Range</div>
-                            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                              {[null, '13-17', '18-24', '25-34', '35-44', '45-54', '55+'].map(a => (
-                                <button key={a ?? 'all'} onClick={() => setFilterAudienceAge(a)}
-                                  style={{ padding: '4px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
-                                    background: filterAudienceAge === a ? `${C.primary}25` : C.bg,
-                                    color: filterAudienceAge === a ? C.primary : C.textSecondary,
-                                    border: `1px solid ${filterAudienceAge === a ? C.primary : C.border}`,
-                                  }}>{a ?? 'Any'}</button>
-                              ))}
-                            </div>
-                          </div>
-                          {/* Audience Language */}
-                          <div style={{ marginBottom: '10px' }}>
-                            <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Audience Language</div>
-                            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                              {[null, 'English', 'Spanish', 'Hindi', 'Portuguese', 'Arabic', 'Mandarin'].map(l => (
-                                <button key={l ?? 'all'} onClick={() => setFilterAudienceLang(l)}
-                                  style={{ padding: '4px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
-                                    background: filterAudienceLang === l ? `${C.primary}25` : C.bg,
-                                    color: filterAudienceLang === l ? C.primary : C.textSecondary,
-                                    border: `1px solid ${filterAudienceLang === l ? C.primary : C.border}`,
-                                  }}>{l ?? 'Any'}</button>
-                              ))}
-                            </div>
-                          </div>
-                          {/* Audience Location + Min Deal side by side */}
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-                            <div>
-                              <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Audience Location</div>
-                              <input value={filterAudienceLoc} onChange={e => setFilterAudienceLoc(e.target.value)} placeholder="e.g. USA" style={{ width: '100%', padding: '7px 9px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '7px', color: C.text, fontSize: '12px', boxSizing: 'border-box' as const, outline: 'none' }} />
-                            </div>
-                            <div>
-                              <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Min Deal Size (USD)</div>
-                              <input value={filterMinDeal} onChange={e => setFilterMinDeal(e.target.value)} type="number" placeholder="e.g. 1000" style={{ width: '100%', padding: '7px 9px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '7px', color: C.text, fontSize: '12px', boxSizing: 'border-box' as const, outline: 'none' }} />
-                            </div>
-                          </div>
-                          {/* Deal Type */}
-                          <div style={{ marginBottom: '10px' }}>
-                            <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Deal Type</div>
-                            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                              {[null, 'Paid', 'Gifted Product', 'Equity', 'Barter', 'Revenue Share', 'Ambassador'].map(d => (
-                                <button key={d ?? 'all'} onClick={() => setFilterDealType(d)}
-                                  style={{ padding: '4px 9px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
-                                    background: filterDealType === d ? `${C.primary}25` : C.bg,
-                                    color: filterDealType === d ? C.primary : C.textSecondary,
-                                    border: `1px solid ${filterDealType === d ? C.primary : C.border}`,
-                                  }}>{d ?? 'Any'}</button>
-                              ))}
-                            </div>
-                          </div>
-                          {/* Response Time Max */}
-                          <div>
-                            <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Max Response Time</div>
-                            <div style={{ display: 'flex', gap: '5px' }}>
-                              {[null, 4, 12, 24, 48].map(h => (
-                                <button key={h ?? 'any'} onClick={() => setFilterResponseMax(h)}
-                                  style={{ flex: 1, padding: '5px 4px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
-                                    background: filterResponseMax === h ? `${C.primary}25` : C.bg,
-                                    color: filterResponseMax === h ? C.primary : C.textSecondary,
-                                    border: `1px solid ${filterResponseMax === h ? C.primary : C.border}`,
-                                  }}>{h ? `≤${h}h` : 'Any'}</button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                       <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                         {activeBrandSkin ? `${activeBrandSkin} Creators` : 'Select a ValueSkin above'}
@@ -6714,6 +6600,50 @@ export default function MarketplaceDemoPage() {
                               <span style={{ fontSize:'10px', color:C.textMuted }}>{c.deadline?`Deadline ${c.deadline}`:''}</span>
                               <span style={{ fontSize:'10px', fontWeight:700, color:c.status==='expired'?C.textMuted:c.status==='open'?C.success:'#888', background:c.status==='expired'?'rgba(239,68,68,0.1)':c.status==='open'?C.surfaceAlt:'rgba(136,136,136,0.1)', padding:'2px 8px', borderRadius:'6px', textTransform:'uppercase' }}>{c.status}</span>
                             </div>
+                            {/* Applicants per campaign */}
+                            {(() => {
+                              const campaignApps = sharedApplications.filter(a => a.campaignId === c.id && a.status !== 'invited');
+                              if (campaignApps.length === 0) return null;
+                              return (
+                                <div style={{ marginTop:'12px', paddingTop:'12px', borderTop:`1px solid ${C.border}` }}>
+                                  <div style={{ fontSize:'11px', fontWeight:700, color:C.text, marginBottom:'8px' }}>
+                                    Applicants ({campaignApps.length})
+                                  </div>
+                                  <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
+                                    {campaignApps.map((app, ai) => {
+                                      const displayName = app.creatorName || app.creatorHandle;
+                                      const igUrl = app.creatorWebsiteUrl || `https://portfolio.valueskins.com/${app.creatorHandle.replace('@', '')}`;
+                                      return (
+                                        <div key={ai} style={{ display:'flex', alignItems:'center', gap:'10px', padding:'8px 0', borderTop: ai > 0 ? `1px solid ${C.border}` : 'none' }}>
+                                          <a href={igUrl} target="_blank" rel="noopener noreferrer" style={{ flexShrink:0 }}>
+                                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName.replace(/[\s@]/g, '')}`} alt={displayName} style={{ width:'32px', height:'32px', borderRadius:'50%', background:C.card }} />
+                                          </a>
+                                          <div style={{ flex:1, minWidth:0 }}>
+                                            <div style={{ fontSize:'12px', fontWeight:700, color:C.text }}>{displayName}</div>
+                                            <div style={{ fontSize:'10px', color:C.textSecondary }}>{app.creatorHandle} · {app.creatorMatchScore}</div>
+                                          </div>
+                                          <div style={{ flexShrink:0, display:'flex', gap:'6px' }}>
+                                            {app.status === 'pending' ? (
+                                              <button onClick={() => { persistApplications(sharedApplications.map(a=>a.id===app.id?{...a,status:'accepted' as const}:a)); setPurchaseToast('Accepted'); setTimeout(()=>setPurchaseToast(null),3000); }} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:600, color:'#fff', cursor:'pointer' }}>Accept</button>
+                                            ) : (
+                                              <>
+                                                <span style={{ fontSize:'9px', fontWeight:600, color:app.status==='accepted'?C.success:C.textMuted, textTransform:'uppercase' }}>{app.status}</span>
+                                                {app.status === 'accepted' && (() => {
+                                                  const creatorData = BRAND_MARKETPLACE_CREATORS.find(cr => cr.handle === app.creatorHandle || cr.name === app.creatorName);
+                                                  return creatorData ? (
+                                                    <button onClick={() => { setNegotiatingCreator(BRAND_MARKETPLACE_CREATORS.indexOf(creatorData)); setBrandCurrentOppIndex(app.opportunityIndex ?? 0); }} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'4px 8px', fontSize:'9px', fontWeight:600, color:'#fff', cursor:'pointer' }}>Deal Room</button>
+                                                  ) : null;
+                                                })()}
+                                              </>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </div>
                         ))
                         })()}
@@ -6778,77 +6708,7 @@ export default function MarketplaceDemoPage() {
                       ) : null;
                     })()}
 
-                    {/* Applications Received */}
-                    <div style={{ marginTop:'16px' }}>
-                      <div style={{ fontSize:'15px', fontWeight:700, color:C.text, marginBottom:'14px' }}>Applicants</div>
-                      {sharedApplications.filter(a => a.status !== 'invited').length === 0 ? (
-                        <div style={{ textAlign:'center', padding:'24px 20px', color:C.textMuted }}>
-                          <div style={{ fontSize:'13px', marginBottom:'4px' }}>No proposals yet</div>
-                          <div style={{ fontSize:'11px' }}>Creators will appear here once they enter negotiations or apply to campaigns.</div>
-                        </div>
-                      ) : sharedApplications.filter(a => a.status !== 'invited').slice(0, 15).map((app,i) => {
-                        const camp = campaigns.find(c=>c.id===app.campaignId);
-                        const displayName = app.creatorName || app.creatorHandle;
-                        const igUrl = app.creatorWebsiteUrl || `https://portfolio.valueskins.com/${app.creatorHandle.replace('@', '')}`;
-                        const allApps = sharedApplications.filter(a => a.status !== 'invited');
-                        return (
-                          <div key={i} style={{ display:'flex', alignItems:'center', gap:'10px', padding:'12px 0', borderBottom: i < Math.min(15, allApps.length) - 1 ? `1px solid ${C.border}` : 'none' }}>
-                            {/* Avatar */}
-                            <a href={igUrl} target="_blank" rel="noopener noreferrer" style={{ flexShrink:0 }}>
-                              <img
-                                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName.replace(/[\s@]/g, '')}`}
-                                alt={displayName}
-                                style={{ width:'40px', height:'40px', borderRadius:'50%', background:C.card }}
-                              />
-                            </a>
-                            {/* Compact Info */}
-                            <div style={{ flex:1, minWidth:0 }}>
-                              <div style={{ display:'flex', alignItems:'center', gap:'6px', marginBottom:'2px' }}>
-                                <span style={{ fontSize:'13px', fontWeight:700, color:C.text }}>{displayName}</span>
-                                {app.creatorLevel && (
-                                  <span style={{ fontSize:'9px', fontWeight:700, color:'#fff', background:app.creatorLevel>=4?C.primary:app.creatorLevel>=2?C.warning:C.textMuted, padding:'1px 5px', borderRadius:'3px' }}>Lv{app.creatorLevel}</span>
-                                )}
-                                {(() => {
-                                  const creatorData = BRAND_MARKETPLACE_CREATORS.find(c => c.handle === app.creatorHandle || c.name === app.creatorName);
-                                  // Use opportunityIndex from application (set when campaign was sent)
-                                  const oppIdx = app.opportunityIndex ?? 0;
-                                  const dealKey = creatorData ? `${creatorData.name}|${creatorData.valueSkin}|${oppIdx}` : null;
-                                  const deal = dealKey ? getOrCreateDeal(dealKey) : null;
-                                  return deal?.phase === 'counter' ? (
-                                    <span style={{ fontSize:'8px', fontWeight:700, color:'#fff', background:C.warning, padding:'2px 6px', borderRadius:'4px', textTransform:'uppercase' }}>Counter waiting</span>
-                                  ) : null;
-                                })()}
-                              </div>
-                              <div style={{ fontSize:'11px', color:C.textSecondary, display:'flex', alignItems:'center', gap:'6px' }}>
-                                {app.creatorHandle}
-                                {app.creatorMatchScore && <span style={{ color:C.primary, fontWeight:600 }}>· {app.creatorMatchScore}</span>}
-                              </div>
-                            </div>
-                            {/* Action */}
-                            <div style={{ flexShrink:0, display:'flex', gap:'6px' }}>
-                              {app.status === 'pending' ? (
-                                <button onClick={() => { persistApplications(sharedApplications.map(a=>a.id===app.id?{...a,status:'accepted' as const}:a)); setPurchaseToast('Accepted'); setTimeout(()=>setPurchaseToast(null),3000); }} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'6px 12px', fontSize:'11px', fontWeight:600, color:'#fff', cursor:'pointer' }}>Accept</button>
-                              ) : (
-                                <>
-                                  <span style={{ fontSize:'10px', fontWeight:600, color:app.status==='accepted'?C.success:C.textMuted, textTransform:'uppercase' }}>{app.status}</span>
-                                  {app.status === 'accepted' && (() => {
-                                    const creatorData = BRAND_MARKETPLACE_CREATORS.find(c => c.handle === app.creatorHandle || c.name === app.creatorName);
-                                    return creatorData ? (
-                                      <button onClick={() => { setNegotiatingCreator(BRAND_MARKETPLACE_CREATORS.indexOf(creatorData)); setBrandCurrentOppIndex(app.opportunityIndex ?? 0); }} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'4px 10px', fontSize:'10px', fontWeight:600, color:'#fff', cursor:'pointer' }}>Deal Room</button>
-                                    ) : null;
-                                  })()}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {sharedApplications.filter(a => a.status !== 'invited').length > 15 && (
-                        <div style={{ textAlign:'center', padding:'12px 0', borderTop:`1px solid ${C.border}` }}>
-                          <button style={{ background:'none', border:'none', color:C.primary, fontSize:'12px', fontWeight:600, cursor:'pointer', textDecoration:'underline' }}>View more ({sharedApplications.filter(a => a.status !== 'invited').length - 15})</button>
-                        </div>
-                      )}
-                    </div>
+
                   </div>
                 </>
               )}
