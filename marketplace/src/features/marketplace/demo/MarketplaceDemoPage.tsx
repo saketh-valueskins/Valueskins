@@ -1184,9 +1184,7 @@ export default function MarketplaceDemoPage() {
   const [usageRightsDays, setUsageRightsDays] = useState(90);
   const [exclusivityUntil, setExclusivityUntil] = useState('');
   const [revisionLimit, setRevisionLimit] = useState(2);
-  const [savedSearches, setSavedSearches] = useState([
-    { id: 1, label: 'Fitness Coach, 18-24, USA', profession: 'Fitness Coach', age: '18-24', loc: 'USA' },
-  ]);
+
   // Admin feature flags
   const [adminShowRateCard, setAdminShowRateCard] = useState(true);
   const [adminShowPortfolio, setAdminShowPortfolio] = useState(true);
@@ -1197,7 +1195,6 @@ export default function MarketplaceDemoPage() {
   const [adminShowRevisionLimit, setAdminShowRevisionLimit] = useState(true);
   const [adminShowUsageRightsDuration, setAdminShowUsageRightsDuration] = useState(true);
   const [adminShowAvailabilityCalendar, setAdminShowAvailabilityCalendar] = useState(true);
-  const [adminShowSavedSearches, setAdminShowSavedSearches] = useState(true);
   const [adminShowSimilarCreators, setAdminShowSimilarCreators] = useState(true);
   const [adminShowBrandTrackRecord, setAdminShowBrandTrackRecord] = useState(true);
   const [adminShowMutualRating, setAdminShowMutualRating] = useState(true);
@@ -5202,34 +5199,6 @@ export default function MarketplaceDemoPage() {
                         </button>
                       </div>
                     ) : (<>
-                    {/* Matching Rule Banner */}
-                    <div style={{ background: 'rgba(0,102,204,0.06)', border: `1px solid rgba(0,102,204,0.15)`, borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                      <div>
-                        <div style={{ fontSize: '12px', fontWeight: 700, color: C.text }}>ValueSkin Matching Active</div>
-                        <div style={{ fontSize: '11px', color: C.textSecondary }}>Only creators holding the ValueSkin you select below will appear. Matching is deterministic and server-enforced.</div>
-                      </div>
-                    </div>
-
-                    {/* Saved Searches */}
-                    {adminShowSavedSearches && savedSearches.length > 0 && (
-                      <div style={{ marginBottom: '14px' }}>
-                        <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '6px' }}>Saved Searches</div>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                          {savedSearches.map(s => (
-                            <button key={s.id} onClick={() => { setBrandSearchMode('profession'); setBrandSearchQuery(s.profession); setFilterAudienceAge(s.age); setFilterAudienceLoc(s.loc); }}
-                              style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: `${C.primary}15`, color: C.primary, border: `1px solid ${C.primary}40` }}>
-                              {s.label}
-                              <span onClick={e => { e.stopPropagation(); setSavedSearches(prev => prev.filter(x => x.id !== s.id)); }} style={{ marginLeft: '2px', color: C.textMuted, fontSize: '12px' }}>×</span>
-                            </button>
-                          ))}
-                          <button onClick={() => { const label = `${brandSearchQuery || 'Any'}, ${filterAudienceAge || 'Any age'}, ${filterAudienceLoc || 'Any loc'}`; setSavedSearches(prev => [...prev, { id: Date.now(), label, profession: brandSearchQuery, age: filterAudienceAge ?? '', loc: filterAudienceLoc }]); }}
-                            style={{ padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', background: 'transparent', color: C.textMuted, border: `1px solid ${C.border}` }}>
-                            + Save current search
-                          </button>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Search Bar */}
                     <div style={{ marginBottom: '16px' }}>
@@ -7456,7 +7425,6 @@ export default function MarketplaceDemoPage() {
                   { label: 'Usage Rights Duration', desc: 'Days of usage rights shown before deal accepted', value: adminShowUsageRightsDuration, set: setAdminShowUsageRightsDuration },
                   { label: 'Brand Track Record', desc: 'Brand deals completed + avg payment time + creator ratings of brand', value: adminShowBrandTrackRecord, set: setAdminShowBrandTrackRecord },
                   { label: 'Mutual Rating System', desc: 'Both parties rate each other after deal close', value: adminShowMutualRating, set: setAdminShowMutualRating },
-                  { label: 'Saved Searches', desc: 'Brands get notified when a matching creator joins', value: adminShowSavedSearches, set: setAdminShowSavedSearches },
                   { label: 'Similar Creators', desc: 'Suggest creators similar to ones a brand already worked with', value: adminShowSimilarCreators, set: setAdminShowSimilarCreators },
                   { label: 'Long-Term Contracts', desc: 'Multi-month ambassador deals with recurring escrow milestones', value: adminAllowLongTermContracts, set: setAdminAllowLongTermContracts },
                 ] as const).map(({ label, desc, value, set }) => (
