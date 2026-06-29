@@ -42,7 +42,6 @@ export default function DemoWrapper() {
         >
           Login
         </button>
-        <div style={{ fontSize: '11px', color: C.textMuted }}>localhost dev mode</div>
       </div>
     );
   }

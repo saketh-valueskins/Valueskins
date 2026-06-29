@@ -1,15 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-
-// ── In-memory mock store ──────────────────────────────────
-
-const loyaltyPoints: Record<number, any[]> = {};
-
-const pointsBalance: Record<number, number> = {};
-const streaks: Record<number, any> = {};
-const vipTiers: Record<number, any> = {};
-const badges: Record<number, any[]> = {};
-const reputationScores: Record<number, any> = {};
-const repBadges: Record<number, any[]> = {};
+import { query, queryOne } from '@/lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const path = Array.isArray(req.query.path) ? req.query.path : [];
@@ -20,47 +10,81 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const accountId = parseInt(rest[0]) || 1;
 
   switch (resource) {
-    // ── Loyalty Points ────────────────────────────────
     case 'points': {
       if (req.method === 'GET') {
-        const pts = pointsBalance[accountId] || 0;
-        const history = loyaltyPoints[accountId] || [];
-        return res.json({ accountId, points: pts, history });
+        const balance = await queryOne('SELECT balance FROM loyalty_points WHERE account_id = $1', [accountId]);
+        const historyRows = await query(
+          'SELECT * FROM loyalty_points_history WHERE account_id = $1 ORDER BY created_at DESC LIMIT 50',
+          [accountId]
+        );
+        return res.json({
+          accountId,
+          points: balance?.balance || 0,
+          history: historyRows.rows.map(r => ({
+            points: r.points,
+            reason: r.reason,
+            referenceType: r.reference_type,
+            referenceId: r.reference_id,
+            createdAt: r.created_at?.toISOString() || '',
+          })),
+        });
       }
       if (req.method === 'POST') {
         const { points, reason, referenceType, referenceId } = req.body;
-        if (!loyaltyPoints[accountId]) loyaltyPoints[accountId] = [];
-        loyaltyPoints[accountId].push({ points, reason, referenceType, referenceId, createdAt: new Date().toISOString() });
-        pointsBalance[accountId] = (pointsBalance[accountId] || 0) + points;
-        return res.json({ success: true, balance: pointsBalance[accountId] });
+        await query(
+          `INSERT INTO loyalty_points (account_id, balance) VALUES ($1, $2)
+           ON CONFLICT (account_id) DO UPDATE SET balance = loyalty_points.balance + $2, updated_at = now()`,
+          [accountId, points]
+        );
+        await query(
+          `INSERT INTO loyalty_points_history (account_id, points, reason, reference_type, reference_id) VALUES ($1, $2, $3, $4, $5)`,
+          [accountId, points, reason || '', referenceType || null, referenceId || null]
+        );
+        const updated = await queryOne('SELECT balance FROM loyalty_points WHERE account_id = $1', [accountId]);
+        return res.json({ success: true, balance: updated?.balance || 0 });
       }
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    // ── Loyalty Streaks ───────────────────────────────
     case 'streaks': {
-      const s = streaks[accountId] || { currentStreak: 0, longestStreak: 0, lastEventDate: null };
-      return res.json({ accountId, ...s });
+      const s = await queryOne('SELECT * FROM loyalty_points_history WHERE account_id = $1 ORDER BY created_at DESC LIMIT 1', [accountId]);
+      return res.json({
+        accountId,
+        currentStreak: 0,
+        longestStreak: 0,
+        lastEventDate: s?.created_at?.toISOString() || null,
+      });
     }
 
-    // ── VIP Tiers ─────────────────────────────────────
     case 'vip': {
-      const v = vipTiers[accountId] || { tier: 'bronze', pointsThreshold: 0 };
-      return res.json({ accountId, ...v });
+      const v = await queryOne('SELECT * FROM vip_tiers WHERE account_id = $1', [accountId]);
+      return res.json({
+        accountId,
+        tier: v?.tier || 'bronze',
+        pointsThreshold: v?.points_threshold || 0,
+      });
     }
 
-    // ── Badges ────────────────────────────────────────
     case 'badges': {
-      const b = badges[accountId] || [];
-      return res.json({ accountId, badges: b });
+      const b = await query('SELECT * FROM badges WHERE account_id = $1', [accountId]);
+      return res.json({
+        accountId,
+        badges: b.rows.map(r => ({
+          name: r.name,
+          description: r.description,
+          icon: r.icon,
+          awardedAt: r.awarded_at?.toISOString() || '',
+        })),
+      });
     }
 
-    // ── Leaderboard ───────────────────────────────────
     case 'leaderboard': {
-      const lb = Object.entries(pointsBalance).map(([id, p]) => ({
-        accountId: parseInt(id), points: p,
-      })).sort((a, b) => b.points - a.points).slice(0, 10);
-      return res.json({ leaderboard: lb });
+      const lb = await query(
+        'SELECT account_id, balance FROM loyalty_points ORDER BY balance DESC LIMIT 10'
+      );
+      return res.json({
+        leaderboard: lb.rows.map(r => ({ accountId: r.account_id, points: Number(r.balance) })),
+      });
     }
 
     default:

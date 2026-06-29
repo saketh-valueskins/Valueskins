@@ -43,15 +43,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         return res.status(400).json({ error: 'Missing userId or valueSkin' });
       }
 
-      // Check count
+      // Check count — only 1 skin allowed
       try {
         const count = await query('SELECT COUNT(*) as cnt FROM user_value_skins WHERE user_id = $1', [userId]);
-        if (count.rows && count.rows[0]?.cnt >= 3) {
-          return res.status(400).json({ error: 'Max 3 skins' });
+        if (count.rows && count.rows[0]?.cnt >= 1) {
+          return res.status(400).json({ error: 'Max 1 skin. Remove current skin to purchase another.' });
         }
       } catch (countErr) {
         console.error('Count error:', countErr);
-        // Table might not exist yet, continue anyway
       }
 
       // Insert

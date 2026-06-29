@@ -25,5 +25,16 @@
   },
   "devDependencies": {
     "@babel/generator": "7.29.1"
-  }
+  },
+  "main": "convert_to_pdf.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redleg789/Valueskins---final-.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/redleg789/Valueskins---final-/issues"
+  },
+  "homepage": "https://github.com/redleg789/Valueskins---final-#readme"
 }

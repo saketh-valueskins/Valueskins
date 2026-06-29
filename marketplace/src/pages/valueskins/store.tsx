@@ -51,8 +51,8 @@ export default function ValueSkinsStore() {
       return;
     }
 
-    if (ownedSkins.length >= 3) {
-      alert('You can only own 3 value skins. Delete one to purchase another.');
+    if (ownedSkins.length >= 1) {
+      alert('You can only own 1 ValueSkin. Remove your current skin to purchase another.');
       return;
     }
 
@@ -64,7 +64,7 @@ export default function ValueSkinsStore() {
     name.toLowerCase().includes(filter.toLowerCase())
   );
 
-  const canPurchase = ownedSkins.length < 3;
+  const canPurchase = ownedSkins.length < 1;
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, padding: '40px 20px' }}>
@@ -74,10 +74,10 @@ export default function ValueSkinsStore() {
             ValueSkins Store
           </h1>
           <p style={{ fontSize: '16px', color: C.textSecondary, marginBottom: '24px' }}>
-            Choose your profession to unlock your unique value skin. You can own up to 3 skins. Upload custom images in Settings.
+            Choose your profession to unlock your unique ValueSkin. You can own 1 skin at a time.
           </p>
           <p style={{ fontSize: '14px', color: C.accent, marginBottom: '24px' }}>
-            Owned: {ownedSkins.length}/3
+            {ownedSkins.length > 0 ? 'You own a ValueSkin' : 'No ValueSkin'}
           </p>
 
           <input

@@ -76,7 +76,10 @@ async function ensureSchema() {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const userId = await getAccountId(req.headers.cookie || '');
+  let userId = await getAccountId(req.headers.cookie || '');
+  if (!userId && req.body?.user_id) {
+    userId = req.body.user_id;
+  }
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
   const { path } = req.query;

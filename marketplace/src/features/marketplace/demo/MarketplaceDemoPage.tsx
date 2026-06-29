@@ -18,8 +18,6 @@ import { sendAutoMatchNotifications } from '@/lib/autoMatchNotifications';
 import {
   type ValueSkinMap,
   type ValueSkinSlot,
-  SLOT_LABELS,
-  SLOT_COLORS,
   ValueSkinStickers,
   ValueskinAvatarToggle,
   ProfilePhotoWithLongPress,
@@ -219,7 +217,6 @@ type Opportunity = {
 // Opportunities vary by profession — different brands want different skills
 // No hardcoded opportunities — only real brand-created campaigns from Firebase appear
 
-const SLOTS: ValueSkinSlot[] = ['profession', 'passion', 'hobby'];
 
 // Channels — skin-gated group DMs. These appear alongside regular DMs with a ValueSkin badge.
 const CHANNELS: any[] = [];
@@ -247,7 +244,7 @@ export default function MarketplaceDemoPage() {
   const SK = {
     valueSkins:   `vs_demo_value_skins_${uid}`,
     persist:      `vs_demo_persist_${uid}`,
-    hiddenSkins:  `vs_demo_hidden_skins_${uid}`,
+
     version:      `vs_demo_version_${uid}`,
     dealSync:     `vs_demo_deal_sync_${uid}`,
     negCreator:   `vs_brand_negotiating_creator_${uid}`,
@@ -382,8 +379,6 @@ export default function MarketplaceDemoPage() {
     } catch (e) { /* quota exceeded — safe to ignore */ }
   }, [valueSkins, skinsLoaded, loading]);
 
-  // Which slot is being assigned in the Store modal
-  const [assigningSlot, setAssigningSlot] = useState<ValueSkinSlot | null>(null);
 
   const [valueskinAvatarEnabled, setValueskinAvatarEnabled] = useState(false);
   const [skinPositions, setSkinPositions] = useState<Record<string, {x: number, y: number}>>({});
@@ -397,26 +392,6 @@ export default function MarketplaceDemoPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [purchaseToast, setPurchaseToast] = useState<string | null>(null);
 
-  // ValueSkin hide/delete management — also persisted
-  const [hiddenSkins, setHiddenSkins] = useState<Set<ValueSkinSlot>>(new Set());
-  const [hiddenLoaded, setHiddenLoaded] = useState(false);
-
-  useEffect(() => {
-    if (loading) return;
-    try {
-      const stored = localStorage.getItem(SK.hiddenSkins);
-      if (stored) setHiddenSkins(new Set(JSON.parse(stored)));
-    } catch (e) { /* ignore */ }
-    setHiddenLoaded(true);
-  }, [loading, SK.hiddenSkins]);
-
-  useEffect(() => {
-    if (!hiddenLoaded || loading) return;
-    try {
-      localStorage.setItem(SK.hiddenSkins, JSON.stringify([...hiddenSkins]));
-    } catch (e) { /* ignore */ }
-  }, [hiddenSkins, hiddenLoaded, loading]);
-
   // ── Persist key states to localStorage (only after auth resolves) ──
   useEffect(() => {
     if (loading) return;
@@ -427,6 +402,7 @@ export default function MarketplaceDemoPage() {
         if (d.marketplaceRole) setMarketplaceRole(d.marketplaceRole);
         if (d.brandValueSkins) setBrandValueSkins(d.brandValueSkins);
         if (d.activeBrandSkin) setActiveBrandSkin(d.activeBrandSkin);
+        if (d.selectedMarketplaceSkin) setSelectedMarketplaceSkin(d.selectedMarketplaceSkin);
         if (d.profileName) setProfileName(d.profileName);
         if (d.profileBio) setProfileBio(d.profileBio);
         if (d.profileAvatar) setProfileAvatar(d.profileAvatar);
@@ -449,7 +425,6 @@ export default function MarketplaceDemoPage() {
     } catch (e) { /* ignore */ }
   }, [loading, SK.persist]);
 
-  const [showSkinManageModal, setShowSkinManageModal] = useState<ValueSkinSlot | null>(null);
 
   const { factors } = useReputationConfig();
 
@@ -611,7 +586,6 @@ export default function MarketplaceDemoPage() {
       localStorage.removeItem(SK.valueSkins);
       localStorage.removeItem(SK.persist);
       localStorage.removeItem(SK.dealSync);
-      localStorage.removeItem(SK.hiddenSkins);
       localStorage.setItem(SK.version, VERSION);
       setValueSkins({});
       setMarketplaceRole('none');
@@ -619,7 +593,7 @@ export default function MarketplaceDemoPage() {
       setActiveBrandSkin(null);
       setSelectedMarketplaceSkin(null);
     }
-  }, [loading, SK.version, SK.valueSkins, SK.persist, SK.dealSync, SK.hiddenSkins]);
+  }, [loading, SK.version, SK.valueSkins, SK.persist, SK.dealSync]);
 
   // ValueSkin edit handlers
   const { update: updateValueSkin, loading: updateLoading } = useUpdateValueSkin(editingValueSkinId || '');
@@ -800,6 +774,9 @@ export default function MarketplaceDemoPage() {
           activeDealKey = activeDealKeyFound;
         }
       }
+    } else if (negotiatingOpp !== null) {
+      // Fallback: use profileName directly (matches the key format used in View Deal)
+      activeDealKey = `${profileName}|${selectedMarketplaceSkin}|${negotiatingOpp}`;
     }
   }
 
@@ -919,7 +896,7 @@ export default function MarketplaceDemoPage() {
   const offerExpiresLabel = '23h 47m';
 
   // Active deals indicator: count of in-progress deals across all skins
-  const activeDeals = Object.entries(dealStates).filter(([, d]) => d.phase !== 'brief');
+  const activeDeals = Object.entries(dealStates).filter(([k, d]) => d.phase !== 'brief' && (marketplaceRole !== 'creator' || !selectedMarketplaceSkin || k.includes(`|${selectedMarketplaceSkin}|`)));
 
   // Tooltip state for intent/campaign type badges
   const [hoveredTooltip, setHoveredTooltip] = useState<string | null>(null);
@@ -1251,6 +1228,14 @@ export default function MarketplaceDemoPage() {
     }
   }, [firebaseState.campaigns, setCampaigns]);
 
+  // Auto-refresh campaigns from shared DB every 10s (cross-device sync)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      forceRefreshCampaigns();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [forceRefreshCampaigns]);
+
   useEffect(() => {
     // Firebase always active
     if (firebaseState.applications.length > 0) {
@@ -1311,7 +1296,7 @@ export default function MarketplaceDemoPage() {
 
   // No seeded campaigns or applications — only real data from Firebase
 
-  const [marketplaceTab, setMarketplaceTab] = useState<'creators' | 'campaigns' | 'applications' | 'sent' | 'pastDeals'>('creators');
+  const [marketplaceTab, setMarketplaceTab] = useState<'creators' | 'campaigns' | 'applications' | 'sent'>('creators');
   // All creators across all professions — used for continuous live auto-matching
   const [allCreators, setAllCreators] = useState<any[]>([]);
   const [allCreatorsLoading, setAllCreatorsLoading] = useState(false);
@@ -1435,7 +1420,6 @@ export default function MarketplaceDemoPage() {
         SK.persist,
         SK.dealSync,
         SK.valueSkins,
-        SK.hiddenSkins,
         SK.campaigns,
         SK.applications,
         SK.negCreator,
@@ -1561,14 +1545,14 @@ export default function MarketplaceDemoPage() {
     if (!skinsLoaded || loading) return;
     try {
       localStorage.setItem(SK.persist, JSON.stringify({
-        marketplaceRole, brandValueSkins, activeBrandSkin, profileName, profileBio, profileAvatar,
+        marketplaceRole, brandValueSkins, activeBrandSkin, selectedMarketplaceSkin, profileName, profileBio, profileAvatar,
         selectedCountry, selectedLanguages, rateCard, profileDealTypes, willingToBarter,
         notifications, joinedCommunities, dmMessages, communityMessages,
         brandProfileSelections, creatorEnergy, metrics, skinPitchTexts, skinPitchVideos,
         skinPositions,
       }));
     } catch (e) { /* ignore */ }
-  }, [marketplaceRole, brandValueSkins, activeBrandSkin, profileName, profileBio, profileAvatar,
+  }, [marketplaceRole, brandValueSkins, activeBrandSkin, selectedMarketplaceSkin, profileName, profileBio, profileAvatar,
       selectedCountry, selectedLanguages, rateCard, profileDealTypes, willingToBarter,
       notifications, joinedCommunities, dmMessages, communityMessages,
       brandProfileSelections, creatorEnergy, metrics, skinsLoaded, skinPitchTexts, skinPitchVideos,
@@ -1640,35 +1624,23 @@ export default function MarketplaceDemoPage() {
     setMetrics(prev => ({ ...prev, [key]: parseFloat(value) || 0 }));
   };
 
-  // Opens the Store modal with the target slot pre-selected
-  const openStoreForSlot = (slot: ValueSkinSlot) => {
-    setAssigningSlot(slot);
-    setShowStoreModal(true);
-  };
-
-  // Simulate purchase: assign profession to the chosen slot, show toast
   const purchaseProfession = (profession: string) => {
     if (marketplaceRole === 'brand') {
-      // Brand purchase — add to global pool (max 3 per device)
       if (brandValueSkins.includes(profession)) {
         setPurchaseToast(`You already own ${profession}`);
         setTimeout(() => setPurchaseToast(null), 3000);
         return;
       }
-      if (brandValueSkins.length >= 3) {
-        setPurchaseToast('Maximum 3 ValueSkins. Remove one first.');
+      if (brandValueSkins.length >= 1) {
+        setPurchaseToast('You can only have 1 ValueSkin. Remove your current one first.');
         setTimeout(() => setPurchaseToast(null), 3000);
         return;
       }
       setBrandValueSkins(prev => [...prev, profession]);
-      // ALSO add to creator's valueSkins so both roles can see it
       setValueSkins(prev => {
         const newSkins = { ...prev };
         if (!Object.values(newSkins).some(s => s?.profession === profession)) {
-          const emptySlot = (['profession', 'passion', 'hobby'] as const).find(slot => !newSkins[slot]);
-          if (emptySlot) {
-            newSkins[emptySlot] = { profession, aboutMe: defaultAboutMe(profession) };
-          }
+          newSkins['profession'] = { profession, aboutMe: defaultAboutMe(profession) };
         }
         return newSkins;
       });
@@ -1679,28 +1651,21 @@ export default function MarketplaceDemoPage() {
       setTimeout(() => setPurchaseToast(null), 3000);
       return;
     }
-    // Creator purchase — assign to slot
-    if (!assigningSlot) {
-      setPurchaseToast('Select a slot first');
-      setTimeout(() => setPurchaseToast(null), 3000);
-      return;
-    }
     const badge = PROFESSION_BADGES[profession];
     const label = badge?.abbreviation ?? profession.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 3);
-    const slotLabel = SLOT_LABELS[assigningSlot];
 
     setValueSkins(prev => ({
       ...prev,
-      [assigningSlot]: { profession, aboutMe: defaultAboutMe(profession) },
+      ['profession']: { profession, aboutMe: defaultAboutMe(profession) },
     }));
-    // ALSO add to brand skins so brand can use it
+    setSelectedMarketplaceSkin(profession);
     if (!brandValueSkins.includes(profession)) {
       setBrandValueSkins(prev => [...prev, profession]);
       if (!activeBrandSkin) setActiveBrandSkin(profession);
     }
     setShowStoreModal(false);
     setActiveView('profile');
-    setPurchaseToast(`${label} applied as your ${slotLabel}`);
+    setPurchaseToast(`${label} applied as your ValueSkin`);
     setTimeout(() => setPurchaseToast(null), 3000);
   };
 
@@ -2509,7 +2474,6 @@ export default function MarketplaceDemoPage() {
                   <div style={{ padding: '12px 16px 0', position: 'sticky', top: 0, background: C.bg, zIndex: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                       <span style={{ fontSize: '22px', fontWeight: 700, color: C.text }}>Marketplace</span>
-                      <button onClick={() => { setMarketplaceRole('none'); setSelectedMarketplaceSkin(null); setNegotiatingOpp(null); }} style={{ background: 'none', border: 'none', fontSize: '13px', color: C.textSecondary, cursor: 'pointer', padding: '4px 0' }}>Switch</button>
                     </div>
 
 
@@ -2558,16 +2522,6 @@ export default function MarketplaceDemoPage() {
                   </div>
 
                   <div style={{ padding: '0 16px 16px' }}>
-                    {/* Campaign search bar */}
-                    {selectedMarketplaceSkin && (
-                      <div style={{ position: 'relative', marginBottom: '12px' }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }}>
-                          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
-                        <input type="text" value={creatorCampaignSearch} onChange={e => setCreatorCampaignSearch(e.target.value)} placeholder="Search campaigns by brand, title, budget..." style={{ width: '100%', background: C.card, border: `1px solid ${creatorCampaignSearch ? C.primary : C.border}`, borderRadius: '10px', padding: '10px 10px 10px 32px', color: C.text, fontSize: '13px', boxSizing: 'border-box' as const, outline: 'none' }} />
-                        {creatorCampaignSearch && <button onClick={() => setCreatorCampaignSearch('')} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: C.textMuted, cursor: 'pointer', fontSize: '14px' }}>x</button>}
-                      </div>
-                    )}
                     {(<>
 
                     {/* Active Deals Banner */}
@@ -2579,12 +2533,11 @@ export default function MarketplaceDemoPage() {
                         <div style={{ flex:1 }}>
                           <div style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{activeDeals.length} Active Deal{activeDeals.length>1?'s':''}</div>
                           <div style={{ fontSize: '12px', color: C.textSecondary }}>
-                            {activeDeals.map(([k]) => { const [skin] = k.split(':'); return skin; }).filter((v,i,a)=>a.indexOf(v)===i).join(', ')}
+                            {activeDeals.map(([k]) => { const [, skin] = k.split('|'); return skin || k; }).filter((v,i,a)=>a.indexOf(v)===i).join(', ')}
                           </div>
                         </div>
                         <div style={{ display:'flex', gap:'6px', flexShrink:0 }}>
                           <button onClick={() => { setDealStates({}); setNegotiatingOpp(null); }} style={{ background:'none', border:`1px solid rgba(239,68,68,0.3)`, borderRadius:'6px', padding:'4px 10px', fontSize:'11px', fontWeight:600, color:'#ef4444', cursor:'pointer' }}>Clear all</button>
-                          <button onClick={resetMvpDemoState} style={{ background:'#ef4444', border:'none', borderRadius:'6px', padding:'4px 10px', fontSize:'11px', fontWeight:700, color:'#fff', cursor:'pointer' }}>MVP Reset</button>
                         </div>
                       </div>
                     )}
@@ -2600,18 +2553,15 @@ export default function MarketplaceDemoPage() {
 
                     {/* Feature 6: Creator Pipeline View (Meta data source: deal states from backend) */}
                     {selectedMarketplaceSkin && creatorMarketplaceTab === 'pipeline' && (() => {
-                      // Find deals for current creator skin (key format: creatorName|creatorSkin)
-                      const matchingCreator = BRAND_MARKETPLACE_CREATORS.find(c => c.valueSkin === selectedMarketplaceSkin);
-                      const pipelineDeals = matchingCreator
-                        ? Object.entries(dealStates)
-                            .filter(([k]) => k === `${matchingCreator.name}|${selectedMarketplaceSkin}`)
-                            .map(([key, deal]) => ({ key, ...deal }))
-                        : [];
+                      // Match deal keys regardless of name prefix (could be profileName or matchingCreator.name)
+                      const pipelineDeals = Object.entries(dealStates)
+                        .filter(([k]) => k.includes(`|${selectedMarketplaceSkin}|`))
+                        .map(([key, deal]) => ({ key, ...deal }));
 
                       const columns = {
-                        'Negotiating': pipelineDeals.filter(d => ['offer', 'chatroom', 'counter', 'brand_countered'].includes(d.phase)),
-                        'Accepted': pipelineDeals.filter(d => d.phase === 'accepted'),
+                        'Negotiation': pipelineDeals.filter(d => ['offer', 'chatroom', 'counter', 'brand_countered', 'pending', 'brand_considering', 'brand_reviewing'].includes(d.phase)),
                         'In Progress': pipelineDeals.filter(d => ['checklist', 'softhold'].includes(d.phase)),
+                        'Past Deals': pipelineDeals.filter(d => d.phase === 'accepted'),
                       };
 
                       return (
@@ -2864,30 +2814,24 @@ export default function MarketplaceDemoPage() {
                                       <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                                         <button
                                           onClick={() => {
-                                            if (activeDealKey) {
-                                              const now = new Date();
-                                              const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                              const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator accepted offer: $${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                              const existingMsgs = activeDeal?.chatMessages || [];
-                                              updateDeal(activeDealKey, { phase: 'accepted', chatMessages: [...(existingMsgs as any[]), acceptMsg] });
+                                            const localKey = `${profileName}|${selectedMarketplaceSkin}|${actualOppIndex}`;
+                                            if (dealRoomPhase === 'brief') {
+                                              updateDeal(localKey, { phase: 'pending', offerAmount: opp.budget?.replace(/[^0-9]/g, '') || '5000' });
                                             }
-                                            setPurchaseToast('Offer accepted');
+                                            const now = new Date();
+                                            const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
+                                            const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator entered negotiation for $${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
+                                            const existingMsgs = (activeDeal?.chatMessages) || [];
+                                            updateDeal(localKey, {
+                                              phase: 'chatroom',
+                                              chatMessages: [...(existingMsgs as any[]), acceptMsg],
+                                            });
+                                            setPurchaseToast('Negotiation opened');
                                             setTimeout(() => setPurchaseToast(null), 2000);
                                           }}
                                           style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
                                         >
-                                          Accept ${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            if (dealRoomPhase === 'brief' && activeDealKey) {
-                                              updateDeal(activeDealKey, { phase: 'pending', offerAmount: opp.budget?.replace(/[^0-9]/g, '') || '5000' });
-                                            }
-                                            setDealRoomPhase('chatroom');
-                                          }}
-                                          style={{ flex: 1, background: C.primary, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
-                                        >
-                                          Negotiate
+                                          Accept & Negotiate ${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}
                                         </button>
                                         <button
                                           onClick={() => {
@@ -3702,39 +3646,7 @@ export default function MarketplaceDemoPage() {
                                             <div style={{ fontSize: '10px', color: C.textSecondary, marginBottom: '4px' }}>
                                               Brand offer: <strong style={{ color: C.text }}>${parseInt(dealOfferAmount || opp.budget.replace(/[^0-9]/g, '') || '0').toLocaleString()}</strong>
                                             </div>
-                                            {/* Feature 4: Fair counter-offer suggestion */}
-                                            {(() => {
-                                              const brandOffer = parseInt(dealOfferAmount || opp.budget.replace(/[^0-9]/g, '') || '0');
-                                              // Find creator's standard rate from BRAND_MARKETPLACE_CREATORS
-                                              const matchingCreator = BRAND_MARKETPLACE_CREATORS.find(c => c.valueSkin === opp.type);
-                                              const creatorRate = matchingCreator ? parseInt(matchingCreator.rate.replace(/[^0-9]/g, '') || '0') : brandOffer;
-                                              // Fair suggestion: if offer is below creator's rate, suggest rate; otherwise suggest accepting or small adjustment
-                                              let suggestedPrice = brandOffer;
-                                              let reason = 'Market-aligned';
-                                              if (brandOffer < creatorRate * 0.9) {
-                                                // Brand offer is 10%+ below creator's rate — suggest creator's standard
-                                                suggestedPrice = creatorRate;
-                                                reason = 'Your standard rate';
-                                              } else if (brandOffer >= creatorRate * 0.95 && brandOffer <= creatorRate * 1.1) {
-                                                // Brand offer is within 5-10% of creator's rate — fair, no adjustment needed
-                                                suggestedPrice = brandOffer;
-                                                reason = 'Fair offer — accept or negotiate minimally';
-                                              } else if (brandOffer > creatorRate * 1.1) {
-                                                // Brand offer is 10%+ above rate — it's generous, accept it
-                                                suggestedPrice = brandOffer;
-                                                reason = 'Above standard — consider accepting';
-                                              } else {
-                                                // Minor adjustment if below standard
-                                                suggestedPrice = Math.round(Math.max(brandOffer, creatorRate * 0.95) / 50) * 50;
-                                                reason = 'Reasonable adjustment';
-                                              }
-                                              return (
-                                                <div style={{ fontSize: '10px', color: C.success, marginBottom: '6px', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.success} strokeWidth="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
-                                                  Suggested: ${suggestedPrice.toLocaleString()} ({reason})
-                                                </div>
-                                              );
-                                            })()}
+
                                             <input
                                               type="number"
                                               value={dealCounterAmount}
@@ -4508,7 +4420,7 @@ export default function MarketplaceDemoPage() {
 
                                   {!['brief','pending','offer','counter','brand_considering','brand_countered','brand_rejected','accepted','chatroom','checklist','softhold'].includes(dealRoomPhase) && (
                                     <div style={{ textAlign: 'center', padding: '18px 8px' }}>
-                                      <div style={{ fontSize: '12px', color: C.textSecondary, marginBottom: '8px' }}>Deal phase: {dealRoomPhase}</div>
+                                      <div style={{ fontSize: '12px', color: C.textSecondary, marginBottom: '8px' }}>Deal phase - {dealRoomPhase.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</div>
                                       <button onClick={() => setNegotiatingOpp(null)} style={{ background: 'none', border: `1px solid ${C.border}`, padding: '8px 16px', borderRadius: '8px', color: C.textSecondary, cursor: 'pointer', fontSize: '12px' }}>Close</button>
                                     </div>
                                   )}
@@ -4572,14 +4484,6 @@ export default function MarketplaceDemoPage() {
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Campaign title *</div>
                             <input type="text" value={newCampaignTitle} onChange={e=>setNewCampaignTitle(e.target.value)} placeholder="e.g. Spring Product Launch" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Select ValueSkin Type *</div>
-                            <div style={{ display:'flex', gap:'8px' }}>
-                              {(['profession', 'passion', 'hobby'] as const).map(skin => (
-                                <button key={skin} onClick={() => setNewCampaignValueskin(skin)} style={{ flex:1, padding:'8px', background: newCampaignValueskin === skin ? C.primary : C.bg, color: newCampaignValueskin === skin ? '#fff' : C.text, border: newCampaignValueskin === skin ? `1px solid ${C.primary}` : `1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', fontSize:'12px', fontWeight: newCampaignValueskin === skin ? 700 : 500 }}>{skin.charAt(0).toUpperCase() + skin.slice(1)}</button>
-                              ))}
-                            </div>
-                          </div>
                           </div>
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>About your product / campaign *</div>
@@ -4746,27 +4650,6 @@ export default function MarketplaceDemoPage() {
                               </select>
                             </div>
                           </div>
-                          {/* Requirements — what creators must meet */}
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Creator requirements</div>
-                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Creators must match these to see the campaign. Include audience age, language, or specific requirements.</div>
-                            <div style={{ fontSize:'9px', color:C.textMuted, marginBottom:'6px', fontStyle:'italic' }}>Examples: "Audience age 25-34", "English speaking", "Must have 100K+ followers"</div>
-                            <div style={{ display:'flex', gap:'6px', marginBottom:'6px' }}>
-                              <input type="text" value={newCampaignReqInput} onChange={e=>setNewCampaignReqInput(e.target.value)} placeholder="e.g. Audience age 25-34, English speaking, GitHub profile" onKeyDown={e => { if (e.key === 'Enter' && newCampaignReqInput.trim()) { e.preventDefault(); setNewCampaignRequirements(prev=>[...prev,newCampaignReqInput.trim()]); setNewCampaignReqInput(''); }}} style={{ flex:1, background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'7px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                              <button onClick={()=>{ if (newCampaignReqInput.trim()) { setNewCampaignRequirements(prev=>[...prev,newCampaignReqInput.trim()]); setNewCampaignReqInput(''); }}} style={{ background:C.primary, border:'none', borderRadius:'8px', padding:'7px 12px', color:'#fff', fontSize:'11px', fontWeight:600, cursor:'pointer' }}>Add</button>
-                            </div>
-                            {newCampaignRequirements.length > 0 && (
-                              <div style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
-                                {newCampaignRequirements.map((req, idx) => (
-                                  <div key={idx} style={{ display:'flex', alignItems:'center', gap:'6px', fontSize:'11px', color:C.text, padding:'4px 8px', background:C.bg, borderRadius:'6px', border:`1px solid ${C.border}` }}>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                    <span style={{ flex:1 }}>{req}</span>
-                                    <button onClick={()=>setNewCampaignRequirements(prev=>prev.filter((_,i)=>i!==idx))} style={{ background:'none', border:'none', color:C.textMuted, cursor:'pointer', fontSize:'14px', lineHeight:1 }}>x</button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
                           <div style={{ marginBottom:'16px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Application deadline</div>
                             <input type="date" value={newCampaignDeadline} onChange={e=>setNewCampaignDeadline(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
@@ -4804,6 +4687,27 @@ export default function MarketplaceDemoPage() {
                               };
                               persistCampaigns([...campaigns, newC]);
                               firebaseCreateCampaign(newC);
+                              // Also save to PostgreSQL so it's visible across devices
+                              const demoUuid = localStorage.getItem('vs_demo_user_id') || (() => {
+                                const u = crypto.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
+                                localStorage.setItem('vs_demo_user_id', u);
+                                return u;
+                              })();
+                              fetch('/api/campaigns/list', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  user_id: demoUuid,
+                                  title: newC.title,
+                                  description: `${newC.about}\n\n${newC.description}`,
+                                  budget_per_creator: parseInt(newC.budget || '0'),
+                                  total_budget: parseInt(newC.budget || '0') * newC.creatorCount,
+                                  deadline: newC.deadline || null,
+                                  delivery_type: 'no_delivery',
+                                  usage_rights_days: 365,
+                                  required_niches: [newC.brandProfession],
+                                }),
+                              }).catch(() => {});
                               setShowCampaignCreator(false);
                               setLastCreatedCampaignId(newC.id);
                               setPendingCampaignForEscrow(newC);
@@ -6712,54 +6616,7 @@ export default function MarketplaceDemoPage() {
                   </div>
                 </>
               )}
-              {/* Past Deals section */}
-              <div style={{ marginTop:'24px', paddingTop:'20px', borderTop:`1px solid ${C.border}` }}>
-                <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'16px' }}>
-                  <span style={{ fontSize:'12px', fontWeight:700, color:C.text, textTransform:'uppercase', letterSpacing:'0.5px' }}>Past Deals</span>
-                  <span style={{ fontSize:'10px', background:C.primary, color:'#fff', padding:'2px 6px', borderRadius:'8px' }}>
-                    {Object.values(dealStates).filter(d => d.brandApprovalPhase === 'approved' || d.creatorDealLifecycle === 'approved').length}
-                  </span>
-                </div>
-                {(() => {
-                  const completedDeals = Object.entries(dealStates).filter(([_, d]) => d.brandApprovalPhase === 'approved' || d.creatorDealLifecycle === 'approved').map(([key, deal]) => ({key, ...deal}));
-                  if (completedDeals.length === 0) {
-                     return <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'12px', padding:'16px' }}>
-                       <div style={{ fontSize:'12px', color:C.textSecondary, textAlign:'center' }}>No completed deals yet</div>
-                       <button onClick={handleRefresh} disabled={refreshing} style={{ fontSize:'11px', fontWeight:600, color:C.primary, background:`${C.primary}12`, border:'none', borderRadius:'8px', padding:'8px 16px', cursor:'pointer' }}>
-                         {refreshing ? 'Refreshing...' : '⟳ Find matching deals'}
-                       </button>
-                     </div>;
-                   }
-                   return (
-                     <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
-                       {completedDeals.map((deal) => {
-                         const [creatorName, skinName] = deal.key.split('|');
-                        const dealAmount = deal.agreementAmount || deal.offerAmount || '0';
-                        const creatorRating = deal.creatorRating || 0;
-                        const brandRating = deal.brandRating || 0;
-                        const completedDate = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-                        return (
-                          <div key={deal.key} style={{ background:C.card, borderRadius:'8px', padding:'12px', border:`1px solid ${C.border}` }}>
-                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'start', marginBottom:'8px' }}>
-                              <div>
-                                <div style={{ fontSize:'13px', fontWeight:600, color:C.text, marginBottom:'2px' }}>{creatorName} × {skinName}</div>
-                                <div style={{ fontSize:'11px', color:C.textSecondary }}>{deal.type || 'Deal'} · {completedDate}</div>
-                              </div>
-                              <div style={{ fontSize:'13px', fontWeight:700, color:C.success }}>${parseInt(dealAmount).toLocaleString()}</div>
-                            </div>
-                            {(creatorRating > 0 || brandRating > 0) && (
-                              <div style={{ display:'flex', gap:'16px', fontSize:'11px', color:C.textSecondary, paddingTop:'8px', borderTop:`1px solid ${C.border}` }}>
-                                {creatorRating > 0 && <span>Creator rated: {'★'.repeat(creatorRating)}</span>}
-                                {brandRating > 0 && <span>Brand rated: {'★'.repeat(brandRating)}</span>}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
-              </div>
+
             </>
           )}
 
@@ -7451,55 +7308,10 @@ export default function MarketplaceDemoPage() {
               </div>
 
               <div style={{ padding: '0 16px 16px' }}>
-                {/* Slot assignment pills */}
-                {marketplaceRole !== 'brand' && (
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                    {SLOTS.map((slot) => {
-                      const current = valueSkins[slot];
-                      const active = assigningSlot === slot;
-                      const slotColor = SLOT_COLORS[slot];
-                      return (
-                        <button
-                          key={slot}
-                          onClick={() => setAssigningSlot(slot)}
-                          style={{
-                            flex: 1, padding: '10px 8px', borderRadius: '12px', cursor: 'pointer',
-                            background: active ? `${slotColor}20` : C.card,
-                            border: active ? `2px solid ${slotColor}` : '2px solid transparent',
-                            transition: 'all 0.15s',
-                          }}
-                        >
-                          <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.6px', textTransform: 'uppercase', color: slotColor, marginBottom: '2px' }}>
-                            {SLOT_LABELS[slot]}
-                          </div>
-                          <div style={{ fontSize: '13px', color: current ? C.text : C.textMuted, fontWeight: current ? 600 : 400 }}>
-                            {current ? (PROFESSION_BADGES[current.profession]?.abbreviation ?? current.profession) : 'Empty'}
-                          </div>
-                          {current && (() => {
-                            const level = getLevel(metrics.dealsCompleted);
-                            const progress = getProgressToNext(metrics.dealsCompleted);
-                            return (
-                              <div style={{ marginTop: '4px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <span style={{ fontSize: '9px', fontWeight: 700, color: slotColor }}>Lv.{level}</span>
-                                  <div style={{ flex: 1, height: '3px', borderRadius: '2px', background: C.border, overflow: 'hidden' }}>
-                                    <div style={{ width: `${progress}%`, height: '100%', background: slotColor, borderRadius: '2px' }} />
-                                  </div>
-                                </div>
-                                <div style={{ fontSize: '8px', color: C.textMuted, marginTop: '1px' }}>{level >= 5 ? 'MAX' : `${progress}%`}</div>
-                              </div>
-                            );
-                          })()}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
                 {/* Brand: owned skins summary */}
                 {marketplaceRole === 'brand' && (
                   <div style={{ marginBottom: '16px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: C.textSecondary, marginBottom: '8px' }}>Your ValueSkins ({brandValueSkins.length}/3)</div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: C.textSecondary, marginBottom: '8px' }}>Your ValueSkins</div>
                     {brandValueSkins.length > 0 && (
                       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {brandValueSkins.map(skin => (
@@ -7513,24 +7325,13 @@ export default function MarketplaceDemoPage() {
                   </div>
                 )}
 
-                {marketplaceRole !== 'brand' && !assigningSlot && ownedSkins.length === 0 && (
-                  <div style={{ fontSize: '13px', color: C.warning, marginBottom: '12px', fontWeight: 600 }}>
-                    Select a slot above to assign a ValueSkin
-                  </div>
-                )}
-                {assigningSlot && (
-                  <div style={{ fontSize: '13px', color: SLOT_COLORS[assigningSlot], marginBottom: '12px', fontWeight: 600 }}>
-                    Selecting for {SLOT_LABELS[assigningSlot]} slot
-                  </div>
-                )}
-
                 {/* 2-column category grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   {Object.values(marketplaceRole === 'brand' ? PROFESSIONS : CREATOR_PROFESSIONS).map((prof) => {
                     const isBrand = marketplaceRole === 'brand';
                     const brandOwns = isBrand && prof.subProfessions.some(sp => brandValueSkins.includes(sp));
-                    const isCurrentSlotActive = !isBrand && assigningSlot && prof.subProfessions.includes(valueSkins[assigningSlot]?.profession ?? '');
-                    const canClick = isBrand ? brandValueSkins.length < 3 : !!assigningSlot;
+                    const isCurrentSlotActive = !isBrand && ownedSkins.some(s => prof.subProfessions.includes(s.profession));
+                    const canClick = isBrand ? brandValueSkins.length < 1 : true;
                     return (
                       <button
                         key={prof.name}
@@ -7580,8 +7381,8 @@ export default function MarketplaceDemoPage() {
           <div style={{ background: C.primary, borderRadius: '12px', padding: '16px', marginTop: '20px', textAlign: 'center', color: '#fff' }}>
             <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '4px' }}>Highest Skin Level</div>
             <div style={{ fontSize: '32px', fontWeight: 'bold' }}>LEVEL {currentLevel}</div>
+            {ownedSkins.length === 0 && <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>No ValueSkin equipped — purchase one from the Closet</div>}
             {ownedSkins.length === 1 && <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>Followers contribute to XP with 1 skin</div>}
-            {ownedSkins.length > 1 && <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>Followers excluded — multiple skins equipped</div>}
           </div>
         </Modal>
       )}
@@ -7665,7 +7466,7 @@ export default function MarketplaceDemoPage() {
       })()}
 
       {/* Store Modal — shows brand types for brands, creator professions for creators */}
-      {showStoreModal && (assigningSlot || marketplaceRole === 'brand') && storeCategory && (() => {
+      {showStoreModal && storeCategory && (() => {
         const catMap = marketplaceRole === 'brand' ? PROFESSIONS : CREATOR_PROFESSIONS;
         const cat = (catMap as Record<string, { name: string; subProfessions: string[] }>)[storeCategory];
         if (!cat) return null;
@@ -7674,21 +7475,16 @@ export default function MarketplaceDemoPage() {
         <Modal onClose={() => { setShowStoreModal(false); setStoreCategory(null); }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
             <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: C.text, margin: 0 }}>{storeCategory}</h2>
-            {assigningSlot && marketplaceRole !== 'brand' && (
-              <span style={{ fontSize: '11px', fontWeight: 700, color: SLOT_COLORS[assigningSlot], background: `${SLOT_COLORS[assigningSlot]}20`, padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-                {SLOT_LABELS[assigningSlot]}
-              </span>
-            )}
             {marketplaceRole === 'brand' && (
               <span style={{ fontSize: '11px', fontWeight: 700, color: C.textSecondary, background: C.surfaceAlt, padding: '3px 8px', borderRadius: '6px' }}>
-                {brandValueSkins.length}/3 slots
+                {brandValueSkins.length}/1 max
               </span>
             )}
           </div>
           <p style={{ fontSize: '13px', color: C.textSecondary, marginBottom: '16px' }}>
             {marketplaceRole === 'brand'
               ? 'Tap any profession to add it to your brand ValueSkins ($10).'
-              : `Tap any badge to purchase ($10) and instantly apply it to your ${assigningSlot ? SLOT_LABELS[assigningSlot].toLowerCase() : ''} slot.`}
+              : 'Tap any badge to purchase ($10) and instantly apply it as your ValueSkin.'}
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -7696,13 +7492,12 @@ export default function MarketplaceDemoPage() {
               const defined = PROFESSION_BADGES[sub];
               const isBrand = marketplaceRole === 'brand';
               const abbr = defined?.abbreviation ?? sub.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 3);
-              const badgeColor = defined?.color ?? (assigningSlot ? SLOT_COLORS[assigningSlot] : C.primary);
+              const badgeColor = defined?.color ?? C.primary;
               const stickerSrc = defined?.stickerImage || STICKER_MANIFEST[sub];
               const isOwned = isBrand && brandValueSkins.includes(sub);
-              const isActiveHere = !isBrand && assigningSlot && valueSkins[assigningSlot]?.profession === sub;
-              const isUsedElsewhere = !isBrand && !isActiveHere && assignedProfessions.has(sub);
-              const isFull = isBrand && brandValueSkins.length >= 3 && !isOwned;
-              const disabled = isUsedElsewhere || isFull;
+              const isActiveHere = !isBrand && assignedProfessions.has(sub);
+              const isFull = isBrand && brandValueSkins.length >= 1 && !isOwned;
+              const disabled = isFull;
               return (
                 <button
                   key={sub}
@@ -7737,9 +7532,6 @@ export default function MarketplaceDemoPage() {
                       </svg>
                     </div>
                   )}
-                  {isUsedElsewhere && (
-                    <span style={{ fontSize: '10px', color: C.textMuted, position: 'absolute', top: '6px', right: '6px' }}>used</span>
-                  )}
                   {isFull && (
                     <span style={{ fontSize: '10px', color: C.textMuted, position: 'absolute', top: '6px', right: '6px' }}>full</span>
                   )}
@@ -7754,43 +7546,8 @@ export default function MarketplaceDemoPage() {
       {/* Brand Store Modal */}
       {/* Brand Store Modal — this is now unused since brands buy skins from the main store like creators */}
 
-      {/* ValueSkin Management Modal */}
-      {showSkinManageModal && (
-        <SkinManagementModal
-          slot={showSkinManageModal}
-          onClose={() => setShowSkinManageModal(null)}
-          valueSkins={valueSkins}
-          hiddenSkins={hiddenSkins}
-          onHide={(slot) => {
-            setHiddenSkins(prev => new Set([...prev, slot]));
-            setPurchaseToast(`${SLOT_LABELS[slot]} ValueSkin hidden from marketplace`);
-            setTimeout(() => setPurchaseToast(null), 3000);
-          }}
-          onUnhide={(slot) => {
-            setHiddenSkins(prev => {
-              const next = new Set(prev);
-              next.delete(slot);
-              return next;
-            });
-            setPurchaseToast(`${SLOT_LABELS[slot]} ValueSkin restored to marketplace`);
-            setTimeout(() => setPurchaseToast(null), 3000);
-          }}
-          onDelete={(slot) => {
-            setValueSkins(prev => {
-              const next = { ...prev };
-              delete next[slot];
-              return next;
-            });
-            setHiddenSkins(prev => {
-              const next = new Set(prev);
-              next.delete(slot);
-              return next;
-            });
-            setPurchaseToast(`${SLOT_LABELS[slot]} ValueSkin permanently deleted`);
-            setTimeout(() => setPurchaseToast(null), 3000);
-          }}
-        />
-      )}
+
+
 
       {/* ── EVENTS VIEW ──────────────────────────── */}
       {activeView === 'events' && (
@@ -7872,100 +7629,6 @@ function NavItem({ label, active, onClick, badgeCount }: { label: string; active
         <span style={{ minWidth: '18px', height: '18px', borderRadius: '9px', background: C.danger, color: '#fff', fontSize: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{badgeCount}</span>
       )}
     </button>
-  );
-}
-
-function SkinManagementModal({ slot, onClose, valueSkins, hiddenSkins, onHide, onUnhide, onDelete }: { slot: ValueSkinSlot; onClose: () => void; valueSkins: ValueSkinMap; hiddenSkins: Set<ValueSkinSlot>; onHide: (slot: ValueSkinSlot) => void; onUnhide: (slot: ValueSkinSlot) => void; onDelete: (slot: ValueSkinSlot) => void }) {
-  const skin = valueSkins[slot];
-  if (!skin) return null;
-
-  const isHidden = hiddenSkins.has(slot);
-  const SLOT_LABELS: Record<ValueSkinSlot, string> = { profession: 'Professional', passion: 'Passion', hobby: 'Hobby' };
-  const SLOT_COLORS: Record<ValueSkinSlot, string> = { profession: '#0095F6', passion: '#880E4F', hobby: '#37474F' };
-
-  return (
-    <Modal onClose={onClose}>
-      <div style={{ paddingBottom: '20px' }}>
-        <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '12px', color: C.text }}>
-          Manage {SLOT_LABELS[slot]} ValueSkin
-        </div>
-
-        {/* Current skin info */}
-        <div style={{ background: C.surfaceAlt, borderRadius: '10px', padding: '14px', marginBottom: '20px', border: `1px solid ${C.border}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: SLOT_COLORS[slot], display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
-              {SLOT_LABELS[slot].substring(0, 3).toUpperCase()}
-            </div>
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>{skin.profession}</div>
-              <div style={{ fontSize: '11px', color: C.textMuted }}>{isHidden ? 'Hidden' : 'Visible'}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {/* Hide/Unhide button */}
-          <button
-            onClick={() => { isHidden ? onUnhide(slot) : onHide(slot); onClose(); }}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              border: `1px solid ${C.border}`,
-              background: C.bg,
-              color: C.text,
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-            }}
-          >
-            {isHidden ? 'Restore visibility' : 'Hide temporarily'}
-            <span style={{ fontSize: '12px', color: C.textMuted }}>
-              {isHidden ? '(Appears in profile)' : '(Hidden from discovery)'}
-            </span>
-          </button>
-
-          {/* Delete button */}
-          <button
-            onClick={() => {
-              if (window.confirm('Permanently delete this ValueSkin? This cannot be undone and no refund will be issued.')) {
-                onDelete(slot);
-                onClose();
-              }
-            }}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
-              border: '1px solid #D32F2F',
-              background: 'rgba(211, 47, 47, 0.08)',
-              color: '#D32F2F',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-            }}
-          >
-            Delete permanently
-            <span style={{ fontSize: '12px', color: 'rgba(211, 47, 47, 0.7)' }}>(No refund)</span>
-          </button>
-
-          {/* Info */}
-          <div style={{ fontSize: '11px', color: C.textMuted, padding: '10px', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', lineHeight: 1.5 }}>
-            <strong>Hide:</strong> Temporarily remove from marketplace/communities (reversible)<br />
-            <strong>Delete:</strong> Permanently remove (irreversible, no refund)
-          </div>
-        </div>
-      </div>
-    </Modal>
   );
 }
 

@@ -7,18 +7,14 @@ import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-ma
 
 //  Types 
 
-export type ValueSkinSlot = 'hobby' | 'passion' | 'profession';
+export type ValueSkinSlot = 'profession';
 
 export const SLOT_LABELS: Record<ValueSkinSlot, string> = {
-  hobby:      'Hobby',
-  passion:    'Passion',
   profession: 'Profession',
 };
 
 export const SLOT_COLORS: Record<ValueSkinSlot, string> = {
-  hobby:      '#37474F',   // slate
-  passion:    '#880E4F',   // deep pink
-  profession: '#0066CC',   // blue
+  profession: '#0066CC',
 };
 
 // Map of slot → active profession name + editable About Me text
@@ -218,8 +214,6 @@ export function ProfessionSticker({
   );
 }
 
-//  About Me Panel — shows all 3 slots, edit any 
-
 function AboutMePanel({
   slot: initialSlot,
   profession,
@@ -239,35 +233,37 @@ function AboutMePanel({
   level?: number;
   hideSlotLabel?: boolean;
 }) {
-  const [editingSlot, setEditingSlot] = useState<ValueSkinSlot | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [customImageUrl, setCustomImageUrl] = useState('');
   const [pitchVideoUrl, setPitchVideoUrl] = useState('');
 
-  const startEdit = (s: ValueSkinSlot) => {
-    setDraft(valueSkins[s]?.aboutMe ?? defaultAboutMe(valueSkins[s]?.profession ?? ''));
-    setCustomImageUrl(valueSkins[s]?.customImage ?? '');
-    setPitchVideoUrl(valueSkins[s]?.pitchVideoUrl ?? '');
-    setEditingSlot(s);
+  const s: ValueSkinSlot = 'profession';
+  const entry = valueSkins[s];
+  const slotBadge = entry ? PROFESSION_BADGES[entry.profession] : undefined;
+
+  const startEdit = () => {
+    setDraft(entry?.aboutMe ?? defaultAboutMe(entry?.profession ?? ''));
+    setCustomImageUrl(entry?.customImage ?? '');
+    setPitchVideoUrl(entry?.pitchVideoUrl ?? '');
+    setIsEditing(true);
   };
 
   const save = () => {
-    if (!editingSlot || !onValueSkinsChange) return;
+    if (!onValueSkinsChange) return;
     onValueSkinsChange({
       ...valueSkins,
-      [editingSlot]: {
-        ...valueSkins[editingSlot]!,
+      [s]: {
+        ...(valueSkins[s] || { profession, aboutMe: '' }),
         aboutMe: draft,
         customImage: customImageUrl || undefined,
         pitchVideoUrl: pitchVideoUrl || undefined,
       },
     });
-    setEditingSlot(null);
+    setIsEditing(false);
   };
 
-  const discard = () => setEditingSlot(null);
-
-  const slots: ValueSkinSlot[] = ['profession', 'passion', 'hobby'];
+  const discard = () => setIsEditing(false);
 
   return (
     <div
@@ -294,7 +290,7 @@ function AboutMePanel({
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: '17px', color: '#E0E0E0' }}>About Me</div>
             <div style={{ fontSize: '12px', color: '#555', marginTop: '2px' }}>
-              Your story across all three ValueSkin slots
+              Your ValueSkin profile details
             </div>
           </div>
           {level !== undefined && (
@@ -324,99 +320,84 @@ function AboutMePanel({
           </button>
         </div>
 
-        {/* Each slot */}
-        {slots.map((s) => {
-          const entry = valueSkins[s];
-          if (!entry) {
-            // Slot not filled — show empty placeholder
-            return (
-              <div key={s} style={{
-                marginBottom: '16px',
-                padding: '14px',
-                background: '#1A1A1A',
-                borderRadius: '10px',
-                border: '1px solid #262626',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                  {!hideSlotLabel && (
-                    <span style={{
-                      fontSize: '10px', fontWeight: 700, letterSpacing: '0.8px',
-                      textTransform: 'uppercase', color: SLOT_COLORS[s],
-                    }}>
-                      {SLOT_LABELS[s]}
+        {!entry ? (
+          <div style={{
+            marginBottom: '16px', padding: '14px',
+            background: '#1A1A1A', borderRadius: '10px',
+            border: '1px solid #262626',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              {!hideSlotLabel && (
+                <span style={{
+                  fontSize: '10px', fontWeight: 700, letterSpacing: '0.8px',
+                  textTransform: 'uppercase', color: SLOT_COLORS[s],
+                }}>
+                  {SLOT_LABELS[s]}
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: '13px', color: '#444', fontStyle: 'italic' }}>
+              No {hideSlotLabel ? 'badge' : SLOT_LABELS[s].toLowerCase()} active.
+            </div>
+          </div>
+        ) : (
+          <div style={{
+            marginBottom: '16px', padding: '14px',
+            background: '#1A1A1A', borderRadius: '10px',
+            border: `1px solid ${isEditing ? '#0066CC' : '#262626'}`,
+            transition: 'border-color 0.15s',
+          }}>
+            {/* Slot header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+              {slotBadge && (
+                (slotBadge.stickerImage || STICKER_MANIFEST[entry.profession]) ? (
+                  <img
+                    src={slotBadge.stickerImage || STICKER_MANIFEST[entry.profession]}
+                    alt={slotBadge.label}
+                    draggable={false}
+                    style={{ width: '28px', height: '28px', borderRadius: '7px', imageRendering: 'pixelated', flexShrink: 0 }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '28px', height: '28px', borderRadius: '7px',
+                    background: slotBadge.color,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  }}>
+                    <span style={{ color: '#fff', fontSize: '8px', fontWeight: 700 }}>
+                      {slotBadge.abbreviation}
                     </span>
-                  )}
-                </div>
-                <div style={{ fontSize: '13px', color: '#444', fontStyle: 'italic' }}>
-                  No {hideSlotLabel ? 'badge' : SLOT_LABELS[s].toLowerCase()} active.
-                </div>
-              </div>
-            );
-          }
-
-          const slotBadge = PROFESSION_BADGES[entry.profession];
-          const isEditing = editingSlot === s;
-
-          return (
-            <div key={s} style={{
-              marginBottom: '16px',
-              padding: '14px',
-              background: '#1A1A1A',
-              borderRadius: '10px',
-              border: `1px solid ${isEditing ? '#0066CC' : '#262626'}`,
-              transition: 'border-color 0.15s',
-            }}>
-              {/* Slot header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                {slotBadge && (
-                  (slotBadge.stickerImage || STICKER_MANIFEST[entry.profession]) ? (
-                    <img
-                      src={slotBadge.stickerImage || STICKER_MANIFEST[entry.profession]}
-                      alt={slotBadge.label}
-                      draggable={false}
-                      style={{ width: '28px', height: '28px', borderRadius: '7px', imageRendering: 'pixelated', flexShrink: 0 }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: '28px', height: '28px', borderRadius: '7px',
-                      background: slotBadge.color,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    }}>
-                      <span style={{ color: '#fff', fontSize: '8px', fontWeight: 700 }}>
-                        {slotBadge.abbreviation}
-                      </span>
-                    </div>
-                  )
-                )}
-                <div>
-                  {!hideSlotLabel && (
-                    <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', color: SLOT_COLORS[s] }}>
-                      {SLOT_LABELS[s]}
-                    </div>
-                  )}
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#C0C0C0' }}>
-                    {entry.profession}
                   </div>
-                </div>
-                {!isEditing && onValueSkinsChange && (
-                  <button
-                    onClick={() => startEdit(s)}
-                    style={{
-                      marginLeft: 'auto', padding: '5px 10px',
-                      background: 'transparent', border: '1px solid #333',
-                      borderRadius: '6px', color: '#666', fontSize: '12px',
-                      fontWeight: 600, cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '4px',
-                    }}
-                  >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                    Edit
-                  </button>
+                )
+              )}
+              <div>
+                {!hideSlotLabel && (
+                  <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', color: SLOT_COLORS[s] }}>
+                    {SLOT_LABELS[s]}
+                  </div>
                 )}
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#C0C0C0' }}>
+                  {entry.profession}
+                </div>
               </div>
+              {!isEditing && onValueSkinsChange && (
+                <button
+                  onClick={startEdit}
+                  style={{
+                    marginLeft: 'auto', padding: '5px 10px',
+                    background: 'transparent', border: '1px solid #333',
+                    borderRadius: '6px', color: '#666', fontSize: '12px',
+                    fontWeight: 600, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                  }}
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Edit
+                </button>
+              )}
+            </div>
 
               {/* About Me text or textarea */}
               {isEditing ? (
@@ -521,8 +502,7 @@ function AboutMePanel({
                 </>
               )}
             </div>
-          );
-        })}
+        )}
       </div>
     </div>
   );
@@ -742,8 +722,6 @@ function ProfileCardPreview({
   );
 }
 
-//  Row of up to 3 stickers (Profession / Passion / Hobby) 
-
 export function ValueSkinStickers({
   valueSkins,
   onValueSkinsChange,
@@ -759,26 +737,24 @@ export function ValueSkinStickers({
   onSkinClick?: (profession: string) => void;
   hideSlotLabel?: boolean;
 }) {
-  const slots: ValueSkinSlot[] = ['profession', 'passion', 'hobby'];
-  const active = slots.filter((s) => valueSkins[s]);
-  if (active.length === 0) return null;
+  const s: ValueSkinSlot = 'profession';
+  const entry = valueSkins[s];
+  if (!entry) return null;
 
   return (
     <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', flexShrink: 0 }}>
-      {active.map((s) => (
-        <div key={s} onClick={onSkinClick ? (e) => { e.stopPropagation(); onSkinClick(valueSkins[s]!.profession); } : undefined} style={onSkinClick ? { cursor: 'pointer' } : undefined}>
-          <ProfessionSticker
-            profession={valueSkins[s]!.profession}
-            slot={s}
-            size={size}
-            valueSkins={valueSkins}
-            onValueSkinsChange={onValueSkinsChange}
-            level={level}
-            clickable={!onSkinClick}
-            hideSlotLabel={hideSlotLabel}
-          />
-        </div>
-      ))}
+      <div key={s} onClick={onSkinClick ? (e) => { e.stopPropagation(); onSkinClick(entry.profession); } : undefined} style={onSkinClick ? { cursor: 'pointer' } : undefined}>
+        <ProfessionSticker
+          profession={entry.profession}
+          slot={s}
+          size={size}
+          valueSkins={valueSkins}
+          onValueSkinsChange={onValueSkinsChange}
+          level={level}
+          clickable={!onSkinClick}
+          hideSlotLabel={hideSlotLabel}
+        />
+      </div>
     </div>
   );
 }

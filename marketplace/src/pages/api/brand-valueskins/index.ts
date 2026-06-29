@@ -32,51 +32,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'GET') {
       const skinsResult = await query(
-        `SELECT id, category, slot, level, description, created_at, updated_at
-         FROM brand_valueskins WHERE user_id = $1 ORDER BY slot ASC, created_at DESC`,
+        `SELECT id, category, level, description, created_at, updated_at
+         FROM brand_valueskins WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`,
         [userId]
       );
 
-      const skins = skinsResult.rows.map((skin: any) => ({
-        id: skin.id,
-        category: skin.category,
-        slot: skin.slot,
-        level: parseInt(skin.level) || 1,
-        description: skin.description,
-        createdAt: skin.created_at,
-        updatedAt: skin.updated_at,
-      }));
+      const skin = skinsResult.rows[0] ? {
+        id: skinsResult.rows[0].id,
+        category: skinsResult.rows[0].category,
+        level: parseInt(skinsResult.rows[0].level) || 1,
+        description: skinsResult.rows[0].description,
+        createdAt: skinsResult.rows[0].created_at,
+        updatedAt: skinsResult.rows[0].updated_at,
+      } : null;
 
-      return res.status(200).json({ userRole: 'brand', skins, skinCount: skins.length, maxSkins: 3 });
+      return res.status(200).json({ userRole: 'brand', skin, skinCount: skin ? 1 : 0, maxSkins: 1 });
     }
 
     if (req.method === 'POST') {
-      const { category, slot, description } = req.body;
+      const { category, description } = req.body;
 
-      if (!category || !slot) {
-        return res.status(400).json({ error: 'Category and slot are required' });
+      if (!category) {
+        return res.status(400).json({ error: 'Category is required' });
       }
 
+      // Check if brand already has a skin
       const existingResult = await query(
-        'SELECT id FROM brand_valueskins WHERE user_id = $1 AND slot = $2',
-        [userId, slot]
+        'SELECT id FROM brand_valueskins WHERE user_id = $1',
+        [userId]
       );
 
       if (existingResult.rows.length > 0) {
-        return res.status(409).json({ error: `Slot "${slot}" is already occupied` });
+        return res.status(409).json({ error: 'You already have a brand ValueSkin. Remove it to create a new one.' });
       }
 
       const insertResult = await query(
-        `INSERT INTO brand_valueskins (user_id, category, slot, level, description, created_at)
-         VALUES ($1, $2, $3, 1, $4, NOW()) RETURNING id, category, slot, level, description, created_at`,
-        [userId, category, slot, description || '']
+        `INSERT INTO brand_valueskins (user_id, category, level, description, created_at)
+         VALUES ($1, $2, 1, $3, NOW()) RETURNING id, category, level, description, created_at`,
+        [userId, category, description || '']
       );
 
       const newSkin = insertResult.rows[0];
       return res.status(201).json({
         id: newSkin.id,
         category: newSkin.category,
-        slot: newSkin.slot,
         xp: 0,
         level: 1,
         description: newSkin.description,

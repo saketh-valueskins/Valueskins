@@ -36,18 +36,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Fetch all ValueSkins for this user
       const skinsResult = await query(
         `SELECT
-          id, user_id, profession, slot, level, about_me, pitch_text, pitch_video,
+          id, user_id, profession, level, about_me, pitch_text, pitch_video,
           created_at, updated_at
          FROM user_valueskins
          WHERE user_id = $1
-         ORDER BY slot ASC, created_at DESC`,
+         ORDER BY created_at DESC
+         LIMIT 1`,
         [userId]
       );
 
       const skins = skinsResult.rows.map((skin: any) => ({
         id: skin.id,
         profession: skin.profession,
-        slot: skin.slot, // 'profession', 'passion', 'hobby'
         level: parseInt(skin.level) || 1,
         aboutMe: skin.about_me,
         pitchText: skin.pitch_text,
@@ -58,40 +58,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       return res.status(200).json({
         userRole,
-        skins,
+        skin: skins[0] || null,
         skinCount: skins.length,
-        maxSkins: 3, // Can have profession, passion, hobby
+        maxSkins: 1,
       });
     }
 
     if (req.method === 'POST') {
-      const { profession, slot, aboutMe, pitchText, pitchVideo } = req.body;
+      const { profession, aboutMe, pitchText, pitchVideo } = req.body;
 
       // Validation
-      if (!profession || !slot) {
-        return res.status(400).json({ error: 'Profession and slot are required' });
+      if (!profession) {
+        return res.status(400).json({ error: 'Profession is required' });
       }
 
-      if (!['profession', 'passion', 'hobby'].includes(slot)) {
-        return res.status(400).json({ error: 'Invalid slot type' });
-      }
-
-      // Check if slot is already taken
+      // Check if user already has a skin
       const existingResult = await query(
-        'SELECT id FROM user_valueskins WHERE user_id = $1 AND slot = $2',
-        [userId, slot]
+        'SELECT id FROM user_valueskins WHERE user_id = $1',
+        [userId]
       );
 
       if (existingResult.rows.length > 0) {
-        return res.status(409).json({ error: `Slot "${slot}" is already occupied` });
+        return res.status(409).json({ error: 'You already have a ValueSkin. Remove it to create a new one.' });
       }
 
       // Create ValueSkin
       const insertResult = await query(
-        `INSERT INTO user_valueskins (user_id, profession, slot, level, about_me, pitch_text, pitch_video, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-         RETURNING id, profession, slot, level, about_me, pitch_text, pitch_video, created_at`,
-        [userId, profession, slot, 1, aboutMe || '', pitchText || '', pitchVideo || '']
+        `INSERT INTO user_valueskins (user_id, profession, level, about_me, pitch_text, pitch_video, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW())
+         RETURNING id, profession, level, about_me, pitch_text, pitch_video, created_at`,
+        [userId, profession, 1, aboutMe || '', pitchText || '', pitchVideo || '']
       );
 
       const newSkin = insertResult.rows[0];
@@ -109,7 +105,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(201).json({
         id: newSkin.id,
         profession: newSkin.profession,
-        slot: newSkin.slot,
         xp: 0,
         level: 1,
         aboutMe: newSkin.about_me,
