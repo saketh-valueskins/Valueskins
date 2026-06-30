@@ -21,6 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     scope: 'openid profile email',
     state,
     access_type: 'offline',
+    prompt: 'select_account',
   });
 
   const isSecure = req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';

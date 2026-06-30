@@ -36,6 +36,7 @@ export async function getGoogleAuthUrl(): Promise<string> {
       scope: 'openid profile email',
       state: randomState(),
       access_type: 'offline',
+      prompt: 'select_account',
     });
     return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   }
