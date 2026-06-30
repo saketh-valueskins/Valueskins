@@ -717,7 +717,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
     if (fbMessages.length > 0) {
       setDealStates(prev => {
         const existing = prev[dealKey];
-        if (!existing) return { ...prev, [dealKey]: { intent: 'campaign' as const, phase: 'chatroom' as const, briefFilled: true, briefTitle: '', offerAmount: '', counterAmount: '', brandResponseAmount: '', chatMessages: fbMessages as ChatMessage[], chatInput: '', performanceClause: false, advancePercent: 30, uploadPercent: 40, approvalPercent: 30 } };
+        if (!existing) return { ...prev, [dealKey]: { intent: 'campaign' as const, phase: 'chatroom' as const, briefFilled: true, briefTitle: '', offerAmount: '', counterAmount: '', brandResponseAmount: '', chatMessages: fbMessages as ChatMessage[], chatInput: '', performanceClause: false, advancePercent: 50, approvalPercent: 50 } };
         // Merge: use local messages as base, append any from Firebase not already present
         const localMap = new Set(existing.chatMessages.map(m => m.id));
         const newFromFb = (fbMessages as ChatMessage[]).filter(m => !localMap.has(m.id));
@@ -892,11 +892,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const setChatInput = (v: string) => { if (activeDealKey) updateDeal(activeDealKey, { chatInput: v }); };
   const performanceClause = activeDeal?.performanceClause ?? false;
   const setPerformanceClause = (v: boolean) => { if (activeDealKey) updateDeal(activeDealKey, { performanceClause: v }); };
-  const advancePercent = activeDeal?.advancePercent ?? 30;
-  const uploadPercent = activeDeal?.uploadPercent ?? 40;
-  const approvalPercent = activeDeal?.approvalPercent ?? 30;
-  const setPaymentSplit = (advance: number, upload: number, approval: number) => {
-    if (activeDealKey) updateDeal(activeDealKey, { advancePercent: advance, uploadPercent: upload, approvalPercent: approval });
+  const advancePercent = activeDeal?.advancePercent ?? 50;
+  const approvalPercent = activeDeal?.approvalPercent ?? 50;
+  const setPaymentSplit = (advance: number, approval: number) => {
+    if (activeDealKey) updateDeal(activeDealKey, { advancePercent: advance, approvalPercent: approval });
   };
 
   // Deal type and workflow-specific accessors
@@ -1048,7 +1047,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
     const messages = (deal.chatMessages || []) as Array<{ sender?: string; text?: string; time?: string; isoTime?: string }>;
     const deliverableLinks = (deal.deliverableLinks || {}) as Record<number, string>;
     const statuses = (deal.deliverableStatuses || {}) as Record<number, string>;
-    const milestones = deal.paymentMilestones || { advance: 'pending', upload: 'pending', approval: 'pending' };
+    const milestones = deal.paymentMilestones || { advance: 'pending', approval: 'pending' };
     const lines = [
       'VALUESKINS DEAL SUMMARY (EVIDENCE RECORD)',
       '----------------------------------------',
@@ -1070,7 +1069,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
       '',
       'PAYMENT MILESTONES',
       `Advance: ${milestones.advance || 'pending'}`,
-      `Upload: ${milestones.upload || 'pending'}`,
       `Approval: ${milestones.approval || 'pending'}`,
       '',
       'DELIVERABLES SUBMITTED',
@@ -1371,7 +1369,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
   // Payment milestone states — tracks which stages have been released
   const [advanceReleased, setAdvanceReleased] = useState(false);
-  const [uploadReleased, setUploadReleased] = useState(false);
+
   const [approvalReleased, setApprovalReleased] = useState(false);
 
   // Communities creation state
@@ -1493,7 +1491,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
     drawLine(`Counter Amount: $${deal.counterAmount || '0'}`, 10, m);
     drawLine(`Final Amount: $${deal.agreementAmount || deal.offerAmount || '0'}`, 10, m, { bold: true });
     drawLine(`Performance Clause: ${deal.performanceClause ? 'Yes' : 'No'}`, 10, m);
-    drawLine(`Payment Split: Advance ${deal.advancePercent}% / Upload ${deal.uploadPercent}% / Approval ${deal.approvalPercent}%`, 9, m, { color: gray });
+    drawLine(`Payment Split: Advance ${deal.advancePercent}% / Approval ${deal.approvalPercent}%`, 9, m, { color: gray });
     if (deal.poc) {
       drawLine(`Point of Contact: ${deal.poc.name} (${deal.poc.workEmail}) — ${deal.poc.role}`, 9, m, { color: gray });
     }
@@ -1534,7 +1532,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
     drawSectionTitle('PAYMENT MILESTONES');
     const pMilestones = deal.paymentMilestones || {};
     drawLine(`  Advance: ${pMilestones.advance || 'pending'}`, 10, m);
-    drawLine(`  Upload: ${pMilestones.upload || 'pending'}`, 10, m);
     drawLine(`  Approval: ${pMilestones.approval || 'pending'}`, 10, m);
     drawSep();
 
@@ -1683,11 +1680,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [displayBrandRating, setDisplayBrandRating] = useState(false);
   // Payment milestone tracking — synced from shared deal state for real-time cross-role visibility
   type MilestoneStatus = 'pending'|'released';
-  const paymentMilestones: Record<string, MilestoneStatus> = (activeDeal?.paymentMilestones as Record<string, MilestoneStatus>) || { advance: 'pending', upload: 'pending', approval: 'pending' };
+  const paymentMilestones: Record<string, MilestoneStatus> = (activeDeal?.paymentMilestones as Record<string, MilestoneStatus>) || { advance: 'pending', approval: 'pending' };
   const setPaymentMilestones = (v: Record<string, MilestoneStatus> | ((prev: Record<string, MilestoneStatus>) => Record<string, MilestoneStatus>)) => {
     if (!activeDealKey) return;
     const newVal = typeof v === 'function' ? v(paymentMilestones) : v;
-    updateDeal(activeDealKey, { paymentMilestones: newVal as any });
+    updateDeal(activeDealKey, { paymentMilestones: newVal as Record<'advance' | 'approval', MilestoneStatus> });
   };
   // Dispute evidence input
   const [disputeEvidence, setDisputeEvidence] = useState('');
@@ -3227,7 +3224,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                       );
                                     }
                                     const advPct = advancePercent;
-                                    const uploadPct = uploadPercent;
                                     const approvalPct = approvalPercent;
                                     const refId = `DR-${activeDealKey ? Math.abs(activeDealKey.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 9000 + 1000) : '0000'}-${opp.brand.replace(/\s/g, '').slice(0, 3).toUpperCase()}`;
                                     const briefText = `${opp.about || ''} ${opp.requirements?.join(' ') || ''} ${opp.deliverables?.map(d => d.format).join(', ') || ''}`;
@@ -3266,7 +3262,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Payment Schedule (your terms)</div>
                                           {[
                                             { label: 'Advance', desc: 'Paid before work begins', pct: advPct, color: C.success },
-                                            { label: 'On upload', desc: 'Paid when content is submitted', pct: uploadPct, color: C.primary },
                                             { label: 'On approval', desc: 'Paid after brand signs off', pct: approvalPct, color: C.warning },
                                           ].map(row => (
                                             <div key={row.label} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
@@ -3311,7 +3306,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'8px' }}>Contract Terms</div>
                                           {[
                                             { key: 'deliverables', label: `I agree to deliver ${opp.deliverables.map(d => `${d.count}x ${d.format}`).join(', ')} by ${new Date(opp.deadline).toLocaleDateString('en-US', { month:'short', day:'numeric' })}` },
-                                            { key: 'payment', label: `Payment of $${totalPrice.toLocaleString()} split as: ${advPct}% advance, ${uploadPct}% on upload, ${approvalPct}% on approval` },
+                                            { key: 'payment', label: `Payment of $${totalPrice.toLocaleString()} split as: ${advPct}% advance, ${approvalPct}% on approval` },
                                             { key: 'usage', label: `Brand may use content for ${opp.usageRights || 'agreed period'} per usage rights terms` },
                                             { key: 'exclusivity', label: `Exclusivity: ${opp.exclusivity || 'None'} — I will not promote competing brands during this period` },
                                             { key: 'revisions', label: `Up to ${opp.revisionLimit} revision round${opp.revisionLimit !== 1 ? 's' : ''} included at no extra cost` },
@@ -3607,7 +3602,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                       const agreedPrice = dealCounterAmount || dealOfferAmount || opp.budget.replace(/[^0-9]/g, '') || '5000';
                                       const totalPrice = parseInt(agreedPrice) || 5000;
                                       const advPct = advancePercent;
-                                      const uploadPct = uploadPercent;
                                       const approvalPct = approvalPercent;
                                       const refId = `DR-${activeDealKey ? Math.abs(activeDealKey.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 9000 + 1000) : '0000'}-${opp.brand.replace(/\s/g, '').slice(0, 3).toUpperCase()}`;
                                       const signedAt = new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
@@ -3627,7 +3621,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>${totalPrice.toLocaleString()} total</div>
                                             {[
                                               { label: 'Advance', pct: advPct },
-                                              { label: 'On upload', pct: uploadPct },
                                               { label: 'On approval', pct: approvalPct },
                                             ].map(r => (
                                               <div key={r.label} style={{ fontSize: '11px', color: C.textSecondary, display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
@@ -4005,7 +3998,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               <>
                                                 {[
                                                   { label: 'Advance', value: advancePercent, color: C.success, key: 'advance' as const },
-                                                  { label: 'On upload', value: uploadPercent, color: C.primary, key: 'upload' as const },
                                                   { label: 'On approval', value: approvalPercent, color: C.warning, key: 'approval' as const },
                                                 ].map(s => (
                                                   <div key={s.key} style={{ marginBottom: '6px' }}>
@@ -4015,33 +4007,19 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     </div>
                                                     <input type="range" min={0} max={100} step={5} value={s.value} onChange={e => {
                                                       const newVal = parseInt(e.target.value);
-                                                      const others = [advancePercent, uploadPercent, approvalPercent];
-                                                      const idx = s.key === 'advance' ? 0 : s.key === 'upload' ? 1 : 2;
-                                                      const diff = newVal - others[idx];
-                                                      const otherIdxs = [0,1,2].filter(i => i !== idx);
-                                                      const otherTotal = otherIdxs.reduce((sum, i) => sum + others[i], 0);
-                                                      const newOthers = [...others];
-                                                      newOthers[idx] = newVal;
-                                                      if (otherTotal > 0) {
-                                                        otherIdxs.forEach(i => { newOthers[i] = Math.max(0, Math.round(others[i] - diff * (others[i] / otherTotal))); });
+                                                      if (s.key === 'advance') {
+                                                        setPaymentSplit(newVal, 100 - newVal);
                                                       } else {
-                                                        otherIdxs.forEach((i, j) => { newOthers[i] = j === 0 ? 100 - newVal : 0; });
+                                                        setPaymentSplit(100 - newVal, newVal);
                                                       }
-                                                      const total = newOthers.reduce((a, b) => a + b, 0);
-                                                      if (total !== 100 && otherIdxs.length > 0) newOthers[otherIdxs[0]] += 100 - total;
-                                                      setPaymentSplit(newOthers[0], newOthers[1], newOthers[2]);
                                                     }} style={{ width: '100%', height: '4px', accentColor: s.color }} />
                                                   </div>
                                                 ))}
-                                                {advancePercent + uploadPercent + approvalPercent !== 100 && (
-                                                  <div style={{ fontSize:'9px', color:'#ef4444', marginTop:'2px' }}>Must total 100%</div>
-                                                )}
                                               </>
                                             ) : (
                                               <div style={{ fontSize:'11px', color: C.textSecondary, lineHeight: 1.6 }}>
                                                 {[
                                                   { label: 'Advance', pct: advancePercent, color: C.success },
-                                                  { label: 'On upload', pct: uploadPercent, color: C.primary },
                                                   { label: 'On approval', pct: approvalPercent, color: C.warning },
                                                 ].map(s => (
                                                   <div key={s.label} style={{ display:'flex', justifyContent:'space-between', padding:'2px 0' }}>
@@ -4195,7 +4173,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                       case 'c2c_paid': {
                                         const agreedPrice = parseInt(dealCounterAmount || dealOfferAmount || '5000') || 5000;
                                         const advPct = advancePercent;
-                                        const uploadPct = uploadPercent;
                                         const approvalPct = approvalPercent;
 
                                         // Escrow gate — reads from shared deal state (brand funds escrow from their side)
@@ -4396,7 +4373,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>Payment Milestones</div>
                                                 {[
                                                   { key: 'advance' as const, label: 'Advance', pct: advPct, color: C.success },
-                                                  { key: 'upload' as const, label: 'On upload', pct: uploadPct, color: C.primary },
                                                   { key: 'approval' as const, label: 'On approval', pct: approvalPct, color: '#f59e0b' },
                                                 ].map(m => (
                                                   <div key={m.key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 0', borderBottom:`1px solid ${C.border}` }}>
@@ -4419,18 +4395,18 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   setSubmittedForReview(true);
                                                   const agreedAmt = parseInt(dealCounterAmount || '5000');
                                                   setCreatorDealLifecycle('submitted');
-                                                  setPaymentMilestones({ advance: 'released', upload: 'released', approval: 'pending' });
+                                                  setPaymentMilestones({ advance: 'released', approval: 'pending' });
                                                   if (activeDealKey) {
                                                     updateDeal(activeDealKey, {
                                                       creatorDealLifecycle: 'submitted',
                                                       brandApprovalPhase: 'reviewing',
-                                                      paymentMilestones: { advance: 'released', upload: 'released', approval: 'pending' },
+                                                      paymentMilestones: { advance: 'released', approval: 'pending' },
                                                       deliverableStatuses: deliverableStatuses,
                                                       deliverableLinks: deliverableLinks,
                                                     });
-                                                    firebaseSendNotification(opp?.brand || 'Brand', 'application', `Deliverables submitted: ${agreedAmt.toLocaleString()} – Advance & upload milestones released. Awaiting approval.`);
+                                                    firebaseSendNotification(opp?.brand || 'Brand', 'application', `Deliverables submitted: ${agreedAmt.toLocaleString()} – Advance milestone released. Awaiting approval.`);
                                                   }
-                                                  setPurchaseToast(`Submitted for review — $${Math.round(agreedAmt * (advancePercent + uploadPercent) / 100).toLocaleString()} released, $${Math.round(agreedAmt * approvalPercent / 100).toLocaleString()} pending approval`);
+                                                  setPurchaseToast(`Submitted for review — $${Math.round(agreedAmt * advancePercent / 100).toLocaleString()} released, $${Math.round(agreedAmt * approvalPercent / 100).toLocaleString()} pending approval`);
                                                   setTimeout(() => setPurchaseToast(null), 4000);
                                                 }} style={{ width:'100%', background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'#fff', fontWeight:600, cursor:'pointer', fontSize:'13px', marginBottom:'8px' }}>
                                                   Submit for Review
@@ -4456,7 +4432,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Deliverables Submitted</div>
                                                 <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Waiting for brand approval — typically within 48h.</div>
                                                 <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'2px' }}>Advance: <span style={{ color:C.success, fontWeight:600 }}>Paid</span></div>
-                                                <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'2px' }}>Upload milestone: <span style={{ color:C.success, fontWeight:600 }}>Paid</span></div>
                                                 <div style={{ fontSize:'10px', color:C.textMuted }}>Approval milestone: <span style={{ color:'#f59e0b', fontWeight:600 }}>Pending brand approval</span></div>
                                               </div>
                                               <div style={{ textAlign:'center', padding:'8px', fontSize:'11px', color:C.textMuted }}>
@@ -4491,7 +4466,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 <div style={{ background:'rgba(46,125,50,0.06)', border:'1px solid rgba(46,125,50,0.2)', borderRadius:'8px', padding:'12px', marginBottom:'14px' }}>
                                                   <div style={{ fontSize:'11px', color:C.textMuted, marginBottom:'2px' }}>Total Earnings</div>
                                                   <div style={{ fontSize:'22px', fontWeight:800, color:C.success }}>${parseInt(dealCounterAmount || '5000').toLocaleString()}</div>
-                                                  <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'4px' }}>Advance + Upload + Approval milestones</div>
+                                                  <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'4px' }}>Advance + Approval milestones</div>
                                                 </div>
                                                 {!ratingSubmitted ? (
                                                   <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'14px', marginBottom:'14px', textAlign:'left' }}>
@@ -4523,7 +4498,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'6px' }}>Escrow Release</div>
                                                   {[
                                                     { label:'Advance', status:'Released on deal acceptance' },
-                                                    { label:'Upload milestone', status:'Released on content submission' },
                                                     { label:'Approval milestone', status:'Released on brand approval' },
                                                   ].map(m => (
                                                     <div key={m.label} style={{ display:'flex', alignItems:'center', gap:'6px', padding:'3px 0', fontSize:'11px' }}>
@@ -5120,9 +5094,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'12px', marginBottom:'16px' }}>
                             <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>How funds are released per creator</div>
                             {[
-                              { label:'Advance (on deal acceptance)', pct:30 },
-                              { label:'On content upload', pct:40 },
-                              { label:'On brand approval', pct:30 },
+                              { label:'Advance (on deal acceptance)', pct:advancePercent },
+                              { label:'On brand approval', pct:approvalPercent },
                             ].map(m => (
                               <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:`1px solid ${C.border}` }}>
                                 <span style={{ fontSize:'11px', color:C.textSecondary }}>{m.label}</span>
@@ -5823,7 +5796,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     escrowFunded: true,
                                                     brandApprovalPhase: 'funded',
                                                     creatorDealLifecycle: 'deliverables',
-                                                    paymentMilestones: { advance: 'released', upload: 'pending', approval: 'pending' },
+                                                    paymentMilestones: { advance: 'released', approval: 'pending' },
                                                     chatMessages: [...existingMsgs, advanceMsg],
                                                   });
                                                 }
@@ -5921,7 +5894,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   if (brandDealKey) {
                                                     updateDeal(brandDealKey, {
                                                       brandApprovalPhase: 'approved',
-                                                      paymentMilestones: { advance: 'released', upload: 'released', approval: 'released' },
+                                                      paymentMilestones: { advance: 'released', approval: 'released' },
                                                       creatorDealLifecycle: 'approved'
                                                     });
                                                     setBrandApprovalPhase('approved');
@@ -6203,9 +6176,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         </div>
                                         {/* Milestone stages */}
                                         {[
-                                          { stage: 'Advance', pct: 30, status: advancePaid ? 'Paid to creator' : brandApprovalPhase === 'accepted' ? 'Awaiting escrow deposit' : 'Held in escrow', released: advancePaid },
-                                          { stage: 'Milestone', pct: 40, status: brandDeal?.paymentMilestones?.upload === 'released' ? 'Paid to creator' : 'Released on content delivery', released: brandDeal?.paymentMilestones?.upload === 'released' },
-                                          { stage: 'Completion', pct: 30, status: brandDeal?.paymentMilestones?.approval === 'released' ? 'Paid to creator' : 'Released on your approval', released: brandDeal?.paymentMilestones?.approval === 'released' },
+                                          { stage: 'Advance', pct: advancePercent, status: advancePaid ? 'Paid to creator' : brandApprovalPhase === 'accepted' ? 'Awaiting escrow deposit' : 'Held in escrow', released: advancePaid },
+                                          { stage: 'Completion', pct: approvalPercent, status: brandDeal?.paymentMilestones?.approval === 'released' ? 'Paid to creator' : 'Released on your approval', released: brandDeal?.paymentMilestones?.approval === 'released' },
                                         ].map((s, si) => (
                                           <div key={si} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: s.released ? 'rgba(46,125,50,0.04)' : C.bg, borderRadius: '6px', marginBottom: '4px', border: `1px solid ${s.released ? 'rgba(46,125,50,0.2)' : C.border}` }}>
                                             <div>
@@ -6392,7 +6364,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 escrowFunded: true,
                                                 brandApprovalPhase: 'funded',
                                                 creatorDealLifecycle: 'deliverables',
-                                                paymentMilestones: { advance: 'released', upload: 'pending', approval: 'pending' },
+                                                paymentMilestones: { advance: 'released', approval: 'pending' },
                                                 chatMessages: [...existingMsgs, advanceMsg],
                                               });
                                             }
@@ -6496,7 +6468,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 if (brandDealKey) {
                                                   updateDeal(brandDealKey, {
                                                     brandApprovalPhase: 'approved',
-                                                    paymentMilestones: { advance: 'released', upload: 'released', approval: 'released' },
+                                                    paymentMilestones: { advance: 'released', approval: 'released' },
                                                     creatorDealLifecycle: 'approved'
                                                   });
                                                   firebaseSendNotification('Creator', 'application', `Deliverables approved! Final payment released: $${approvalAmt.toLocaleString()}`);

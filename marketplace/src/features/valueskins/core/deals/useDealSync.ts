@@ -41,10 +41,9 @@ export type DealState = {
   chatInput: string;
   performanceClause: boolean;
   advancePercent: number;
-  uploadPercent: number;
   approvalPercent: number;
   // Payment milestone tracking — synced real-time
-  paymentMilestones?: Record<'advance' | 'upload' | 'approval', PaymentMilestoneStatus>;
+  paymentMilestones?: Record<'advance' | 'approval', PaymentMilestoneStatus>;
   creatorDealLifecycle?: 'checklist' | 'scripting' | 'deliverables' | 'submitted' | 'approved'; // Creator side
   // Script workflow: both parties negotiate, edit, and approve script before deliverables
   scriptMode?: 'non_negotiable' | 'discussion' | 'creator_freedom';
@@ -394,9 +393,8 @@ export function useDealSync(userId?: number, initialData?: {
                 chatMessages: [],
                 chatInput: '',
                 performanceClause: false,
-                advancePercent: 30,
-                uploadPercent: 40,
-                approvalPercent: 30,
+                advancePercent: 50,
+                approvalPercent: 50,
                 backendDealRoomId: typeof d.id === 'number' ? d.id : undefined,
                 creatorName: d.partnerName,
               };
@@ -689,8 +687,7 @@ export function useDealSync(userId?: number, initialData?: {
       ],
       chatInput: '',
       performanceClause: false,
-      advancePercent: 70,
-      uploadPercent: 0,
+      advancePercent: 100,
       approvalPercent: 0,
       dealType: undefined,
       goodsTrackerStatus: undefined,
@@ -717,7 +714,7 @@ export function useDealSync(userId?: number, initialData?: {
         chatInput: '',
         performanceClause: false,
         advancePercent: 70,
-        uploadPercent: 0,
+
         approvalPercent: 0,
         dealType: undefined,
         goodsTrackerStatus: undefined,
