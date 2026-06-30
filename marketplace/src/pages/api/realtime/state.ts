@@ -37,7 +37,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (existing.rows.length > 0) {
       const current = existing.rows[0].value || {};
       merged = {
-        deals: { ...(current.deals || {}), ...(value.deals || {}) },
+        deals: Object.fromEntries(
+          Object.entries({ ...(current.deals || {}), ...(value.deals || {}) }).map(([k]) => [
+            k, { ...((current.deals || {})[k] || {}), ...((value.deals || {})[k] || {}) }
+          ])
+        ),
         campaigns: value.campaigns !== undefined
           ? (value.campaigns.length > 0 || !current.campaigns?.length ? value.campaigns : current.campaigns)
           : (current.campaigns ?? []),

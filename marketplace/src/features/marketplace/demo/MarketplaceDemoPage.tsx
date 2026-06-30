@@ -13,6 +13,7 @@ import { useReputationConfig } from '@/lib/useConfigStorage';
 import { useDealSync, type DealState, type DealRoomPhase, type SharedApplication, type Campaign, type ChatMessage } from '@/features/valueskins/core/deals/useDealSync';
 import { useFirebaseRoom } from '@/features/valueskins/core/realtime/useFirebaseRoom';
 import { autoMatchCreators, type AutoMatchResult } from '@/lib/autoMatch';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 import { sendAutoMatchNotifications } from '@/lib/autoMatchNotifications';
 import {
@@ -189,6 +190,7 @@ const isSensitiveContent = (text: string): boolean => {
 
 // Opportunity type with full brand brief
 type Opportunity = {
+  campaignId?: number;
   brand: string;
   brandWebsiteUrl?: string;
   type: string;
@@ -210,6 +212,7 @@ type Opportunity = {
   escrowFunded?: boolean;
   escrowPool?: number;
   creatorCount?: number;
+  contentReview?: 'direct_upload' | 'review_required';
   // Point of Contact for the campaign
   poc?: { name: string; workEmail: string; role: string; phone?: string };
 };
@@ -232,7 +235,11 @@ const MOCK_REPUTATION = {
   maxDealSize: 2000,
 };
 
-export default function MarketplaceDemoPage() {
+export default function MarketplaceDemoPage(initialDealData?: {
+  initialCampaigns?: any[];
+  initialDealStates?: any;
+  initialApplications?: any[];
+}) {
   const { account, loading } = useAuth();
 
   const userRole = account?.role;
@@ -649,7 +656,11 @@ export default function MarketplaceDemoPage() {
   const [brandCurrentOppIndex, setBrandCurrentOppIndex] = useState(0);
 
   // Deal sync hook — bridges localStorage with backend API + cross-device sync via Supabase Realtime
-  const dealSync = useDealSync(account?.id);
+  const dealSync = useDealSync(account?.id, initialDealData ? {
+    campaigns: initialDealData.initialCampaigns,
+    dealStates: initialDealData.initialDealStates,
+    applications: initialDealData.initialApplications,
+  } : undefined);
   // Firebase sync — all users share one global namespace
   const { state: firebaseState, syncing: firebaseSyncing, createCampaign: firebaseCreateCampaign, updateDeal: firebaseUpdateDeal, addMessage: firebaseAddMessage, sendNotification: firebaseSendNotification, createApplication: firebaseCreateApplication } = useFirebaseRoom(null, null, '');
   const { dealStates, setDealStates, getOrCreateDeal, updateDeal: localUpdateDeal } = dealSync;
@@ -680,56 +691,61 @@ export default function MarketplaceDemoPage() {
     }
   }, [negotiatingOpp]);
 
-  // Sync Firebase messages back to local deal state (using new key format: creatorName|creatorSkin)
+  // Auto-scroll creator chat
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const brandChatEndRef = useRef<HTMLDivElement>(null);
+  // Track previous brandDealKey to reset notifications when switching creators
+
+  // Sync Firebase messages back to local deal state — merge, don't replace
   useEffect(() => {
     if (!firebaseState.messages) return;
-    // Recompute deal key here to avoid block-scoping issues with later declarations
     let dealKey: string | null = null;
     if (marketplaceRole === 'creator' && selectedMarketplaceSkin && negotiatingOpp !== null) {
-      const matchingCreator = BRAND_MARKETPLACE_CREATORS.find(c => c.valueSkin === selectedMarketplaceSkin);
+      const matchingCreator = backendCreators.find((c: any) => c.valueSkin === selectedMarketplaceSkin);
       if (matchingCreator) {
-        dealKey = `${matchingCreator.name}|${selectedMarketplaceSkin}`;
+        dealKey = `${matchingCreator.name}|${selectedMarketplaceSkin}|${negotiatingOpp}`;
       }
     } else if (marketplaceRole === 'brand' && negotiatingCreator !== null) {
-      const creator = BRAND_MARKETPLACE_CREATORS[negotiatingCreator];
+      const creator = backendCreators.find((c: any) => c._origIdx === negotiatingCreator);
       if (creator) {
-        dealKey = `${creator.name}|${creator.valueSkin}`;
+        dealKey = `${creator.name}|${creator.valueSkin}|${brandCurrentOppIndex}`;
       }
     }
 
     if (!dealKey) return;
     const fbMessages = firebaseState.messages[dealKey] || [];
     if (fbMessages.length > 0) {
-      setDealStates(prev => ({
-        ...prev,
-        [dealKey]: {
-          ...prev[dealKey],
-          chatMessages: fbMessages as ChatMessage[],
-        },
-      }));
+      setDealStates(prev => {
+        const existing = prev[dealKey];
+        if (!existing) return { ...prev, [dealKey]: { intent: 'campaign' as const, phase: 'chatroom' as const, briefFilled: true, briefTitle: '', offerAmount: '', counterAmount: '', brandResponseAmount: '', chatMessages: fbMessages as ChatMessage[], chatInput: '', performanceClause: false, advancePercent: 30, uploadPercent: 40, approvalPercent: 30 } };
+        // Merge: use local messages as base, append any from Firebase not already present
+        const localMap = new Set(existing.chatMessages.map(m => m.id));
+        const newFromFb = (fbMessages as ChatMessage[]).filter(m => !localMap.has(m.id));
+        if (newFromFb.length === 0) return prev;
+        return { ...prev, [dealKey]: { ...existing, chatMessages: [...existing.chatMessages, ...newFromFb] } };
+      });
     }
-  }, [firebaseState.messages, selectedMarketplaceSkin, negotiatingOpp, marketplaceRole, negotiatingCreator, setDealStates]);
+  }, [firebaseState.messages, selectedMarketplaceSkin, negotiatingOpp, marketplaceRole, negotiatingCreator, brandCurrentOppIndex, setDealStates, backendCreators]);
 
   // Sync payment milestones + creator deal lifecycle from dealStates to local UI state (real-time)
   useEffect(() => {
-    // Compute deal key inline to avoid block-scoping issues
     let dealKey: string | null = null;
     if (marketplaceRole === 'creator' && selectedMarketplaceSkin && negotiatingOpp !== null) {
-      const matchingCreator = BRAND_MARKETPLACE_CREATORS.find(c => c.valueSkin === selectedMarketplaceSkin);
+      const matchingCreator = backendCreators.find((c: any) => c.valueSkin === selectedMarketplaceSkin);
       if (matchingCreator) {
-        dealKey = `${matchingCreator.name}|${selectedMarketplaceSkin}`;
+        dealKey = `${matchingCreator.name}|${selectedMarketplaceSkin}|${negotiatingOpp}`;
       }
     } else if (marketplaceRole === 'brand' && negotiatingCreator !== null) {
-      const creator = BRAND_MARKETPLACE_CREATORS[negotiatingCreator];
+      const creator = backendCreators.find((c: any) => c._origIdx === negotiatingCreator);
       if (creator) {
-        dealKey = `${creator.name}|${creator.valueSkin}`;
+        dealKey = `${creator.name}|${creator.valueSkin}|${brandCurrentOppIndex}`;
       }
     }
 
     if (!dealKey) return;
     const deal = dealStates[dealKey];
     if (!deal) return;
-    // Payment milestones: sync from dealStates to local state so UI updates in real-time
+    // Payment milestones: sync from dealStates to local UI state so UI updates in real-time
     if (deal.paymentMilestones) {
       setPaymentMilestones(deal.paymentMilestones);
     }
@@ -745,7 +761,7 @@ export default function MarketplaceDemoPage() {
     if (deal.brandApprovalPhase) {
       setBrandApprovalPhase(deal.brandApprovalPhase as BrandApprovalPhase);
     }
-  }, [marketplaceRole, selectedMarketplaceSkin, negotiatingOpp, negotiatingCreator, dealStates]);
+  }, [marketplaceRole, selectedMarketplaceSkin, negotiatingOpp, negotiatingCreator, brandCurrentOppIndex, dealStates, backendCreators]);
 
   const updateDeal = useCallback((key: string, updates: Partial<DealState>) => {
     localUpdateDeal(key, updates);
@@ -758,9 +774,8 @@ export default function MarketplaceDemoPage() {
   // Use: creatorName|creatorSkin to enable cross-party deal lookup
   let activeDealKey: string | null = null;
   if (marketplaceRole === 'creator' && selectedMarketplaceSkin) {
-    // Find the creator in BRAND_MARKETPLACE_CREATORS that matches this creator's skin
-    // In the demo, we're simulating this creator interacting with opportunities
-    const matchingCreator = BRAND_MARKETPLACE_CREATORS.find(c => c.valueSkin === selectedMarketplaceSkin);
+    // Find the creator in backendCreators matching this creator's skin
+    const matchingCreator = backendCreators.find((c: any) => c.valueSkin === selectedMarketplaceSkin);
     if (matchingCreator) {
       // PRIMARY: if user explicitly selected an opp, use it (with opportunity index)
       if (negotiatingOpp !== null) {
@@ -781,6 +796,11 @@ export default function MarketplaceDemoPage() {
   }
 
   const activeDeal = activeDealKey ? getOrCreateDeal(activeDealKey) : null;
+
+  // Auto-scroll creator chat to bottom on new messages
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [activeDeal?.chatMessages?.length]);
 
   // Convenience accessors for the active deal (backward compat with existing render code)
   const dealRoomPhase = activeDeal?.phase ?? 'brief';
@@ -863,7 +883,7 @@ export default function MarketplaceDemoPage() {
   const setChatMessages = (fn: ((prev: DealState['chatMessages']) => DealState['chatMessages']) | DealState['chatMessages']) => {
     if (!activeDealKey) return;
     setDealStates(prev => {
-      const deal = { ...getOrCreateDeal(activeDealKey), ...prev[activeDealKey] };
+      const deal = prev[activeDealKey] || getOrCreateDeal(activeDealKey);
       const newMsgs = typeof fn === 'function' ? fn(deal.chatMessages) : fn;
       return { ...prev, [activeDealKey]: { ...deal, chatMessages: newMsgs } };
     });
@@ -933,14 +953,20 @@ export default function MarketplaceDemoPage() {
   // Key format MUST match creator side: creatorName|creatorSkin
   const getBrandDealKey = useCallback(() => {
     if (negotiatingCreator === null) return null;
-    const creator = BRAND_MARKETPLACE_CREATORS[negotiatingCreator];
+    const creator = backendCreators.find((c: any) => c._origIdx === negotiatingCreator);
     if (!creator) return null;
     // Format: creatorName|creatorSkin|oppIndex — includes opportunity context for multi-deal support
     return `${creator.name}|${creator.valueSkin}|${brandCurrentOppIndex}`;
-  }, [negotiatingCreator, brandCurrentOppIndex]);
+  }, [negotiatingCreator, brandCurrentOppIndex, backendCreators]);
 
   const brandDealKey = getBrandDealKey();
   const brandDeal = brandDealKey ? getOrCreateDeal(brandDealKey) : null;
+
+  // Auto-scroll brand chat to bottom on new messages
+  const brandChatMsgLen = brandDeal?.chatMessages?.length ?? 0;
+  useEffect(() => {
+    brandChatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [brandChatMsgLen]);
 
   // AUTO-SYNC: Brand side — when switching to brand role, sync to active deal from creator side
   useEffect(() => {
@@ -951,7 +977,7 @@ export default function MarketplaceDemoPage() {
         const creatorName = parts[0];
         const skinName = parts[1];
         const oppIdx = parseInt(parts[2]);
-        const creatorIdx = BRAND_MARKETPLACE_CREATORS.findIndex(c => c.name === creatorName && c.valueSkin === skinName);
+        const creatorIdx = backendCreators.findIndex((c: any) => c.name === creatorName && c.valueSkin === skinName);
         if (creatorIdx >= 0) {
           setNegotiatingCreator(creatorIdx);
           setBrandCurrentOppIndex(oppIdx);
@@ -963,7 +989,7 @@ export default function MarketplaceDemoPage() {
   // AUTO-SYNC: Creator side — auto-open active deal when navigating to marketplace
   useEffect(() => {
     if (marketplaceRole === 'creator' && selectedMarketplaceSkin && negotiatingOpp === null) {
-      const matchingCreator = BRAND_MARKETPLACE_CREATORS.find(c => c.valueSkin === selectedMarketplaceSkin);
+      const matchingCreator = backendCreators.find((c: any) => c.valueSkin === selectedMarketplaceSkin);
       if (matchingCreator) {
         // Find first active deal for this creator+skin combo (new format: creatorName|creatorSkin|oppIndex)
         const prefix = `${matchingCreator.name}|${selectedMarketplaceSkin}|`;
@@ -1337,6 +1363,7 @@ export default function MarketplaceDemoPage() {
   // Campaign script mode selection (brand chooses during creation)
   const [newCampaignScriptMode, setNewCampaignScriptMode] = useState<'non_negotiable' | 'discussion' | 'creator_freedom'>('creator_freedom');
   const [newCampaignScriptText, setNewCampaignScriptText] = useState('');
+  const [newCampaignContentReview, setNewCampaignContentReview] = useState<'direct_upload' | 'review_required'>('review_required');
 
   // Barter goods tracker and international compliance states
   const [goodsTrackingInput, setGoodsTrackingInput] = useState('');
@@ -1395,6 +1422,174 @@ export default function MarketplaceDemoPage() {
     setSharedApplications(updated);
     updated.forEach(a => firebaseCreateApplication(a));
   };
+  const downloadDealReport = useCallback(async (dealKey: string) => {
+    const deal = dealStates[dealKey];
+    if (!deal) return;
+    const opp = activeOpportunities[parseInt(dealKey.split('|')[2] || '0')];
+    const doc = await PDFDocument.create();
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
+    const monoFont = await doc.embedFont(StandardFonts.Courier);
+    const gray = rgb(0.4, 0.4, 0.4);
+    const dark = rgb(0.15, 0.15, 0.15);
+    const black = rgb(0, 0, 0);
+    const white = rgb(1, 1, 1);
+    const accent = rgb(0.2, 0.4, 0.8);
+    let page = doc.addPage([612, 792]);
+    const m = 50;
+    let y = 750;
+    const wrap = (text: string, size: number, maxW: number) => {
+      const f = size <= 8 ? monoFont : font;
+      const words = text.split(' ');
+      const linesOut: string[] = [];
+      let line = '';
+      for (const w of words) {
+        const test = line ? line + ' ' + w : w;
+        if (f.widthOfTextAtSize(test, size) > maxW) {
+          linesOut.push(line);
+          line = w;
+        } else {
+          line = test;
+        }
+      }
+      if (line) linesOut.push(line);
+      return linesOut;
+    };
+    const drawLine = (text: string, size: number, x: number, opts?: { bold?: boolean; color?: any; mono?: boolean }) => {
+      const f = opts?.mono ? monoFont : opts?.bold ? boldFont : font;
+      page.drawText(text, { x, y, size, font: f, color: opts?.color || dark });
+      y -= size + 4;
+    };
+    const drawWrapped = (text: string, size: number, x: number, maxW: number, opts?: { bold?: boolean; color?: any; mono?: boolean }) => {
+      const wrapped = wrap(text, size, maxW);
+      for (const w of wrapped) {
+        drawLine(w, size, x, opts);
+      }
+    };
+    const drawSep = () => {
+      y -= 4;
+      page.drawLine({ start: { x: m, y }, end: { x: 562, y }, thickness: 1, color: rgb(0.85, 0.85, 0.85) });
+      y -= 8;
+    };
+    const drawSectionTitle = (title: string) => {
+      y -= 6;
+      page.drawRectangle({ x: m, y: y - 2, width: 150, height: 16, color: accent });
+      page.drawText(title, { x: m + 6, y: y, size: 10, font: boldFont, color: white });
+      y -= 22;
+    };
+
+    drawLine('VALUESKINS', 22, m, { bold: true, color: accent });
+    drawLine('FINAL DEAL REPORT — SETTLEMENT DOCUMENT', 14, m, { bold: true, color: black });
+    drawSep();
+    drawLine(`Generated: ${new Date().toISOString().replace('T', ' ').slice(0, 19)} UTC`, 9, m, { color: gray });
+    drawLine(`Deal ID: ${dealKey}`, 9, m, { color: gray });
+    drawLine(`Status: ${deal.phase}`, 9, m, { color: gray });
+    y -= 10;
+
+    drawSectionTitle('DEAL OVERVIEW');
+    drawWrapped(`Title: ${deal.briefTitle || opp?.type || 'N/A'}`, 11, m, 500, { bold: true });
+    drawWrapped(`Brand: ${opp?.brand || 'N/A'}`, 10, m, 500);
+    drawLine(`Offer Amount: $${deal.offerAmount || '0'}`, 10, m);
+    drawLine(`Counter Amount: $${deal.counterAmount || '0'}`, 10, m);
+    drawLine(`Final Amount: $${deal.agreementAmount || deal.offerAmount || '0'}`, 10, m, { bold: true });
+    drawLine(`Performance Clause: ${deal.performanceClause ? 'Yes' : 'No'}`, 10, m);
+    drawLine(`Payment Split: Advance ${deal.advancePercent}% / Upload ${deal.uploadPercent}% / Approval ${deal.approvalPercent}%`, 9, m, { color: gray });
+    if (deal.poc) {
+      drawLine(`Point of Contact: ${deal.poc.name} (${deal.poc.workEmail}) — ${deal.poc.role}`, 9, m, { color: gray });
+    }
+    if (opp?.contentReview) {
+      drawLine(`Content Review Mode: ${opp.contentReview === 'review_required' ? 'Review required before publish' : 'Direct upload — no review'}`, 9, m, { color: gray });
+    }
+    drawSep();
+
+    drawSectionTitle('FULL MESSAGE LOG (AUDIT TRAIL)');
+    const msgs = deal.chatMessages || [];
+    if (msgs.length === 0) {
+      drawLine('(No messages recorded)', 10, m, { color: gray });
+    } else {
+      for (const msg of msgs) {
+        if (y < 80) { page = doc.addPage([612, 792]); y = 750; }
+        const ts = msg.isoTime ? new Date(msg.isoTime).toISOString().replace('T', ' ').slice(0, 19) + ' UTC' : msg.time;
+        const sender = msg.sender === 'brand' ? 'BRAND' : msg.sender === 'creator' ? 'CREATOR' : msg.sender?.toUpperCase() || 'UNKNOWN';
+        drawLine(`[${ts}] ${sender}:`, 8, m, { mono: true, bold: true, color: accent });
+        drawWrapped(msg.text || '', 8, m + 12, 500, { mono: true, color: dark });
+      }
+    }
+    drawSep();
+
+    drawSectionTitle('DELIVERABLES & TIMELINE');
+    const dStatuses = deal.deliverableStatuses || {};
+    if (Object.keys(dStatuses).length > 0) {
+      Object.entries(dStatuses).forEach(([idx, status]) => {
+        drawLine(`  Deliverable #${idx}: ${status}`, 10, m);
+      });
+    } else {
+      drawLine('No deliverables recorded', 10, m, { color: gray });
+    }
+    if (deal.escrowFunded) {
+      drawLine(`Escrow: Funded (Pool: $${deal.escrowPool || 'N/A'})`, 10, m);
+    }
+    drawSep();
+
+    drawSectionTitle('PAYMENT MILESTONES');
+    const pMilestones = deal.paymentMilestones || {};
+    drawLine(`  Advance: ${pMilestones.advance || 'pending'}`, 10, m);
+    drawLine(`  Upload: ${pMilestones.upload || 'pending'}`, 10, m);
+    drawLine(`  Approval: ${pMilestones.approval || 'pending'}`, 10, m);
+    drawSep();
+
+    const tips = deal.tipsReceived || [];
+    if (tips.length > 0) {
+      drawSectionTitle('TIPS');
+      tips.forEach(t => {
+        const extra = t.message ? ': ' + t.message : '';
+        drawLine(`  $${t.amount} from ${t.from}${extra}`, 10, m);
+      });
+      drawSep();
+    }
+
+    const disputes = deal.disputes || [];
+    if (disputes.length > 0) {
+      drawSectionTitle('DISPUTES');
+      disputes.forEach(d => {
+        drawLine(`  [#${d.id}] ${d.type} — ${d.status} (filed by ${d.filledBy})`, 10, m);
+        drawWrapped(`    ${d.description}`, 9, m + 10, 490, { color: gray });
+      });
+      drawSep();
+    }
+
+    y -= 8;
+    page.drawLine({ start: { x: m, y }, end: { x: 562, y }, thickness: 2, color: accent });
+    y -= 12;
+    page.drawText('END OF REPORT', { x: m, y, size: 11, font: boldFont, color: accent });
+    y -= 16;
+    page.drawText('This document is an official Valueskins deal settlement record.', { x: m, y, size: 8, font: font, color: gray });
+    y -= 12;
+    page.drawText('All messages, amounts, milestones, and disputes are captured above.', { x: m, y, size: 8, font: font, color: gray });
+
+    const pdfBytes = await doc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `valueskins-deal-${dealKey.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().slice(0, 10)}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [dealStates]);
+
+  const forceFetchApplications = useCallback(async () => {
+    try {
+      const res = await fetch('/api/realtime/state');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.applications)) {
+          setSharedApplications(data.applications as SharedApplication[]);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch applications:', e);
+    }
+  }, [setSharedApplications]);
   const resetMvpDemoState = () => {
     // Full MVP reset: clear in-memory state and persisted demo storage.
     setDealStates({});
@@ -1769,6 +1964,68 @@ export default function MarketplaceDemoPage() {
     return c;
   }), [campaigns, today]);
 
+  // Backfill SharedApplication entries from existing dealStates (e.g. deals created before SharedApplication was introduced)
+  const hasBackfilledApps = useRef(false);
+  useEffect(() => {
+    if (hasBackfilledApps.current) return;
+    const dealKeys = Object.keys(dealStates);
+    if (dealKeys.length === 0 || liveCampaigns.length === 0) return;
+    const newApps: SharedApplication[] = [];
+    for (const [dealKey, deal] of Object.entries(dealStates)) {
+      if (!deal || deal.phase === 'brief') continue;
+      const parts = dealKey.split('|');
+      const creatorName = parts[0];
+      const creatorSkin = parts[1];
+      const oppIndex = parts[2] ? parseInt(parts[2]) : undefined;
+      const alreadyHasApp = sharedApplications.some(a =>
+        (a.creatorName === creatorName && oppIndex !== undefined && a.opportunityIndex === oppIndex) ||
+        (a.creatorName === creatorName && deal.campaignId !== undefined && a.campaignId === deal.campaignId)
+      );
+      if (alreadyHasApp) continue;
+      let matchedCampaign: Campaign | undefined;
+      if (deal.campaignId) {
+        matchedCampaign = liveCampaigns.find(c => c.id === deal.campaignId);
+      }
+      if (!matchedCampaign) {
+        matchedCampaign = liveCampaigns.find(c =>
+          c.requiredProfessions.includes(creatorSkin)
+        );
+      }
+      if (!matchedCampaign) continue;
+      const creatorProfile = BRAND_MARKETPLACE_CREATORS.find(c => c.name === creatorName);
+      const app: SharedApplication = {
+        id: Date.now() + newApps.length + Math.floor(Math.random() * 1000),
+        campaignId: matchedCampaign.id,
+        campaignTitle: matchedCampaign.title,
+        creatorProfession: creatorSkin,
+        creatorHandle: creatorProfile?.handle || `@${creatorName.replace(/\s+/g, '').toLowerCase()}`,
+        status: 'pending' as const,
+        appliedAt: new Date().toISOString(),
+        opportunityIndex: oppIndex,
+        creatorName,
+        creatorFollowers: creatorProfile?.followers,
+        creatorEngagement: creatorProfile?.engagement,
+        creatorLevel: creatorProfile?.level,
+        creatorMatchScore: creatorProfile?.matchScore,
+        creatorRate: creatorProfile?.rate,
+        creatorDealCompletionRate: creatorProfile?.dealCompletionRate,
+        creatorPortfolio: creatorProfile?.portfolio,
+        creatorAudienceLocation: creatorProfile?.audienceLocation,
+        creatorAudienceAge: creatorProfile?.audienceAge,
+        creatorResponseTimeHrs: creatorProfile?.responseTimeHrs,
+        creatorInstagramUrl: creatorProfile?.instagramUrl,
+        creatorWebsiteUrl: creatorProfile?.websiteUrl,
+      };
+      newApps.push(app);
+    }
+    if (newApps.length > 0) {
+      const updated = [...sharedApplications, ...newApps];
+      setSharedApplications(updated);
+      updated.forEach(a => firebaseCreateApplication(a));
+    }
+    hasBackfilledApps.current = true;
+  }, [dealStates, liveCampaigns, sharedApplications, setSharedApplications, firebaseCreateApplication]);
+
   // Continuous live auto-matching: recomputes whenever campaigns or allCreators change
   const campaignMatches = useMemo(() => {
     const map = new Map<number, AutoMatchResult[]>();
@@ -1850,6 +2107,7 @@ export default function MarketplaceDemoPage() {
       return creatorMatchesCampaignRequirements(c, selectedMarketplaceSkin, currentCreator);
     })
     .map(c => ({
+      campaignId: c.id,
       brand: c.brandName || 'Brand',
       type: c.title,
       match: '100%',
@@ -1874,6 +2132,7 @@ export default function MarketplaceDemoPage() {
       escrowPool: c.escrowPool || 0,
       requiredValueskin: c.requiredValueskin || 'profession',
       creatorCount: c.creatorCount || 1,
+      contentReview: c.contentReview || 'review_required',
     }));
   const activeOpportunities = selectedMarketplaceSkin
     ? campaignOpportunities.slice().sort((a, b) => parseInt(b.match) - parseInt(a.match))
@@ -2168,6 +2427,14 @@ export default function MarketplaceDemoPage() {
                   <span style={{ color: C.textSecondary }}>Match</span>
                   <span style={{ color: C.primary, fontWeight: 700 }}>{askModalOpp.match}</span>
                 </div>
+                {askModalOpp.contentReview && (
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:'12px', padding:'6px 0' }}>
+                    <span style={{ color:C.textSecondary }}>Content review</span>
+                    <span style={{ color: askModalOpp.contentReview==='review_required'?C.warning:C.success, fontWeight:600 }}>
+                      {askModalOpp.contentReview==='review_required' ? '📋 Review required' : '✅ Direct upload'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2660,6 +2927,11 @@ export default function MarketplaceDemoPage() {
                                   </span>
                                 ))}
                                 {opp.willingToBarter && <span style={{ fontSize: '12px', fontWeight: 600, color: C.success, background: `${C.success}15`, padding: '4px 10px', borderRadius: '20px' }}>Barter</span>}
+                                {opp.contentReview && (
+                                  <span style={{ fontSize:'11px', fontWeight:600, color: opp.contentReview==='review_required'?C.warning:C.success, background: opp.contentReview==='review_required'?`${C.warning}12`:`${C.success}15`, padding:'4px 10px', borderRadius:'20px' }}>
+                                    {opp.contentReview==='review_required' ? '📋 Review' : '✅ Direct'}
+                                  </span>
+                                )}
                               </div>
 
                               {/* Action row */}
@@ -2693,6 +2965,33 @@ export default function MarketplaceDemoPage() {
                                         creatorSkin: selectedMarketplaceSkin,
                                         creatorMarketplaceIndex: matchingCreator ? BRAND_MARKETPLACE_CREATORS.indexOf(matchingCreator) : undefined,
                                       });
+                                      if (opp.campaignId) {
+                                        const newApp: SharedApplication = {
+                                          id: Date.now(),
+                                          campaignId: opp.campaignId,
+                                          campaignTitle: opp.type,
+                                          creatorProfession: selectedMarketplaceSkin || '',
+                                          creatorHandle: matchingCreator?.handle || `@${profileName.replace(/\s+/g, '_')}`,
+                                          status: 'pending',
+                                          appliedAt: new Date().toISOString(),
+                                          creatorName: matchingCreator?.name || profileName || 'Demo Creator',
+                                          creatorFollowers: `${(metrics.followers / 1000).toFixed(metrics.followers >= 1000000 ? 1 : 0)}${metrics.followers >= 1000000 ? 'M' : 'K'}`,
+                                          creatorEngagement: `${metrics.engagement.toFixed(1)}%`,
+                                          creatorLevel: getLevel(metrics.dealsCompleted),
+                                          creatorMatchScore: opp.match,
+                                          creatorRate: rateCard.reel ? `$${rateCard.reel}` : '$3,000',
+                                          creatorDealCompletionRate: 95,
+                                          creatorPortfolio: [],
+                                          creatorAudienceLocation: selectedCountry || 'USA',
+                                          creatorAudienceAge: '25-34',
+                                          creatorResponseTimeHrs: 6,
+                                          creatorWebsiteUrl: `https://portfolio.valueskins.com/${profileName.replace(/\s+/g, '_')}`,
+                                          opportunityIndex: actualOppIndex,
+                                        };
+                                        if (!sharedApplications.some(a => a.opportunityIndex === actualOppIndex && a.campaignId === opp.campaignId && a.creatorName === profileName)) {
+                                          persistApplications([...sharedApplications, newApp]);
+                                        }
+                                      }
                                     }
                                   }}
                                   style={{ flex: 1, fontSize: '13px', fontWeight: 700, color: '#fff', background: isDealDone ? C.textMuted : hasActiveDeal ? C.success : C.primary, border: 'none', padding: '10px', borderRadius: '10px', cursor: isDealDone ? 'default' : 'pointer', opacity: isDealDone ? 0.6 : 1 }}
@@ -2839,9 +3138,10 @@ export default function MarketplaceDemoPage() {
                                               const now = new Date();
                                               const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                               const rejectMsg = { id: Date.now(), sender: 'creator' as const, text: 'Creator declined the offer', time: timeStr, isoTime: now.toISOString(), seen: false };
-                                              const existingMsgs = activeDeal?.chatMessages || [];
+                                              setChatMessages(prev => [...prev, rejectMsg]);
+                                              firebaseAddMessage(activeDealKey || '', rejectMsg);
                                               setDealRoomPhase('rejected');
-                                              updateDeal(activeDealKey, { phase: 'rejected', chatMessages: [...(existingMsgs as any[]), rejectMsg] });
+                                              updateDeal(activeDealKey, { phase: 'rejected' });
                                             }
                                             setNegotiatingOpp(null);
                                             setPurchaseToast('Offer rejected');
@@ -2875,8 +3175,9 @@ export default function MarketplaceDemoPage() {
                                             const now = new Date();
                                             const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                             const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator confirmed agreement at $${parseInt(dealCounterAmount).toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                            const existingMsgs = activeDeal?.chatMessages || [];
-                                            updateDeal(activeDealKey!, { phase: 'accepted', chatMessages: [...(existingMsgs as any[]), acceptMsg] });
+                                            setChatMessages(prev => [...prev, acceptMsg]);
+                                            firebaseAddMessage(activeDealKey || '', acceptMsg);
+                                            updateDeal(activeDealKey!, { phase: 'accepted' });
                                             setDealRoomPhase('accepted');
                                           }}
                                           style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
@@ -3066,23 +3367,32 @@ export default function MarketplaceDemoPage() {
                                             disabled={!canAccept}
                                             onClick={() => {
                                               updateDeal(activeDealKey!, { phase: 'accepted', offerAmount: agreedPrice });
-                                              const newApp: SharedApplication = {
-                                                id: Date.now(), campaignId: -1,
-                                                campaignTitle: `Deal with ${opp.brand}`,
-                                                creatorProfession: selectedMarketplaceSkin || '',
-                                                creatorHandle: '@creator_demo', status: 'accepted',
-                                                appliedAt: new Date().toLocaleDateString(),
-                                                creatorName: profileName || 'Demo Creator',
-                                                creatorFollowers: `${(metrics.followers / 1000).toFixed(metrics.followers >= 1000000 ? 1 : 0)}${metrics.followers >= 1000000 ? 'M' : 'K'}`,
-                                                creatorEngagement: `${metrics.engagement.toFixed(1)}%`,
-                                                creatorLevel: getLevel(metrics.dealsCompleted),
-                                                creatorMatchScore: '94%', creatorRate: rateCard.reel ? `$${rateCard.reel}` : '$3,000',
-                                                creatorDealCompletionRate: 95, creatorPortfolio: [],
-                                                creatorAudienceLocation: selectedCountry || 'USA', creatorAudienceAge: '25-34',
-                                                creatorResponseTimeHrs: 6, creatorWebsiteUrl: `https://portfolio.valueskins.com/creator_demo`,
-                                                opportunityIndex: actualOppIndex,
-                                              };
-                                              persistApplications([...sharedApplications, newApp]);
+                                              const existingIdx = sharedApplications.findIndex(a =>
+                                                a.opportunityIndex === actualOppIndex && a.campaignId === (opp.campaignId || -1) && a.creatorName === profileName
+                                              );
+                                              if (existingIdx >= 0) {
+                                                const updated = [...sharedApplications];
+                                                updated[existingIdx] = { ...updated[existingIdx], status: 'accepted' as const };
+                                                persistApplications(updated);
+                                              } else {
+                                                const newApp: SharedApplication = {
+                                                  id: Date.now(), campaignId: opp.campaignId || -1,
+                                                  campaignTitle: `Deal with ${opp.brand}`,
+                                                  creatorProfession: selectedMarketplaceSkin || '',
+                                                  creatorHandle: '@creator_demo', status: 'accepted',
+                                                  appliedAt: new Date().toLocaleDateString(),
+                                                  creatorName: matchingCreator?.name || profileName || 'Demo Creator',
+                                                  creatorFollowers: `${(metrics.followers / 1000).toFixed(metrics.followers >= 1000000 ? 1 : 0)}${metrics.followers >= 1000000 ? 'M' : 'K'}`,
+                                                  creatorEngagement: `${metrics.engagement.toFixed(1)}%`,
+                                                  creatorLevel: getLevel(metrics.dealsCompleted),
+                                                  creatorMatchScore: '94%', creatorRate: rateCard.reel ? `$${rateCard.reel}` : '$3,000',
+                                                  creatorDealCompletionRate: 95, creatorPortfolio: [],
+                                                  creatorAudienceLocation: selectedCountry || 'USA', creatorAudienceAge: '25-34',
+                                                  creatorResponseTimeHrs: 6, creatorWebsiteUrl: `https://portfolio.valueskins.com/creator_demo`,
+                                                  opportunityIndex: actualOppIndex,
+                                                };
+                                                persistApplications([...sharedApplications, newApp]);
+                                              }
                                             }}
                                             style={{ flex: 2, background: canAccept ? C.success : C.border, border: 'none', padding: '11px', borderRadius: '10px', color: '#fff', fontWeight: 700, cursor: canAccept ? 'pointer' : 'not-allowed', fontSize: '13px', opacity: canAccept ? 1 : 0.5 }}
                                           >Sign &amp; Accept Deal</button>
@@ -3451,7 +3761,12 @@ export default function MarketplaceDemoPage() {
                                               <div style={{ fontSize: '11px', color: C.text, marginBottom: '3px' }}>Deadline: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
                                             )}
                                             <div style={{ fontSize: '11px', color: C.text, marginBottom: '3px' }}>Usage rights: <strong>{opp.usageRights || `${opp.revisionLimit * 30} days`}</strong></div>
-                                            <div style={{ fontSize: '11px', color: C.text }}>Exclusivity: <strong>{opp.exclusivity || 'None'}</strong></div>
+                                            <div style={{ fontSize: '11px', color: C.text, marginBottom: '3px' }}>Exclusivity: <strong>{opp.exclusivity || 'None'}</strong></div>
+                                            {opp.contentReview && (
+                                              <div style={{ marginTop:'4px', fontSize:'10px', padding:'4px 6px', borderRadius:'4px', background:opp.contentReview==='review_required'?`${C.warning}15`:C.success+'20', color:opp.contentReview==='review_required'?C.warning:C.success, fontWeight:600 }}>
+                                                {opp.contentReview==='review_required' ? '📋 Content review required before publish' : '✅ Direct upload — no review needed'}
+                                              </div>
+                                            )}
                                           </div>
                                           {/* POC Card */}
                                           {activeDeal?.poc && (
@@ -3535,8 +3850,9 @@ export default function MarketplaceDemoPage() {
                                               </div>
                                             );
                                             })}
+                                            <div ref={chatEndRef} />
                                           </div>
-                                          {/* Input */}
+                                          {/* Input — always active for post-deal communication */}
                                           <form onSubmit={(e) => {
                                             e.preventDefault();
                                             if (!chatInput.trim()) return;
@@ -3547,11 +3863,6 @@ export default function MarketplaceDemoPage() {
                                             const newMsg = { id: Date.now(), sender: msgSender, text: chatInput.trim(), time: timeStr, isoTime: isoNow, seen: false };
                                             setChatMessages(prev => [...prev, newMsg]);
                                             firebaseAddMessage(activeDealKey ?? '', newMsg);
-                                            // Write to shared deal state so the other party sees the message
-                                            if (activeDealKey) {
-                                              const existingMsgs = activeDeal?.chatMessages || [];
-                                              updateDeal(activeDealKey, { chatMessages: [...existingMsgs, newMsg] });
-                                            }
                                             setChatInput('');
                                           }} style={{ display: 'flex', gap: '4px', padding: '6px', borderTop: `1px solid ${C.border}` }}>
                                             <input
@@ -3581,6 +3892,11 @@ export default function MarketplaceDemoPage() {
                                               <span style={{ fontSize:'10px', color:C.success, fontWeight:700 }}>{opp.budget}</span>
                                               {opp.deadline && <span style={{ fontSize:'9px', color:C.textMuted }}>{new Date(opp.deadline).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>}
                                             </div>
+                                            {opp.contentReview && (
+                                              <div style={{ marginTop:'4px', fontSize:'9px', padding:'3px 5px', borderRadius:'4px', background:opp.contentReview==='review_required'?`${C.warning}15`:C.success+'20', color:opp.contentReview==='review_required'?C.warning:C.success, fontWeight:600 }}>
+                                                {opp.contentReview==='review_required' ? '📋 Review required before publish' : '✅ Direct upload — no review'}
+                                              </div>
+                                            )}
                                           </div>
                                           {/* Checklist */}
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
@@ -3667,11 +3983,9 @@ export default function MarketplaceDemoPage() {
                                                 // Write counter amount + phase + chat messages to shared deal state
                                                 // so brand sees the update in real-time under Sent Deals
                                                 if (activeDealKey) {
-                                                  const existingMsgs = activeDeal?.chatMessages || [];
                                                   updateDeal(activeDealKey, {
                                                     phase: 'counter' as DealRoomPhase,
                                                     counterAmount: String(creatorAsk),
-                                                    chatMessages: [...existingMsgs, counterMsg],
                                                   });
                                                 }
                                                 firebaseSendNotification(opp?.brand || 'Brand', 'message', `Creator countered: $${creatorAsk.toLocaleString()} (you offered $${brandOffer.toLocaleString()})`);
@@ -3684,41 +3998,58 @@ export default function MarketplaceDemoPage() {
                                             </button>
                                           </div>}
 
-                                          {/* Payment split */}
+                                          {/* Payment split — only editable during negotiation */}
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
                                             <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Payment Plan</div>
-                                            {[
-                                              { label: 'Advance', value: advancePercent, color: C.success, key: 'advance' as const },
-                                              { label: 'On upload', value: uploadPercent, color: C.primary, key: 'upload' as const },
-                                              { label: 'On approval', value: approvalPercent, color: C.warning, key: 'approval' as const },
-                                            ].map(s => (
-                                              <div key={s.key} style={{ marginBottom: '6px' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '2px' }}>
-                                                  <span style={{ color: s.color, fontWeight: 600 }}>{s.label}</span>
-                                                  <span style={{ color: C.text, fontWeight: 700 }}>{s.value}%</span>
-                                                </div>
-                                                <input type="range" min={0} max={100} step={5} value={s.value} onChange={e => {
-                                                  const newVal = parseInt(e.target.value);
-                                                  const others = [advancePercent, uploadPercent, approvalPercent];
-                                                  const idx = s.key === 'advance' ? 0 : s.key === 'upload' ? 1 : 2;
-                                                  const diff = newVal - others[idx];
-                                                  const otherIdxs = [0,1,2].filter(i => i !== idx);
-                                                  const otherTotal = otherIdxs.reduce((sum, i) => sum + others[i], 0);
-                                                  const newOthers = [...others];
-                                                  newOthers[idx] = newVal;
-                                                  if (otherTotal > 0) {
-                                                    otherIdxs.forEach(i => { newOthers[i] = Math.max(0, Math.round(others[i] - diff * (others[i] / otherTotal))); });
-                                                  } else {
-                                                    otherIdxs.forEach((i, j) => { newOthers[i] = j === 0 ? 100 - newVal : 0; });
-                                                  }
-                                                  const total = newOthers.reduce((a, b) => a + b, 0);
-                                                  if (total !== 100 && otherIdxs.length > 0) newOthers[otherIdxs[0]] += 100 - total;
-                                                  setPaymentSplit(newOthers[0], newOthers[1], newOthers[2]);
-                                                }} style={{ width: '100%', height: '4px', accentColor: s.color }} />
+                                            {!['deliverables','submitted','approved'].includes(creatorDealLifecycle) ? (
+                                              <>
+                                                {[
+                                                  { label: 'Advance', value: advancePercent, color: C.success, key: 'advance' as const },
+                                                  { label: 'On upload', value: uploadPercent, color: C.primary, key: 'upload' as const },
+                                                  { label: 'On approval', value: approvalPercent, color: C.warning, key: 'approval' as const },
+                                                ].map(s => (
+                                                  <div key={s.key} style={{ marginBottom: '6px' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '2px' }}>
+                                                      <span style={{ color: s.color, fontWeight: 600 }}>{s.label}</span>
+                                                      <span style={{ color: C.text, fontWeight: 700 }}>{s.value}%</span>
+                                                    </div>
+                                                    <input type="range" min={0} max={100} step={5} value={s.value} onChange={e => {
+                                                      const newVal = parseInt(e.target.value);
+                                                      const others = [advancePercent, uploadPercent, approvalPercent];
+                                                      const idx = s.key === 'advance' ? 0 : s.key === 'upload' ? 1 : 2;
+                                                      const diff = newVal - others[idx];
+                                                      const otherIdxs = [0,1,2].filter(i => i !== idx);
+                                                      const otherTotal = otherIdxs.reduce((sum, i) => sum + others[i], 0);
+                                                      const newOthers = [...others];
+                                                      newOthers[idx] = newVal;
+                                                      if (otherTotal > 0) {
+                                                        otherIdxs.forEach(i => { newOthers[i] = Math.max(0, Math.round(others[i] - diff * (others[i] / otherTotal))); });
+                                                      } else {
+                                                        otherIdxs.forEach((i, j) => { newOthers[i] = j === 0 ? 100 - newVal : 0; });
+                                                      }
+                                                      const total = newOthers.reduce((a, b) => a + b, 0);
+                                                      if (total !== 100 && otherIdxs.length > 0) newOthers[otherIdxs[0]] += 100 - total;
+                                                      setPaymentSplit(newOthers[0], newOthers[1], newOthers[2]);
+                                                    }} style={{ width: '100%', height: '4px', accentColor: s.color }} />
+                                                  </div>
+                                                ))}
+                                                {advancePercent + uploadPercent + approvalPercent !== 100 && (
+                                                  <div style={{ fontSize:'9px', color:'#ef4444', marginTop:'2px' }}>Must total 100%</div>
+                                                )}
+                                              </>
+                                            ) : (
+                                              <div style={{ fontSize:'11px', color: C.textSecondary, lineHeight: 1.6 }}>
+                                                {[
+                                                  { label: 'Advance', pct: advancePercent, color: C.success },
+                                                  { label: 'On upload', pct: uploadPercent, color: C.primary },
+                                                  { label: 'On approval', pct: approvalPercent, color: C.warning },
+                                                ].map(s => (
+                                                  <div key={s.label} style={{ display:'flex', justifyContent:'space-between', padding:'2px 0' }}>
+                                                    <span style={{ color: s.color, fontWeight:600 }}>{s.label}</span>
+                                                    <span style={{ color:C.text, fontWeight:700 }}>{s.pct}%</span>
+                                                  </div>
+                                                ))}
                                               </div>
-                                            ))}
-                                            {advancePercent + uploadPercent + approvalPercent !== 100 && (
-                                              <div style={{ fontSize:'9px', color:'#ef4444', marginTop:'2px' }}>Must total 100%</div>
                                             )}
                                           </div>
 
@@ -3773,8 +4104,9 @@ export default function MarketplaceDemoPage() {
                                               const now = new Date();
                                               const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                               const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator accepted final offer: $${parseInt(dealOfferAmount || '0').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                              const existingMsgs = activeDeal?.chatMessages || [];
-                                              updateDeal(activeDealKey, { phase: 'accepted', offerAmount: dealOfferAmount, chatMessages: [...(existingMsgs as any[]), acceptMsg] });
+                                              setChatMessages(prev => [...prev, acceptMsg]);
+                                              firebaseAddMessage(activeDealKey || '', acceptMsg);
+                                              updateDeal(activeDealKey, { phase: 'accepted', offerAmount: dealOfferAmount });
                                             }
                                             setPurchaseToast('Deal accepted');
                                             setTimeout(() => setPurchaseToast(null), 2000);
@@ -3789,8 +4121,9 @@ export default function MarketplaceDemoPage() {
                                               const now = new Date();
                                               const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                               const declineMsg = { id: Date.now(), sender: 'creator' as const, text: 'Creator declined the final offer.', time: timeStr, isoTime: now.toISOString(), seen: false };
-                                              const existingMsgs = activeDeal?.chatMessages || [];
-                                              updateDeal(activeDealKey, { phase: 'rejected', chatMessages: [...(existingMsgs as any[]), declineMsg] });
+                                              setChatMessages(prev => [...prev, declineMsg]);
+                                              firebaseAddMessage(activeDealKey || '', declineMsg);
+                                              updateDeal(activeDealKey, { phase: 'rejected' });
                                             }
                                             setNegotiatingOpp(null);
                                             setPurchaseToast('Deal declined');
@@ -3953,7 +4286,7 @@ export default function MarketplaceDemoPage() {
                                           const allUploaded = totalSlots > 0 && Array.from({ length: totalSlots }, (_, i) => i).every(i => deliverableStatuses[i] === 'uploaded' || deliverableStatuses[i] === 'approved');
                                           return (
                                             <>
-                                              <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>Upload Deliverables</div>
+                                              <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>Submit Deliverable Links</div>
                                               {deadlineStr && (
                                                 <div style={{ background: daysLeft !== null && daysLeft <= 3 ? 'rgba(239,68,68,0.08)' : C.bg, border: `1px solid ${daysLeft !== null && daysLeft <= 3 ? 'rgba(239,68,68,0.3)' : C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'10px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                                                   <div>
@@ -3979,8 +4312,8 @@ export default function MarketplaceDemoPage() {
                                                   const status = deliverableStatuses[di] || 'pending';
                                                   const link = deliverableLinks[di] || '';
                                                   const inputVal = deliverableLinkInputs[di] || '';
-                                                  const isValidContentUrl = (u: string) => /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(u);
-                                                  const postId = link.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/)?.[1];
+                                                  const isValidContentUrl = (u: string) => u.startsWith('http://') || u.startsWith('https://');
+                                                  const postId = link.match(/([^\/]+)\/?$/)?.[1];
                                                   return (
                                                     <div key={di} style={{ borderRadius:'8px', marginBottom:'8px', border:`1px solid ${status === 'approved' ? 'rgba(0,212,106,0.25)' : status === 'uploaded' ? 'rgba(0,149,246,0.25)' : C.border}`, overflow:'hidden' }}>
                                                       <div style={{ display:'flex', alignItems:'center', gap:'8px', padding:'8px 10px', background: status === 'uploaded' ? 'rgba(0,149,246,0.04)' : status === 'approved' ? 'rgba(0,212,106,0.04)' : 'transparent' }}>
@@ -4008,7 +4341,7 @@ export default function MarketplaceDemoPage() {
                                                               type="text"
                                                               value={inputVal}
                                                               onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, [di]: e.target.value }))}
-                                                              placeholder="https://www.portfolio.valueskins.com/p/..."
+                                                               placeholder="https://your-portfolio-link.com/..."
                                                               style={{ flex:1, background:C.surfaceAlt, border:`1px solid ${isValidContentUrl(inputVal) ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'11px', fontFamily:'inherit', outline:'none' }}
                                                             />
                                                             <button
@@ -4036,7 +4369,7 @@ export default function MarketplaceDemoPage() {
                                                             >Confirm</button>
                                                           </div>
                                                           {inputVal && !isValidContentUrl(inputVal) && (
-                                                            <div style={{ fontSize:'10px', color:'#ef4444', marginTop:'4px' }}>Must be an portfolio.valueskins.com/p/, /reels/, or /tv/ link</div>
+                                                             <div style={{ fontSize:'10px', color:'#ef4444', marginTop:'4px' }}>Must start with https://</div>
                                                           )}
                                                         </div>
                                                       )}
@@ -4047,7 +4380,7 @@ export default function MarketplaceDemoPage() {
                                                           </div>
                                                           <div style={{ flex:1, minWidth:0 }}>
                                                             <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, marginBottom:'2px', textTransform:'uppercase', letterSpacing:'0.4px' }}>{d.format}</div>
-                                                            <a href={link} target="_blank" rel="noopener noreferrer" style={{ fontSize:'10px', color:C.primary, textDecoration:'none', display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{postId ? `portfolio.valueskins.com/p/${postId}` : link}</a>
+                                                             <a href={link} target="_blank" rel="noopener noreferrer" style={{ fontSize:'10px', color:C.primary, textDecoration:'none', display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{link}</a>
                                                             <div style={{ fontSize:'9px', color:C.textMuted, marginTop:'3px' }}>Submitted {new Date().toLocaleDateString('en-US', { month:'short', day:'numeric' })}</div>
                                                           </div>
                                                           {status === 'approved' && (
@@ -4143,12 +4476,18 @@ export default function MarketplaceDemoPage() {
                                                 </div>
                                                 <div style={{ fontSize:'15px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Approved and Deal Completed</div>
                                                 <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'16px' }}>All deliverables approved. All milestones paid.</div>
-                                                <button
-                                                  onClick={() => { if (activeDealKey && activeDeal) downloadDealSummary(activeDealKey, activeDeal); }}
-                                                  style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'9px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'12px', marginBottom:'12px' }}
-                                                >
-                                                  Download Legal Deal Summary
-                                                </button>
+                                                  <button
+                                                    onClick={() => { if (activeDealKey && activeDeal) downloadDealSummary(activeDealKey, activeDeal); }}
+                                                    style={{ width:'100%', background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'7px', color:C.textSecondary, fontWeight:600, cursor:'pointer', fontSize:'11px', marginBottom:'6px' }}
+                                                  >
+                                                    Download Legal Deal Summary (.txt) (.txt)
+                                                  </button>
+                                                  <button
+                                                    onClick={() => { if (activeDealKey) downloadDealReport(activeDealKey); }}
+                                                    style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'9px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'12px', marginBottom:'12px' }}
+                                                  >
+                                                    Download Deal Report (.pdf)
+                                                  </button>
                                                 <div style={{ background:'rgba(46,125,50,0.06)', border:'1px solid rgba(46,125,50,0.2)', borderRadius:'8px', padding:'12px', marginBottom:'14px' }}>
                                                   <div style={{ fontSize:'11px', color:C.textMuted, marginBottom:'2px' }}>Total Earnings</div>
                                                   <div style={{ fontSize:'22px', fontWeight:800, color:C.success }}>${parseInt(dealCounterAmount || '5000').toLocaleString()}</div>
@@ -4626,6 +4965,21 @@ export default function MarketplaceDemoPage() {
                             </div>
                           )}
 
+                          {/* Content Review Mode */}
+                          <div style={{ marginBottom:'12px' }}>
+                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'6px' }}>Content delivery mode *</div>
+                            <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
+                              <button onClick={()=>setNewCampaignContentReview('review_required')} style={{ padding:'10px 12px', borderRadius:'8px', textAlign:'left', background:newCampaignContentReview==='review_required'?`${C.primary}15`:C.bg, border:`1px solid ${newCampaignContentReview==='review_required'?C.primary:C.border}`, cursor:'pointer' }}>
+                                <div style={{ fontSize:'12px', fontWeight:700, color:newCampaignContentReview==='review_required'?C.primary:C.text, marginBottom:'2px' }}>Review content before publish</div>
+                                <div style={{ fontSize:'10px', color:C.textMuted }}>Creator sends a Google Drive link for you to review before the final publish</div>
+                              </button>
+                              <button onClick={()=>setNewCampaignContentReview('direct_upload')} style={{ padding:'10px 12px', borderRadius:'8px', textAlign:'left', background:newCampaignContentReview==='direct_upload'?`${C.primary}15`:C.bg, border:`1px solid ${newCampaignContentReview==='direct_upload'?C.primary:C.border}`, cursor:'pointer' }}>
+                                <div style={{ fontSize:'12px', fontWeight:700, color:newCampaignContentReview==='direct_upload'?C.primary:C.text, marginBottom:'2px' }}>Direct upload — no review needed</div>
+                                <div style={{ fontSize:'10px', color:C.textMuted }}>Creator uploads the published content link directly; no pre-approval needed</div>
+                              </button>
+                            </div>
+                          </div>
+
                           {/* Exclusivity & Usage Rights */}
                           <div style={{ display:'flex', gap:'10px', marginBottom:'12px' }}>
                             <div style={{ flex:1 }}>
@@ -4677,7 +5031,7 @@ export default function MarketplaceDemoPage() {
                               if (missing.length > 0) { setPurchaseToast(`Missing: ${missing.join(', ')}`); setTimeout(()=>setPurchaseToast(null),4000); return; }
                               const escrowPool = parseInt(newCampaignBudget||'0') * newCampaignCreatorCount;
                               const newC: Campaign = {
-                                id:Date.now(), brandName:profileName, brandProfession:newCampaignSelectedProfession, title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[newCampaignSelectedProfession], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, location:newCampaignLocation, country:brandCountry, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0,
+                                id:Date.now(), brandName:profileName, brandProfession:newCampaignSelectedProfession, title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[newCampaignSelectedProfession], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, location:newCampaignLocation, country:brandCountry, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, contentReview:newCampaignContentReview, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0,
                                 poc: newCampaignPocName.trim() ? {
                                   name: newCampaignPocName.trim(),
                                   workEmail: newCampaignPocEmail.trim(),
@@ -5042,7 +5396,7 @@ export default function MarketplaceDemoPage() {
                         <div style={{ background:C.card, border:`1px solid rgba(230,81,0,0.3)`, borderRadius:'12px', padding:'14px 16px', marginBottom:'14px' }}>
                           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px' }}>
                             <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px' }}>Active ValueSkin</div>
-                            {brandValueSkins.length < 3 && (
+                            {brandValueSkins.length < 1 && (
                               <button onClick={() => setActiveView('store')} style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'4px 10px', fontSize:'10px', color:C.textSecondary, cursor:'pointer', fontWeight:600 }}>+ Add Skin</button>
                             )}
                           </div>
@@ -5324,33 +5678,6 @@ export default function MarketplaceDemoPage() {
                               {/* Phase 2: Make offer */}
                               {brandDealPhase === 'offer' && (
                                 <>
-                                  {/* Brief summary */}
-                                  <div style={{ background: C.bg, borderRadius: '8px', padding: '10px 12px', marginBottom: '12px', border: `1px solid ${C.border}` }}>
-                                    <div style={{ fontSize: '10px', color: C.textMuted, fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Brief</div>
-                                    <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{brandBriefTitle}</div>
-                                    <div style={{ fontSize: '11px', color: C.textSecondary, marginTop: '2px' }}>{brandCampaignType}</div>
-                                    {brandBriefAbout && <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '4px', lineHeight: 1.4 }}><span style={{ fontWeight: 600, color: C.textSecondary }}>Brand: </span>{brandBriefAbout}</div>}
-                                    {brandBriefCampaignDesc && <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '3px', lineHeight: 1.4 }}><span style={{ fontWeight: 600, color: C.textSecondary }}>Campaign: </span>{brandBriefCampaignDesc}</div>}
-                                    <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '4px', lineHeight: 1.4 }}>{brandBriefDeliverables}</div>
-                                    {brandOfferNonNegotiable && <div style={{ fontSize: '10px', fontWeight: 700, color: 'rgba(239,68,68,0.85)', marginTop: '6px', padding: '3px 6px', background: 'rgba(239,68,68,0.07)', borderRadius: '4px', display: 'inline-block' }}>Non-negotiable offer</div>}
-                                  </div>
-
-                                  <div style={{ marginBottom: '12px' }}>
-                                    <div style={{ fontSize: '11px', color: C.textMuted, marginBottom: '8px', fontWeight: 600 }}>Creator's rate card</div>
-                                    <div style={{ background: C.bg, borderRadius: '8px', padding: '10px', marginBottom: '12px', border: `1px solid ${C.border}` }}>
-                                      {creator.rateCard && Object.entries(creator.rateCard).length > 0 ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                          {Object.entries(creator.rateCard).map(([format, rate]) => (
-                                            <div key={format} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: C.text }}>
-                                              <span style={{ textTransform: 'capitalize', color: C.textMuted }}>{format}</span>
-                                              <span style={{ fontWeight: 600 }}>{parseInt(String(rate).replace(/[^0-9]/g, '')).toLocaleString() ? `$${parseInt(String(rate).replace(/[^0-9]/g, '')).toLocaleString()}` : 'N/A'}</span>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      ) : (
-                                        <div style={{ fontSize: '12px', color: C.textMuted }}>Standard rate: ${parseInt(creator.rate).toLocaleString()}/post</div>
-                                      )}
-                                    </div>
 
                                     <div style={{ fontSize: '11px', color: C.textMuted, marginBottom: '4px', fontWeight: 600 }}>Your offer</div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -5365,7 +5692,6 @@ export default function MarketplaceDemoPage() {
                                       />
                                       <span style={{ fontSize: '12px', color: C.textMuted }}>/any format</span>
                                     </div>
-                                  </div>
 
                                   {/* Privacy note */}
                                   <div style={{ fontSize: '10px', color: C.textMuted, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -5626,7 +5952,13 @@ export default function MarketplaceDemoPage() {
                                       })()}
                                       {brandDeal?.brandApprovalPhase === 'approved' && (
                                         <div style={{ marginTop:'12px', padding:'10px', background:'rgba(0,212,106,0.08)', border:`1px solid rgba(0,212,106,0.25)`, borderRadius:'8px', fontSize:'12px', color:C.success, fontWeight:600 }}>
-                                          ✅ Deal complete — all payments released
+                                          <div style={{ marginBottom:'8px' }}>✅ Deal complete — all payments released</div>
+                                          <button
+                                            onClick={() => { if (brandDealKey) downloadDealReport(brandDealKey); }}
+                                            style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'8px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'11px' }}
+                                          >
+                                            Download Deal Report (.pdf)
+                                          </button>
                                         </div>
                                       )}
                                     </div>
@@ -5686,8 +6018,12 @@ export default function MarketplaceDemoPage() {
                                           const now = new Date();
                                           const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                           const lastOfferMsg = { id: Date.now(), sender: 'brand' as const, text: `Final offer: $${parseInt(brandBudget).toLocaleString()}/post — take it or leave it`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          const existingMsgs = brandDeal?.chatMessages || [];
-                                          updateDeal(brandDealKey, { phase: 'last_offer', chatMessages: [...existingMsgs, lastOfferMsg] });
+                                          setDealStates(prev => {
+                                            const deal = prev[brandDealKey!] || getOrCreateDeal(brandDealKey!);
+                                            return { ...prev, [brandDealKey!]: { ...deal, chatMessages: [...deal.chatMessages, lastOfferMsg] } };
+                                          });
+                                          firebaseAddMessage(brandDealKey, lastOfferMsg);
+                                          updateDeal(brandDealKey, { phase: 'last_offer' });
                                         }
                                       }}
                                       style={{ flex: 1, background: 'none', border: `1px solid ${C.warning}`, padding: '8px', borderRadius: '8px', color: C.warning, fontWeight: 600, cursor: 'pointer', fontSize: '11px' }}
@@ -5700,8 +6036,12 @@ export default function MarketplaceDemoPage() {
                                           const now = new Date();
                                           const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                           const rejectMsg = { id: Date.now(), sender: 'brand' as const, text: 'Brand has withdrawn from this deal.', time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          const existingMsgs = brandDeal?.chatMessages || [];
-                                          updateDeal(brandDealKey, { phase: 'rejected', chatMessages: [...existingMsgs, rejectMsg] });
+                                          setDealStates(prev => {
+                                            const deal = prev[brandDealKey] || getOrCreateDeal(brandDealKey);
+                                            return { ...prev, [brandDealKey]: { ...deal, chatMessages: [...deal.chatMessages, rejectMsg] } };
+                                          });
+                                          firebaseAddMessage(brandDealKey, rejectMsg);
+                                          updateDeal(brandDealKey, { phase: 'rejected' });
                                         }
                                         setNegotiatingCreator(null); setBrandBriefTitle(''); setBrandBriefDeliverables(''); setBrandBriefAbout(''); setBrandBriefCampaignDesc('');
                                       }}
@@ -5793,8 +6133,12 @@ export default function MarketplaceDemoPage() {
                                           const now = new Date();
                                           const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                           const approveMsg = { id: Date.now(), sender: 'brand' as const, text: `Brand approved formal offer at $${parseInt(agreedDealAmount).toLocaleString()}/post. Deal is locked.`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          const existingMsgs = brandDeal?.chatMessages || [];
-                                          updateDeal(brandDealKey, { phase: 'accepted', brandApprovalPhase: 'accepted', chatMessages: [...existingMsgs, approveMsg] });
+                                          setDealStates(prev => {
+                                            const deal = prev[brandDealKey!] || getOrCreateDeal(brandDealKey!);
+                                            return { ...prev, [brandDealKey!]: { ...deal, chatMessages: [...deal.chatMessages, approveMsg] } };
+                                          });
+                                          firebaseAddMessage(brandDealKey!, approveMsg);
+                                          updateDeal(brandDealKey!, { phase: 'accepted', brandApprovalPhase: 'accepted' });
                                         }
                                       }}
                                       style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '12px' }}
@@ -5807,8 +6151,12 @@ export default function MarketplaceDemoPage() {
                                           const now = new Date();
                                           const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                           const rejectMsg = { id: Date.now(), sender: 'brand' as const, text: 'Brand rejected the formal offer.', time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          const existingMsgs = brandDeal?.chatMessages || [];
-                                          updateDeal(brandDealKey, { phase: 'rejected', chatMessages: [...existingMsgs, rejectMsg] });
+                                          setDealStates(prev => {
+                                            const deal = prev[brandDealKey!] || getOrCreateDeal(brandDealKey!);
+                                            return { ...prev, [brandDealKey!]: { ...deal, chatMessages: [...deal.chatMessages, rejectMsg] } };
+                                          });
+                                          firebaseAddMessage(brandDealKey!, rejectMsg);
+                                          updateDeal(brandDealKey, { phase: 'rejected' });
                                         }
                                         setNegotiatingCreator(null);
                                       }}
@@ -6233,7 +6581,7 @@ export default function MarketplaceDemoPage() {
                                         onClick={() => { if (brandDealKey && brandDeal) downloadDealSummary(brandDealKey, brandDeal); }}
                                         style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'9px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'12px', marginBottom:'12px' }}
                                       >
-                                        Download Legal Deal Summary
+                                        Download Legal Deal Summary (.txt)
                                       </button>
                                       {/* Brand rating for creator */}
                                       {!brandRatingSubmitted ? (
@@ -6265,7 +6613,9 @@ export default function MarketplaceDemoPage() {
                                       <button onClick={() => { setNegotiatingCreator(null); setBrandDealPhase('brief'); setBrandApprovalPhase('accepted'); setBrandDealRating(0); setBrandRatingComment(''); setBrandRatingSubmitted(false); }} style={{ width:'100%', background:C.primary, border:'none', padding:'8px', borderRadius:'8px', color:'#fff', fontWeight:600, fontSize:'12px', cursor:'pointer' }}>Done</button>
                                     </div>
                                   )}
-                                  {/* Deal Room Chat — brand side, shows all messages from shared state */}
+                                </>
+                              )}
+                              {/* Deal Room Chat — brand side, shows all messages from shared state */}
                                   {(() => {
                                     const brandChatMsgs = (brandDeal?.chatMessages || []) as Array<{id: number; sender: string; text: string; time: string; isoTime?: string; seen?: boolean}>;
                                     return (
@@ -6286,17 +6636,21 @@ export default function MarketplaceDemoPage() {
                                                 <div style={{ fontSize: '9px', color: C.textMuted, marginTop: '2px' }}>{msg.time}</div>
                                               </div>
                                             ))}
+                                            <div ref={brandChatEndRef} />
                                           </div>
                                         )}
-                                        {/* Brand chat input — negotiate terms, deliverables, timeline */}
+                                        {/* Brand chat input — always active for post-deal communication */}
                                         <form onSubmit={(e) => {
                                           e.preventDefault();
                                           if (!brandChatInput.trim() || !brandDealKey) return;
                                           const now = new Date();
                                           const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                           const newMsg = { id: Date.now(), sender: 'brand' as const, text: brandChatInput.trim(), time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          const existingMsgs = brandDeal?.chatMessages || [];
-                                          updateDeal(brandDealKey, { chatMessages: [...existingMsgs, newMsg] });
+                                          setDealStates(prev => {
+                                            const deal = prev[brandDealKey!] || getOrCreateDeal(brandDealKey!);
+                                            return { ...prev, [brandDealKey!]: { ...deal, chatMessages: [...deal.chatMessages, newMsg] } };
+                                          });
+                                          firebaseAddMessage(brandDealKey!, newMsg);
                                           setBrandChatInput('');
                                         }} style={{ display: 'flex', gap: '4px' }}>
                                           <input
@@ -6337,8 +6691,6 @@ export default function MarketplaceDemoPage() {
                                       </div>
                                     </div>
                                   )}
-                                </>
-                              )}
                             </div>
                           )}
                         </div>
@@ -6504,17 +6856,68 @@ export default function MarketplaceDemoPage() {
                               <span style={{ fontSize:'10px', color:C.textMuted }}>{c.deadline?`Deadline ${c.deadline}`:''}</span>
                               <span style={{ fontSize:'10px', fontWeight:700, color:c.status==='expired'?C.textMuted:c.status==='open'?C.success:'#888', background:c.status==='expired'?'rgba(239,68,68,0.1)':c.status==='open'?C.surfaceAlt:'rgba(136,136,136,0.1)', padding:'2px 8px', borderRadius:'6px', textTransform:'uppercase' }}>{c.status}</span>
                             </div>
-                            {/* Applicants per campaign */}
+                            {/* Applicants per campaign — derived from sharedApplications + dealStates fallback */}
                             {(() => {
                               const campaignApps = sharedApplications.filter(a => a.campaignId === c.id && a.status !== 'invited');
-                              if (campaignApps.length === 0) return null;
+                              const dealDerived: SharedApplication[] = Object.entries(dealStates)
+                                .filter(([key, deal]) => {
+                                  if (!deal || deal.phase === 'brief') return false;
+                                  const parts = key.split('|');
+                                  const creatorSkin = parts[1];
+                                  if (!c.requiredProfessions.includes(creatorSkin)) return false;
+                                  const creatorName = parts[0];
+                                  return !campaignApps.some(a => a.creatorName === creatorName);
+                                })
+                                .map(([key, deal]) => {
+                                  const parts = key.split('|');
+                                  const creatorName = parts[0];
+                                  const creatorSkin = parts[1];
+                                  const oppIndex = parts[2] ? parseInt(parts[2]) : undefined;
+                                  const creatorProfile = BRAND_MARKETPLACE_CREATORS.find(cr => cr.name === creatorName);
+                                  return {
+                                    id: Date.now() + Math.abs(key.split('').reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) | 0, 0)),
+                                    campaignId: c.id,
+                                    campaignTitle: c.title,
+                                    creatorProfession: creatorSkin,
+                                    creatorHandle: creatorProfile?.handle || `@${creatorName.replace(/\s+/g, '').toLowerCase()}`,
+                                    status: 'pending' as const,
+                                    appliedAt: new Date().toISOString(),
+                                    opportunityIndex: oppIndex,
+                                    creatorName,
+                                    creatorFollowers: creatorProfile?.followers,
+                                    creatorEngagement: creatorProfile?.engagement,
+                                    creatorLevel: creatorProfile?.level,
+                                    creatorMatchScore: creatorProfile?.matchScore,
+                                    creatorRate: creatorProfile?.rate,
+                                    creatorDealCompletionRate: creatorProfile?.dealCompletionRate,
+                                    creatorPortfolio: creatorProfile?.portfolio,
+                                    creatorAudienceLocation: creatorProfile?.audienceLocation,
+                                    creatorAudienceAge: creatorProfile?.audienceAge,
+                                    creatorResponseTimeHrs: creatorProfile?.responseTimeHrs,
+                                    creatorWebsiteUrl: creatorProfile?.websiteUrl,
+                                  };
+                                });
+                              const allApps = [...campaignApps, ...dealDerived];
+                              if (allApps.length === 0) return null;
                               return (
                                 <div style={{ marginTop:'12px', paddingTop:'12px', borderTop:`1px solid ${C.border}` }}>
-                                  <div style={{ fontSize:'11px', fontWeight:700, color:C.text, marginBottom:'8px' }}>
-                                    Applicants ({campaignApps.length})
+                                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                                    <div style={{ fontSize:'11px', fontWeight:700, color:C.text, marginBottom:'8px' }}>
+                                      Applicants ({allApps.length})
+                                    </div>
+                                    <button
+                                      onClick={() => forceFetchApplications()}
+                                      title="Refresh applications"
+                                      style={{ background:'none', border:'none', cursor:'pointer', padding:'2px', display:'flex', alignItems:'center', flexShrink:0 }}
+                                    >
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2.5" style={{ opacity:0.7 }}>
+                                        <polyline points="23 4 23 10 17 10"/>
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                                      </svg>
+                                    </button>
                                   </div>
                                   <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
-                                    {campaignApps.map((app, ai) => {
+                                    {allApps.map((app, ai) => {
                                       const displayName = app.creatorName || app.creatorHandle;
                                       const igUrl = app.creatorWebsiteUrl || `https://portfolio.valueskins.com/${app.creatorHandle.replace('@', '')}`;
                                       return (
@@ -6524,26 +6927,46 @@ export default function MarketplaceDemoPage() {
                                           </a>
                                           <div style={{ flex:1, minWidth:0 }}>
                                             <div style={{ fontSize:'12px', fontWeight:700, color:C.text }}>{displayName}</div>
-                                            <div style={{ fontSize:'10px', color:C.textSecondary }}>{app.creatorHandle} · {app.creatorMatchScore}</div>
+                                            <div style={{ fontSize:'10px', color:C.textSecondary }}>{app.creatorHandle} · {app.creatorMatchScore || 'Awaiting review'}</div>
                                           </div>
                                           <div style={{ flexShrink:0, display:'flex', gap:'6px' }}>
-                                            {app.status === 'pending' ? (
-                                              <button onClick={() => { persistApplications(sharedApplications.map(a=>a.id===app.id?{...a,status:'accepted' as const}:a)); setPurchaseToast('Accepted'); setTimeout(()=>setPurchaseToast(null),3000); }} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:600, color:'#fff', cursor:'pointer' }}>Accept</button>
+                                            {app.status === 'pending' || app.status === 'invited' ? (
+                                              <button onClick={() => {
+                                                let creatorData = app.creatorName ? backendCreators.find((cr: any) => cr.name === app.creatorName) : undefined;
+                                                if (!creatorData) {
+                                                  const newIdx = backendCreators.length;
+                                                  const virtual = { _origIdx: newIdx, name: app.creatorName || 'Creator', valueSkin: app.creatorProfession || '', handle: app.creatorHandle || '', rate: app.creatorRate || '$0', featured: false, willingToBarter: true };
+                                                  setBackendCreators(prev => [...prev, virtual]);
+                                                  creatorData = virtual;
+                                                }
+                                                const oppIdx = app.opportunityIndex ?? 0;
+                                                setNegotiatingCreator(creatorData._origIdx);
+                                                setBrandCurrentOppIndex(oppIdx);
+                                                setMarketplaceTab('creators');
+                                                const dk = `${creatorData.name}|${creatorData.valueSkin}|${oppIdx}`;
+                                                if (!dealStates[dk] || dealStates[dk]?.phase === 'brief') { updateDeal(dk, { phase: 'offer', briefTitle: app.campaignTitle || 'Campaign', offerAmount: app.creatorRate || '5000' }); }
+                                              }} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:600, color:'#fff', cursor:'pointer' }}>
+                                                Review &amp; Negotiate
+                                              </button>
                                             ) : (
                                               <>
                                                 <span style={{ fontSize:'9px', fontWeight:600, color:app.status==='accepted'?C.success:C.textMuted, textTransform:'uppercase' }}>{app.status}</span>
                                                 {app.status === 'accepted' && (() => {
-                                                  const creatorData = BRAND_MARKETPLACE_CREATORS.find(cr => cr.handle === app.creatorHandle || cr.name === app.creatorName);
-                                                  return creatorData ? (
-                                                    <button onClick={() => { setNegotiatingCreator(BRAND_MARKETPLACE_CREATORS.indexOf(creatorData)); setBrandCurrentOppIndex(app.opportunityIndex ?? 0); }} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'4px 8px', fontSize:'9px', fontWeight:600, color:'#fff', cursor:'pointer' }}>Deal Room</button>
-                                                  ) : null;
+                                                  let creatorData = app.creatorName ? backendCreators.find((cr: any) => cr.name === app.creatorName) : undefined;
+                                                  if (!creatorData) {
+                                                    const newIdx = backendCreators.length;
+                                                    const virtual = { _origIdx: newIdx, name: app.creatorName || 'Creator', valueSkin: app.creatorProfession || '', handle: app.creatorHandle || '', rate: app.creatorRate || '$0', featured: false, willingToBarter: true };
+                                                    setBackendCreators(prev => [...prev, virtual]);
+                                                    creatorData = virtual;
+                                                  }
+                                                  return (
+                                                    <button onClick={() => { setNegotiatingCreator(creatorData!._origIdx); setBrandCurrentOppIndex(app.opportunityIndex ?? 0); setMarketplaceTab('creators'); const dk = `${creatorData!.name}|${creatorData!.valueSkin}|${app.opportunityIndex ?? 0}`; if (!dealStates[dk] || dealStates[dk]?.phase === 'brief') { updateDeal(dk, { phase: 'offer', briefTitle: app.campaignTitle || 'Campaign', offerAmount: app.creatorRate || '5000' }); } }} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'4px 8px', fontSize:'9px', fontWeight:600, color:'#fff', cursor:'pointer' }}>Deal Room</button>
+                                                  );
                                                 })()}
                                               </>
                                             )}
                                           </div>
-                                        </div>
-                                      );
-                                    })}
+                                        </div>);})}
                                   </div>
                                 </div>
                               );

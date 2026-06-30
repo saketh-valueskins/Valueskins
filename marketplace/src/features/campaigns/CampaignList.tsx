@@ -11,14 +11,19 @@ const C = {
   success: '#10b981', warning: '#f59e0b', danger: '#ef4444', border: '#334155',
 };
 
-export default function CampaignList() {
+interface CampaignListProps {
+  initialCampaigns?: any[];
+  initialPagination?: { page: number; pageSize: number; total: number; totalPages: number; hasMore: boolean } | null;
+}
+
+export default function CampaignList({ initialCampaigns = [], initialPagination = null }: CampaignListProps) {
   const router = useRouter();
-  const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [campaigns, setCampaigns] = useState<any[]>(initialCampaigns);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(initialPagination?.page || 1);
+  const [hasMore, setHasMore] = useState(initialPagination?.hasMore || false);
   const [form, setForm] = useState({ title: '', description: '', budget_per_creator: '', total_budget: '', deadline: '', delivery_type: 'no_delivery' });
   const [saving, setSaving] = useState(false);
   const [pastCreators, setPastCreators] = useState<any[]>([]);
@@ -49,7 +54,9 @@ export default function CampaignList() {
     } catch {}
   };
 
-  useEffect(() => { fetchCampaigns(); }, []);
+  useEffect(() => {
+    if (!initialCampaigns.length) fetchCampaigns();
+  }, []);
 
   const toggleCreate = () => {
     setShowCreate(!showCreate);

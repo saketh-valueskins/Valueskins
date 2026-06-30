@@ -1,7 +1,54 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import type { GetServerSidePropsContext } from 'next';
+import { getSessionUserId } from '@/lib/session';
+import { query } from '@/lib/db';
 import MarketplaceLayout from '@/components/MarketplaceLayout';
+
+export async function getServerSideProps(ctx: GetServerSidePropsContext) {
+  const cookie = ctx.req.headers.cookie || '';
+  const userId = await getSessionUserId(cookie);
+  if (!userId) return { props: { initialCampaigns: [], initialPagination: null } };
+
+  try {
+    const page = 1, pageSize = 20, offset = 0;
+    const conditions: string[] = ["c.status = 'active'", "(c.deadline IS NULL OR c.deadline >= NOW())"];
+    const params: any[] = [];
+    let p = 1;
+
+    conditions.push(`NOT EXISTS (SELECT 1 FROM campaign_bids cb WHERE cb.campaign_id = c.id AND cb.creator_id = $${p})`);
+    params.push(userId); p++;
+    conditions.push(`NOT EXISTS (SELECT 1 FROM campaign_invites ci WHERE ci.campaign_id = c.id AND ci.creator_id = $${p})`);
+    params.push(userId);
+
+    const whereClause = conditions.join(' AND ');
+    const countResult = await query(`SELECT COUNT(*) as total FROM campaigns c WHERE ${whereClause}`, params);
+    const total = parseInt(countResult.rows[0]?.total || '0');
+
+    params.push(pageSize, offset);
+    const r = await query(
+      `SELECT c.*, a.display_name as brand_name, a.username as brand_username, a.avatar_url as brand_avatar
+       FROM campaigns c JOIN accounts a ON c.brand_id = a.id
+       WHERE ${whereClause} ORDER BY c.created_at DESC LIMIT $${p} OFFSET $${p + 1}`,
+      params
+    );
+
+    return {
+      props: {
+        initialCampaigns: r.rows || [],
+        initialPagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize), hasMore: page * pageSize < total },
+      },
+    };
+  } catch {
+    return { props: { initialCampaigns: [], initialPagination: null } };
+  }
+}
+
+interface BrowseCampaignsProps {
+  initialCampaigns: any[];
+  initialPagination: { page: number; pageSize: number; total: number; totalPages: number; hasMore: boolean } | null;
+}
 
 const C = {
   bg: '#0f172a', surface: '#1e293b', surfaceAlt: '#334155',
@@ -9,14 +56,14 @@ const C = {
   success: '#10b981', warning: '#f59e0b', border: '#334155',
 };
 
-export default function BrowseCampaigns() {
+export default function BrowseCampaigns({ initialCampaigns = [], initialPagination = null }: BrowseCampaignsProps) {
   const router = useRouter();
-  const [campaigns, setCampaigns] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [campaigns, setCampaigns] = useState<any[]>(initialCampaigns);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [maxBudget, setMaxBudget] = useState('');
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(initialPagination?.page || 1);
+  const [hasMore, setHasMore] = useState(initialPagination?.hasMore || false);
 
   const fetchCampaigns = async (pageNum = 1, append = false) => {
     setLoading(true);
@@ -34,7 +81,9 @@ export default function BrowseCampaigns() {
     } catch {} finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchCampaigns(); }, []);
+  useEffect(() => {
+    if (!initialCampaigns.length) fetchCampaigns();
+  }, []);
 
   return (
     <MarketplaceLayout title="Browse Campaigns" hideHeader>

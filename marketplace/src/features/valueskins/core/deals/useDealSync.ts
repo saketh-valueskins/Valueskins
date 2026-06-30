@@ -192,6 +192,7 @@ export type Campaign = {
   scriptMode?: 'non_negotiable' | 'discussion' | 'creator_freedom';
   scriptText?: string;
   allowContentApprovalPayment?: boolean;
+  contentReview?: 'direct_upload' | 'review_required';
   status: 'open' | 'closed' | 'expired';
   applicants: number;
   creatorCount?: number;
@@ -270,11 +271,15 @@ function broadcastSync(): void {
 const SYNC_API = '/api/realtime/state';
 const POLL_INTERVAL_MS = 3000;
 
-export function useDealSync(userId?: number) {
-  const [dealStates, setDealStates] = useState<Record<string, DealState>>({});
-  const [applications, setApplications] = useState<SharedApplication[]>([]);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loaded, setLoaded] = useState(false);
+export function useDealSync(userId?: number, initialData?: {
+  campaigns?: Campaign[];
+  dealStates?: Record<string, DealState>;
+  applications?: SharedApplication[];
+}) {
+  const [dealStates, setDealStates] = useState<Record<string, DealState>>(initialData?.dealStates || {});
+  const [applications, setApplications] = useState<SharedApplication[]>(initialData?.applications || []);
+  const [campaigns, setCampaigns] = useState<Campaign[]>(initialData?.campaigns || []);
+  const [loaded, setLoaded] = useState(!!initialData);
   const [online, setOnline] = useState(false);
   const syncInProgress = useRef(false);
 
@@ -292,128 +297,150 @@ export function useDealSync(userId?: number) {
   campaignsRef.current = campaigns;
   applicationsRef.current = applications;
 
-  // Initial load — try backend, fall back to localStorage
+  // Initial load — merge SSR data with localStorage, then try backend
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
+      // If SSR provided data, use it as base but ALSO merge with localStorage
+      if (initialData && (initialData.campaigns || initialData.dealStates || initialData.applications)) {
+        const localCampaigns = loadFromStorage<Campaign[]>(STORAGE_CAMPAIGNS, []);
+        if (localCampaigns.length > 0) {
+          const initIds = new Set((initialData.campaigns || []).map(c => c.id));
+          const localOnly = localCampaigns.filter(c => !initIds.has(c.id));
+          if (localOnly.length > 0) {
+            setCampaigns([...(initialData.campaigns || []), ...localOnly]);
+          }
+        }
+        const localDeals = loadFromStorage<Record<string, DealState>>(STORAGE_DEALS, {});
+        if (Object.keys(localDeals).length > 0) {
+          setDealStates(prev => {
+            const initDeals = initialData.dealStates || {};
+            const merged = { ...localDeals };
+            for (const [k, v] of Object.entries(initDeals)) {
+              merged[k] = { ...(merged[k] || {} as DealState), ...(v as Partial<DealState>) };
+            }
+            return merged;
+          });
+        }
+        const localApps = loadFromStorage<SharedApplication[]>(STORAGE_APPLICATIONS, []);
+        if (localApps.length > 0) {
+          const initAppIds = new Set((initialData.applications || []).map(a => a.id));
+          const localOnlyApps = localApps.filter(a => !initAppIds.has(a.id));
+          if (localOnlyApps.length > 0) {
+            setApplications([...(initialData.applications || []), ...localOnlyApps]);
+          }
+        }
+      }
+      if (!cancelled) setLoaded(true);
+
       const backendUp = await isBackendOnline();
       if (cancelled) return;
       setOnline(backendUp);
+      if (!backendUp) return;
 
-      if (backendUp) {
-        // ── Try PostgreSQL API endpoints (Next.js API routes → DB) ──
+      // ── Try PostgreSQL API endpoints (Next.js API routes → DB) ──
 
-        // 1. Load campaigns from PostgreSQL
-        try {
-          const campRes = await fetch('/api/campaigns/list', { credentials: 'include' });
-          if (!cancelled && campRes.ok) {
-            const campData = await campRes.json();
-            if (campData.campaigns) {
-              const dbCampaigns: Campaign[] = campData.campaigns.map((c: any) => ({
-                id: c.id,
-                brandName: '',
-                brandProfession: '',
-                title: c.title || '',
-                description: c.description || '',
-                requiredProfessions: [],
-                minLevel: 0,
-                maxLevel: 0,
-                budget: String(c.budget_per_creator || '0'),
-                deadline: c.deadline || '',
-                location: '',
-                nonNegotiables: [],
-                deliverables: '',
-                status: c.status === 'active' ? 'open' : 'closed',
-                applicants: Number(c.invite_count || 0),
-              }));
-              const localCampaigns = loadFromStorage<Campaign[]>(STORAGE_CAMPAIGNS, []);
-              const dbIds = new Set(dbCampaigns.map(c => c.id));
-              const localOnly = localCampaigns.filter(c => !dbIds.has(c.id));
-              const merged = [...dbCampaigns, ...localOnly];
-              setCampaigns(merged);
-              saveToStorage(STORAGE_CAMPAIGNS, merged);
-            }
+      // 1. Load campaigns from PostgreSQL
+      try {
+        const campRes = await fetch('/api/campaigns/list', { credentials: 'include' });
+        if (!cancelled && campRes.ok) {
+          const campData = await campRes.json();
+          if (campData.campaigns) {
+            const dbCampaigns: Campaign[] = campData.campaigns.map((c: any) => ({
+              id: c.id,
+              brandName: '',
+              brandProfession: '',
+              title: c.title || '',
+              description: c.description || '',
+              requiredProfessions: [],
+              minLevel: 0,
+              maxLevel: 0,
+              budget: String(c.budget_per_creator || '0'),
+              deadline: c.deadline || '',
+              location: '',
+              nonNegotiables: [],
+              deliverables: '',
+              status: c.status === 'active' ? 'open' : 'closed',
+              applicants: Number(c.invite_count || 0),
+            }));
+            setCampaigns(prev => {
+              const prevIds = new Set(prev.map(c => c.id));
+              const newOnes = dbCampaigns.filter(c => !prevIds.has(c.id));
+              if (newOnes.length === 0) return prev;
+              return [...prev, ...newOnes];
+            });
           }
-        } catch { /* fall through */ }
+        }
+      } catch { /* fall through */ }
 
-        // 2. Load deals from PostgreSQL
-        try {
-          const dealRes = await fetch('/api/deals/my-deals', { credentials: 'include' });
-          if (!cancelled && dealRes.ok) {
-            const dealData = await dealRes.json();
-            if (dealData.deals) {
-              const dbDeals: Record<string, DealState> = {};
-              for (const d of dealData.deals) {
-                const key = `${d.title || 'Deal'}:${d.id}`;
-                dbDeals[key] = {
-                  phase: mapDbDealPhase(d.status),
-                  intent: 'campaign',
-                  briefFilled: true,
-                  briefTitle: d.title || '',
-                  offerAmount: String(d.offerAmount || ''),
-                  counterAmount: '',
-                  brandResponseAmount: '',
-                  chatMessages: [],
-                  chatInput: '',
-                  performanceClause: false,
-                  advancePercent: 30,
-                  uploadPercent: 40,
-                  approvalPercent: 30,
-                  backendDealRoomId: typeof d.id === 'number' ? d.id : undefined,
-                  creatorName: d.partnerName,
-                };
+      // 2. Load deals from PostgreSQL
+      try {
+        const dealRes = await fetch('/api/deals/my-deals', { credentials: 'include' });
+        if (!cancelled && dealRes.ok) {
+          const dealData = await dealRes.json();
+          if (dealData.deals) {
+            const dbDeals: Record<string, DealState> = {};
+            for (const d of dealData.deals) {
+              const key = `${d.title || 'Deal'}:${d.id}`;
+              dbDeals[key] = {
+                phase: mapDbDealPhase(d.status),
+                intent: 'campaign',
+                briefFilled: true,
+                briefTitle: d.title || '',
+                offerAmount: String(d.offerAmount || ''),
+                counterAmount: '',
+                brandResponseAmount: '',
+                chatMessages: [],
+                chatInput: '',
+                performanceClause: false,
+                advancePercent: 30,
+                uploadPercent: 40,
+                approvalPercent: 30,
+                backendDealRoomId: typeof d.id === 'number' ? d.id : undefined,
+                creatorName: d.partnerName,
+              };
+            }
+            setDealStates(prev => {
+              const merged = { ...prev };
+              for (const [k, v] of Object.entries(dbDeals)) {
+                if (!merged[k]) merged[k] = v;
               }
-              const localDeals = loadFromStorage<Record<string, DealState>>(STORAGE_DEALS, {});
-              const merged = { ...localDeals, ...dbDeals };
-              setDealStates(merged);
-              saveToStorage(STORAGE_DEALS, merged);
-            }
+              return merged;
+            });
           }
-        } catch { /* fall through */ }
+        }
+      } catch { /* fall through */ }
 
-        // 3. Load bids (applications) from PostgreSQL
-        try {
-          const bidRes = await fetch('/api/bids/', { credentials: 'include' });
-          if (!cancelled && bidRes.ok) {
-            const bidData = await bidRes.json();
-            if (bidData.bids) {
-              const dbApps: SharedApplication[] = bidData.bids.map((b: any) => ({
-                id: b.id,
-                campaignId: b.campaign_id,
-                campaignTitle: b.campaign_title || '',
-                creatorProfession: '',
-                creatorHandle: '',
-                status: mapBidStatus(b.status),
-                appliedAt: b.created_at || new Date().toISOString(),
-              }));
-              const localApps = loadFromStorage<SharedApplication[]>(STORAGE_APPLICATIONS, []);
-              const dbIds = new Set(dbApps.map(a => a.id));
-              const localOnly = localApps.filter(a => !dbIds.has(a.id));
-              const merged = [...dbApps, ...localOnly];
-              setApplications(merged);
-              saveToStorage(STORAGE_APPLICATIONS, merged);
-            }
+      // 3. Load bids (applications) from PostgreSQL
+      try {
+        const bidRes = await fetch('/api/bids/', { credentials: 'include' });
+        if (!cancelled && bidRes.ok) {
+          const bidData = await bidRes.json();
+          if (bidData.bids) {
+            const dbApps: SharedApplication[] = bidData.bids.map((b: any) => ({
+              id: b.id,
+              campaignId: b.campaign_id,
+              campaignTitle: b.campaign_title || '',
+              creatorProfession: '',
+              creatorHandle: '',
+              status: mapBidStatus(b.status),
+              appliedAt: b.created_at || new Date().toISOString(),
+            }));
+            setApplications(prev => {
+              const prevIds = new Set(prev.map(a => a.id));
+              const newOnes = dbApps.filter(a => !prevIds.has(a.id));
+              if (newOnes.length === 0) return prev;
+              return [...prev, ...newOnes];
+            });
           }
-        } catch { /* fall through */ }
-
-      } else {
-        // Offline mode — load everything from localStorage
-        setDealStates(loadFromStorage(STORAGE_DEALS, {}));
-        setApplications(loadFromStorage(STORAGE_APPLICATIONS, []));
-      }
-
-      // Load campaigns from localStorage if PG load didn't populate them
-      setCampaigns(prev => {
-        if (prev.length > 0) return prev;
-        return loadFromStorage(STORAGE_CAMPAIGNS, []);
-      });
-      if (!cancelled) setLoaded(true);
+        }
+      } catch { /* fall through */ }
     }
 
     init();
     return () => { cancelled = true; };
-  }, []);
+  }, []); // Only run on mount — initialData is the initial state, not a dependency
 
   // Persist deals to localStorage on change
   useEffect(() => {
@@ -432,6 +459,9 @@ export function useDealSync(userId?: number) {
   // Persist campaigns to localStorage on change
   useEffect(() => {
     if (!loaded) return;
+    // Don't overwrite localStorage with empty data if it previously had data
+    const stored = loadFromStorage<Campaign[]>(STORAGE_CAMPAIGNS, []);
+    if (campaigns.length === 0 && stored.length > 0) return;
     saveToStorage(STORAGE_CAMPAIGNS, campaigns);
     broadcastSync();
   }, [campaigns, loaded]);
@@ -478,7 +508,13 @@ export function useDealSync(userId?: number) {
           setDealStates(prev => {
             const merged = { ...prev };
             for (const [k, v] of Object.entries(data.deals)) {
-              merged[k] = { ...(merged[k] || {} as DealState), ...(v as Partial<DealState>) };
+              const remote = v as Partial<DealState>;
+              const local = merged[k];
+              if (local) {
+                merged[k] = { ...remote, ...local, chatMessages: local.chatMessages.length > 0 ? local.chatMessages : (remote.chatMessages || []) };
+              } else {
+                merged[k] = local ?? (remote as DealState);
+              }
             }
             return merged;
           });
@@ -542,7 +578,13 @@ export function useDealSync(userId?: number) {
           setDealStates(prev => {
             const merged = { ...prev };
             for (const [k, v] of Object.entries(data.deals)) {
-              merged[k] = { ...(merged[k] || {} as DealState), ...(v as Partial<DealState>) };
+              const remote = v as Partial<DealState>;
+              const local = merged[k];
+              if (local) {
+                merged[k] = { ...remote, ...local, chatMessages: local.chatMessages.length > 0 ? local.chatMessages : (remote.chatMessages || []) };
+              } else {
+                merged[k] = local ?? (remote as DealState);
+              }
             }
             return merged;
           });
@@ -572,24 +614,45 @@ export function useDealSync(userId?: number) {
       externalUpdateRef.current = true;
       if (event.event_type === 'state_updated' || event.event_type === 'deal_created' || event.event_type === 'deal_updated') {
         if (data.dealKey) {
-          setDealStates(prev => ({
-            ...prev,
-            [data.dealKey]: { ...(prev[data.dealKey] || {} as DealState), ...data.updates },
-          }));
+          setDealStates(prev => {
+            const local = prev[data.dealKey];
+            const remoteUpdates = data.updates as Record<string, any> || {};
+            const merged = { ...(local || {} as DealState), ...remoteUpdates };
+            if (local && local.chatMessages.length > 0) {
+              merged.chatMessages = local.chatMessages;
+            }
+            return { ...prev, [data.dealKey]: merged };
+          });
         } else if (data.deals) {
           setDealStates(prev => {
             const merged = { ...prev };
             for (const [k, v] of Object.entries(data.deals)) {
-              merged[k] = { ...(merged[k] || {} as DealState), ...(v as Partial<DealState>) };
+              const remote = v as Partial<DealState>;
+              const local = merged[k];
+              if (local) {
+                merged[k] = { ...remote, ...local, chatMessages: local.chatMessages.length > 0 ? local.chatMessages : (remote.chatMessages || []) };
+              } else {
+                merged[k] = local ?? (remote as DealState);
+              }
             }
             return merged;
           });
         }
         if (data.campaigns && Array.isArray(data.campaigns)) {
-          setCampaigns(data.campaigns);
+          setCampaigns(prev => {
+            const prevIds = new Set(prev.map(c => c.id));
+            const newOnes = (data.campaigns as Campaign[]).filter(c => !prevIds.has(c.id));
+            if (newOnes.length === 0) return prev;
+            return [...prev, ...newOnes];
+          });
         }
         if (data.applications && Array.isArray(data.applications)) {
-          setApplications(data.applications);
+          setApplications(prev => {
+            const prevIds = new Set(prev.map(a => a.id));
+            const newOnes = (data.applications as SharedApplication[]).filter(a => !prevIds.has(a.id));
+            if (newOnes.length === 0) return prev;
+            return [...prev, ...newOnes];
+          });
         }
       }
       if (event.event_type === 'campaign_created' && data.campaign) {
