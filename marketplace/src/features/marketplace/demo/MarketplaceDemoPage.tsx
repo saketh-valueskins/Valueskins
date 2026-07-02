@@ -3114,20 +3114,21 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 ) : (
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     {deals.map((deal, idx) => {
-                                      // Key format: creatorName|creatorSkin|oppIndex — find matching opportunity by oppIndex
+                                      // For Past Deals, use brandName stored in deal (not opportunity lookup)
+                                      const brandName = deal.brandName || 'Brand';
                                       const oppIdx = parseInt(deal.key.split('|')[2] || '0');
                                       const opp = activeOpportunities[oppIdx];
                                       return (
-                                        <div key={idx} style={{ background: C.bg, borderRadius: '8px', padding: '10px', border: `1px solid ${C.border}`, cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => { setNegotiatingOpp(oppIdx); }}>
+                                        <div key={idx} style={{ background: C.bg, borderRadius: '8px', padding: '10px', border: `1px solid ${C.border}`, cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => { if (opp) setNegotiatingOpp(oppIdx); }}>
                                           <div
-                                            onMouseEnter={(e) => opp?.brand && showHoverCard(buildBrandHover(opp.brand), e)}
+                                            onMouseEnter={(e) => showHoverCard(buildBrandHover(brandName), e)}
                                             onMouseMove={updateHoverPosition}
                                             onMouseLeave={hideHoverCard}
-                                            style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '3px', cursor: opp?.brand ? 'pointer' : 'default' }}
-                                          >{opp?.brand || 'Deal'}</div>
-                                          <div style={{ fontSize: '10px', color: C.textSecondary, marginBottom: '4px' }}>{opp?.budget}</div>
+                                            style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '3px', cursor: 'pointer' }}
+                                          >{brandName}</div>
+                                          <div style={{ fontSize: '10px', color: C.textSecondary, marginBottom: '4px' }}>{opp?.budget || 'N/A'}</div>
                                           <div style={{ fontSize: '9px', color: C.textMuted, background: `${C.primary}15`, padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
-                                            {deal.phase === 'offer' ? 'Initial offer' : deal.phase === 'chatroom' ? 'In chat' : deal.phase === 'counter' ? 'Countered' : deal.phase === 'accepted' ? 'Deal locked' : 'Completed'}
+                                            Completed
                                           </div>
                                           <button onClick={e => { e.stopPropagation(); downloadDealReport(deal.key); }} style={{ width:'100%', marginTop:'8px', background:C.primary, border:'none', borderRadius:'6px', padding:'5px 8px', color:'#fff', fontSize:'10px', fontWeight:600, cursor:'pointer' }}>
                                             Download the final report
