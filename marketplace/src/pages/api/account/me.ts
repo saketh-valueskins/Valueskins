@@ -32,9 +32,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse<AccountResponse
       return res.status(200).json(cached);
     }
 
-    // Query database
+    // Query database — verify session exists, is active, and not expired
     const session = await queryOne(
-      'SELECT user_id FROM auth_sessions WHERE id = $1 AND is_active = TRUE',
+      'SELECT user_id FROM auth_sessions WHERE id = $1 AND is_active = TRUE AND expires_at > NOW()',
       [sessionToken]
     );
 

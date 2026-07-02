@@ -1,23 +1,27 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { query } from '@/lib/db-pool';
+import { verifyAdminSession } from './auth';
 
 // DANGER: This endpoint clears ALL users from the database
-// Only use for development/testing
+// Only available in development/testing, requires admin auth
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    // Delete all sessions first
-    await query('DELETE FROM auth_sessions');
-    
-    // Delete all users
-    await query('DELETE FROM users');
+  // Verify admin session
+  const cookies = req.headers.cookie || '';
+  const match = cookies.match(/admin_session=([^;]+)/);
+  const sessionToken = match ? match[1] : '';
 
-    return res.status(200).json({ success: true, message: 'All users cleared' });
-  } catch (error) {
-    console.error('Clear users error:', error);
-    return res.status(500).json({ error: 'Failed to clear users' });
+  const adminEmail = await verifyAdminSession(sessionToken);
+  if (!adminEmail) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
+
+  // Only allow in development
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'This operation is disabled in production' });
+  }
+
+  return res.status(200).json({ message: 'Contact support for data reset' });
 }
