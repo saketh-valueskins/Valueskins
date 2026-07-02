@@ -112,6 +112,7 @@ export type DealState = {
   opportunityIndex?: number;        // activeOpportunities array index (creator side)
   creatorName?: string;             // Name of creator from BRAND_MARKETPLACE_CREATORS
   creatorSkin?: string;             // ValueSkin (profession) of creator
+  brandName?: string;               // Name of brand (stored when deal is created)
   // Ratings and reviews — both sides rate each other after deal completion
   creatorRating?: number;           // 1-5 stars from creator to brand
   creatorRatingComment?: string;    // Creator's review comment

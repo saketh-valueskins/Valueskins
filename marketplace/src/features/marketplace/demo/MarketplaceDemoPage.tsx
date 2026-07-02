@@ -1607,13 +1607,32 @@ export default function MarketplaceDemoPage(initialDealData?: {
     page.drawText('All messages, amounts, milestones, and disputes are captured above.', { x: m, y, size: 8, font: font, color: gray });
 
     const pdfBytes = await doc.save();
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const blob = new Blob([pdfBytes as BlobPart], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+    const filename = `valueskins-deal-${dealKey.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().slice(0, 10)}.pdf`;
     a.href = url;
-    a.download = `valueskins-deal-${dealKey.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().slice(0, 10)}.pdf`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
+
+    // Log report for admin panel (auto-sync to Google Drive later)
+    const reportLog = {
+      dealKey,
+      filename,
+      timestamp: new Date().toISOString(),
+      dealData: {
+        phase: deal.phase,
+        brand: opp?.brand || 'Unknown',
+        creatorName: deal.creatorName || 'Unknown',
+        amount: deal.agreementAmount || deal.offerAmount || '0',
+      }
+    };
+    const existingReports = JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('vs_demo_deal_reports') || '[]' : '[]');
+    existingReports.push(reportLog);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vs_demo_deal_reports', JSON.stringify(existingReports));
+    }
   }, [dealStates]);
 
   const forceFetchApplications = useCallback(async () => {
@@ -2033,7 +2052,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       line('This is not a tax invoice.', 8, { color: gray });
 
       const pdfBytes = await doc.save();
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const blob = new Blob([pdfBytes as BlobPart], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -3035,7 +3054,22 @@ export default function MarketplaceDemoPage(initialDealData?: {
               )}
 
               {/* Layer 3a: Creator Marketplace */}
-              {hasValueSkin && marketplaceRole === 'creator' && (
+              {hasValueSkin && marketplaceRole === 'creator' && (() => {
+                const myProfile = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('vs_demo_my_profile') || '{}') : {};
+                const isProfileComplete = myProfile.fullName && myProfile.ageRange && myProfile.gender && myProfile.country && myProfile.city;
+
+                if (!isProfileComplete) {
+                  return (
+                    <div style={{ padding: '40px 20px', textAlign: 'center', background: C.card, borderRadius: '12px', margin: '20px', border: `1px solid ${C.border}` }}>
+                      <div style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginBottom: '12px' }}>Complete Your Profile</div>
+                      <div style={{ fontSize: '14px', color: C.textSecondary, marginBottom: '24px', lineHeight: 1.5, maxWidth: '400px', margin: '0 auto 24px' }}>
+                        Before accessing the marketplace, please complete your profile information. This helps us provide better matches and insights.
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
                 <>
                   {/* Marketplace header */}
                   <div style={{ padding: '12px 16px 0', position: 'sticky', top: 0, background: C.bg, zIndex: 10 }}>
@@ -5087,7 +5121,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                   </div>
                 </>
-              )}
+                );
+              })()}
 
               {/* Layer 3b: Brand Marketplace */}
               {hasAnySkin && marketplaceRole === 'brand' && (
