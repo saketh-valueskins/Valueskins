@@ -179,6 +179,7 @@ export type Campaign = {
   maxLevel: number;
   budget: string;
   deadline: string;
+  deliveryDeadline?: string;
   location: string;
   nonNegotiables: string[];
   deliverables: string;

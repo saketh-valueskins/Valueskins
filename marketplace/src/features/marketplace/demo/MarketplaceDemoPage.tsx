@@ -33,6 +33,7 @@ import NotificationsView from '@/features/marketplace/demo/views/NotificationsVi
 import ExploreView from '@/features/marketplace/demo/views/ExploreView';
 import SettingsView from '@/features/marketplace/demo/views/SettingsView';
 import MessagesView from '@/features/marketplace/demo/views/MessagesView';
+import { HoverCard, type HoverProfile } from '@/features/marketplace/demo/components/ProfileHoverCard';
 
 /** Get sticker image path for any profession — checks PROFESSION_BADGES first, then auto-generated manifest */
 function getStickerForProfession(profession: string): string | undefined {
@@ -150,12 +151,6 @@ const PROFESSIONS: Record<string, { name: string; subProfessions: string[] }> = 
 // No hardcoded creators - all creator data comes from the backend API
 const BRAND_MARKETPLACE_CREATORS: any[] = [];
 
-const BRAND_CATEGORIES: Record<string, { name: string; subCategories: string[] }> = {
-  'Company Size':  { name: 'Company Size',  subCategories: ['Startup', 'SMB', 'Mid-Market', 'Enterprise', 'Agency', 'Solo Brand', 'Non-Profit', 'Government'] },
-  'Campaign Type': { name: 'Campaign Type', subCategories: ['Product Review', 'Brand Ambassador', 'Sponsored Content', 'Event Coverage', 'Affiliate', 'Whitelabel', 'UGC', 'Podcast'] },
-  'Budget Tier':   { name: 'Budget Tier',   subCategories: ['Micro ($500-2K)', 'Standard ($2K-10K)', 'Premium ($10K-50K)', 'Enterprise ($50K+)'] },
-};
-
 // Systems 2/3: Creator professions — used in store for creators (not brands)
 const CREATOR_PROFESSIONS: Record<string, { name: string; subProfessions: string[] }> = {
   'Technology': { name: 'Technology', subProfessions: ['Software Engineer', 'Data Scientist', 'Product Manager', 'DevOps Engineer', 'UX/UI Designer', 'AI/ML Specialist', 'Security Researcher'] },
@@ -201,6 +196,7 @@ type Opportunity = {
   about: string;
   budget: string;
   deadline: string;
+  applicationDeadline?: string;
   deliverables: { format: string; count: number }[];
   requirements: string[];
   exclusivity: string;
@@ -235,6 +231,22 @@ const MOCK_REPUTATION = {
   maxDealSize: 2000,
 };
 
+let razorpayLoadPromise: Promise<void> | null = null;
+
+function ensureRazorpayLoaded(): Promise<void> {
+  if (razorpayLoadPromise) return razorpayLoadPromise;
+  razorpayLoadPromise = new Promise((resolve, reject) => {
+    if (typeof (window as any).Razorpay !== 'undefined') { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Failed to load Razorpay'));
+    document.body.appendChild(s);
+  });
+  return razorpayLoadPromise;
+}
+
 export default function MarketplaceDemoPage(initialDealData?: {
   initialCampaigns?: any[];
   initialDealStates?: any;
@@ -257,6 +269,32 @@ export default function MarketplaceDemoPage(initialDealData?: {
     negCreator:   `vs_brand_negotiating_creator_${uid}`,
     campaigns:    `vs_demo_campaigns_${uid}`,
     applications: `vs_demo_applications_${uid}`,
+  };
+  const SKIN_PRICE_RUPEES = 950;
+
+  const recordFakeBankTransaction = (entry: {
+    type: 'payment' | 'escrow' | 'payout' | 'refund' | 'transfer';
+    description: string;
+    amount: number;
+    status?: 'completed' | 'pending' | 'failed';
+    reference?: string;
+  }) => {
+    try {
+      const stored = localStorage.getItem('fake_bank_ledger');
+      const ledger = stored ? JSON.parse(stored) : [];
+      ledger.unshift({
+        id: `txn_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        timestamp: new Date().toISOString(),
+        type: entry.type,
+        description: entry.description,
+        amount: entry.amount,
+        status: entry.status || 'completed',
+        reference: entry.reference || `ref_${Date.now()}`,
+      });
+      localStorage.setItem('fake_bank_ledger', JSON.stringify(ledger));
+    } catch (err) {
+      console.error('FakeBank record failed:', err);
+    }
   };
   const [activeView, setActiveView] = useState<'profile' | 'mim' | 'store' | 'admin' | 'messages' | 'settings' | 'explore' | 'notifications' | 'events'>(() => {
 
@@ -664,6 +702,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
   // Firebase sync — all users share one global namespace
   const { state: firebaseState, syncing: firebaseSyncing, createCampaign: firebaseCreateCampaign, updateDeal: firebaseUpdateDeal, addMessage: firebaseAddMessage, sendNotification: firebaseSendNotification, createApplication: firebaseCreateApplication } = useFirebaseRoom(null, null, '');
   const { dealStates, setDealStates, getOrCreateDeal, updateDeal: localUpdateDeal } = dealSync;
+
+  // Ref to bridge activeOpportunities declaration order (defined later at line ~2395)
+  const activeOppsRef = useRef<any[]>([]);
 
   // CRITICAL FIX: Sync Firebase state back to local state for real-time multi-device updates
   useEffect(() => {
@@ -1331,6 +1372,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [newCampaignDesc, setNewCampaignDesc] = useState('');
   const [newCampaignBudget, setNewCampaignBudget] = useState('');
   const [newCampaignDeadline, setNewCampaignDeadline] = useState('');
+  const [newCampaignDeliveryDeadline, setNewCampaignDeliveryDeadline] = useState('');
   const [newCampaignProfessions, setNewCampaignProfessions] = useState<string[]>([]);
   const [newCampaignMinLevel, setNewCampaignMinLevel] = useState(1);
   const [newCampaignMaxLevel, setNewCampaignMaxLevel] = useState(5);
@@ -1628,10 +1670,17 @@ export default function MarketplaceDemoPage(initialDealData?: {
   type CreatorDealLifecycle = 'checklist'|'deliverables'|'submitted'|'approved';
   type BrandApprovalPhase = 'accepted'|'funding'|'funded'|'reviewing'|'approved';
   // Read from shared deal state for real-time cross-role sync
-  const creatorDealLifecycle: CreatorDealLifecycle = (activeDeal?.creatorDealLifecycle as CreatorDealLifecycle) || 'checklist';
-  const setCreatorDealLifecycle = (lc: CreatorDealLifecycle) => { if (activeDealKey) updateDeal(activeDealKey, { creatorDealLifecycle: lc }); };
+  // Fallback to brandDeal for brand side (where activeDeal is null)
+  const creatorDealLifecycle: CreatorDealLifecycle = (activeDeal?.creatorDealLifecycle as CreatorDealLifecycle) || (brandDeal?.creatorDealLifecycle as CreatorDealLifecycle) || 'checklist';
+  const setCreatorDealLifecycle = (lc: CreatorDealLifecycle) => { const targetKey = activeDealKey || brandDealKey; if (targetKey) updateDeal(targetKey, { creatorDealLifecycle: lc }); };
   const brandApprovalPhase: BrandApprovalPhase = (brandDeal?.brandApprovalPhase as BrandApprovalPhase) || 'accepted';
   const setBrandApprovalPhase = (p: BrandApprovalPhase) => { if (brandDealKey) updateDeal(brandDealKey, { brandApprovalPhase: p }); };
+  // MIGRATION: Existing deals where brand already accepted → skip to deliverables
+  useEffect(() => {
+    if (marketplaceRole === 'creator' && dealRoomPhase === 'accepted' && brandApprovalPhase === 'accepted' && creatorDealLifecycle !== 'deliverables' && activeDealKey) {
+      updateDeal(activeDealKey, { phase: 'softhold', creatorDealLifecycle: 'deliverables', escrowFunded: true });
+    }
+  }, [marketplaceRole, dealRoomPhase, brandApprovalPhase, creatorDealLifecycle, activeDealKey]);
   const [dealUploadSimulated, setDealUploadSimulated] = useState(false);
   type CompletedDeal = { id:number; brand:string; amount:number; completedAt:string; deliverable:string; usageRightsDays?:number; exclusivityDays?:number; exclusivitySkin?:string; disputed?:boolean; disputeReason?:string; disputeStatus?:'filed'|'under_review'|'resolved'; contractSignedAt?:string; tipped?:number; };
   const [completedDeals, setCompletedDeals] = useState<CompletedDeal[]>([]);
@@ -1750,6 +1799,87 @@ export default function MarketplaceDemoPage(initialDealData?: {
       brandProfileSelections, creatorEnergy, metrics, skinsLoaded, skinPitchTexts, skinPitchVideos,
       skinPositions, loading]);
 
+  // ── Hover card system ──────────────────────────────────────────────
+  const [hoverProfile, setHoverProfile] = useState<{ profile: HoverProfile; x: number; y: number } | null>(null);
+  const hoverTimers = useRef<{ show?: ReturnType<typeof setTimeout>; hide?: ReturnType<typeof setTimeout> }>({});
+
+  const showHoverCard = useCallback((profile: HoverProfile, e: React.MouseEvent) => {
+    clearTimeout(hoverTimers.current.hide);
+    hoverTimers.current.show = setTimeout(() => {
+      setHoverProfile({ profile, x: e.clientX + 12, y: e.clientY + 12 });
+    }, 350);
+  }, []);
+
+  const updateHoverPosition = useCallback((e: React.MouseEvent) => {
+    setHoverProfile(prev => prev ? { ...prev, x: e.clientX + 12, y: e.clientY + 12 } : null);
+  }, []);
+
+  const hideHoverCard = useCallback(() => {
+    clearTimeout(hoverTimers.current.show);
+    hoverTimers.current.hide = setTimeout(() => setHoverProfile(null), 200);
+  }, []);
+
+  const buildBrandHover = useCallback((brandName: string): HoverProfile => {
+    let brandDealCount = 0;
+    const opps = activeOppsRef.current;
+    for (const [key, deal] of Object.entries(dealStates)) {
+      if (!deal) continue;
+      if (deal.creatorDealLifecycle !== 'approved' && deal.brandApprovalPhase !== 'approved') continue;
+      const oppIdx = parseInt(key.split('|')[2] || '0');
+      const opp = opps[oppIdx];
+      if (opp && opp.brand === brandName) { brandDealCount++; continue; }
+    }
+    for (const cd of completedDeals) {
+      if (cd.brand === brandName) { brandDealCount++; }
+    }
+    return {
+      role: 'brand',
+      name: brandName,
+      skin: activeBrandSkin || brandValueSkins[0],
+      bio: profileBio,
+      brandProfileSelections,
+      brandValueSkins,
+      completedDeals: brandDealCount,
+      selectedCountry,
+      metrics: {
+        followers: metrics.followers, engagement: metrics.engagement,
+        dealsCompleted: brandDealCount, avgDealValue: metrics.avgDealValue,
+        onTimeRate: metrics.onTimeRate, brandRating: metrics.brandRating,
+      },
+    };
+  }, [activeBrandSkin, brandValueSkins, profileBio, brandProfileSelections, completedDeals, selectedCountry, metrics, dealStates, activeOppsRef]);
+
+  const buildCreatorHover = useCallback((creatorName: string, creatorSkin?: string): HoverProfile => {
+    const sk = creatorSkin || Object.values(valueSkins).find(e => e?.profession)?.profession;
+    const slot = sk ? (Object.keys(valueSkins) as Array<keyof typeof valueSkins>).find(k => valueSkins[k]?.profession === sk) : undefined;
+    const rawAbout = slot && valueSkins[slot]?.aboutMe ? valueSkins[slot]!.aboutMe : '';
+    const aboutMe = rawAbout && defaultAboutMe(sk || '') !== rawAbout ? rawAbout : '';
+    let creatorDealCount = 0;
+    for (const [key, deal] of Object.entries(dealStates)) {
+      if (!deal) continue;
+      if (deal.creatorDealLifecycle !== 'approved' && deal.brandApprovalPhase !== 'approved') continue;
+      if (deal.creatorName === creatorName && (!creatorSkin || deal.creatorSkin === creatorSkin)) { creatorDealCount++; continue; }
+      const parts = key.split('|');
+      if (parts[0] === creatorName && (!creatorSkin || parts[1] === creatorSkin)) { creatorDealCount++; }
+    }
+    return {
+      role: 'creator',
+      name: creatorName,
+      skin: sk,
+      bio: profileBio,
+      aboutMe,
+      metrics: {
+        followers: metrics.followers, engagement: metrics.engagement,
+        dealsCompleted: creatorDealCount, avgDealValue: metrics.avgDealValue,
+        onTimeRate: metrics.onTimeRate, brandRating: metrics.brandRating,
+      },
+      rateCard,
+      completedDeals: creatorDealCount,
+      availableFrom: creatorAvailableFrom,
+      selectedCountry,
+    };
+  }, [valueSkins, profileBio, metrics, rateCard, creatorAvailableFrom, selectedCountry, dealStates]);
+
   // Fetch profile stats from API instead of using hardcoded values
   useEffect(() => {
     const fetchStats = async () => {
@@ -1816,18 +1946,17 @@ export default function MarketplaceDemoPage(initialDealData?: {
     setMetrics(prev => ({ ...prev, [key]: parseFloat(value) || 0 }));
   };
 
-  const purchaseProfession = (profession: string) => {
+  const assignSkinAfterPayment = (profession: string) => {
+    if (marketplaceRole === 'brand' && brandValueSkins.length >= 1) return;
+    if (marketplaceRole === 'creator' && ownedSkins.length >= 1) return;
+    recordFakeBankTransaction({
+      type: 'payment',
+      description: `ValueSkin Purchase: ${profession}`,
+      amount: SKIN_PRICE_RUPEES * 100,
+      reference: `vs_${Date.now()}`,
+    });
+
     if (marketplaceRole === 'brand') {
-      if (brandValueSkins.includes(profession)) {
-        setPurchaseToast(`You already own ${profession}`);
-        setTimeout(() => setPurchaseToast(null), 3000);
-        return;
-      }
-      if (brandValueSkins.length >= 1) {
-        setPurchaseToast('You can only have 1 ValueSkin. Remove your current one first.');
-        setTimeout(() => setPurchaseToast(null), 3000);
-        return;
-      }
       setBrandValueSkins(prev => [...prev, profession]);
       setValueSkins(prev => {
         const newSkins = { ...prev };
@@ -1859,6 +1988,143 @@ export default function MarketplaceDemoPage(initialDealData?: {
     setActiveView('profile');
     setPurchaseToast(`${label} applied as your ValueSkin`);
     setTimeout(() => setPurchaseToast(null), 3000);
+  };
+
+  const downloadReceipt = async (profession: string, orderId: string, paymentId: string) => {
+    try {
+      const doc = await PDFDocument.create();
+      const font = await doc.embedFont(StandardFonts.Helvetica);
+      const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
+      const gray = rgb(0.4, 0.4, 0.4);
+      const dark = rgb(0.15, 0.15, 0.15);
+      const accent = rgb(0.22, 0.74, 0.5);
+      const page = doc.addPage([400, 520]);
+      const m = 30;
+      let y = 480;
+
+      const line = (text: string, size: number, opts?: { bold?: boolean; color?: any }) => {
+        page.drawText(text, { x: m, y, size, font: opts?.bold ? boldFont : font, color: opts?.color || dark });
+        y -= size + 6;
+      };
+      const sep = () => { y -= 4; page.drawLine({ start: { x: m, y }, end: { x: 370, y }, thickness: 1, color: rgb(0.85, 0.85, 0.85) }); y -= 8; };
+
+      line('VALUESKINS', 22, { bold: true, color: accent });
+      line('Payment Receipt', 14, { bold: true, color: dark });
+      sep();
+      line(`Receipt #: VS-${Date.now().toString(36).toUpperCase()}`, 10, { color: gray });
+      line(`Date: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`, 10, { color: gray });
+      sep();
+      line('PAYMENT DETAILS', 11, { bold: true });
+      line(`Item: ${profession} ValueSkin`, 10);
+      line(`Order ID: ${orderId}`, 8, { color: gray });
+      line(`Payment ID: ${paymentId}`, 8, { color: gray });
+      line(`Amount Paid: ₹950.00`, 14, { bold: true, color: accent });
+      line(`Status: Completed`, 10, { color: rgb(0.22, 0.74, 0.5) });
+      sep();
+      line('No GST charged — seller is not GST-registered.', 8, { color: gray });
+      line('This is not a tax invoice.', 8, { color: gray });
+
+      const pdfBytes = await doc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receipt-vs-${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Receipt download failed:', err);
+    }
+  };
+
+  const startRazorpayPayment = async (profession: string) => {
+    try {
+      await ensureRazorpayLoaded();
+    } catch {
+      setPurchaseToast('Failed to load payment gateway. Try again.');
+      setTimeout(() => setPurchaseToast(null), 3000);
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/razorpay-test/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amountInRupees: SKIN_PRICE_RUPEES }),
+      });
+      const data = await res.json();
+      if (!data.order) {
+        setPurchaseToast('Payment service unavailable. Try again.');
+        setTimeout(() => setPurchaseToast(null), 3000);
+        return;
+      }
+
+      const options = {
+        key: data.keyId,
+        amount: data.order.amount,
+        currency: data.order.currency,
+        name: 'ValueSkins',
+        description: `Purchase ${profession} ValueSkin`,
+        order_id: data.order.id,
+        handler: async (response: any) => {
+          const verifyRes = await fetch('/api/razorpay-test/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.verified) {
+            assignSkinAfterPayment(profession);
+            downloadReceipt(profession, response.razorpay_order_id, response.razorpay_payment_id);
+          } else {
+            setPurchaseToast('Payment could not be verified. Contact support.');
+            setTimeout(() => setPurchaseToast(null), 4000);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setPurchaseToast('Payment cancelled.');
+            setTimeout(() => setPurchaseToast(null), 3000);
+          },
+        },
+        prefill: { name: profileName || '' },
+        theme: { color: '#000' },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error('Razorpay error:', err);
+      setPurchaseToast('Something went wrong. Please try again.');
+      setTimeout(() => setPurchaseToast(null), 3000);
+    }
+  };
+
+  const purchaseProfession = (profession: string) => {
+    if (marketplaceRole === 'brand') {
+      if (brandValueSkins.includes(profession)) {
+        setPurchaseToast(`You already own ${profession}`);
+        setTimeout(() => setPurchaseToast(null), 3000);
+        return;
+      }
+      if (brandValueSkins.length >= 1) {
+        setPurchaseToast('You can only have 1 ValueSkin.');
+        setTimeout(() => setPurchaseToast(null), 3000);
+        return;
+      }
+    }
+    if (marketplaceRole === 'creator' && ownedSkins.length >= 1) {
+      setPurchaseToast('You can only have 1 ValueSkin.');
+      setTimeout(() => setPurchaseToast(null), 3000);
+      return;
+    }
+    startRazorpayPayment(profession);
   };
 
   const handleDealComplete = (earnedAmount: number, brandName: string, deliverable: string, skinProfession?: string, usageRightsDays?: number, exclusivityDays?: number, exclusivitySkin?: string) => {
@@ -2112,7 +2378,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
       willingToBarter: (c.compensationType || '').toLowerCase().includes('barter'),
       about: c.about || c.description,
       budget: `$${parseInt(c.budget || '0').toLocaleString()}`,
-      deadline: c.deadline,
+      deadline: c.deliveryDeadline && c.deliveryDeadline.trim() ? c.deliveryDeadline : undefined,
+      applicationDeadline: c.deadline,
       deliverables: (c.deliverables || '').split(',').map(d => {
               const trimmed = d.trim();
               const countMatch = trimmed.match(/^(\d+)[xX]\s*(.+)$/);
@@ -2134,6 +2401,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const activeOpportunities = selectedMarketplaceSkin
     ? campaignOpportunities.slice().sort((a, b) => parseInt(b.match) - parseInt(a.match))
     : [];
+  activeOppsRef.current = activeOpportunities;
 
   // Deals the creator missed (expired campaigns matching their skins)
   const missedDeals = selectedMarketplaceSkin
@@ -2352,11 +2620,19 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
             {/* Brand header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ width: 44, height: 44, borderRadius: '10px', background: `linear-gradient(135deg, ${C.primary}, ${C.primary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff' }}>
+              <div
+                onMouseEnter={(e) => showHoverCard(buildBrandHover(askModalOpp.brand), e)}
+                onMouseMove={updateHoverPosition}
+                onMouseLeave={hideHoverCard}
+                style={{ width: 44, height: 44, borderRadius: '10px', background: `linear-gradient(135deg, ${C.primary}, ${C.primary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
                 {askModalOpp.brand.charAt(0)}
               </div>
               <div>
-                <a href={askModalOpp.brandWebsiteUrl || `https://portfolio.valueskins.com/${askModalOpp.brand.replace(/\s+/g, '').toLowerCase()}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '16px', fontWeight: 700, color: C.text, textDecoration: 'none', display: 'block' }}>{askModalOpp.brand}</a>
+                <a
+                  onMouseEnter={(e) => showHoverCard(buildBrandHover(askModalOpp.brand), e)}
+                  onMouseMove={updateHoverPosition}
+                  onMouseLeave={hideHoverCard}
+                  href={askModalOpp.brandWebsiteUrl || `https://portfolio.valueskins.com/${askModalOpp.brand.replace(/\s+/g, '').toLowerCase()}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: '16px', fontWeight: 700, color: C.text, textDecoration: 'none', display: 'block', cursor: 'pointer' }}>{askModalOpp.brand}</a>
                 <div style={{ fontSize: '12px', color: C.textSecondary }}>{askModalOpp.type}</div>
               </div>
             </div>
@@ -2387,8 +2663,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 <div style={{ fontSize: '14px', fontWeight: 700, color: C.textSecondary }}>{askModalOpp.budget}</div>
               </div>
               <div style={{ background: C.bg, borderRadius: '10px', padding: '12px', border: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Deadline</div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{new Date(askModalOpp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Deliver by</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{askModalOpp.deadline ? new Date(askModalOpp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set'}</div>
+                {askModalOpp.applicationDeadline && <div style={{ fontSize:'9px', color:C.textMuted, marginTop:'4px' }}>Apply by: {new Date(askModalOpp.applicationDeadline).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</div>}
               </div>
               <div style={{ background: C.bg, borderRadius: '10px', padding: '12px', border: `1px solid ${C.border}` }}>
                 <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Compensation</div>
@@ -2523,7 +2800,16 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '16px', padding: '24px', marginBottom: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
                     {/* Avatar */}
-                    <div style={{ width: 80, height: 80, borderRadius: '50%', background: C.primary + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: 800, color: C.primary, flexShrink: 0 }}>
+                    <div
+                      onMouseEnter={(e) => showHoverCard(
+                        marketplaceRole === 'brand'
+                          ? buildBrandHover(profileName || account?.display_name || 'User')
+                          : buildCreatorHover(profileName || account?.display_name || 'User'),
+                        e
+                      )}
+                      onMouseMove={updateHoverPosition}
+                      onMouseLeave={hideHoverCard}
+                      style={{ width: 80, height: 80, borderRadius: '50%', background: C.primary + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: 800, color: C.primary, flexShrink: 0, cursor: 'pointer' }}>
                       {(account?.display_name || profileName || 'U').charAt(0).toUpperCase()}
                     </div>
                     {/* Name + role */}
@@ -2567,7 +2853,16 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         </div>
                       ) : (
                         <>
-                          <div style={{ fontSize: '22px', fontWeight: 800, color: C.text, marginBottom: '4px' }}>{account?.display_name || profileName || 'Your Name'}</div>
+                          <div
+                            onMouseEnter={(e) => showHoverCard(
+                              marketplaceRole === 'brand'
+                                ? buildBrandHover(profileName || account?.display_name || 'User')
+                                : buildCreatorHover(profileName || account?.display_name || 'User'),
+                              e
+                            )}
+                            onMouseMove={updateHoverPosition}
+                            onMouseLeave={hideHoverCard}
+                            style={{ fontSize: '22px', fontWeight: 800, color: C.text, marginBottom: '4px', cursor: 'pointer' }}>{account?.display_name || profileName || 'Your Name'}</div>
                           <div style={{ fontSize: '13px', color: C.textSecondary, marginBottom: '8px' }}>{account?.email || ''}</div>
                           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                             <span style={{ padding: '4px 12px', borderRadius: '20px', background: isBrand ? 'rgba(59,130,246,0.1)' : 'rgba(34,197,94,0.1)', border: `1px solid ${isBrand ? '#3b82f6' : '#22c55e'}`, color: isBrand ? '#3b82f6' : '#22c55e', fontSize: '12px', fontWeight: 600 }}>
@@ -2788,24 +3083,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <div style={{ padding: '0 16px 16px' }}>
                     {(<>
 
-                    {/* Active Deals Banner */}
-                    {activeDeals.length > 0 && (
-                      <div style={{ background: C.card, borderRadius: '12px', padding: '12px 16px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '10px', position:'relative' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `${C.warning}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill={C.warning} stroke="none"><path d="M12 23c-3.866 0-7-2.686-7-6 0-1.954.951-3.677 2.427-5.173C8.853 10.392 10 8.639 10 6.5c0-.381-.044-.756-.127-1.116A9.86 9.86 0 0 1 12 2a9.86 9.86 0 0 1 2.127 3.384A4.725 4.725 0 0 0 14 6.5c0 2.139 1.147 3.892 2.573 5.327C18.049 13.323 19 15.046 19 17c0 3.314-3.134 6-7 6z"/></svg>
-                        </div>
-                        <div style={{ flex:1 }}>
-                          <div style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{activeDeals.length} Active Deal{activeDeals.length>1?'s':''}</div>
-                          <div style={{ fontSize: '12px', color: C.textSecondary }}>
-                            {activeDeals.map(([k]) => { const [, skin] = k.split('|'); return skin || k; }).filter((v,i,a)=>a.indexOf(v)===i).join(', ')}
-                          </div>
-                        </div>
-                        <div style={{ display:'flex', gap:'6px', flexShrink:0 }}>
-                          <button onClick={() => { setDealStates({}); setNegotiatingOpp(null); }} style={{ background:'none', border:`1px solid rgba(239,68,68,0.3)`, borderRadius:'6px', padding:'4px 10px', fontSize:'11px', fontWeight:600, color:'#ef4444', cursor:'pointer' }}>Clear all</button>
-                        </div>
-                      </div>
-                    )}
-
                     {/* No skin selected prompt */}
                     {!selectedMarketplaceSkin && !isBrand && (
                       <div style={{ textAlign: 'center', padding: '40px 20px' }}>
@@ -2825,7 +3102,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       const columns = {
                         'Negotiation': pipelineDeals.filter(d => ['offer', 'chatroom', 'counter', 'brand_countered', 'pending', 'brand_considering', 'brand_reviewing'].includes(d.phase)),
                         'In Progress': pipelineDeals.filter(d => ['checklist', 'softhold'].includes(d.phase)),
-                        'Past Deals': pipelineDeals.filter(d => d.phase === 'accepted'),
+                        'Past Deals': pipelineDeals.filter(d => d.creatorDealLifecycle === 'approved' || d.brandApprovalPhase === 'approved'),
                       };
 
                       return (
@@ -2851,6 +3128,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           <div style={{ fontSize: '9px', color: C.textMuted, background: `${C.primary}15`, padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
                                             {deal.phase === 'offer' ? 'Initial offer' : deal.phase === 'chatroom' ? 'In chat' : deal.phase === 'counter' ? 'Countered' : deal.phase === 'accepted' ? 'Deal locked' : 'Active'}
                                           </div>
+                                          <button onClick={e => { e.stopPropagation(); downloadDealReport(deal.key); }} style={{ width:'100%', marginTop:'8px', background:C.primary, border:'none', borderRadius:'6px', padding:'5px 8px', color:'#fff', fontSize:'10px', fontWeight:600, cursor:'pointer' }}>
+                                            Download the final report
+                                          </button>
                                         </div>
                                       );
                                     })}
@@ -2905,11 +3185,20 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             >
                               {/* Brand header row */}
                               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: `linear-gradient(135deg, ${C.primary}, #7C3AED)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <div
+                                  onMouseEnter={(e) => showHoverCard(buildBrandHover(opp.brand), e)}
+                                  onMouseMove={updateHoverPosition}
+                                  onMouseLeave={hideHoverCard}
+                                  style={{ width: '40px', height: '40px', borderRadius: '50%', background: `linear-gradient(135deg, ${C.primary}, #7C3AED)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+                                >
                                   <span style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>{brandInitial}</span>
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                  <a href={opp.brandWebsiteUrl || `https://portfolio.valueskins.com/${opp.brand.replace(/\s+/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: '15px', fontWeight: 700, color: C.text, textDecoration: 'none', display: 'block' }}>{opp.brand}</a>
+                                  <a
+                                    onMouseEnter={(e) => showHoverCard(buildBrandHover(opp.brand), e)}
+                                    onMouseMove={updateHoverPosition}
+                                    onMouseLeave={hideHoverCard}
+                                    href={opp.brandWebsiteUrl || `https://portfolio.valueskins.com/${opp.brand.replace(/\s+/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: '15px', fontWeight: 700, color: C.text, textDecoration: 'none', display: 'block', cursor: 'pointer' }}>{opp.brand}</a>
                                   <div style={{ fontSize: '13px', color: C.textSecondary }}>{opp.type}</div>
                                 </div>
                                 <div style={{ fontSize: '14px', fontWeight: 700, color: C.primary }}>{opp.match}</div>
@@ -3014,10 +3303,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     </div>
                                     <div style={{ flex: 1 }}>
                                       <div style={{ fontSize: '15px', fontWeight: 700, color: C.text }}>
-                                        Deal Room · <a href={opp.brandWebsiteUrl || `https://portfolio.valueskins.com/${opp.brand.replace(/\s+/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: C.primary, textDecoration: 'none' }}>{opp.brand}</a>
+                                        Deal Room · <a
+                                          onMouseEnter={(e) => showHoverCard(buildBrandHover(opp.brand), e)}
+                                          onMouseMove={updateHoverPosition}
+                                          onMouseLeave={hideHoverCard}
+                                          href={opp.brandWebsiteUrl || `https://portfolio.valueskins.com/${opp.brand.replace(/\s+/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: C.primary, textDecoration: 'none', cursor:'pointer' }}>{opp.brand}</a>
                                       </div>
                                       <div style={{ fontSize: '12px', color: C.textMuted }}>
-                                        {dealRoomPhase === 'accepted' ? 'Deal accepted — terms locked' : dealRoomPhase === 'formal_offer' ? 'Review formal offer' : 'Negotiate freely — price, terms, everything'}
+                                        {dealRoomPhase === 'accepted' || dealRoomPhase === 'softhold' ? 'Deal accepted — terms locked' : dealRoomPhase === 'formal_offer' ? 'Review formal offer' : 'Negotiate freely — price, terms, everything'}
                                       </div>
                                     </div>
                                   </div>
@@ -3280,7 +3573,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           {opp.deliverables.map((d, di) => (
                                             <div key={di} style={{ fontSize: '12px', color: C.text, marginBottom: '3px' }}>{d.count}x {d.format}</div>
                                           ))}
-                                          <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '4px' }}>Deadline: {new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                                          {opp.deadline && <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '4px' }}>Deliver by: {new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>}
+                                          {opp.applicationDeadline && <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'2px' }}>Apply by: {new Date(opp.applicationDeadline).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</div>}
                                         </div>
 
                                         {/* Ref + timestamp */}
@@ -3305,7 +3599,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'12px', marginBottom:'10px' }}>
                                           <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'8px' }}>Contract Terms</div>
                                           {[
-                                            { key: 'deliverables', label: `I agree to deliver ${opp.deliverables.map(d => `${d.count}x ${d.format}`).join(', ')} by ${new Date(opp.deadline).toLocaleDateString('en-US', { month:'short', day:'numeric' })}` },
+                                            { key: 'deliverables', label: `I agree to deliver ${opp.deliverables.map(d => `${d.count}x ${d.format}`).join(', ')} by ${opp.deadline ? new Date(opp.deadline).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : 'agreed date'}` },
                                             { key: 'payment', label: `Payment of $${totalPrice.toLocaleString()} split as: ${advPct}% advance, ${approvalPct}% on approval` },
                                             { key: 'usage', label: `Brand may use content for ${opp.usageRights || 'agreed period'} per usage rights terms` },
                                             { key: 'exclusivity', label: `Exclusivity: ${opp.exclusivity || 'None'} — I will not promote competing brands during this period` },
@@ -3429,7 +3723,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '8px' }}>Terms are locked and recorded. Chat remains open for coordination.</div>
                                             <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>{opp.brand} will send product</div>
                                             {opp.deadline && (
-                                              <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '3px' }}>Deadline: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
+                                              <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '3px' }}>Deliver by: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
                                             )}
                                             <div style={{ fontSize: '11px', color: C.textSecondary }}>Exclusivity: <strong>{opp.exclusivity || 'None'}</strong></div>
                                           </div>
@@ -3437,7 +3731,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           {activeDeal?.poc && (
                                             <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
                                               <div style={{ fontSize: '9px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Point of Contact</div>
-                                              <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{activeDeal.poc.name}</div>
+                                              <div
+                                                onMouseEnter={(e) => showHoverCard(buildBrandHover(opp?.brand || profileName), e)}
+                                                onMouseMove={updateHoverPosition}
+                                                onMouseLeave={hideHoverCard}
+                                                style={{ fontSize: '12px', fontWeight: 600, color: C.text, cursor: 'pointer' }}>{activeDeal.poc.name}</div>
                                               <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
                                               <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
                                             </div>
@@ -3461,7 +3759,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '8px' }}>You're ready to create content together. Terms are locked and recorded.</div>
                                             <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>Collaborating with {opp.brand}</div>
                                             {opp.deadline && (
-                                              <div style={{ fontSize: '11px', color: C.textSecondary }}>Deadline: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
+                                              <div style={{ fontSize: '11px', color: C.textSecondary }}>Deliver by: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
                                             )}
                                           </div>
                                           {/* Script editor */}
@@ -3582,7 +3880,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           {activeDeal?.poc && (
                                             <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
                                               <div style={{ fontSize: '9px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Point of Contact</div>
-                                              <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{activeDeal.poc.name}</div>
+                                              <div
+                                                onMouseEnter={(e) => showHoverCard(buildBrandHover(opp?.brand || profileName), e)}
+                                                onMouseMove={updateHoverPosition}
+                                                onMouseLeave={hideHoverCard}
+                                                style={{ fontSize: '12px', fontWeight: 600, color: C.text, cursor: 'pointer' }}>{activeDeal.poc.name}</div>
                                               <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
                                               <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
                                             </div>
@@ -3751,7 +4053,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           {/* Deadline & Rights summary */}
                                           <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
                                             {opp.deadline && (
-                                              <div style={{ fontSize: '11px', color: C.text, marginBottom: '3px' }}>Deadline: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
+                                              <div style={{ fontSize: '11px', color: C.text, marginBottom: '3px' }}>Deliver by: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
                                             )}
                                             <div style={{ fontSize: '11px', color: C.text, marginBottom: '3px' }}>Usage rights: <strong>{opp.usageRights || `${opp.revisionLimit * 30} days`}</strong></div>
                                             <div style={{ fontSize: '11px', color: C.text, marginBottom: '3px' }}>Exclusivity: <strong>{opp.exclusivity || 'None'}</strong></div>
@@ -3765,7 +4067,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           {activeDeal?.poc && (
                                             <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
                                               <div style={{ fontSize: '9px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Point of Contact</div>
-                                              <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{activeDeal.poc.name}</div>
+                                              <div
+                                                onMouseEnter={(e) => showHoverCard(buildBrandHover(opp?.brand || profileName), e)}
+                                                onMouseMove={updateHoverPosition}
+                                                onMouseLeave={hideHoverCard}
+                                                style={{ fontSize: '12px', fontWeight: 600, color: C.text, cursor: 'pointer' }}>{activeDeal.poc.name}</div>
                                               <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
                                               <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
                                             </div>
@@ -3926,15 +4232,59 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             </>
                                           )}
 
-                                          {dealRoomPhase === 'softhold' && activeDeal && (
-                                            <DeliverablesView
-                                              dealId={activeDealKey || ''}
-                                              deliverables={[
-                                                { id: 'del_0', name: 'Main Reel', description: 'Promotional video', deadline: new Date(Date.now() + 14*24*60*60*1000).toISOString(), status: 'pending', revisions_remaining: 3 },
-                                                { id: 'del_1', name: 'Carousel Post', description: 'Multi-slide carousel (5-10 slides)', deadline: new Date(Date.now() + 14*24*60*60*1000).toISOString(), status: 'pending', revisions_remaining: 3 },
-                                              ]}
-                                            />
+                                          {/* Brand approves deliverables — shown when creator has submitted */}
+                                          {creatorDealLifecycle === 'submitted' && brandApprovalPhase === 'reviewing' && (
+                                            <div style={{ background: C.card, border: `1px solid ${C.success}`, borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
+                                              <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>Deliverables Ready for Review</div>
+                                              <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '10px', lineHeight: 1.5 }}>
+                                                The creator has submitted their deliverables. Review and approve to complete the deal and release the approval milestone.
+                                              </div>
+                                              {activeDeal?.deliverableLinks && Object.entries(activeDeal.deliverableLinks).map(([key, url]) => (
+                                                <div key={key} style={{ fontSize: '11px', marginBottom: '4px' }}>
+                                                  <span style={{ color: C.textMuted }}>{key === '0' ? 'Google Drive' : 'Social Media'}: </span>
+                                                  <a href={url as string} target="_blank" rel="noopener noreferrer" style={{ color: C.primary }}>{(url as string).slice(0, 40)}...</a>
+                                                </div>
+                                              ))}
+                                              <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                                                <button onClick={() => {
+                                                  const earnedAmount = parseInt(dealCounterAmount || dealOfferAmount || '5000');
+                                                  const brandName = opp?.brand || profileName;
+                                                  const updatedMetrics = {
+                                                    ...metrics,
+                                                    dealsCompleted: metrics.dealsCompleted + 1,
+                                                    avgDealValue: Math.round((metrics.avgDealValue * metrics.dealsCompleted + earnedAmount * 100) / (metrics.dealsCompleted + 1)),
+                                                  };
+                                                  setMetrics(updatedMetrics);
+                                                  setCompletedDeals(prev => [...prev, { id: Date.now(), brand: brandName, amount: earnedAmount, completedAt: new Date().toLocaleDateString(), deliverable: 'content', usageRightsDays: undefined, exclusivityDays: undefined, exclusivitySkin: undefined }]);
+                                                  const prevLevel = getLevel(metrics.dealsCompleted);
+                                                  const newLevel = getLevel(updatedMetrics.dealsCompleted);
+                                                  if (newLevel > prevLevel && marketplaceRole === 'creator') {
+                                                    setLevelUpFrom(prevLevel);
+                                                    setLevelUpTo(newLevel);
+                                                    setShowLevelUpModal(true);
+                                                  }
+                                                  setCreatorDealLifecycle('approved');
+                                                  setBrandApprovalPhase('approved');
+                                                  setPaymentMilestones(prev => ({ ...prev, approval: 'released' }));
+                                                  if (activeDealKey) {
+                                                    updateDeal(activeDealKey, {
+                                                      creatorDealLifecycle: 'approved',
+                                                      brandApprovalPhase: 'approved',
+                                                      paymentMilestones: { advance: 'released', approval: 'released' },
+                                                    });
+                                                  }
+                                                  if (marketplaceRole !== 'creator') {
+                                                    setPurchaseToast(`Deal completed — earnings released to ${brandName}`);
+                                                    setTimeout(() => setPurchaseToast(null), 3000);
+                                                  }
+                                                }} style={{ flex: 1, background: C.success, border: 'none', padding: '10px', borderRadius: '8px', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '12px' }}>
+                                                  Approve & Complete Deal
+                                                </button>
+                                              </div>
+                                            </div>
                                           )}
+
+                                          {/* DeliverablesView removed — main deliverables section is shown in content area */}
 
                                           {dealRoomPhase === 'checklist' && activeDeal && (
                                             <InvoiceView
@@ -3949,8 +4299,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             />
                                           )}
 
-                                          {/* Counter-offer — hidden once formal offer sent */}
-                                          {!activeDeal?.formalOfferSentByCreator && <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
+                                          {/* Counter-offer — hidden once deal is past negotiation */}
+                                          {dealRoomPhase !== 'accepted' && dealRoomPhase !== 'softhold' && dealRoomPhase !== 'checklist' && !activeDeal?.formalOfferSentByCreator && <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
                                             <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Your Counter</div>
                                             <div style={{ fontSize: '10px', color: C.textSecondary, marginBottom: '4px' }}>
                                               Brand offer: <strong style={{ color: C.text }}>${parseInt(dealOfferAmount || opp.budget.replace(/[^0-9]/g, '') || '0').toLocaleString()}</strong>
@@ -3991,45 +4341,30 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             </button>
                                           </div>}
 
-                                          {/* Payment split — only editable during negotiation */}
+                                          {!['deliverables','submitted','approved'].includes(creatorDealLifecycle) && dealRoomPhase !== 'accepted' && dealRoomPhase !== 'softhold' && dealRoomPhase !== 'checklist' && (
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
                                             <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Payment Plan</div>
-                                            {!['deliverables','submitted','approved'].includes(creatorDealLifecycle) ? (
-                                              <>
-                                                {[
-                                                  { label: 'Advance', value: advancePercent, color: C.success, key: 'advance' as const },
-                                                  { label: 'On approval', value: approvalPercent, color: C.warning, key: 'approval' as const },
-                                                ].map(s => (
-                                                  <div key={s.key} style={{ marginBottom: '6px' }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '2px' }}>
-                                                      <span style={{ color: s.color, fontWeight: 600 }}>{s.label}</span>
-                                                      <span style={{ color: C.text, fontWeight: 700 }}>{s.value}%</span>
-                                                    </div>
-                                                    <input type="range" min={0} max={100} step={5} value={s.value} onChange={e => {
-                                                      const newVal = parseInt(e.target.value);
-                                                      if (s.key === 'advance') {
-                                                        setPaymentSplit(newVal, 100 - newVal);
-                                                      } else {
-                                                        setPaymentSplit(100 - newVal, newVal);
-                                                      }
-                                                    }} style={{ width: '100%', height: '4px', accentColor: s.color }} />
-                                                  </div>
-                                                ))}
-                                              </>
-                                            ) : (
-                                              <div style={{ fontSize:'11px', color: C.textSecondary, lineHeight: 1.6 }}>
-                                                {[
-                                                  { label: 'Advance', pct: advancePercent, color: C.success },
-                                                  { label: 'On approval', pct: approvalPercent, color: C.warning },
-                                                ].map(s => (
-                                                  <div key={s.label} style={{ display:'flex', justifyContent:'space-between', padding:'2px 0' }}>
-                                                    <span style={{ color: s.color, fontWeight:600 }}>{s.label}</span>
-                                                    <span style={{ color:C.text, fontWeight:700 }}>{s.pct}%</span>
-                                                  </div>
-                                                ))}
+                                            {[
+                                              { label: 'Advance', value: advancePercent, color: C.success, key: 'advance' as const },
+                                              { label: 'On approval', value: approvalPercent, color: C.warning, key: 'approval' as const },
+                                            ].map(s => (
+                                              <div key={s.key} style={{ marginBottom: '6px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '2px' }}>
+                                                  <span style={{ color: s.color, fontWeight: 600 }}>{s.label}</span>
+                                                  <span style={{ color: C.text, fontWeight: 700 }}>{s.value}%</span>
+                                                </div>
+                                                <input type="range" min={0} max={100} step={5} value={s.value} onChange={e => {
+                                                  const newVal = parseInt(e.target.value);
+                                                  if (s.key === 'advance') {
+                                                    setPaymentSplit(newVal, 100 - newVal);
+                                                  } else {
+                                                    setPaymentSplit(100 - newVal, newVal);
+                                                  }
+                                                }} style={{ width: '100%', height: '4px', accentColor: s.color }} />
                                               </div>
-                                            )}
+                                            ))}
                                           </div>
+                                          )}
 
                                           {/* Brand submits formal offer — hidden once submitted */}
                                           {!activeDeal?.formalOfferSentByCreator && (
@@ -4250,22 +4585,22 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                                         // Deliverables phase (when escrowFunded && lifecycle==='deliverables')
                                         if (creatorDealLifecycle === 'deliverables') {
-                                          const oppDeliverables = opp.deliverables?.length ? opp.deliverables : [{ format: 'Video Content', count: 1 }];
-                                          // Expand deliverables into individual slots: [{format:'Reel',count:2}] → [{format:'Reel',label:'Reel 1 of 2'},{format:'Reel',label:'Reel 2 of 2'}]
-                                          const expandedSlots: { format: string; label: string }[] = oppDeliverables.flatMap((d: {format:string;count:number}) =>
-                                            d.count === 1
-                                              ? [{ format: d.format, label: d.format }]
-                                              : Array.from({ length: d.count }, (_, i) => ({ format: d.format, label: `${d.format} (${i + 1} of ${d.count})` }))
-                                          );
-                                          const totalSlots = expandedSlots.length;
                                           const deadlineStr = opp.deadline ? new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
                                           const daysLeft = opp.deadline ? Math.ceil((new Date(opp.deadline).getTime() - Date.now()) / 86400000) : null;
-                                          const allUploaded = totalSlots > 0 && Array.from({ length: totalSlots }, (_, i) => i).every(i => deliverableStatuses[i] === 'uploaded' || deliverableStatuses[i] === 'approved');
+                                          const hasGoogleDriveLink = !!deliverableLinks[0];
+                                          const hasSocialLink = !!deliverableLinks[1];
+                                          const googleDriveVal = deliverableLinkInputs[0] || '';
+                                          const socialLinkVal = deliverableLinkInputs[1] || '';
+                                          const isValidUrl = (u: string) => u.startsWith('http://') || u.startsWith('https://');
+                                          const atLeastOneSubmitted = hasGoogleDriveLink || hasSocialLink;
                                           return (
                                             <>
-                                              <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>Submit Deliverable Links</div>
+                                              <div style={{ fontSize:'13px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'6px' }}>Submit Deliverable Links</div>
+                                              <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'12px', lineHeight:1.5 }}>
+                                                Provide a link to your work. Use a <strong>Google Drive link</strong> for the draft/sample, or paste a <strong>social media upload link</strong> for the final published content.
+                                              </div>
                                               {deadlineStr && (
-                                                <div style={{ background: daysLeft !== null && daysLeft <= 3 ? 'rgba(239,68,68,0.08)' : C.bg, border: `1px solid ${daysLeft !== null && daysLeft <= 3 ? 'rgba(239,68,68,0.3)' : C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'10px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                                                <div style={{ background: daysLeft !== null && daysLeft <= 3 ? 'rgba(239,68,68,0.08)' : C.bg, border: `1px solid ${daysLeft !== null && daysLeft <= 3 ? 'rgba(239,68,68,0.3)' : C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'12px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                                                   <div>
                                                     <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px' }}>Deadline</div>
                                                     <div style={{ fontSize:'13px', fontWeight:600, color:C.text }}>{deadlineStr}</div>
@@ -4277,103 +4612,47 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   )}
                                                 </div>
                                               )}
-                                              <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'10px' }}>
+                                              <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'6px' }}>Rights & Exclusivity</div>
                                                 <div style={{ fontSize:'11px', color:C.text, marginBottom:'3px' }}>Usage rights: <strong>{opp.usageRights || `${opp.revisionLimit * 30} days`}</strong></div>
                                                 <div style={{ fontSize:'11px', color:C.text, marginBottom:'3px' }}>Exclusivity: <strong>{opp.exclusivity || 'None'}</strong></div>
                                                 <div style={{ fontSize:'11px', color:C.text }}>Revision limit: <strong>{opp.revisionLimit} round{opp.revisionLimit !== 1 ? 's' : ''}</strong></div>
                                               </div>
-                                              <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'10px' }}>
-                                                <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>Deliverables ({totalSlots} item{totalSlots !== 1 ? 's' : ''})</div>
-                                                {expandedSlots.map((d, di) => {
-                                                  const status = deliverableStatuses[di] || 'pending';
-                                                  const link = deliverableLinks[di] || '';
-                                                  const inputVal = deliverableLinkInputs[di] || '';
-                                                  const isValidContentUrl = (u: string) => u.startsWith('http://') || u.startsWith('https://');
-                                                  const postId = link.match(/([^\/]+)\/?$/)?.[1];
-                                                  return (
-                                                    <div key={di} style={{ borderRadius:'8px', marginBottom:'8px', border:`1px solid ${status === 'approved' ? 'rgba(0,212,106,0.25)' : status === 'uploaded' ? 'rgba(0,149,246,0.25)' : C.border}`, overflow:'hidden' }}>
-                                                      <div style={{ display:'flex', alignItems:'center', gap:'8px', padding:'8px 10px', background: status === 'uploaded' ? 'rgba(0,149,246,0.04)' : status === 'approved' ? 'rgba(0,212,106,0.04)' : 'transparent' }}>
-                                                        <div style={{ width:'20px', height:'20px', borderRadius:'5px', background: status === 'approved' ? C.success : status === 'uploaded' ? C.primary : C.border, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                                                          {status !== 'pending' && status !== 'linking' ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg> : <span style={{ fontSize:'10px', color:'#fff', fontWeight:700 }}>{di + 1}</span>}
-                                                        </div>
-                                                        <div style={{ flex:1 }}>
-                                                          <div style={{ fontSize:'12px', fontWeight:600, color:C.text }}>{d.label}</div>
-                                                          <div style={{ fontSize:'10px', color: status === 'approved' ? C.success : status === 'uploaded' ? C.primary : C.textMuted }}>
-                                                            {status === 'approved' ? 'Approved by brand' : status === 'uploaded' ? 'Submitted — awaiting review' : status === 'linking' ? 'Enter your content link below' : 'Not yet submitted'}
-                                                          </div>
-                                                        </div>
-                                                        {status === 'pending' && (
-                                                          <button onClick={() => setDeliverableStatuses(prev => ({ ...prev, [di]: 'linking' }))} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'4px 10px', color:'#fff', fontSize:'10px', fontWeight:600, cursor:'pointer', flexShrink:0 }}>Submit link</button>
-                                                        )}
-                                                        {status === 'linking' && (
-                                                          <button onClick={() => setDeliverableStatuses(prev => ({ ...prev, [di]: 'pending' }))} style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'3px 8px', color:C.textMuted, fontSize:'10px', cursor:'pointer', flexShrink:0 }}>Cancel</button>
-                                                        )}
-                                                      </div>
-                                                      {status === 'linking' && (
-                                                        <div style={{ padding:'10px', borderTop:`1px solid ${C.border}`, background:C.bg }}>
-                                                          <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Paste the link to your published content</div>
-                                                          <div style={{ display:'flex', gap:'6px' }}>
-                                                            <input
-                                                              type="text"
-                                                              value={inputVal}
-                                                              onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, [di]: e.target.value }))}
-                                                               placeholder="https://your-portfolio-link.com/..."
-                                                              style={{ flex:1, background:C.surfaceAlt, border:`1px solid ${isValidContentUrl(inputVal) ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'11px', fontFamily:'inherit', outline:'none' }}
-                                                            />
-                                                            <button
-                                                              disabled={!isValidContentUrl(inputVal)}
-                                                              onClick={() => {
-                                                                const isDuplicate = Object.values(deliverableLinks).some((existingLink, idx) => existingLink === inputVal && idx !== di);
-                                                                if (isDuplicate) {
-                                                                  alert('This link has already been submitted for another deliverable. Please use a different post.');
-                                                                  return;
-                                                                }
-                                                                setDeliverableLinks(prev => ({ ...prev, [di]: inputVal }));
-                                                                setDeliverableStatuses(prev => ({ ...prev, [di]: 'uploaded' }));
-                                                                setDeliverableLinkInputs(prev => ({ ...prev, [di]: '' }));
-                                                                const newUploadItem: UploadedItem = {
-                                                                  id: Date.now().toString() + Math.random(),
-                                                                  brand: opp.brand || 'Unknown',
-                                                                  dealId: activeDealKey || '',
-                                                                  format: d.format,
-                                                                  link: inputVal,
-                                                                  uploadedAt: new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'2-digit' })
-                                                                };
-                                                                setUploadedItems(prev => [...prev, newUploadItem]);
-                                                              }}
-                                                              style={{ background: isValidContentUrl(inputVal) ? C.success : C.border, border:'none', borderRadius:'6px', padding:'7px 12px', color:'#fff', fontSize:'11px', fontWeight:700, cursor: isValidContentUrl(inputVal) ? 'pointer' : 'not-allowed', opacity: isValidContentUrl(inputVal) ? 1 : 0.5, flexShrink:0 }}
-                                                            >Confirm</button>
-                                                          </div>
-                                                          {inputVal && !isValidContentUrl(inputVal) && (
-                                                             <div style={{ fontSize:'10px', color:'#ef4444', marginTop:'4px' }}>Must start with https://</div>
-                                                          )}
-                                                        </div>
-                                                      )}
-                                                      {(status === 'uploaded' || status === 'approved') && link && (
-                                                        <div style={{ padding:'10px', borderTop:`1px solid ${C.border}`, background:C.bg, display:'flex', gap:'10px', alignItems:'flex-start' }}>
-                                                          <div style={{ width:52, height:52, borderRadius:'6px', background:C.surfaceAlt, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
-                                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6m-3-3v6"/></svg>
-                                                          </div>
-                                                          <div style={{ flex:1, minWidth:0 }}>
-                                                            <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, marginBottom:'2px', textTransform:'uppercase', letterSpacing:'0.4px' }}>{d.format}</div>
-                                                             <a href={link} target="_blank" rel="noopener noreferrer" style={{ fontSize:'10px', color:C.primary, textDecoration:'none', display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{link}</a>
-                                                            <div style={{ fontSize:'9px', color:C.textMuted, marginTop:'3px' }}>Submitted {new Date().toLocaleDateString('en-US', { month:'short', day:'numeric' })}</div>
-                                                          </div>
-                                                          {status === 'approved' && (
-                                                            <div style={{ fontSize:'9px', fontWeight:700, color:C.success, background:'rgba(0,212,106,0.1)', padding:'2px 7px', borderRadius:'6px', flexShrink:0 }}>Approved</div>
-                                                          )}
-                                                        </div>
-                                                      )}
+                                              <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'16px', marginBottom:'12px' }}>
+                                                <div style={{ marginBottom:'14px' }}>
+                                                  <div style={{ fontSize:'11px', fontWeight:600, color:C.text, marginBottom:'6px' }}>Google Drive link (sample / draft)</div>
+                                                  {hasGoogleDriveLink ? (
+                                                    <div style={{ display:'flex', alignItems:'center', gap:'8px', padding:'8px 10px', background:C.surfaceAlt, borderRadius:'6px' }}>
+                                                      <a href={deliverableLinks[0]} target="_blank" rel="noopener noreferrer" style={{ flex:1, fontSize:'11px', color:C.primary, textDecoration:'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{deliverableLinks[0]}</a>
+                                                      <div style={{ fontSize:'9px', fontWeight:700, color:C.success, background:'rgba(0,212,106,0.1)', padding:'2px 7px', borderRadius:'6px', flexShrink:0 }}>Submitted</div>
                                                     </div>
-                                                  );
-                                                })}
+                                                  ) : (
+                                                    <div style={{ display:'flex', gap:'6px' }}>
+                                                      <input type="text" value={googleDriveVal} onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, [0]: e.target.value }))} placeholder="https://drive.google.com/..." style={{ flex:1, background:C.surfaceAlt, border:`1px solid ${isValidUrl(googleDriveVal) ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'11px', fontFamily:'inherit', outline:'none' }} />
+                                                      <button disabled={!isValidUrl(googleDriveVal)} onClick={() => { setDeliverableLinks(prev => ({ ...prev, [0]: googleDriveVal })); setDeliverableLinkInputs(prev => ({ ...prev, [0]: '' })); setDeliverableStatuses(prev => ({ ...prev, [0]: 'uploaded' })); }} style={{ background: isValidUrl(googleDriveVal) ? C.success : C.border, border:'none', borderRadius:'6px', padding:'7px 12px', color:'#fff', fontSize:'11px', fontWeight:700, cursor: isValidUrl(googleDriveVal) ? 'pointer' : 'not-allowed', opacity: isValidUrl(googleDriveVal) ? 1 : 0.5, flexShrink:0 }}>Confirm</button>
+                                                    </div>
+                                                  )}
+                                                </div>
+                                                <div>
+                                                  <div style={{ fontSize:'11px', fontWeight:600, color:C.text, marginBottom:'6px' }}>Social media upload link (final)</div>
+                                                  {hasSocialLink ? (
+                                                    <div style={{ display:'flex', alignItems:'center', gap:'8px', padding:'8px 10px', background:C.surfaceAlt, borderRadius:'6px' }}>
+                                                      <a href={deliverableLinks[1]} target="_blank" rel="noopener noreferrer" style={{ flex:1, fontSize:'11px', color:C.primary, textDecoration:'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{deliverableLinks[1]}</a>
+                                                      <div style={{ fontSize:'9px', fontWeight:700, color:C.success, background:'rgba(0,212,106,0.1)', padding:'2px 7px', borderRadius:'6px', flexShrink:0 }}>Submitted</div>
+                                                    </div>
+                                                  ) : (
+                                                    <div style={{ display:'flex', gap:'6px' }}>
+                                                      <input type="text" value={socialLinkVal} onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, [1]: e.target.value }))} placeholder="https://instagram.com/..." style={{ flex:1, background:C.surfaceAlt, border:`1px solid ${isValidUrl(socialLinkVal) ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'11px', fontFamily:'inherit', outline:'none' }} />
+                                                      <button disabled={!isValidUrl(socialLinkVal)} onClick={() => { setDeliverableLinks(prev => ({ ...prev, [1]: socialLinkVal })); setDeliverableLinkInputs(prev => ({ ...prev, [1]: '' })); setDeliverableStatuses(prev => ({ ...prev, [1]: 'uploaded' })); }} style={{ background: isValidUrl(socialLinkVal) ? C.success : C.border, border:'none', borderRadius:'6px', padding:'7px 12px', color:'#fff', fontSize:'11px', fontWeight:700, cursor: isValidUrl(socialLinkVal) ? 'pointer' : 'not-allowed', opacity: isValidUrl(socialLinkVal) ? 1 : 0.5, flexShrink:0 }}>Confirm</button>
+                                                    </div>
+                                                  )}
+                                                </div>
                                               </div>
                                               <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'10px' }}>
                                                 <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>Payment Milestones</div>
                                                 {[
-                                                  { key: 'advance' as const, label: 'Advance', pct: advPct, color: C.success },
-                                                  { key: 'approval' as const, label: 'On approval', pct: approvalPct, color: '#f59e0b' },
+                                                  { key: 'advance' as const, label: 'Advance', pct: advancePercent, color: C.success },
+                                                  { key: 'approval' as const, label: 'On approval', pct: approvalPercent, color: '#f59e0b' },
                                                 ].map(m => (
                                                   <div key={m.key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 0', borderBottom:`1px solid ${C.border}` }}>
                                                     <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
@@ -4390,7 +4669,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               <div style={{ background:'rgba(46,125,50,0.06)', border:'1px solid rgba(46,125,50,0.2)', borderRadius:'8px', padding:'10px', marginBottom:'12px', fontSize:'11px', color:C.textSecondary }}>
                                                 Brand payment on-hold: ${agreedPrice.toLocaleString()} — released per milestones above
                                               </div>
-                                              {allUploaded && !submittedForReview && activeDeal?.creatorDealLifecycle !== 'submitted' && activeDeal?.creatorDealLifecycle !== 'approved' && (
+                                              {atLeastOneSubmitted && !submittedForReview && activeDeal?.creatorDealLifecycle !== 'submitted' && activeDeal?.creatorDealLifecycle !== 'approved' && (
                                                 <button onClick={() => {
                                                   setSubmittedForReview(true);
                                                   const agreedAmt = parseInt(dealCounterAmount || '5000');
@@ -4412,7 +4691,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   Submit for Review
                                                 </button>
                                               )}
-                                              {allUploaded && (submittedForReview || activeDeal?.creatorDealLifecycle === 'submitted') && activeDeal?.creatorDealLifecycle !== 'approved' && (
+                                              {atLeastOneSubmitted && (submittedForReview || activeDeal?.creatorDealLifecycle === 'submitted') && activeDeal?.creatorDealLifecycle !== 'approved' && (
                                                 <div style={{ width:'100%', padding:'10px', background:'rgba(0,149,246,0.08)', border:`1px solid rgba(0,149,246,0.25)`, borderRadius:'8px', color:C.primary, fontWeight:600, fontSize:'13px', textAlign:'center', marginBottom:'8px' }}>
                                                   ⏳ Waiting for brand&apos;s approval
                                                 </div>
@@ -4424,22 +4703,49 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           );
                                         }
 
-                                        // Submitted phase (when lifecycle==='submitted')
-                                        if (creatorDealLifecycle === 'submitted') {
-                                          return (
-                                            <>
-                                              <div style={{ background:'rgba(0,102,204,0.06)', border:`1px solid rgba(0,102,204,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
-                                                <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Deliverables Submitted</div>
-                                                <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Waiting for brand approval — typically within 48h.</div>
-                                                <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'2px' }}>Advance: <span style={{ color:C.success, fontWeight:600 }}>Paid</span></div>
-                                                <div style={{ fontSize:'10px', color:C.textMuted }}>Approval milestone: <span style={{ color:'#f59e0b', fontWeight:600 }}>Pending brand approval</span></div>
-                                              </div>
-                                              <div style={{ textAlign:'center', padding:'8px', fontSize:'11px', color:C.textMuted }}>
-                                                Brand will review and approve from their deal room
-                                              </div>
-                                            </>
-                                          );
-                                        }
+                                          // Submitted phase (when lifecycle==='submitted')
+                                          if (creatorDealLifecycle === 'submitted') {
+                                            return (
+                                              <>
+                                                <div style={{ background:'rgba(0,102,204,0.06)', border:`1px solid rgba(0,102,204,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
+                                                  <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Deliverables Submitted</div>
+                                                  <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Waiting for brand approval — typically within 48h.</div>
+                                                  <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'2px' }}>Advance: <span style={{ color:C.success, fontWeight:600 }}>Paid</span></div>
+                                                  <div style={{ fontSize:'10px', color:C.textMuted }}>Approval milestone: <span style={{ color:'#f59e0b', fontWeight:600 }}>Pending brand approval</span></div>
+                                                </div>
+                                                <button onClick={() => {
+                                                  const earnedAmount = parseInt(dealCounterAmount || dealOfferAmount || '5000');
+                                                  const brandName = opp?.brand || profileName;
+                                                  const updatedMetrics = {
+                                                    ...metrics,
+                                                    dealsCompleted: metrics.dealsCompleted + 1,
+                                                    avgDealValue: Math.round((metrics.avgDealValue * metrics.dealsCompleted + earnedAmount * 100) / (metrics.dealsCompleted + 1)),
+                                                  };
+                                                  setMetrics(updatedMetrics);
+                                                  setCompletedDeals(prev => [...prev, { id: Date.now(), brand: brandName, amount: earnedAmount, completedAt: new Date().toLocaleDateString(), deliverable: 'content' }]);
+                                                  const prevLevel = getLevel(metrics.dealsCompleted);
+                                                  const newLevel = getLevel(updatedMetrics.dealsCompleted);
+                                                  if (newLevel > prevLevel) {
+                                                    setLevelUpFrom(prevLevel);
+                                                    setLevelUpTo(newLevel);
+                                                    setShowLevelUpModal(true);
+                                                  }
+                                                  setCreatorDealLifecycle('approved');
+                                                  setBrandApprovalPhase('approved');
+                                                  setPaymentMilestones(prev => ({ ...prev, approval: 'released' }));
+                                                  if (activeDealKey) {
+                                                    updateDeal(activeDealKey, {
+                                                      creatorDealLifecycle: 'approved',
+                                                      brandApprovalPhase: 'approved',
+                                                      paymentMilestones: { advance: 'released', approval: 'released' },
+                                                    });
+                                                  }
+                                                }} style={{ width:'100%', background:C.success, border:'none', padding:'10px', borderRadius:'8px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'12px', marginBottom:'8px' }}>
+                                                  Complete Deal & Update Level
+                                                </button>
+                                              </>
+                                            );
+                                          }
 
                                         // Approved phase (when lifecycle==='approved')
                                         if (creatorDealLifecycle === 'approved') {
@@ -4710,7 +5016,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                       <div style={{ fontSize: '9px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Point of Contact</div>
                                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                         <div>
-                                          <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{activeDeal.poc.name}</div>
+                                          <div
+                                            onMouseEnter={(e) => {
+                                              const brandName = (opp as any)?.brand || activeDeal?.poc?.name || profileName;
+                                              showHoverCard(buildBrandHover(brandName), e);
+                                            }}
+                                            onMouseMove={updateHoverPosition}
+                                            onMouseLeave={hideHoverCard}
+                                            style={{ fontSize: '12px', fontWeight: 600, color: C.text, cursor: 'pointer' }}>{activeDeal.poc.name}</div>
                                           <div style={{ fontSize: '11px', color: C.primary, marginTop: '1px' }}>{activeDeal.poc.workEmail}</div>
                                           {activeDeal.poc.role && <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '1px' }}>{activeDeal.poc.role}</div>}
                                         </div>
@@ -4770,7 +5083,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                           Create Campaign
                         </button>
-                        <button onClick={() => { setMarketplaceRole('none'); setNegotiatingCreator(null); }} style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '8px 12px', fontSize: '13px', color: C.textSecondary, cursor: 'pointer', fontWeight: 600 }}>Switch</button>
                       </div>
                     </div>
                     {/* Only show discovery search if a campaign exists */}
@@ -4982,6 +5294,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Application deadline</div>
                             <input type="date" value={newCampaignDeadline} onChange={e=>setNewCampaignDeadline(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
                           </div>
+                          <div style={{ marginBottom:'16px' }}>
+                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Delivery deadline</div>
+                            <input type="date" value={newCampaignDeliveryDeadline} onChange={e=>setNewCampaignDeliveryDeadline(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
+                          </div>
 
                           {/* Point of Contact */}
                           <div style={{ marginBottom:'16px' }}>
@@ -5005,7 +5321,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               if (missing.length > 0) { setPurchaseToast(`Missing: ${missing.join(', ')}`); setTimeout(()=>setPurchaseToast(null),4000); return; }
                               const escrowPool = parseInt(newCampaignBudget||'0') * newCampaignCreatorCount;
                               const newC: Campaign = {
-                                id:Date.now(), brandName:profileName, brandProfession:newCampaignSelectedProfession, title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[newCampaignSelectedProfession], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, location:newCampaignLocation, country:brandCountry, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, contentReview:newCampaignContentReview, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0,
+                                id:Date.now(), brandName:profileName, brandProfession:newCampaignSelectedProfession, title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[newCampaignSelectedProfession], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, deliveryDeadline:newCampaignDeliveryDeadline, location:newCampaignLocation, country:brandCountry, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, contentReview:newCampaignContentReview, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0,
                                 poc: newCampaignPocName.trim() ? {
                                   name: newCampaignPocName.trim(),
                                   workEmail: newCampaignPocEmail.trim(),
@@ -5042,7 +5358,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               setShowEscrowFundingModal(true);
                               setEscrowFundingInProgress2(false);
                               setBatchSendCreatorIds(new Set());
-                              setNewCampaignTitle(''); setNewCampaignDesc(''); setNewCampaignAbout(''); setNewCampaignBudget(''); setNewCampaignDeadline(''); setNewCampaignProfessions([]); setNewCampaignSelectedProfession(''); setNewCampaignMinLevel(1); setNewCampaignMaxLevel(5); setNewCampaignLocation(''); setNewCampaignDeliverables(''); setNewCampaignNonNeg([]); setNewCampaignCompensation('Paid'); setNewCampaignExclusivity('None'); setNewCampaignUsageRights('30 days, social only'); setNewCampaignAudienceTarget(''); setNewCampaignRequirements([]); setNewCampaignReqInput(''); setNewCampaignCreatorCount(1); setNewCampaignPocName(''); setNewCampaignPocEmail(''); setNewCampaignPocPhone(''); setNewCampaignPocRole(''); setNewCampaignScriptMode('creator_freedom'); setNewCampaignScriptText('');
+                              setNewCampaignTitle(''); setNewCampaignDesc(''); setNewCampaignAbout(''); setNewCampaignBudget(''); setNewCampaignDeadline(''); setNewCampaignDeliveryDeadline(''); setNewCampaignProfessions([]); setNewCampaignSelectedProfession(''); setNewCampaignMinLevel(1); setNewCampaignMaxLevel(5); setNewCampaignLocation(''); setNewCampaignDeliverables(''); setNewCampaignNonNeg([]); setNewCampaignCompensation('Paid'); setNewCampaignExclusivity('None'); setNewCampaignUsageRights('30 days, social only'); setNewCampaignAudienceTarget(''); setNewCampaignRequirements([]); setNewCampaignReqInput(''); setNewCampaignCreatorCount(1); setNewCampaignPocName(''); setNewCampaignPocEmail(''); setNewCampaignPocPhone(''); setNewCampaignPocRole(''); setNewCampaignScriptMode('creator_freedom'); setNewCampaignScriptText('');
                             }}
                             style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'14px', cursor:'pointer' }}
                           >
@@ -5123,6 +5439,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               setEscrowFundingInProgress2(true);
                               setTimeout(() => {
                                 persistCampaigns(campaigns.map(c => c.id === pendingCampaignForEscrow.id ? { ...c, escrowFunded: true } : c));
+                                recordFakeBankTransaction({
+                                  type: 'escrow',
+                                  description: `Campaign escrow deposit: ${pendingCampaignForEscrow.title}`,
+                                  amount: (pendingCampaignForEscrow.escrowPool || 0) * 100,
+                                  reference: `escrow_${pendingCampaignForEscrow.id}_${Date.now()}`,
+                                });
 
                                 // AUTO-MATCH: Use continuously computed matches
                                 const liveMatches = campaignMatches.get(pendingCampaignForEscrow.id) || [];
@@ -5197,10 +5519,18 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     <input type="checkbox" checked={batchSendCreatorIds.has(idx)} onChange={() => {}} style={{ cursor:'pointer', width:'18px', height:'18px', accentColor:C.primary, marginTop:'2px', flexShrink:0 }} />
                                     <div style={{ flex:1 }}>
                                       <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px' }}>
-                                        <div style={{ fontSize:'13px', fontWeight:600, color:C.text }}>{match.creatorName}</div>
+                                        <div
+                                          onMouseEnter={(e) => showHoverCard(buildCreatorHover(match.creatorName, match.creatorProfession), e)}
+                                          onMouseMove={updateHoverPosition}
+                                          onMouseLeave={hideHoverCard}
+                                          style={{ fontSize:'13px', fontWeight:600, color:C.text, cursor:'pointer' }}>{match.creatorName}</div>
                                         <div style={{ fontSize:'12px', fontWeight:700, background:`${C.primary}15`, color:C.primary, padding:'2px 8px', borderRadius:'4px' }}>{match.matchScore}%</div>
                                       </div>
-                                      <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'6px' }}>{match.creatorProfession} · {match.creatorName}</div>
+                                      <div
+                                        onMouseEnter={(e) => showHoverCard(buildCreatorHover(match.creatorName, match.creatorProfession), e)}
+                                        onMouseMove={updateHoverPosition}
+                                        onMouseLeave={hideHoverCard}
+                                        style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'6px', cursor:'pointer' }}>{match.creatorProfession} · {match.creatorName}</div>
                                       <div style={{ display:'flex', flexWrap:'wrap', gap:'6px' }}>
                                         {match.reasons.map((reason, i) => (
                                           <div key={i} style={{ fontSize:'10px', background:C.card, color:C.textMuted, padding:'3px 8px', borderRadius:'4px' }}>{reason}</div>
@@ -5401,11 +5731,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               );
                             })}
                           </div>
-                          {activeBrandSkin && (
-                            <div style={{ fontSize:'11px', color:C.textSecondary, lineHeight:1.4 }}>
-                              Campaigns and proposals you create will be under <strong style={{ color:C.text }}>{activeBrandSkin}</strong>. Creators with this ValueSkin will see you as a match.
-                            </div>
-                          )}
                         </div>
                       ) : (
                         <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:'12px', padding:'14px 16px', marginBottom:'14px' }}>
@@ -5418,1536 +5743,33 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       )
                     )}
 
-                    {marketplaceTab === 'creators' && (<>
-                    {campaigns.length === 0 ? (
-                      <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:'12px', padding:'22px 18px', marginBottom:'16px', textAlign:'center' }}>
-                        <div style={{ fontSize:'16px', fontWeight:700, color:C.text, marginBottom:'6px' }}>Create a campaign first</div>
-                        <div style={{ fontSize:'12px', color:C.textSecondary, lineHeight:1.5, marginBottom:'14px' }}>
-                          Creator suggestions unlock after you publish your first campaign brief. Once the niche and requirements are set, matching creators will appear here.
-                        </div>
-                        <button onClick={() => setMarketplaceTab('campaigns')} style={{ background:C.primary, border:'none', borderRadius:'8px', padding:'10px 14px', color:'#fff', fontWeight:700, fontSize:'12px', cursor:'pointer' }}>
-                          Go to Campaigns
-                        </button>
-                      </div>
-                    ) : (<>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-                        {activeBrandSkin ? `${activeBrandSkin} Creators` : 'Select a ValueSkin above'}
-                      </div>
-                      <button
-                        onClick={() => setFilterBarterOnly(prev => !prev)}
-                        style={{
-                          fontSize: '11px', fontWeight: 600,
-                          color: filterBarterOnly ? C.textSecondary : C.textSecondary,
-                          background: filterBarterOnly ? 'rgba(16,185,129,0.1)' : 'transparent',
-                          border: `1px solid ${filterBarterOnly ? C.textSecondary : C.border}`,
-                          padding: '4px 10px', borderRadius: '6px', cursor: 'pointer',
-                        }}
-                      >
-                        {filterBarterOnly ? 'Barter Only' : 'Show All'}
-                      </button>
-                    </div>
+                    {/* Brand Past Deals — computed from dealStates */}
                     {(() => {
-                      const q = brandSearchQuery.trim().toLowerCase();
-                      // Show creators with valueSkin matching the active brand skin
-                      // Preserve original index (_origIdx) so deal room lookup works after filtering
-                      const creatorsForSkin = backendCreators.length > 0 ? backendCreators : [];
-                      let results = creatorsForSkin.filter(c =>
-                        (!filterBarterOnly || c.willingToBarter) &&
-                        (!filterAudienceAge || c.audienceAgeRange === filterAudienceAge) &&
-                        (!filterAudienceLang || c.audienceLang === filterAudienceLang) &&
-                        (!filterAudienceLoc.trim() || c.audienceLocation.toLowerCase().includes(filterAudienceLoc.trim().toLowerCase())) &&
-                        (!filterMinDeal || c.minDealUsd >= Number(filterMinDeal)) &&
-                        (!filterDealType || c.dealTypes.includes(filterDealType)) &&
-                        (!filterResponseMax || c.responseTimeHrs <= filterResponseMax)
-                      );
-                      if (q) {
-                        // Always search across name, handle, and profession regardless of mode
-                        const nameMatches = results.filter(c => c.name.toLowerCase().includes(q) || c.handle.toLowerCase().includes(q));
-                        const profExact = results.filter(c => c.valueSkin.toLowerCase() === q && !nameMatches.includes(c));
-                        const profPartial = results.filter(c => c.valueSkin.toLowerCase().includes(q) && c.valueSkin.toLowerCase() !== q && !nameMatches.includes(c));
-                        // Name matches always show first, then profession matches
-                        if (brandSearchMode === 'name') {
-                          results = nameMatches;
-                        } else if (brandSearchMode === 'profession') {
-                          results = [...profExact, ...profPartial, ...nameMatches.filter(c => !profExact.includes(c) && !profPartial.includes(c))];
-                        } else {
-                          results = [...nameMatches, ...profExact, ...profPartial];
-                        }
-                      }
+                      const brandPastDeals = Object.entries(dealStates)
+                        .filter(([k, d]) => d.brandApprovalPhase === 'approved' || d.creatorDealLifecycle === 'approved')
+                        .map(([key, d]) => ({ key, creatorName: key.split('|')[0], creatorSkin: key.split('|')[1], ...d }));
+                      if (brandPastDeals.length === 0) return null;
                       return (
-                        <>
-                          {campaigns.length === 0 && (
-                            <div style={{ background: C.card, borderRadius: '12px', border: `1px solid ${C.border}`, padding: '32px 24px', textAlign: 'center' }}>
-                              <div style={{ fontSize: '15px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>Create a campaign first</div>
-                              <div style={{ fontSize: '12px', color: C.textSecondary, lineHeight: 1.6, maxWidth: '520px', margin: '0 auto 20px' }}>
-                                Creator discovery unlocks after you create a campaign. Once the brief is live, you can review matching creators and start deals from here.
-                              </div>
-                              <button onClick={() => setMarketplaceTab('campaigns')} style={{ background: C.primary, border: 'none', borderRadius: '8px', padding: '10px 18px', color: '#fff', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
-                                Create Campaign
-                              </button>
-                            </div>
-                          )}
-                          {campaigns.length > 0 && results.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '30px 20px', color: C.textMuted }}>
-                              <div style={{ fontSize: '14px', marginBottom: '4px' }}>No creators found</div>
-                              <div style={{ fontSize: '11px' }}>Try a different search term or clear filters.</div>
-                            </div>
-                          )}
-                          {campaigns.length > 0 && results.map((creator, i) => {
-                      const origIdx = (creator as any)._origIdx ?? i;
-                      const badge = PROFESSION_BADGES[creator.valueSkin];
-                      const abbr = badge?.abbreviation ?? creator.valueSkin.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 3);
-                      const badgeColor = badge?.color ?? C.primary;
-                      const isNegotiating = negotiatingCreator === origIdx;
-                      return (
-                        <div key={i} data-creator-idx={origIdx} style={{ background: C.card, borderRadius: '10px', padding: '12px', marginBottom: '10px', border: `1px solid ${isNegotiating ? C.primary : C.border}`, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <img
-                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${creator.name.replace(/\s/g, '')}`}
-                            alt={creator.name}
-                            style={{ width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0 }}
-                          />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontWeight: 600, fontSize: '13px', color: C.text }}>{creator.name}</div>
-                            <a href={`https://portfolio.valueskins.com/${creator.handle.replace('@', '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: '11px', color: C.primary, textDecoration: 'none' }}>{creator.handle}</a>
+                        <div style={{ background:C.card, borderRadius:'12px', padding:'14px', marginBottom:'14px', border:`1px solid ${C.border}` }}>
+                          <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>
+                            Past Deals ({brandPastDeals.length})
                           </div>
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontWeight: 700, fontSize: '12px', color: C.text }}>{creator.rate}</div>
-                          </div>
-
-                          {!isNegotiating ? (
-                            (() => {
-                              const hasMatch = activeBrandSkin === creator.valueSkin;
-                              const noBrandSkin = brandValueSkins.length === 0;
-                              return (
-                                <div>
-                                  {!hasMatch && !noBrandSkin && (
-                                    <div style={{ background:'rgba(230,81,0,0.06)', border:'1px solid rgba(230,81,0,0.2)', borderRadius:'8px', padding:'8px 10px', marginBottom:'8px', fontSize:'11px', color:C.textSecondary }}>
-                                      No shared ValueSkin — you are {activeBrandSkin}, this creator is {creator.valueSkin}
-                                    </div>
-                                  )}
-                                  {noBrandSkin && (
-                                    <div style={{ background:'rgba(230,81,0,0.06)', border:'1px solid rgba(230,81,0,0.2)', borderRadius:'8px', padding:'8px 10px', marginBottom:'8px', fontSize:'11px', color:C.textSecondary }}>
-                                      Get a brand ValueSkin to contact creators
-                                    </div>
-                                  )}
-                                  <button
-                                    onClick={() => {
-                                      if (noBrandSkin) { setPurchaseToast('Get a brand ValueSkin first'); setTimeout(() => setPurchaseToast(null), 3000); return; }
-                                      if (!hasMatch) { setPurchaseToast('No shared ValueSkin with this creator'); setTimeout(() => setPurchaseToast(null), 3000); return; }
-                                      // Check if there's already an active deal with this creator
-                                      const existingPrefix = `${creator.name}|${creator.valueSkin}|`;
-                                      const existingDealKey = Object.keys(dealStates).find(key => key.startsWith(existingPrefix) && dealStates[key]?.phase && dealStates[key]?.phase !== 'brief');
-                                      if (existingDealKey) {
-                                        // Resume existing deal — restore all state from deal
-                                        const existingOppIdx = parseInt(existingDealKey.split('|')[2] || '0');
-                                        const existingDeal = dealStates[existingDealKey];
-                                        setNegotiatingCreator(origIdx);
-                                        setBrandCurrentOppIndex(existingOppIdx);
-                                        if (existingDeal?.briefTitle) setBrandBriefTitle(existingDeal.briefTitle);
-                                        if (existingDeal?.offerAmount) setBrandBudget(existingDeal.offerAmount);
-                                      } else {
-                                        setShowCampaignCreator(true);
-                                      }
-                                    }}
-                                    style={{ width:'100%', background: hasMatch ? (creator.featured ? C.primary : C.surfaceAlt) : C.surfaceAlt, border: hasMatch && creator.featured ? 'none' : `1px solid ${hasMatch ? C.border : 'rgba(230,81,0,0.3)'}`, padding: '10px 16px', borderRadius: '8px', color: hasMatch ? '#fff' : C.warning, fontWeight: '600', cursor: 'pointer', fontSize: '14px', opacity: hasMatch ? 1 : 0.7 }}
-                                  >
-                                    {noBrandSkin ? 'No ValueSkin' : hasMatch ? (Object.keys(dealStates).find(key => key.startsWith(`${creator.name}|${creator.valueSkin}|`) && dealStates[key]?.phase && dealStates[key]?.phase !== 'brief') ? 'View Deal' : 'Create Campaign') : 'No Shared ValueSkin'}
-                                  </button>
-                                </div>
-                              );
-                            })()
-                          ) : (
-                            <div style={{ background: C.surfaceAlt, borderRadius: '10px', padding: '14px', border: `1px solid rgba(230,81,0,0.3)` }}>
-                              {/* Brand Deal Room Back Button */}
-                              <button onClick={() => setNegotiatingCreator(null)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', color: C.textSecondary, cursor: 'pointer', fontSize: '11px', fontWeight: 600, padding: '0 0 8px' }}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textSecondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                                Back to creators
-                              </button>
-                              {/* Deal Room Header */}
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                <div style={{ display:'flex', alignItems:'center', gap:'10px' }}>
-                                  <img
-                                    src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${creator.name.replace(/\s/g, '')}`}
-                                    alt={creator.name}
-                                    style={{ width:'34px', height:'34px', borderRadius:'50%', background:C.surfaceAlt, flexShrink:0 }}
-                                  />
-                                  <div>
-                                    <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
-                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textSecondary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                                      </svg>
-                                      <span style={{ fontSize: '11px', fontWeight: 700, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.6px' }}>Deal Room</span>
-                                    </div>
-                                    <a
-                                      href={`https://portfolio.valueskins.com/${creator.handle.replace('@', '')}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      style={{ fontSize:'12px', fontWeight:700, color:C.text, textDecoration:'none', display:'block', marginTop:'2px' }}
-                                      onMouseEnter={(e) => { (e.target as HTMLElement).style.textDecoration = 'underline'; }}
-                                      onMouseLeave={(e) => { (e.target as HTMLElement).style.textDecoration = 'none'; }}
-                                    >{creator.name}</a>
-                                    {activeBrandSkin && <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'1px' }}>Your identity: {activeBrandSkin}{brandValueSkins.length > 0 && ' · Verified'}</div>}
-                                  </div>
-                                </div>
-                                {brandDealPhase === 'pending' && (
-                                  <div style={{ fontSize: '10px', color: C.textSecondary, background: C.surfaceAlt, padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>
-                                    Expires in 23h 47m
-                                  </div>
-                                )}
-                                {brandDealPhase === 'counter' && (
-                                  <div style={{ fontSize: '10px', color: C.textSecondary, background: C.surfaceAlt, padding: '2px 8px', borderRadius: '10px', fontWeight: 600 }}>
-                                    Respond within 23h 12m
-                                  </div>
-                                )}
+                          {brandPastDeals.map((d, i) => (
+                            <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 0', borderTop:i>0?`1px solid ${C.border}`:'none' }}>
+                              <div style={{ flex:1 }}>
+                                <div
+                                  onMouseEnter={(e) => showHoverCard(buildCreatorHover(d.creatorName, d.creatorSkin), e)}
+                                  onMouseMove={updateHoverPosition}
+                                  onMouseLeave={hideHoverCard}
+                                  style={{ fontSize:'13px', fontWeight:600, color:C.text, cursor:'pointer' }}>{d.creatorName}</div>
+                                <div style={{ fontSize:'10px', color:C.textSecondary }}>{d.creatorSkin} · Completed</div>
                               </div>
-
-                              {/* Deal Lifecycle Phase Indicator — brand view */}
-                              <div style={{ marginBottom:'12px', padding:'8px 10px', background:C.bg, borderRadius:'8px', border:`1px solid ${C.border}` }}>
-                                <div style={{ fontSize:'9px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'6px', letterSpacing:'0.5px' }}>Deal Progression</div>
-                                <div style={{ display:'flex', alignItems:'center', gap:'3px' }}>
-                                  {(() => {
-                                    const STEPS = ['brief', 'offer', 'counter', 'accepted', 'completed'];
-                                    const LABELS: Record<string, string> = { brief:'Brief', offer:'Sent', counter:'Negotiating', accepted:'Accepted', completed:'Completed' };
-                                    const phaseOrder: Record<string, number> = { brief:0, offer:1, pending:1, brand_considering:1.5, brand_reviewing:1.5, brand_countered:2, counter:2, last_offer:2.5, formal_offer:3, checklist:3, accepted:3, softhold:4, rejected:-1, brand_rejected:-1 };
-                                    const current = phaseOrder[brandDealPhase] ?? 0;
-                                    return STEPS.map((step, idx, arr) => {
-                                      const stepPos = idx;
-                                      const isActive = current >= 0 && Math.floor(current) === stepPos;
-                                      const isCompleted = current >= stepPos + 0.5;
-                                      return (
-                                        <React.Fragment key={step}>
-                                          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'3px' }}>
-                                            <div style={{ width:'24px', height:'24px', borderRadius:'50%', background: brandDealPhase === 'rejected' || brandDealPhase === 'brand_rejected' ? C.danger : isCompleted ? C.success : !isActive && current < stepPos && current !== -1 ? C.border : isActive ? C.primary : C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'10px', fontWeight:700, color: isCompleted || isActive ? '#fff' : C.textMuted }}>
-                                              {brandDealPhase === 'rejected' || brandDealPhase === 'brand_rejected' ? '✕' : isCompleted ? '\u2713' : idx+1}
-                                            </div>
-                                            <div style={{ fontSize:'7px', color: isActive?C.primary:C.textMuted, fontWeight:isActive?700:400, textAlign:'center', minWidth:'36px' }}>{LABELS[step]}</div>
-                                          </div>
-                                          {idx < arr.length - 1 && <div style={{ flex:1, height:'2px', background: isCompleted ? C.success : C.border, margin:'0 1px', marginTop:'-8px' }} />}
-                                        </React.Fragment>
-                                      );
-                                    });
-                                  })()}
-                                </div>
-                              </div>
-
-                              {/* Phase 1: No active deal — prompt to create campaign */}
-                              {brandDealPhase === 'brief' && (
-                                <>
-                                  <div style={{ textAlign: 'center', padding: '24px 12px' }}>
-                                    <div style={{ fontSize: '32px', marginBottom: '12px' }}>📢</div>
-                                    <div style={{ fontSize: '14px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>No active deal with {creator.name}</div>
-                                    <div style={{ fontSize: '12px', color: C.textSecondary, marginBottom: '20px', lineHeight: 1.6 }}>
-                                      Create a campaign and invite {creator.name} to start a deal. Once they accept the invite, you can negotiate and send offers here.
-                                    </div>
-                                    <button onClick={() => { setNegotiatingCreator(null); setShowCampaignCreator(true); }} style={{ background: C.primary, border: 'none', borderRadius: '8px', padding: '10px 20px', color: '#fff', fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}>
-                                      Create Campaign
-                                    </button>
-                                  </div>
-                                </>
-                              )}
-
-                              {/* Phase 2: Make offer */}
-                              {brandDealPhase === 'offer' && (
-                                <>
-
-                                    <div style={{ fontSize: '11px', color: C.textMuted, marginBottom: '4px', fontWeight: 600 }}>Your offer</div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      <span style={{ fontSize: '18px', fontWeight: 800, color: C.text }}>$</span>
-                                      <input
-                                        type="text"
-                                        value={brandBudget}
-                                        onChange={(e) => setBrandBudget(e.target.value.replace(/[^0-9]/g, ''))}
-                                        style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, padding: '7px 10px', fontSize: '16px', fontWeight: 700, fontFamily: 'inherit', outline: 'none', width: '110px' }}
-                                        onFocus={(e) => { e.currentTarget.style.borderColor = C.warning; }}
-                                        onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
-                                      />
-                                      <span style={{ fontSize: '12px', color: C.textMuted }}>/any format</span>
-                                    </div>
-
-                                  {/* Privacy note */}
-                                  <div style={{ fontSize: '10px', color: C.textMuted, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
-                                    </svg>
-                                    Only visible to you and {creator.name} · Auto-expires in 24h
-                                  </div>
-
-                                  <div style={{ display: 'flex', gap: '8px' }}>
-                                    <button
-                                      onClick={() => {
-                                        // Write offer amount + brief to shared deal state so creator sees it
-                                        if (brandDealKey) {
-                                          const now = new Date();
-                                          const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                          const offerMsg = { id: Date.now(), sender: 'brand' as const, text: `Brand offer: $${parseInt(brandBudget).toLocaleString()}/post for ${brandBriefTitle}`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          const existingMsgs = brandDeal?.chatMessages || [];
-                                          updateDeal(brandDealKey, {
-                                            phase: 'pending',
-                                            offerAmount: brandBudget,
-                                            briefTitle: brandBriefTitle,
-                                            chatMessages: [...existingMsgs, offerMsg],
-                                            // Ensure context is always saved
-                                            creatorName: creator.name,
-                                            creatorSkin: creator.valueSkin,
-                                            creatorMarketplaceIndex: negotiatingCreator ?? undefined,
-                                          });
-                                        }
-                                        setBrandDealPhase('pending');
-                                      }}
-                                      style={{ flex: 1, background: C.warning, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '13px' }}
-                                    >
-                                      Send Offer
-                                    </button>
-                                    <button onClick={() => setBrandDealPhase('brief')} style={{ background: 'none', border: `1px solid ${C.border}`, padding: '9px 12px', borderRadius: '8px', color: C.textSecondary, cursor: 'pointer', fontSize: '12px' }}>Back</button>
-                                  </div>
-                                </>
-                              )}
-
-                              {/* Phase 3: Pending — waiting for creator response */}
-                              {brandDealPhase === 'pending' && (
-                                <>
-                                  <div style={{ textAlign: 'center', padding: '10px 0 14px' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-                                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.textSecondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                                      </svg>
-                                    </div>
-                                    <div style={{ fontSize: '14px', fontWeight: 700, color: C.text, marginBottom: '4px' }}>Offer Sent</div>
-                                    <div style={{ fontSize: '12px', color: C.textSecondary, lineHeight: 1.5, marginBottom: '14px' }}>
-                                      ${brandBudget}/post · {brandCampaignType}<br />
-                                      Waiting for {creator.name} to respond
-                                    </div>
-                                  </div>
-
-                                  <div style={{ textAlign:'center', padding:'8px', fontSize:'11px', color:C.textMuted }}>
-                                    Creator will respond from their deal room
-                                  </div>
-                                </>
-                              )}
-
-                              {/* Phase 3a: Soft hold active — creator accepted, brand must fund escrow */}
-                              {brandDealPhase === 'softhold' && (
-                                <>
-                                  {/* Phase status bar */}
-                                  <div style={{ display:'flex', alignItems:'center', gap:'4px', marginBottom:'14px', padding:'8px 10px', background:'rgba(0,150,136,0.06)', borderRadius:'8px', border:'1px solid rgba(0,150,136,0.2)' }}>
-                                    {[
-                                      { label:'Offer Sent', done: true },
-                                      { label:'Creator Accepted', done: true },
-                                      { label:'Fund Escrow', done: brandDeal?.escrowFunded, active: !brandDeal?.escrowFunded },
-                                      { label:'Work & Approve', done: false },
-                                    ].map((s, i) => (
-                                      <div key={i} style={{ display:'flex', alignItems:'center', gap:'4px', flex: i < 3 ? 'none' : 1 }}>
-                                        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'2px' }}>
-                                          <div style={{ width:'18px', height:'18px', borderRadius:'50%', background: s.done ? C.success : s.active ? C.primary : C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'9px', color:'#fff', fontWeight:700 }}>
-                                            {s.done ? '✓' : i + 1}
-                                          </div>
-                                          <div style={{ fontSize:'8px', color: s.done ? C.success : s.active ? C.primary : C.textMuted, fontWeight: s.active ? 700 : 400, whiteSpace:'nowrap' }}>{s.label}</div>
-                                        </div>
-                                        {i < 3 && <div style={{ width:'16px', height:'1px', background: s.done ? C.success : C.border, marginBottom:'10px' }} />}
-                                      </div>
-                                    ))}
-                                  </div>
-
-                                  {!brandDeal?.escrowFunded ? (
-                                    <>
-                                      <div style={{ background:'rgba(0,150,136,0.06)', border:'1px solid rgba(0,150,136,0.2)', borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
-                                        <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>✅ Creator Accepted Your Offer</div>
-                                        <div style={{ fontSize:'11px', color:C.textSecondary, lineHeight:1.5 }}>
-                                          {creator.name} is ready to begin. Fund escrow to release the advance and start the deal.
-                                        </div>
-                                      </div>
-                                      {(() => {
-                                        const totalAmount = parseInt(brandBudget) || 5000;
-                                        const commission = Math.round(totalAmount * platformCommissionPct / 100);
-                                        const creatorPayout = commissionPaidBy === 'brand' ? totalAmount : totalAmount - commission;
-                                        const brandDeposit = commissionPaidBy === 'brand' ? totalAmount + commission : totalAmount;
-                                        const advanceToCreator = Math.round(creatorPayout * 0.3);
-                                        return (
-                                          <div style={{ background:C.bg, borderRadius:'10px', padding:'14px', border:`1px solid ${C.border}`, marginBottom:'12px' }}>
-                                            <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'10px' }}>Escrow Breakdown</div>
-                                            <div style={{ display:'flex', justifyContent:'space-between', fontSize:'11px', marginBottom:'6px', padding:'6px 8px', background:'rgba(46,125,50,0.06)', borderRadius:'4px', border:'1px solid rgba(46,125,50,0.15)' }}>
-                                              <span style={{ color:C.success, fontWeight:600 }}>Advance (30%)</span>
-                                              <span style={{ color:C.success, fontWeight:700 }}>${advanceToCreator.toLocaleString()} — paid to creator immediately</span>
-                                            </div>
-                                            <div style={{ display:'flex', justifyContent:'space-between', fontSize:'11px', marginBottom:'4px' }}>
-                                              <span style={{ color:C.textMuted }}>Milestone (40%)</span>
-                                              <span style={{ color:C.text, fontWeight:600 }}>${Math.round(creatorPayout * 0.4).toLocaleString()} — on content delivery</span>
-                                            </div>
-                                            <div style={{ display:'flex', justifyContent:'space-between', fontSize:'11px', marginBottom:'4px' }}>
-                                              <span style={{ color:C.textMuted }}>Completion (30%)</span>
-                                              <span style={{ color:C.text, fontWeight:600 }}>${Math.round(creatorPayout * 0.3).toLocaleString()} — on your approval</span>
-                                            </div>
-                                            {commissionPaidBy === 'brand' && (
-                                              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'11px', marginTop:'6px', padding:'4px 8px', background:'rgba(0,149,246,0.04)', borderRadius:'4px' }}>
-                                                <span style={{ color:C.textMuted }}>Platform fee ({platformCommissionPct}%)</span>
-                                                <span style={{ color:C.textSecondary, fontWeight:600 }}>${commission.toLocaleString()}</span>
-                                              </div>
-                                            )}
-                                            <button
-                                              onClick={() => {
-                                                const now = new Date();
-                                                const timeStr = now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', second:'2-digit', hour12:false });
-                                                const advanceMsg = { id: Date.now(), sender: 'brand' as const, text: `Escrow funded: $${totalAmount.toLocaleString()} deposited. Advance of $${advanceToCreator.toLocaleString()} (30%) paid to creator.`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                                const existingMsgs = brandDeal?.chatMessages || [];
-                                                if (brandDealKey) {
-                                                  updateDeal(brandDealKey, {
-                                                    escrowFunded: true,
-                                                    brandApprovalPhase: 'funded',
-                                                    creatorDealLifecycle: 'deliverables',
-                                                    paymentMilestones: { advance: 'released', approval: 'pending' },
-                                                    chatMessages: [...existingMsgs, advanceMsg],
-                                                  });
-                                                }
-                                                firebaseSendNotification(creator.name, 'application', `Advance paid: $${advanceToCreator.toLocaleString()} deposited to your account. Begin your deliverables.`);
-                                                setPurchaseToast(`Escrow funded — $${advanceToCreator.toLocaleString()} advance paid to ${creator.name}`);
-                                                setTimeout(() => setPurchaseToast(null), 4000);
-                                              }}
-                                              style={{ width:'100%', background:C.success, border:'none', padding:'10px', borderRadius:'8px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'13px', marginTop:'10px' }}
-                                            >
-                                              Deposit ${brandDeposit.toLocaleString()} into Escrow
-                                            </button>
-                                          </div>
-                                        );
-                                      })()}
-                                    </>
-                                  ) : (
-                                    <div style={{ textAlign:'center', padding:'16px 0' }}>
-                                      {(() => {
-                                        const dealPhase = brandDealPhase;
-                                        const freshDeal = brandDealKey ? dealStates[brandDealKey] : null;
-                                        const isFunded = freshDeal?.escrowFunded ?? brandDeal?.escrowFunded;
-                                        const creatorLifecycle = freshDeal?.creatorDealLifecycle ?? brandDeal?.creatorDealLifecycle;
-                                        const hasSubmittedDeliverables = Object.keys((freshDeal?.deliverableLinks || brandDeal?.deliverableLinks || {}) as Record<number, string>).length > 0;
-                                        let statusTitle = 'Escrow Funded';
-                                        let statusMsg = 'Creator has been notified to begin work';
-                                        let statusIcon = C.success;
-
-                                        if (dealPhase === 'offer_sent') {
-                                          statusTitle = 'Waiting for Creator';
-                                          statusMsg = 'Creator is reviewing your offer...';
-                                          statusIcon = C.primary;
-                                        } else if (dealPhase === 'counter' || dealPhase === 'negotiation') {
-                                          statusTitle = 'Negotiating';
-                                          statusMsg = 'Creator is countering your offer...';
-                                          statusIcon = C.primary;
-                                        } else if (dealPhase === 'last_offer') {
-                                          statusTitle = 'Final Negotiation';
-                                          statusMsg = 'Creator has submitted a counter-offer. Review to proceed.';
-                                          statusIcon = C.primary;
-                                        } else if (dealPhase === 'softhold' && !isFunded) {
-                                          statusTitle = 'Deal Accepted';
-                                          statusMsg = 'Creator is ready. Fund escrow to begin.';
-                                          statusIcon = C.success;
-                                        } else if (dealPhase === 'softhold' && isFunded && creatorLifecycle === 'deliverables' && !hasSubmittedDeliverables) {
-                                          statusTitle = 'Awaiting Deliverables';
-                                          statusMsg = 'Creator is preparing content...';
-                                          statusIcon = C.primary;
-                                        } else if (dealPhase === 'softhold' && isFunded && (creatorLifecycle === 'submitted' || hasSubmittedDeliverables)) {
-                                          statusTitle = 'Reviewing Deliverables';
-                                          statusMsg = 'Creator has submitted their work';
-                                          statusIcon = C.primary;
-                                        }
-
-                                        return (
-                                          <>
-                                            <div style={{ width:'44px', height:'44px', borderRadius:'50%', background:`${statusIcon === C.warning ? 'rgba(255,171,0,0.1)' : statusIcon === C.primary ? 'rgba(0,149,246,0.1)' : 'rgba(46,125,50,0.1)'}`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 10px' }}>
-                                              {statusIcon === C.warning ? (
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={statusIcon} strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                              ) : (
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={statusIcon} strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                              )}
-                                            </div>
-                                            <div style={{ fontSize:'14px', fontWeight:700, color:statusIcon }}>{statusTitle}</div>
-                                            <div style={{ fontSize:'12px', color:C.textSecondary, marginTop:'4px' }}>{statusMsg}</div>
-                                          </>
-                                        );
-                                      })()}
-                                      {(() => {
-                                        const freshDeal = brandDealKey ? dealStates[brandDealKey] : null;
-                                        const creatorLifecycle = freshDeal?.creatorDealLifecycle ?? brandDeal?.creatorDealLifecycle;
-                                        const bdLinks = (freshDeal?.deliverableLinks || brandDeal?.deliverableLinks || {}) as Record<number, string>;
-                                        const hasSubmittedDeliverables = Object.keys(bdLinks).length > 0;
-                                        return (creatorLifecycle === 'submitted' || hasSubmittedDeliverables) && (freshDeal?.brandApprovalPhase ?? brandDeal?.brandApprovalPhase) !== 'approved';
-                                      })() && (() => {
-                                        const freshDeal = brandDealKey ? dealStates[brandDealKey] : null;
-                                        const bdLinks = (freshDeal?.deliverableLinks || brandDeal?.deliverableLinks || {}) as Record<number, string>;
-                                        const agreedAmt = parseInt(agreedDealAmount || brandBudget || '5000');
-                                        const approvalAmt = Math.round(agreedAmt * 0.3);
-                                        return (
-                                          <div style={{ marginTop:'14px', textAlign:'left' }}>
-                                            <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'10px' }}>Review Submitted Deliverables</div>
-                                            {Object.entries(bdLinks).length > 0 ? Object.entries(bdLinks).map(([idx, link]) => (
-                                              <div key={idx} style={{ background:C.bg, borderRadius:'8px', padding:'10px', border:`1px solid ${C.border}`, marginBottom:'8px' }}>
-                                                <div style={{ fontSize:'12px', fontWeight:600, color:C.text, marginBottom:'4px' }}>Deliverable #{parseInt(idx) + 1}</div>
-                                                <a href={link} target="_blank" rel="noopener noreferrer" style={{ fontSize:'10px', color:C.primary, textDecoration:'none', display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{link}</a>
-                                              </div>
-                                            )) : (
-                                              <div style={{ background:C.bg, borderRadius:'8px', padding:'10px', border:`1px solid ${C.border}`, marginBottom:'8px', fontSize:'11px', color:C.textSecondary }}>
-                                                Creator submitted deliverables — review pending
-                                              </div>
-                                            )}
-                                            <div style={{ display:'flex', gap:'8px', marginTop:'10px' }}>
-                                              <button
-                                                onClick={() => {
-                                                  if (brandDealKey) {
-                                                    updateDeal(brandDealKey, {
-                                                      brandApprovalPhase: 'approved',
-                                                      paymentMilestones: { advance: 'released', approval: 'released' },
-                                                      creatorDealLifecycle: 'approved'
-                                                    });
-                                                    setBrandApprovalPhase('approved');
-                                                    firebaseSendNotification('Creator', 'application', `Deliverables approved! Final payment released: $${approvalAmt.toLocaleString()}`);
-                                                  }
-                                                  setPurchaseToast(`Approved — $${approvalAmt.toLocaleString()} released to creator`);
-                                                  setTimeout(() => setPurchaseToast(null), 3500);
-                                                }}
-                                                style={{ flex:1, background:C.success, border:'none', padding:'9px', borderRadius:'8px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'12px' }}
-                                              >
-                                                Approve
-                                              </button>
-                                              <button
-                                                onClick={() => {
-                                                  if (brandDealKey) {
-                                                    firebaseSendNotification('Creator', 'application', 'Brand requested revision — please update your deliverables');
-                                                  }
-                                                  setPurchaseToast('Revision requested — creator notified');
-                                                  setTimeout(() => setPurchaseToast(null), 3000);
-                                                }}
-                                                style={{ flex:1, background:'none', border:`1px solid ${C.border}`, padding:'9px', borderRadius:'8px', color:C.textSecondary, fontWeight:600, cursor:'pointer', fontSize:'12px' }}
-                                              >
-                                                Request Revision
-                                              </button>
-                                            </div>
-                                          </div>
-                                        );
-                                      })()}
-                                      {brandDeal?.brandApprovalPhase === 'approved' && (
-                                        <div style={{ marginTop:'12px', padding:'10px', background:'rgba(0,212,106,0.08)', border:`1px solid rgba(0,212,106,0.25)`, borderRadius:'8px', fontSize:'12px', color:C.success, fontWeight:600 }}>
-                                          <div style={{ marginBottom:'8px' }}>✅ Deal complete — all payments released</div>
-                                          <button
-                                            onClick={() => { if (brandDealKey) downloadDealReport(brandDealKey); }}
-                                            style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'8px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'11px' }}
-                                          >
-                                            Download Deal Report (.pdf)
-                                          </button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </>
-                              )}
-
-                              {/* Phase 4: Counter received — brand reviewing */}
-                              {brandDealPhase === 'counter' && (
-                                <>
-                                  <div style={{ background: 'rgba(230,81,0,0.06)', borderRadius: '8px', padding: '10px 12px', marginBottom: '12px', border: `1px solid rgba(230,81,0,0.2)` }}>
-                                    <div style={{ fontSize: '11px', fontWeight: 700, color: C.textSecondary, marginBottom: '6px' }}>Counter-Offer Received</div>
-                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
-                                      <span style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>${agreedDealAmount}</span>
-                                      <span style={{ fontSize: '12px', color: C.textMuted }}>/post</span>
-                                    </div>
-                                    <div style={{ fontSize: '11px', color: C.textSecondary }}>
-                                      Your offer was ${brandBudget} · difference: +${(parseInt(agreedDealAmount) - parseInt(brandBudget)).toLocaleString()}
-                                    </div>
-                                  </div>
-                                  <div style={{ fontSize: '11px', color: C.textMuted, marginBottom: '10px', lineHeight: 1.4 }}>Review the counter-offer and choose a response. The creator will be notified once you act.</div>
-                                  <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                                    <button
-                                      onClick={() => {
-                                        const now = new Date();
-                                        const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                        const acceptMsg = { id: Date.now(), sender: 'brand' as const, text: `Brand accepted offer: $${parseInt(agreedDealAmount).toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                        const existingMsgs = brandDeal?.chatMessages || [];
-                                        if (brandDealKey) {
-                                          updateDeal(brandDealKey, {
-                                            phase: 'pending',
-                                            offerAmount: agreedDealAmount,
-                                            counterAmount: '',
-                                            brandApprovalPhase: 'accepted',
-                                            chatMessages: [...existingMsgs, acceptMsg],
-                                          });
-                                        }
-                                        setBrandApprovalPhase('accepted');
-                                        setPurchaseToast('Counter-offer accepted — creator will see your acceptance');
-                                        setTimeout(() => setPurchaseToast(null), 3000);
-                                      }}
-                                      style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
-                                    >
-                                      Accept ${agreedDealAmount}
-                                    </button>
-                                    <button
-                                      onClick={() => { setBrandCounterAmount(brandBudget); setBrandDealPhase('brand_reviewing'); }}
-                                      style={{ flex: 1, background: C.primary, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
-                                    >
-                                      Counter Again
-                                    </button>
-                                  </div>
-                                  <div style={{ display: 'flex', gap: '8px' }}>
-                                    <button
-                                      onClick={() => {
-                                        if (brandDealKey) {
-                                          const now = new Date();
-                                          const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                          const lastOfferMsg = { id: Date.now(), sender: 'brand' as const, text: `Final offer: $${parseInt(brandBudget).toLocaleString()}/post — take it or leave it`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          setDealStates(prev => {
-                                            const deal = prev[brandDealKey!] || getOrCreateDeal(brandDealKey!);
-                                            return { ...prev, [brandDealKey!]: { ...deal, chatMessages: [...deal.chatMessages, lastOfferMsg] } };
-                                          });
-                                          firebaseAddMessage(brandDealKey, lastOfferMsg);
-                                          updateDeal(brandDealKey, { phase: 'last_offer' });
-                                        }
-                                      }}
-                                      style={{ flex: 1, background: 'none', border: `1px solid ${C.warning}`, padding: '8px', borderRadius: '8px', color: C.warning, fontWeight: 600, cursor: 'pointer', fontSize: '11px' }}
-                                    >
-                                      This is our last offer
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        if (brandDealKey) {
-                                          const now = new Date();
-                                          const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                          const rejectMsg = { id: Date.now(), sender: 'brand' as const, text: 'Brand has withdrawn from this deal.', time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          setDealStates(prev => {
-                                            const deal = prev[brandDealKey] || getOrCreateDeal(brandDealKey);
-                                            return { ...prev, [brandDealKey]: { ...deal, chatMessages: [...deal.chatMessages, rejectMsg] } };
-                                          });
-                                          firebaseAddMessage(brandDealKey, rejectMsg);
-                                          updateDeal(brandDealKey, { phase: 'rejected' });
-                                        }
-                                        setNegotiatingCreator(null); setBrandBriefTitle(''); setBrandBriefDeliverables(''); setBrandBriefAbout(''); setBrandBriefCampaignDesc('');
-                                      }}
-                                      style={{ flex: 1, background: 'none', border: `1px solid rgba(239,68,68,0.4)`, padding: '8px', borderRadius: '8px', color: 'rgba(239,68,68,0.85)', fontWeight: 600, cursor: 'pointer', fontSize: '11px' }}
-                                    >
-                                      Reject creator
-                                    </button>
-                                  </div>
-                                </>
-                              )}
-
-                              {/* Phase 4a: Brand sends counter */}
-                              {brandDealPhase === 'brand_reviewing' && (
-                                <>
-                                  <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '10px' }}>Send your counter</div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                                    <span style={{ fontSize: '16px', fontWeight: 800, color: C.text }}>$</span>
-                                    <input
-                                      type="text"
-                                      value={brandCounterAmount}
-                                      onChange={(e) => setBrandCounterAmount(e.target.value.replace(/[^0-9]/g, ''))}
-                                      style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, padding: '6px 10px', fontSize: '15px', fontWeight: 700, fontFamily: 'inherit', outline: 'none', width: '110px' }}
-                                      onFocus={(e) => { e.currentTarget.style.borderColor = C.primary; }}
-                                      onBlur={(e) => { e.currentTarget.style.borderColor = C.border; }}
-                                    />
-                                    <span style={{ fontSize: '12px', color: C.textMuted }}>/post</span>
-                                  </div>
-                                  <div style={{ display: 'flex', gap: '8px' }}>
-                                    <button
-                                      onClick={() => {
-                                        if (brandCounterAmount && brandDealKey) {
-                                          const now = new Date();
-                                          const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                          const counterMsg = { id: Date.now(), sender: 'brand' as const, text: `Brand counter-offer: $${parseInt(brandCounterAmount).toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          const existingMsgs = brandDeal?.chatMessages || [];
-                                          updateDeal(brandDealKey, {
-                                            phase: 'pending',
-                                            offerAmount: brandCounterAmount,
-                                            counterAmount: '',
-                                            brandResponseAmount: brandCounterAmount,
-                                            chatMessages: [...existingMsgs, counterMsg],
-                                          });
-                                          setBrandBudget(brandCounterAmount);
-                                          setBrandCounterAmount('');
-                                        }
-                                      }}
-                                      style={{ flex: 1, background: brandCounterAmount ? C.primary : C.border, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: brandCounterAmount ? 'pointer' : 'not-allowed', fontSize: '13px' }}
-                                    >
-                                      Send Counter
-                                    </button>
-                                    <button onClick={() => setBrandDealPhase('counter')} style={{ background: 'none', border: `1px solid ${C.border}`, padding: '9px 12px', borderRadius: '8px', color: C.textSecondary, cursor: 'pointer', fontSize: '12px' }}>Back</button>
-                                  </div>
-                                </>
-                              )}
-
-                              {/* Phase 4b: Last offer — creator has time to accept or lose deal */}
-                              {brandDealPhase === 'last_offer' && (
-                                <>
-                                  <div style={{ background: 'rgba(230,81,0,0.06)', borderRadius: '8px', padding: '10px 12px', marginBottom: '12px', border: `1px solid rgba(230,81,0,0.3)` }}>
-                                    <div style={{ fontSize: '11px', fontWeight: 700, color: C.warning, marginBottom: '4px' }}>Last offer sent</div>
-                                    <div style={{ fontSize: '22px', fontWeight: 800, color: C.text, marginBottom: '2px' }}>${brandBudget}<span style={{ fontSize: '12px', color: C.textMuted, fontWeight: 400 }}>/post</span></div>
-                                    <div style={{ fontSize: '11px', color: C.textMuted, lineHeight: 1.4 }}>
-                                      {creator.name} has been notified this is your final offer. If they reject, they are disqualified from this campaign. They have 24h to respond.
-                                    </div>
-                                  </div>
-                                  <button
-                                    onClick={() => { setNegotiatingCreator(null); setBrandDealPhase('brief'); setBrandBriefTitle(''); setBrandBriefDeliverables(''); setBrandBriefAbout(''); setBrandBriefCampaignDesc(''); }}
-                                    style={{ width: '100%', background: 'none', border: `1px solid ${C.border}`, padding: '8px', borderRadius: '8px', color: C.textSecondary, cursor: 'pointer', fontSize: '12px' }}
-                                  >
-                                    Withdraw & close
-                                  </button>
-                                </>
-                              )}
-
-                              {/* Phase 4c: Creator submitted formal offer — brand must approve */}
-                              {brandDealPhase === 'formal_offer' && (
-                                <>
-                                  <div style={{ background: 'rgba(0,149,246,0.06)', borderRadius: '8px', padding: '10px 12px', marginBottom: '12px', border: `1px solid rgba(0,149,246,0.2)` }}>
-                                    <div style={{ fontSize: '11px', fontWeight: 700, color: C.primary, marginBottom: '4px' }}>Creator Submitted Final Offer</div>
-                                    <div style={{ fontSize: '22px', fontWeight: 800, color: C.text, marginBottom: '2px' }}>${agreedDealAmount}<span style={{ fontSize: '12px', color: C.textMuted, fontWeight: 400 }}>/post</span></div>
-                                    <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.4 }}>
-                                      {creator.name} has locked their terms. Review and approve to proceed, or reject to end the negotiation.
-                                    </div>
-                                  </div>
-                                  <div style={{ display: 'flex', gap: '8px' }}>
-                                    <button
-                                      onClick={() => {
-                                        if (brandDealKey) {
-                                          const now = new Date();
-                                          const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                          const approveMsg = { id: Date.now(), sender: 'brand' as const, text: `Brand approved formal offer at $${parseInt(agreedDealAmount).toLocaleString()}/post. Deal is locked.`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          setDealStates(prev => {
-                                            const deal = prev[brandDealKey!] || getOrCreateDeal(brandDealKey!);
-                                            return { ...prev, [brandDealKey!]: { ...deal, chatMessages: [...deal.chatMessages, approveMsg] } };
-                                          });
-                                          firebaseAddMessage(brandDealKey!, approveMsg);
-                                          updateDeal(brandDealKey!, { phase: 'accepted', brandApprovalPhase: 'accepted' });
-                                        }
-                                      }}
-                                      style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '12px' }}
-                                    >
-                                      Approve &amp; Lock Deal
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        if (brandDealKey) {
-                                          const now = new Date();
-                                          const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                          const rejectMsg = { id: Date.now(), sender: 'brand' as const, text: 'Brand rejected the formal offer.', time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          setDealStates(prev => {
-                                            const deal = prev[brandDealKey!] || getOrCreateDeal(brandDealKey!);
-                                            return { ...prev, [brandDealKey!]: { ...deal, chatMessages: [...deal.chatMessages, rejectMsg] } };
-                                          });
-                                          firebaseAddMessage(brandDealKey!, rejectMsg);
-                                          updateDeal(brandDealKey, { phase: 'rejected' });
-                                        }
-                                        setNegotiatingCreator(null);
-                                      }}
-                                      style={{ flex: 1, background: 'none', border: `1px solid rgba(239,68,68,0.4)`, padding: '9px', borderRadius: '8px', color: 'rgba(239,68,68,0.85)', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
-                                    >
-                                      Reject
-                                    </button>
-                                  </div>
-                                </>
-                              )}
-
-                              {/* Phase 5: Accepted */}
-                              {brandDealPhase === 'accepted' && (
-                                <>
-                                  <div style={{ textAlign: 'center', padding: '8px 0 12px' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-                                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.textSecondary} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                    </div>
-                                    <div style={{ fontSize: '14px', fontWeight: 700, color: C.text, marginBottom: '4px' }}>Deal Accepted!</div>
-                                    <div style={{ fontSize: '12px', color: C.textSecondary, marginBottom: '16px' }}>
-                                      ${agreedDealAmount}/post · {brandCampaignType}
-                                    </div>
-                                  </div>
-
-                                  {/* Escrow stages — only for paid/c2c_paid */}
-                                  {(dealType === 'paid' || dealType === 'c2c_paid') && (() => {
-                                    const totalDeal = parseInt(agreedDealAmount) || 0;
-                                    const commission = Math.round(totalDeal * platformCommissionPct / 100);
-                                    const creatorPayout = commissionPaidBy === 'brand' ? totalDeal : totalDeal - commission;
-                                    const advancePaid = brandDeal?.paymentMilestones?.advance === 'released';
-                                    return (
-                                      <div style={{ marginBottom: '12px' }}>
-                                        <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Payment Breakdown</div>
-                                        {/* Total + commission summary */}
-                                        <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 10px', background:'rgba(0,149,246,0.04)', borderRadius:'6px', marginBottom:'6px', border:`1px solid rgba(0,149,246,0.15)` }}>
-                                          <div>
-                                            <div style={{ fontSize:'12px', fontWeight:700, color:C.text }}>Agreed Amount</div>
-                                            <div style={{ fontSize:'10px', color:C.textMuted }}>Platform fee: {platformCommissionPct}% (${commission.toLocaleString()}) {commissionPaidBy === 'brand' ? '— paid by brand' : '— deducted from creator'}</div>
-                                          </div>
-                                          <div style={{ textAlign:'right' }}>
-                                            <div style={{ fontSize:'14px', fontWeight:800, color:C.text }}>${commissionPaidBy === 'brand' ? (totalDeal + commission).toLocaleString() : totalDeal.toLocaleString()}</div>
-                                            <div style={{ fontSize:'10px', color:C.success }}>Creator gets ${creatorPayout.toLocaleString()}</div>
-                                          </div>
-                                        </div>
-                                        {/* Milestone stages */}
-                                        {[
-                                          { stage: 'Advance', pct: advancePercent, status: advancePaid ? 'Paid to creator' : brandApprovalPhase === 'accepted' ? 'Awaiting escrow deposit' : 'Held in escrow', released: advancePaid },
-                                          { stage: 'Completion', pct: approvalPercent, status: brandDeal?.paymentMilestones?.approval === 'released' ? 'Paid to creator' : 'Released on your approval', released: brandDeal?.paymentMilestones?.approval === 'released' },
-                                        ].map((s, si) => (
-                                          <div key={si} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: s.released ? 'rgba(46,125,50,0.04)' : C.bg, borderRadius: '6px', marginBottom: '4px', border: `1px solid ${s.released ? 'rgba(46,125,50,0.2)' : C.border}` }}>
-                                            <div>
-                                              <div style={{ fontSize: '12px', fontWeight: 600, color: s.released ? C.success : C.text }}>{s.stage} ({s.pct}%)</div>
-                                              <div style={{ fontSize: '10px', color: s.released ? C.success : C.textMuted }}>{s.status}</div>
-                                            </div>
-                                            <div style={{ fontSize: '12px', fontWeight: 700, color: s.released ? C.success : C.text }}>
-                                              ${Math.round(creatorPayout * s.pct / 100).toLocaleString()}
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    );
-                                  })()}
-
-                                  {brandApprovalPhase === 'accepted' && (() => {
-                                    // Show script approval for c2c_collab before moving to funding
-                                    if (dealType === 'c2c_collab' && !brandScriptApproved) {
-                                      return (
-                                        <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '12px', marginBottom: '12px' }}>
-                                          <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Review Script</div>
-                                          <div style={{ background: C.surfaceAlt, borderRadius: '6px', padding: '10px', marginBottom: '10px', maxHeight: '120px', overflowY: 'auto', fontSize: '10px', color: C.text, lineHeight: 1.5, whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
-                                            {scriptDraft || 'No script provided yet. Initiator will submit their creative direction.'}
-                                          </div>
-                                          <div style={{ display: 'flex', gap: '8px' }}>
-                                            {!brandScriptApproved ? (
-                                              <button
-                                                onClick={() => {
-                                                  if (brandDealKey) {
-                                                    updateDeal(brandDealKey, { brandScriptApproved: true });
-                                                  }
-                                                  setPurchaseToast('Script approved — creator can now proceed');
-                                                  setTimeout(() => setPurchaseToast(null), 3000);
-                                                }}
-                                                style={{ flex: 1, background: C.primary, border: 'none', borderRadius: '6px', padding: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '11px' }}
-                                              >
-                                                Approve Script
-                                              </button>
-                                            ) : (
-                                              <div style={{ flex: 1, background: 'rgba(0,212,106,0.08)', border: `1px solid rgba(0,212,106,0.2)`, borderRadius: '6px', padding: '8px', color: C.success, fontSize: '11px', fontWeight: 600, textAlign: 'center' }}>
-                                                ✓ Approved
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      );
-                                    }
-
-                                    switch(dealType) {
-                                      case 'paid':
-                                      case 'c2c_paid':
-                                        if (brandDeal?.phase === 'accepted') {
-                                          const briefText = `${brandBriefAbout || ''} ${brandBriefCampaignDesc || ''} ${brandBriefDeliverables || ''}`;
-                                          const hasSensitiveContent = isSensitiveContent(briefText) || isSensitiveContent(brandBriefTitle);
-                                          return (
-                                            <>
-                                              {hasSensitiveContent && (
-                                                <div style={{ background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.3)', borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
-                                                  <div style={{ fontSize: '10px', fontWeight: 700, color: '#ff9800', marginBottom: '4px', textTransform: 'uppercase' }}>⚠️ Verify Disclaimer Compliance</div>
-                                                  <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.5 }}>
-                                                    This campaign involves regulated topics. <strong>Ensure the creator includes clear disclaimers</strong> in their content (e.g., "personal opinion," "consult a professional"). Review <a href="/terms" style={{ color: C.primary, textDecoration: 'underline' }}>Terms &amp; Conditions</a> for full guidelines.
-                                                  </div>
-                                                </div>
-                                              )}
-                                              <button
-                                                onClick={() => setBrandApprovalPhase('funding')}
-                                                style={{ width: '100%', background: C.primary, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '13px' }}
-                                              >
-                                                Fund Escrow to Begin
-                                              </button>
-                                            </>
-                                          );
-                                        }
-                                        return (
-                                          <div style={{ width: '100%', background: C.bg, border: `1px solid ${C.border}`, padding: '9px', borderRadius: '8px', color: C.textMuted, fontWeight: 600, textAlign: 'center', fontSize: '13px' }}>
-                                            Waiting for creator to accept offer
-                                          </div>
-                                        );
-                                      case 'barter':
-                                        return (
-                                          <div style={{ background:'rgba(59,130,246,0.06)', border:`1px solid rgba(59,130,246,0.2)`, borderRadius:'8px', padding:'12px' }}>
-                                            <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Prepare Product Shipment</div>
-                                            <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'10px' }}>Enter tracking information when you ship the product</div>
-                                            <input
-                                              type="text"
-                                              value={goodsTrackingInput}
-                                              onChange={e => setGoodsTrackingInput(e.target.value)}
-                                              placeholder="Tracking number (e.g., 1Z999AA1012345678)"
-                                              style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', color:C.text, padding:'8px 10px', fontSize:'11px', fontFamily:'inherit', outline:'none', marginBottom:'10px', boxSizing:'border-box' }}
-                                            />
-                                            {activeDeal?.isInternationalDeal && (
-                                              <label style={{ display:'flex', alignItems:'flex-start', gap:'8px', marginBottom:'10px', cursor:'pointer' }}>
-                                                <input
-                                                  type="checkbox"
-                                                  checked={intlCustomsAcknowledged}
-                                                  onChange={e => setIntlCustomsAcknowledged(e.target.checked)}
-                                                  style={{ marginTop:'3px', cursor:'pointer' }}
-                                                />
-                                                <span style={{ fontSize:'11px', color:C.textSecondary, lineHeight:1.4 }}>I confirm this shipment complies with applicable customs and import regulations for the creator's country.</span>
-                                              </label>
-                                            )}
-                                            <button
-                                              disabled={!goodsTrackingInput || (activeDeal?.isInternationalDeal && !intlCustomsAcknowledged)}
-                                              onClick={() => {
-                                                setGoodsTrackerStatus('goods_shipped');
-                                                if (brandDealKey) {
-                                                  updateDeal(brandDealKey, { goodsTrackerStatus: 'goods_shipped', goodsTrackingNumber: goodsTrackingInput, customsComplianceAcknowledged: intlCustomsAcknowledged });
-                                                }
-                                                setBrandApprovalPhase('funding');
-                                                setPurchaseToast('Shipment marked as sent');
-                                                setTimeout(() => setPurchaseToast(null), 3000);
-                                              }}
-                                              style={{ width:'100%', background: goodsTrackingInput && (!activeDeal?.isInternationalDeal || intlCustomsAcknowledged) ? C.primary : C.border, border:'none', borderRadius:'6px', padding:'8px', color:'#fff', fontWeight:600, cursor: goodsTrackingInput && (!activeDeal?.isInternationalDeal || intlCustomsAcknowledged) ? 'pointer' : 'not-allowed', opacity: goodsTrackingInput && (!activeDeal?.isInternationalDeal || intlCustomsAcknowledged) ? 1 : 0.5, fontSize:'11px' }}
-                                            >
-                                              Mark as Shipped
-                                            </button>
-                                          </div>
-                                        );
-                                      case 'c2c_collab':
-                                        return (
-                                          <div style={{ background:'rgba(59,130,246,0.06)', border:`1px solid rgba(59,130,246,0.2)`, borderRadius:'8px', padding:'12px', textAlign:'center' }}>
-                                            <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Waiting for Content</div>
-                                            <div style={{ fontSize:'11px', color:C.textSecondary }}>The initiator is creating your collaborative content. You'll approve it when they submit.</div>
-                                          </div>
-                                        );
-                                      default:
-                                        return null;
-                                    }
-                                  })()}
-                                  {(dealType === 'paid' || dealType === 'c2c_paid') && brandApprovalPhase === 'funding' && (() => {
-                                    const totalAmount = parseInt(agreedDealAmount) || 5000;
-                                    const originalOffer = parseInt(brandDeal?.offerAmount || brandBudget || '0') || 0;
-                                    const alreadyInEscrow = brandDeal?.escrowFunded ? originalOffer : 0;
-                                    const additionalNeeded = Math.max(0, totalAmount - alreadyInEscrow);
-                                    const commission = Math.round(additionalNeeded * platformCommissionPct / 100);
-                                    const additionalDeposit = commissionPaidBy === 'brand' ? additionalNeeded + commission : additionalNeeded;
-                                    const creatorPayout = commissionPaidBy === 'brand' ? totalAmount : totalAmount - Math.round(totalAmount * platformCommissionPct / 100);
-                                    const advanceToCreator = Math.round(creatorPayout * 0.3);
-                                    const isTopUp = alreadyInEscrow > 0 && additionalNeeded > 0;
-                                    return (
-                                      <div style={{ marginTop:'12px' }}>
-                                        <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'10px' }}>Fund Escrow Account</div>
-                                        {isTopUp && (
-                                          <div style={{ background:'rgba(249,115,22,0.06)', border:'1px solid rgba(249,115,22,0.2)', borderRadius:'8px', padding:'10px', marginBottom:'10px', fontSize:'11px', color:C.textSecondary, lineHeight:1.5 }}>
-                                            <strong style={{ color:'#f59e0b' }}>Counter-offer top-up:</strong> ${alreadyInEscrow.toLocaleString()} already in escrow from original offer. Only the additional <strong style={{ color:C.text }}>${additionalNeeded.toLocaleString()}</strong> is due now.
-                                          </div>
-                                        )}
-                                        <div style={{ background:C.bg, borderRadius:'10px', padding:'14px', border:`1px solid ${C.border}`, marginBottom:'12px' }}>
-                                          <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'10px', lineHeight:1.5 }}>
-                                            {isTopUp
-                                              ? <>Deposit additional <strong style={{ color:C.text }}>${additionalDeposit.toLocaleString()}</strong> {commissionPaidBy === 'brand' ? `(includes ${platformCommissionPct}% fee: $${commission.toLocaleString()})` : ''}. Total deal: <strong style={{ color:C.success }}>${totalAmount.toLocaleString()}</strong>.</>
-                                              : <>Deposit <strong style={{ color:C.text }}>${additionalDeposit.toLocaleString()}</strong> into escrow {commissionPaidBy === 'brand' ? `(includes ${platformCommissionPct}% fee: $${commission.toLocaleString()})` : ''}. Creator receives <strong style={{ color:C.success }}>${creatorPayout.toLocaleString()}</strong>.</>
-                                            }
-                                          </div>
-                                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'11px', marginBottom:'6px', padding:'6px 8px', background:'rgba(46,125,50,0.06)', borderRadius:'4px', border:'1px solid rgba(46,125,50,0.15)' }}>
-                                            <span style={{ color:C.success, fontWeight:600 }}>Advance (30%)</span>
-                                            <span style={{ color:C.success, fontWeight:700 }}>${advanceToCreator.toLocaleString()} — paid to creator immediately</span>
-                                          </div>
-                                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'11px', marginBottom:'4px' }}>
-                                            <span style={{ color:C.textMuted }}>Milestone (40%)</span>
-                                            <span style={{ color:C.text, fontWeight:600 }}>${Math.round(creatorPayout * 0.4).toLocaleString()} — on content delivery</span>
-                                          </div>
-                                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'11px', marginBottom:'4px' }}>
-                                            <span style={{ color:C.textMuted }}>Completion (30%)</span>
-                                            <span style={{ color:C.text, fontWeight:600 }}>${Math.round(creatorPayout * 0.3).toLocaleString()} — on your approval</span>
-                                          </div>
-                                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'11px', marginTop:'6px', padding:'4px 8px', background:'rgba(0,149,246,0.04)', borderRadius:'4px' }}>
-                                            <span style={{ color:C.textMuted }}>Platform fee ({platformCommissionPct}%)</span>
-                                            <span style={{ color:C.textSecondary, fontWeight:600 }}>${commission.toLocaleString()}</span>
-                                          </div>
-                                        </div>
-                                        <div style={{ background:'rgba(0,102,204,0.06)', border:'1px solid rgba(0,102,204,0.15)', borderRadius:'8px', padding:'10px', marginBottom:'12px', fontSize:'11px', color:C.textSecondary, lineHeight:1.5 }}>
-                                          On deposit, the advance (${advanceToCreator.toLocaleString()}) is paid directly to the creator. Remaining funds are held in escrow and released per milestones. Platform fee is deducted automatically.
-                                        </div>
-                                        <button
-                                          onClick={() => {
-                                            setBrandApprovalPhase('funded');
-                                            const now = new Date();
-                                            const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                            const advanceMsg = { id: Date.now(), sender: 'brand' as const, text: isTopUp ? `Top-up deposited: $${additionalNeeded.toLocaleString()} additional (total escrow: $${totalAmount.toLocaleString()}). Advance of $${advanceToCreator.toLocaleString()} (30%) paid to creator.` : `Escrow funded: $${totalAmount.toLocaleString()} deposited. Advance of $${advanceToCreator.toLocaleString()} (30%) paid to creator. Platform fee: $${commission.toLocaleString()} (${platformCommissionPct}%).`, time: timeStr, isoTime: now.toISOString(), seen: false };
-                                            const existingMsgs = brandDeal?.chatMessages || [];
-                                            if (brandDealKey) {
-                                              updateDeal(brandDealKey, {
-                                                escrowFunded: true,
-                                                brandApprovalPhase: 'funded',
-                                                creatorDealLifecycle: 'deliverables',
-                                                paymentMilestones: { advance: 'released', approval: 'pending' },
-                                                chatMessages: [...existingMsgs, advanceMsg],
-                                              });
-                                            }
-                                            // Notify creator that advance has been paid
-                                            firebaseSendNotification(creator.name, 'application', `Advance paid: $${advanceToCreator.toLocaleString()} has been deposited to your account (30% of $${creatorPayout.toLocaleString()} deal)`);
-                                            setPurchaseToast(`Escrow funded — $${advanceToCreator.toLocaleString()} advance paid to ${creator.name}`);
-                                            setTimeout(() => setPurchaseToast(null), 4000);
-                                            setTimeout(() => setBrandApprovalPhase('reviewing'), 2000);
-                                          }}
-                                          style={{ width:'100%', background:C.success, border:'none', padding:'10px', borderRadius:'8px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'13px' }}
-                                        >
-                                          {isTopUp ? `Deposit Additional $${additionalDeposit.toLocaleString()}` : `Deposit $${additionalDeposit.toLocaleString()} into Escrow`}
-                                        </button>
-                                      </div>
-                                    );
-                                  })()}
-                                  {(dealType === 'paid' || dealType === 'c2c_paid') && brandApprovalPhase === 'funded' && (
-                                    <div style={{ textAlign:'center', padding:'16px 0' }}>
-                                      <div style={{ width:'44px', height:'44px', borderRadius:'50%', background:'rgba(46,125,50,0.1)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 10px' }}>
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.success} strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                      </div>
-                                      <div style={{ fontSize:'14px', fontWeight:700, color:C.success }}>Escrow Funded</div>
-                                      <div style={{ fontSize:'12px', color:C.textSecondary, marginTop:'4px' }}>Creator has been notified to begin work</div>
-                                    </div>
-                                  )}
-                                  {dealType === 'barter' && brandApprovalPhase === 'funding' && (
-                                    <div style={{ background:'rgba(34,197,94,0.06)', border:`1px solid rgba(34,197,94,0.2)`, borderRadius:'8px', padding:'12px', marginTop:'12px' }}>
-                                      <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Shipment Sent</div>
-                                      <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Tracking information delivered to creator. Waiting for them to confirm receipt.</div>
-                                      <button
-                                        onClick={() => {
-                                          setGoodsTrackerStatus('goods_shipped');
-                                          setBrandApprovalPhase('reviewing');
-                                          if (brandDealKey) {
-                                            updateDeal(brandDealKey, { goodsTrackerStatus: 'goods_shipped' });
-                                          }
-                                          setTimeout(() => setPurchaseToast('Creator will confirm receipt'), 2000);
-                                        }}
-                                        style={{ width:'100%', background:C.success, border:'none', padding:'8px', borderRadius:'6px', color:'#fff', fontWeight:600, cursor:'pointer', fontSize:'11px' }}
-                                      >
-                                        Continue to Content Review
-                                      </button>
-                                    </div>
-                                  )}
-                                  {dealType === 'c2c_collab' && brandApprovalPhase === 'funding' && (
-                                    <div style={{ background:'rgba(59,130,246,0.06)', border:`1px solid rgba(59,130,246,0.2)`, borderRadius:'8px', padding:'12px', marginTop:'12px' }}>
-                                      <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Ready for Content</div>
-                                      <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Waiting for initiator to submit collaborative content.</div>
-                                      <button
-                                        onClick={() => {
-                                          setBrandApprovalPhase('reviewing');
-                                          setTimeout(() => setPurchaseToast('Waiting for content submission'), 2000);
-                                        }}
-                                        style={{ width:'100%', background:C.primary, border:'none', padding:'8px', borderRadius:'6px', color:'#fff', fontWeight:600, cursor:'pointer', fontSize:'11px' }}
-                                      >
-                                        Continue
-                                      </button>
-                                    </div>
-                                  )}
-                                  {brandApprovalPhase === 'reviewing' && (() => {
-                                    // Read deliverable data from the shared deal state (brandDeal) so brand sees what creator submitted
-                                    const bdLinks = (brandDeal?.deliverableLinks || {}) as Record<number, string>;
-                                    const bdStatuses = (brandDeal?.deliverableStatuses || {}) as Record<number, string>;
-                                    const bdLifecycle = brandDeal?.creatorDealLifecycle;
-
-                                    if (dealType === 'paid' || dealType === 'c2c_paid') {
-                                      const hasSubmissions = Object.keys(bdLinks).length > 0;
-                                      const canApprove = bdLifecycle === 'submitted' || hasSubmissions;
-                                      return (
-                                        <div style={{ marginTop:'12px' }}>
-                                          <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'10px' }}>Review Creator Deliverables</div>
-                                          {bdLifecycle === 'submitted' || hasSubmissions ? (
-                                            <>
-                                              {Object.entries(bdLinks).map(([idx, link]) => (
-                                                <div key={idx} style={{ background:C.bg, borderRadius:'8px', padding:'12px', border:`1px solid ${C.border}`, marginBottom:'8px' }}>
-                                                  <div style={{ fontSize:'12px', fontWeight:600, color:C.text, marginBottom:'4px' }}>Deliverable #{parseInt(idx) + 1}</div>
-                                                  <div style={{ fontSize:'10px', color: bdStatuses[parseInt(idx)] === 'approved' ? C.success : C.primary, marginBottom:'4px' }}>
-                                                    {bdStatuses[parseInt(idx)] === 'approved' ? 'Approved' : 'Submitted — awaiting your review'}
-                                                  </div>
-                                                  <a href={link} target="_blank" rel="noopener noreferrer" style={{ fontSize:'10px', color:C.primary, textDecoration:'none', display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{link}</a>
-                                                </div>
-                                              ))}
-                                              {Object.keys(bdLinks).length === 0 && (
-                                                <div style={{ background:C.bg, borderRadius:'8px', padding:'12px', border:`1px solid ${C.border}`, marginBottom:'10px', fontSize:'11px', color:C.textSecondary }}>
-                                                  Creator submitted deliverables — review pending
-                                                </div>
-                                              )}
-                                            </>
-                                          ) : (
-                                            <div style={{ background:'rgba(245,158,11,0.06)', border:`1px solid rgba(245,158,11,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'10px' }}>
-                                              <div style={{ fontSize:'11px', color:'#f59e0b' }}>Creator has not yet submitted deliverables</div>
-                                            </div>
-                                          )}
-                                          <div style={{ display:'flex', gap:'8px' }}>
-                                            <button
-                                              disabled={!canApprove}
-                                              onClick={() => {
-                                                const agreedAmt = parseInt(agreedDealAmount || '5000');
-                                                const approvalAmt = Math.round(agreedAmt * 0.3);
-                                                setBrandApprovalPhase('approved');
-                                                if (brandDealKey) {
-                                                  updateDeal(brandDealKey, {
-                                                    brandApprovalPhase: 'approved',
-                                                    paymentMilestones: { advance: 'released', approval: 'released' },
-                                                    creatorDealLifecycle: 'approved'
-                                                  });
-                                                  firebaseSendNotification('Creator', 'application', `Deliverables approved! Final payment released: $${approvalAmt.toLocaleString()}`);
-                                                }
-                                                setPurchaseToast(`Approved and deal completed — $${approvalAmt.toLocaleString()} approval payment released to creator`);
-                                                setTimeout(() => setPurchaseToast(null), 3500);
-                                              }}
-                                              style={{ flex:1, background: canApprove ? C.success : C.border, border:'none', padding:'9px', borderRadius:'8px', color:'#fff', fontWeight:600, cursor: canApprove ? 'pointer' : 'not-allowed', fontSize:'13px', opacity: canApprove ? 1 : 0.5 }}
-                                            >
-                                              Approve
-                                            </button>
-                                            <button
-                                              onClick={() => {
-                                                if (brandDealKey) {
-                                                  firebaseSendNotification('Creator', 'application', `Brand requested revision — please update your deliverables`);
-                                                }
-                                                setPurchaseToast('Revision requested — creator notified');
-                                                setTimeout(() => setPurchaseToast(null), 3000);
-                                              }}
-                                              style={{ flex:1, background:'none', border:`1px solid ${C.border}`, padding:'9px', borderRadius:'8px', color:C.textSecondary, fontWeight:600, cursor:'pointer', fontSize:'13px' }}
-                                            >
-                                              Request Revision
-                                            </button>
-                                          </div>
-                                        </div>
-                                      );
-                                    } else if (dealType === 'barter' || dealType === 'c2c_collab') {
-                                      const contentLink = bdLinks[0] || '';
-                                      return (
-                                        <div style={{ marginTop:'12px' }}>
-                                          <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'10px' }}>Review Content</div>
-                                          {contentLink ? (
-                                            <div style={{ background:C.bg, borderRadius:'8px', padding:'12px', border:`1px solid ${C.border}`, marginBottom:'10px' }}>
-                                              <div style={{ fontSize:'12px', fontWeight:600, color:C.text, marginBottom:'4px' }}>Instagram Post</div>
-                                              <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Submitted {new Date().toLocaleDateString('en-US', { month:'short', day:'numeric' })}</div>
-                                              <a href={contentLink} target="_blank" rel="noopener noreferrer" style={{ fontSize:'10px', color:C.primary, textDecoration:'none', display:'block', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:'8px' }}>{contentLink}</a>
-                                            </div>
-                                          ) : (
-                                            <div style={{ background:'rgba(239,68,68,0.06)', border:`1px solid rgba(239,68,68,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'10px' }}>
-                                              <div style={{ fontSize:'11px', color:'#ef4444' }}>Content not yet submitted</div>
-                                            </div>
-                                          )}
-                                          <div style={{ display:'flex', gap:'8px' }}>
-                                            <button
-                                              disabled={!contentLink}
-                                              onClick={() => {
-                                                setBrandApprovalPhase('approved');
-                                                if (dealType === 'barter') {
-                                                  setGoodsTrackerStatus('content_approved');
-                                                  if (brandDealKey) {
-                                                    updateDeal(brandDealKey, { goodsTrackerStatus: 'content_approved', brandApprovalPhase: 'approved' });
-                                                  }
-                                                }
-                                                if (dealType === 'c2c_collab') {
-                                                  setC2cContentStatus('content_approved');
-                                                  if (brandDealKey) {
-                                                    updateDeal(brandDealKey, { c2cContentStatus: 'content_approved', brandApprovalPhase: 'approved' });
-                                                  }
-                                                }
-                                                firebaseSendNotification('Creator', 'application', 'Content approved!');
-                                                setPurchaseToast('Approved and deal completed');
-                                                setTimeout(() => setPurchaseToast(null), 3000);
-                                              }}
-                                              style={{ flex:1, background: contentLink ? C.success : C.border, border:'none', padding:'9px', borderRadius:'8px', color:'#fff', fontWeight:600, cursor: contentLink ? 'pointer' : 'not-allowed', fontSize:'13px', opacity: contentLink ? 1 : 0.5 }}
-                                            >
-                                              Approve Content
-                                            </button>
-                                          </div>
-                                        </div>
-                                      );
-                                    }
-                                    return null;
-                                  })()}
-                                  {brandApprovalPhase === 'approved' && (
-                                    <div style={{ textAlign:'center', padding:'12px 0', marginTop:'12px' }}>
-                                      <div style={{ width:'36px', height:'36px', borderRadius:'50%', background:C.surfaceAlt, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 8px' }}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.textSecondary} strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                      </div>
-                                      <div style={{ fontSize:'14px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Approved and Deal Completed</div>
-                                      <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'12px' }}>Payment released: ${parseInt(agreedDealAmount).toLocaleString()}</div>
-                                      <button
-                                        onClick={() => { if (brandDealKey && brandDeal) downloadDealSummary(brandDealKey, brandDeal); }}
-                                        style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'9px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'12px', marginBottom:'12px' }}
-                                      >
-                                        Download Legal Deal Summary (.txt)
-                                      </button>
-                                      {/* Brand rating for creator */}
-                                      {!brandRatingSubmitted ? (
-                                        <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'14px', marginBottom:'12px', textAlign:'left' }}>
-                                          <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>Rate this creator</div>
-                                          <div style={{ display:'flex', gap:'6px', marginBottom:'10px', justifyContent:'center' }}>
-                                            {[1,2,3,4,5].map(star => (
-                                              <button key={star} onClick={() => setBrandDealRating(star)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:'24px', color: star <= brandDealRating ? '#f59e0b' : C.border, transition:'color 0.1s', padding:'2px' }}>
-                                                {star <= brandDealRating ? '\u2605' : '\u2606'}
-                                              </button>
-                                            ))}
-                                          </div>
-                                          <textarea value={brandRatingComment} onChange={e => setBrandRatingComment(e.target.value)} placeholder="How was working with this creator?" rows={2} style={{ width:'100%', background:C.card, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'8px', fontSize:'12px', color:C.text, resize:'none', boxSizing:'border-box' }} />
-                                          <button onClick={() => { setBrandRatingSubmitted(true); if (brandDealKey) { updateDeal(brandDealKey, { brandRating: brandDealRating, brandRatingComment: brandRatingComment, displayBrandRating: false }); } setPurchaseToast('Rating submitted'); setTimeout(() => setPurchaseToast(null), 3000); }} disabled={brandDealRating === 0} style={{ width:'100%', background: brandDealRating > 0 ? C.primary : C.border, border:'none', padding:'8px', borderRadius:'6px', color:'#fff', fontWeight:600, fontSize:'12px', cursor: brandDealRating > 0 ? 'pointer' : 'not-allowed', marginTop:'8px', opacity: brandDealRating > 0 ? 1 : 0.5 }}>
-                                            Submit Rating
-                                          </button>
-                                        </div>
-                                      ) : (
-                                        <div style={{ background:'rgba(0,102,204,0.06)', border:`1px solid rgba(0,102,204,0.2)`, borderRadius:'8px', padding:'10px', marginBottom:'12px' }}>
-                                          <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'8px' }}>
-                                            Rating submitted: {brandDealRating}/5
-                                          </div>
-                                          <label style={{ display:'flex', alignItems:'center', gap:'8px', fontSize:'12px', color:C.text, cursor:'pointer' }}>
-                                            <input type="checkbox" checked={displayBrandRating} onChange={e => { setDisplayBrandRating(e.target.checked); if (brandDealKey) { updateDeal(brandDealKey, { displayBrandRating: e.target.checked }); } }} style={{ cursor:'pointer' }} />
-                                            Show this review on my brand profile
-                                          </label>
-                                        </div>
-                                      )}
-                                      <button onClick={() => { setNegotiatingCreator(null); setBrandDealPhase('brief'); setBrandApprovalPhase('accepted'); setBrandDealRating(0); setBrandRatingComment(''); setBrandRatingSubmitted(false); }} style={{ width:'100%', background:C.primary, border:'none', padding:'8px', borderRadius:'8px', color:'#fff', fontWeight:600, fontSize:'12px', cursor:'pointer' }}>Done</button>
-                                    </div>
-                                  )}
-                                </>
-                              )}
-                              {/* Deal Room Chat — brand side, shows all messages from shared state */}
-                                  {(() => {
-                                    const brandChatMsgs = (brandDeal?.chatMessages || []) as Array<{id: number; sender: string; text: string; time: string; isoTime?: string; seen?: boolean}>;
-                                    return (
-                                      <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', marginTop: '12px' }}>
-                                        <div style={{ fontSize: '9px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                                          Negotiation
-                                          {brandChatMsgs.length > 0 && <span style={{ fontSize: '9px', color: C.textMuted, fontWeight: 400 }}>{brandChatMsgs.length} messages</span>}
-                                        </div>
-                                        {brandChatMsgs.length > 0 && (
-                                          <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom:'8px' }}>
-                                            {brandChatMsgs.map((msg, mi) => (
-                                              <div key={msg.id || mi} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.sender === 'brand' ? 'flex-end' : 'flex-start', marginBottom: '6px' }}>
-                                                <div style={{ maxWidth: '85%', background: msg.sender === 'brand' ? 'rgba(0,149,246,0.08)' : C.surfaceAlt, borderRadius: '8px', padding: '6px 10px' }}>
-                                                  <div style={{ fontSize: '10px', fontWeight: 600, color: msg.sender === 'brand' ? C.primary : C.text, marginBottom: '2px' }}>{msg.sender === 'brand' ? 'You' : creator.name}</div>
-                                                  <div style={{ fontSize: '11px', color: C.text, lineHeight: 1.4 }}>{msg.text}</div>
-                                                </div>
-                                                <div style={{ fontSize: '9px', color: C.textMuted, marginTop: '2px' }}>{msg.time}</div>
-                                              </div>
-                                            ))}
-                                            <div ref={brandChatEndRef} />
-                                          </div>
-                                        )}
-                                        {/* Brand chat input — always active for post-deal communication */}
-                                        <form onSubmit={(e) => {
-                                          e.preventDefault();
-                                          if (!brandChatInput.trim() || !brandDealKey) return;
-                                          const now = new Date();
-                                          const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                          const newMsg = { id: Date.now(), sender: 'brand' as const, text: brandChatInput.trim(), time: timeStr, isoTime: now.toISOString(), seen: false };
-                                          setDealStates(prev => {
-                                            const deal = prev[brandDealKey!] || getOrCreateDeal(brandDealKey!);
-                                            return { ...prev, [brandDealKey!]: { ...deal, chatMessages: [...deal.chatMessages, newMsg] } };
-                                          });
-                                          firebaseAddMessage(brandDealKey!, newMsg);
-                                          setBrandChatInput('');
-                                        }} style={{ display: 'flex', gap: '4px' }}>
-                                          <input
-                                            type="text"
-                                            value={brandChatInput}
-                                            onChange={(e) => setBrandChatInput(e.target.value)}
-                                            placeholder="Negotiate terms, deliverables, timeline..."
-                                            style={{ flex: 1, padding: '6px 10px', background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: '14px', color: C.text, fontSize: '11px', outline: 'none' }}
-                                          />
-                                          <button type="submit" disabled={!brandChatInput.trim()} style={{ padding: '6px 12px', background: brandChatInput.trim() ? C.primary : `${C.primary}40`, color: '#fff', border: 'none', borderRadius: '14px', fontSize: '10px', fontWeight: 600, cursor: brandChatInput.trim() ? 'pointer' : 'not-allowed' }}>Send</button>
-                                        </form>
-                                      </div>
-                                    );
-                                  })()}
-                                  {/* POC Contact Card — brand side, visible at all brand deal phases */}
-                                  {brandDeal?.poc && (
-                                    <div style={{ background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', marginTop: '12px' }}>
-                                      <div style={{ fontSize: '9px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Point of Contact</div>
-                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                        <div>
-                                          <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{brandDeal.poc.name}</div>
-                                          <div style={{ fontSize: '11px', color: C.primary, marginTop: '1px' }}>{brandDeal.poc.workEmail}</div>
-                                          {brandDeal.poc.role && <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '1px' }}>{brandDeal.poc.role}</div>}
-                                        </div>
-                                        <button
-                                          onClick={() => {
-                                            const workEmail = brandDeal.poc?.workEmail || '';
-                                            if (workEmail) {
-                                              window.open(`mailto:${workEmail}`, '_blank');
-                                            }
-                                            setPurchaseToast(`Contacting ${brandDeal.poc?.name || 'POC'} via email`);
-                                            setTimeout(() => setPurchaseToast(null), 2000);
-                                          }}
-                                          style={{ background: C.primary, border: 'none', borderRadius: '6px', padding: '5px 12px', color: '#fff', fontSize: '10px', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
-                                        >
-                                          Message
-                                        </button>
-                                      </div>
-                                    </div>
-                                  )}
+                              <button onClick={() => downloadDealReport(d.key)} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:600, color:'#fff', cursor:'pointer' }}>Download the final report</button>
                             </div>
-                          )}
+                          ))}
                         </div>
-                      );
-                    })}
-
-                          {/* Similar Creators */}
-                          {campaigns.length > 0 && adminShowSimilarCreators && results.length > 0 && (
-                            <div style={{ marginTop: '8px', padding: '12px 14px', background: C.card, border: `1px solid ${C.border}`, borderRadius: '10px' }}>
-                              <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '8px' }}>Similar Creators</div>
-                              <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '8px' }}>Based on your most-viewed creator this session:</div>
-                              {BRAND_MARKETPLACE_CREATORS.filter((_, idx) => idx !== 0).slice(0, 2).map((c, si) => {
-                                const b = PROFESSION_BADGES[c.valueSkin];
-                                return (
-                                  <div key={si} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 0', borderTop: si > 0 ? `1px solid ${C.border}` : 'none' }}>
-                                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name.replace(/\s/g,'')}`} alt={c.name} style={{ width: '32px', height: '32px', borderRadius: '50%', background: C.surfaceAlt }} />
-                                    <div style={{ flex: 1 }}>
-                                      <div style={{ fontSize: '12px', fontWeight: 700, color: C.text }}>{c.name}</div>
-                                      <div style={{ fontSize: '10px', color: C.textSecondary }}>{c.valueSkin} · {c.followers} · {c.engagement}</div>
-                                    </div>
-                                    <span style={{ fontSize: '9px', fontWeight: 700, color: b?.color ?? C.primary, background: `${b?.color ?? C.primary}15`, padding: '2px 6px', borderRadius: '6px' }}>{c.matchScore}</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </>
                       );
                     })()}
-                    </>)}
-                    </>)}
-
-                    {/* Campaign tabs: Your Campaigns — collapsible, does NOT hide the creator list */}
-                    <div style={{ marginTop:'24px', paddingTop:'20px', borderTop:`1px solid ${C.border}` }}>
-                      <button
-                        onClick={() => setCampaignsSectionOpen(v => !v)}
-                        style={{ width:'100%', display:'flex', justifyContent:'space-between', alignItems:'center', background:'none', border:'none', padding:'0 0 14px', cursor:'pointer' }}
-                      >
-                        <span style={{ fontSize:'12px', fontWeight:700, color:C.text, textTransform:'uppercase', letterSpacing:'0.5px', display:'flex', alignItems:'center', gap:'6px' }}>
-                          Your Campaigns
-                          {campaigns.length > 0 && <span style={{ fontSize:'10px', background:C.primary, color:'#fff', padding:'1px 5px', borderRadius:'8px' }}>{campaigns.length}</span>}
-                          {allCreators.length > 0 && (() => {
-                            const totalMatches = [...campaignMatches.values()].reduce((sum, m) => sum + m.length, 0);
-                            return (
-                              <span
-                                title={`${totalMatches} total creator matches across all campaigns — live updated every 30s`}
-                                style={{ fontSize:'10px', background: totalMatches > 0 ? `${C.primary}15` : C.surfaceAlt, color: totalMatches > 0 ? C.primary : C.textMuted, padding:'1px 6px', borderRadius:'8px', fontWeight:600 }}
-                              >
-                                {totalMatches} match{totalMatches !== 1 ? 'es' : ''}
-                              </span>
-                            );
-                          })()}
-                          <button
-                            onClick={handleRefresh}
-                            title="Refresh creator list + campaigns"
-                            style={{ background:'none', border:'none', cursor:'pointer', padding:'2px', display:'flex', alignItems:'center' }}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2.5" style={{ opacity: refreshing ? 0.5 : 0.7, animation: refreshing ? 'spin 1s linear infinite' : 'none' }}>
-                              <polyline points="23 4 23 10 17 10"/>
-                              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                            </svg>
-                          </button>
-                        </span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2.5" style={{ transform: campaignsSectionOpen ? 'rotate(180deg)' : 'none', transition:'transform 0.2s' }}><polyline points="6 9 12 15 18 9"/></svg>
-                      </button>
-
-                      {campaignsSectionOpen && (<>
-                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px' }}>
-                          {campaigns.length > 0 && (() => {
-                            const hasActiveDealCreators = campaigns.some(camp => {
-                              const applicants = sharedApplications.filter(a => a.campaignId === camp.id && a.status !== 'invited');
-                              return applicants.some(app => {
-                                // Find any deal associated with this creator and campaign
-                                const creatorDeal = Object.entries(dealStates).find(([key, deal]) => {
-                                  return deal?.creatorName === app.creatorName && deal?.escrowFunded && ['deliverables', 'submitted', 'approved'].includes(deal?.creatorDealLifecycle || '');
-                                });
-                                return !!creatorDeal;
-                              });
-                            });
-                            return (
-                              <button
-                                disabled={hasActiveDealCreators}
-                                onClick={() => { persistCampaigns([]); setSharedApplications([]); setDealStates({}); }}
-                                title={hasActiveDealCreators ? 'Cannot delete campaigns with active creator work in progress' : ''}
-                                style={{ background:'none', border:`1px solid rgba(239,68,68,0.3)`, borderRadius:'6px', padding:'5px 10px', fontSize:'11px', fontWeight:600, color: hasActiveDealCreators ? '#888' : '#ef4444', cursor: hasActiveDealCreators ? 'not-allowed' : 'pointer', opacity: hasActiveDealCreators ? 0.5 : 1 }}
-                              >
-                                Clear all
-                              </button>
-                            );
-                          })()}
-                          <button onClick={() => setShowCampaignCreator(true)} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'6px 12px', fontSize:'12px', fontWeight:700, color:'#fff', cursor:'pointer', marginLeft:'auto' }}>+ New Campaign</button>
-                        </div>
-                        {(() => {
-                          const activeDealCampaigns = campaigns.filter(camp => {
-                            const applicants = sharedApplications.filter(a => a.campaignId === camp.id && a.status !== 'invited');
-                            return applicants.some(app => {
-                              // Find any deal associated with this creator and campaign
-                              const creatorDeal = Object.entries(dealStates).find(([key, deal]) => {
-                                return deal?.creatorName === app.creatorName && deal?.escrowFunded && ['deliverables', 'submitted', 'approved'].includes(deal?.creatorDealLifecycle || '');
-                              });
-                              return !!creatorDeal;
-                            });
-                          });
-                          return activeDealCampaigns.length > 0 ? (
-                            <div style={{ background: 'rgba(237,73,86,0.08)', border: `1px solid rgba(237,73,86,0.25)`, borderRadius:'8px', padding:'10px 12px', marginBottom:'12px', fontSize:'11px', color: C.danger, fontWeight:600 }}>
-                              ⚠️ {activeDealCampaigns.length} campaign{activeDealCampaigns.length !== 1 ? 's have' : ' has'} creators actively working. You cannot delete campaigns with ongoing deals. Complete or cancel work first.
-                            </div>
-                          ) : null;
-                        })()}
-                        {(() => {
-                          const activeCampaigns = liveCampaigns.filter(c => c.status !== 'expired');
-                          return activeCampaigns.length === 0 ? (
-                            <div style={{ textAlign:'center', padding:'24px 20px', color:C.textMuted }}>
-                              <div style={{ fontSize:'13px', marginBottom:'4px' }}>No campaigns yet</div>
-                              <div style={{ fontSize:'11px' }}>Create a campaign to start receiving creator applications.</div>
-                            </div>
-                          ) : activeCampaigns.map((c,i) => (
-                          <div key={i} style={{ background:C.card, borderRadius:'12px', padding:'14px', marginBottom:'10px', border:`1px solid ${C.border}` }}>
-                            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'6px', flexWrap:'wrap', gap:'4px' }}>
-                              <span style={{ fontSize:'13px', fontWeight:700, color:C.text }}>{c.title}</span>
-                              <span style={{ fontSize:'12px', fontWeight:700, color:C.success }}>${parseInt(c.budget||'0').toLocaleString()}</span>
-                            </div>
-                            {c.brandName && <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'4px' }}>by {c.brandName}</div>}
-                            <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px', lineHeight:1.4 }}>{c.description}</div>
-                            <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'6px' }}>
-                              {c.requiredProfessions.map(p => <span key={p} style={{ fontSize:'10px', fontWeight:600, color:C.primary, background:`${C.primary}12`, padding:'2px 7px', borderRadius:'6px', border:`1px solid ${C.primary}30` }}>{p}</span>)}
-                              {c.country && <span style={{ fontSize:'10px', fontWeight:600, color:C.text, background:C.surfaceAlt, padding:'2px 7px', borderRadius:'6px', border:`1px solid ${C.border}` }}>{c.country} only</span>}
-                            </div>
-                            <div style={{ display:'flex', gap:'12px', flexWrap:'wrap', fontSize:'10px', color:C.textMuted, marginBottom: c.nonNegotiables?.length ? '6px':'8px' }}>
-                              <span>Level: L{c.minLevel||1}{(c.maxLevel && c.maxLevel !== c.minLevel) ? `–L${c.maxLevel}` : ''}</span>
-                              {c.location && <span>{c.location}</span>}
-                              {c.deliverables && <span>{c.deliverables}</span>}
-                            </div>
-                            {(campaignMatches.get(c.id)?.length ?? 0) > 0 && (
-                              <div style={{ marginBottom:'8px' }}>
-                                <span
-                                  title={`${campaignMatches.get(c.id)?.length ?? 0} creators match this campaign — updated live as new creators join`}
-                                  style={{ fontSize:'10px', fontWeight:700, color:C.primary, background:`${C.primary}10`, border:`1px solid ${C.primary}30`, padding:'2px 8px', borderRadius:'6px', display:'inline-flex', alignItems:'center', gap:'4px', cursor:'default' }}
-                                >
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2"/></svg>
-                                  {campaignMatches.get(c.id)?.length ?? 0} creator{(campaignMatches.get(c.id)?.length ?? 0) !== 1 ? 's' : ''} matched
-                                  <span style={{ fontSize:'8px', opacity:0.6 }}>● live</span>
-                                </span>
-                              </div>
-                            )}
-                            {c.nonNegotiables && c.nonNegotiables.length > 0 && (
-                              <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'8px' }}>
-                                {c.nonNegotiables.map(n=><span key={n} style={{ fontSize:'10px', color:C.textMuted, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', padding:'2px 7px', borderRadius:'6px' }}>{n}</span>)}
-                              </div>
-                            )}
-                            {(c.creatorCount || c.escrowPool) && (
-                              <div style={{ display:'flex', gap:'8px', marginBottom:'6px', flexWrap:'wrap' }}>
-                                {c.creatorCount && <span style={{ fontSize:'10px', color:C.textSecondary, background:C.surfaceAlt, padding:'2px 8px', borderRadius:'6px' }}>Hiring {c.creatorCount} creator{c.creatorCount!==1?'s':''}</span>}
-                                {c.escrowPool && (
-                                  <span style={{ fontSize:'10px', fontWeight:700, color: c.escrowFunded ? C.success : C.warning, background: c.escrowFunded ? 'rgba(0,212,106,0.08)' : 'rgba(255,171,0,0.08)', border: `1px solid ${c.escrowFunded ? 'rgba(0,212,106,0.25)' : 'rgba(255,171,0,0.25)'}`, padding:'2px 8px', borderRadius:'6px', display:'flex', alignItems:'center', gap:'4px' }}>
-                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                    {c.escrowFunded ? `$${c.escrowPool.toLocaleString()} in escrow` : `$${c.escrowPool.toLocaleString()} escrow pending`}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                              <span style={{ fontSize:'10px', color:C.textMuted }}>{c.deadline?`Deadline ${c.deadline}`:''}</span>
-                              <span style={{ fontSize:'10px', fontWeight:700, color:c.status==='expired'?C.textMuted:c.status==='open'?C.success:'#888', background:c.status==='expired'?'rgba(239,68,68,0.1)':c.status==='open'?C.surfaceAlt:'rgba(136,136,136,0.1)', padding:'2px 8px', borderRadius:'6px', textTransform:'uppercase' }}>{c.status}</span>
-                            </div>
-                            {/* Applicants per campaign — derived from sharedApplications + dealStates fallback */}
-                            {(() => {
-                              const campaignApps = sharedApplications.filter(a => a.campaignId === c.id && a.status !== 'invited');
-                              const dealDerived: SharedApplication[] = Object.entries(dealStates)
-                                .filter(([key, deal]) => {
-                                  if (!deal || deal.phase === 'brief') return false;
-                                  const parts = key.split('|');
-                                  const creatorSkin = parts[1];
-                                  if (!c.requiredProfessions.includes(creatorSkin)) return false;
-                                  const creatorName = parts[0];
-                                  return !campaignApps.some(a => a.creatorName === creatorName);
-                                })
-                                .map(([key, deal]) => {
-                                  const parts = key.split('|');
-                                  const creatorName = parts[0];
-                                  const creatorSkin = parts[1];
-                                  const oppIndex = parts[2] ? parseInt(parts[2]) : undefined;
-                                  const creatorProfile = BRAND_MARKETPLACE_CREATORS.find(cr => cr.name === creatorName);
-                                  return {
-                                    id: Date.now() + Math.abs(key.split('').reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) | 0, 0)),
-                                    campaignId: c.id,
-                                    campaignTitle: c.title,
-                                    creatorProfession: creatorSkin,
-                                    creatorHandle: creatorProfile?.handle || `@${creatorName.replace(/\s+/g, '').toLowerCase()}`,
-                                    status: 'pending' as const,
-                                    appliedAt: new Date().toISOString(),
-                                    opportunityIndex: oppIndex,
-                                    creatorName,
-                                    creatorFollowers: creatorProfile?.followers,
-                                    creatorEngagement: creatorProfile?.engagement,
-                                    creatorLevel: creatorProfile?.level,
-                                    creatorMatchScore: creatorProfile?.matchScore,
-                                    creatorRate: creatorProfile?.rate,
-                                    creatorDealCompletionRate: creatorProfile?.dealCompletionRate,
-                                    creatorPortfolio: creatorProfile?.portfolio,
-                                    creatorAudienceLocation: creatorProfile?.audienceLocation,
-                                    creatorAudienceAge: creatorProfile?.audienceAge,
-                                    creatorResponseTimeHrs: creatorProfile?.responseTimeHrs,
-                                    creatorWebsiteUrl: creatorProfile?.websiteUrl,
-                                  };
-                                });
-                              const allApps = [...campaignApps, ...dealDerived];
-                              if (allApps.length === 0) return null;
-                              return (
-                                <div style={{ marginTop:'12px', paddingTop:'12px', borderTop:`1px solid ${C.border}` }}>
-                                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                                    <div style={{ fontSize:'11px', fontWeight:700, color:C.text, marginBottom:'8px' }}>
-                                      Applicants ({allApps.length})
-                                    </div>
-                                    <button
-                                      onClick={() => forceFetchApplications()}
-                                      title="Refresh applications"
-                                      style={{ background:'none', border:'none', cursor:'pointer', padding:'2px', display:'flex', alignItems:'center', flexShrink:0 }}
-                                    >
-                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2.5" style={{ opacity:0.7 }}>
-                                        <polyline points="23 4 23 10 17 10"/>
-                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                                      </svg>
-                                    </button>
-                                  </div>
-                                  <div style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
-                                    {allApps.map((app, ai) => {
-                                      const displayName = app.creatorName || app.creatorHandle;
-                                      const igUrl = app.creatorWebsiteUrl || `https://portfolio.valueskins.com/${app.creatorHandle.replace('@', '')}`;
-                                      return (
-                                        <div key={ai} style={{ display:'flex', alignItems:'center', gap:'10px', padding:'8px 0', borderTop: ai > 0 ? `1px solid ${C.border}` : 'none' }}>
-                                          <a href={igUrl} target="_blank" rel="noopener noreferrer" style={{ flexShrink:0 }}>
-                                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName.replace(/[\s@]/g, '')}`} alt={displayName} style={{ width:'32px', height:'32px', borderRadius:'50%', background:C.card }} />
-                                          </a>
-                                          <div style={{ flex:1, minWidth:0 }}>
-                                            <div style={{ fontSize:'12px', fontWeight:700, color:C.text }}>{displayName}</div>
-                                            <div style={{ fontSize:'10px', color:C.textSecondary }}>{app.creatorHandle} · {app.creatorMatchScore || 'Awaiting review'}</div>
-                                          </div>
-                                          <div style={{ flexShrink:0, display:'flex', gap:'6px' }}>
-                                            {app.status === 'pending' || app.status === 'invited' ? (
-                                              <button onClick={() => {
-                                                let creatorData = app.creatorName ? backendCreators.find((cr: any) => cr.name === app.creatorName) : undefined;
-                                                if (!creatorData) {
-                                                  const newIdx = backendCreators.length;
-                                                  const virtual = { _origIdx: newIdx, name: app.creatorName || 'Creator', valueSkin: app.creatorProfession || '', handle: app.creatorHandle || '', rate: app.creatorRate || '$0', featured: false, willingToBarter: true };
-                                                  setBackendCreators(prev => [...prev, virtual]);
-                                                  creatorData = virtual;
-                                                }
-                                                const oppIdx = app.opportunityIndex ?? 0;
-                                                setNegotiatingCreator(creatorData._origIdx);
-                                                setBrandCurrentOppIndex(oppIdx);
-                                                setMarketplaceTab('creators');
-                                                const dk = `${creatorData.name}|${creatorData.valueSkin}|${oppIdx}`;
-                                                if (!dealStates[dk] || dealStates[dk]?.phase === 'brief') { updateDeal(dk, { phase: 'offer', briefTitle: app.campaignTitle || 'Campaign', offerAmount: app.creatorRate || '5000' }); }
-                                              }} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:600, color:'#fff', cursor:'pointer' }}>
-                                                Review &amp; Negotiate
-                                              </button>
-                                            ) : (
-                                              <>
-                                                <span style={{ fontSize:'9px', fontWeight:600, color:app.status==='accepted'?C.success:C.textMuted, textTransform:'uppercase' }}>{app.status}</span>
-                                                {app.status === 'accepted' && (() => {
-                                                  let creatorData = app.creatorName ? backendCreators.find((cr: any) => cr.name === app.creatorName) : undefined;
-                                                  if (!creatorData) {
-                                                    const newIdx = backendCreators.length;
-                                                    const virtual = { _origIdx: newIdx, name: app.creatorName || 'Creator', valueSkin: app.creatorProfession || '', handle: app.creatorHandle || '', rate: app.creatorRate || '$0', featured: false, willingToBarter: true };
-                                                    setBackendCreators(prev => [...prev, virtual]);
-                                                    creatorData = virtual;
-                                                  }
-                                                  return (
-                                                    <button onClick={() => { setNegotiatingCreator(creatorData!._origIdx); setBrandCurrentOppIndex(app.opportunityIndex ?? 0); setMarketplaceTab('creators'); const dk = `${creatorData!.name}|${creatorData!.valueSkin}|${app.opportunityIndex ?? 0}`; if (!dealStates[dk] || dealStates[dk]?.phase === 'brief') { updateDeal(dk, { phase: 'offer', briefTitle: app.campaignTitle || 'Campaign', offerAmount: app.creatorRate || '5000' }); } }} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'4px 8px', fontSize:'9px', fontWeight:600, color:'#fff', cursor:'pointer' }}>Deal Room</button>
-                                                  );
-                                                })()}
-                                              </>
-                                            )}
-                                          </div>
-                                        </div>);})}
-                                  </div>
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        ))
-                        })()}
-                      </>)}
-                    </div>
 
                     {/* Past Campaigns — expired campaigns */}
                     {(() => {
@@ -6970,7 +5792,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   <span style={{ fontSize:'13px', fontWeight:700, color:C.text }}>{c.title}</span>
                                   <span style={{ fontSize:'12px', fontWeight:700, color:C.success }}>${parseInt(c.budget||'0').toLocaleString()}</span>
                                 </div>
-                                {c.brandName && <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'4px' }}>by {c.brandName}</div>}
+                                {c.brandName && <div
+                                  onMouseEnter={(e) => showHoverCard(buildBrandHover(c.brandName), e)}
+                                  onMouseMove={updateHoverPosition}
+                                  onMouseLeave={hideHoverCard}
+                                  style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'4px', cursor:'pointer' }}>by {c.brandName}</div>}
                                 <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px', lineHeight:1.4 }}>{c.description}</div>
                                 <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'6px' }}>
                                   {c.requiredProfessions.map(p => <span key={p} style={{ fontSize:'10px', fontWeight:600, color:C.primary, background:`${C.primary}12`, padding:'2px 7px', borderRadius:'6px', border:`1px solid ${C.primary}30` }}>{p}</span>)}
@@ -6985,15 +5811,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     {c.nonNegotiables.map(n=><span key={n} style={{ fontSize:'10px', color:C.textMuted, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', padding:'2px 7px', borderRadius:'6px' }}>{n}</span>)}
                                   </div>
                                 )}
-                                {(c.creatorCount || c.escrowPool) && (
+                                {c.creatorCount && (
                                   <div style={{ display:'flex', gap:'8px', marginBottom:'6px', flexWrap:'wrap' }}>
-                                    {c.creatorCount && <span style={{ fontSize:'10px', color:C.textSecondary, background:C.surfaceAlt, padding:'2px 8px', borderRadius:'6px' }}>Hired {c.creatorCount} creator{c.creatorCount!==1?'s':''}</span>}
-                                    {c.escrowPool && (
-                                      <span style={{ fontSize:'10px', fontWeight:700, color: c.escrowFunded ? C.success : C.warning, background: c.escrowFunded ? 'rgba(0,212,106,0.08)' : 'rgba(255,171,0,0.08)', border: `1px solid ${c.escrowFunded ? 'rgba(0,212,106,0.25)' : 'rgba(255,171,0,0.25)'}`, padding:'2px 8px', borderRadius:'6px', display:'flex', alignItems:'center', gap:'4px' }}>
-                                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                        {c.escrowFunded ? `$${c.escrowPool.toLocaleString()} in escrow` : `$${c.escrowPool.toLocaleString()} escrow pending`}
-                                      </span>
-                                    )}
+                                    <span style={{ fontSize:'10px', color:C.textSecondary, background:C.surfaceAlt, padding:'2px 8px', borderRadius:'6px' }}>Hired {c.creatorCount} creator{c.creatorCount!==1?'s':''}</span>
                                   </div>
                                 )}
                                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -7712,7 +6532,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         {brandValueSkins.map(skin => (
                           <span key={skin} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: C.primary, background: `${C.primary}15`, padding: '6px 14px', borderRadius: '20px' }}>
                             {skin}
-                            <button onClick={(e) => { e.stopPropagation(); setBrandValueSkins(prev => prev.filter(s => s !== skin)); if (activeBrandSkin === skin) setActiveBrandSkin(brandValueSkins.find(s => s !== skin) || null); setPurchaseToast(`Removed ${skin} from brand skins`); setTimeout(() => setPurchaseToast(null), 3000); }} style={{ background: 'none', border: 'none', color: C.textMuted, cursor: 'pointer', fontSize: '14px', lineHeight: 1, padding: 0 }}>x</button>
                           </span>
                         ))}
                       </div>
@@ -7726,7 +6545,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     const isBrand = marketplaceRole === 'brand';
                     const brandOwns = isBrand && prof.subProfessions.some(sp => brandValueSkins.includes(sp));
                     const isCurrentSlotActive = !isBrand && ownedSkins.some(s => prof.subProfessions.includes(s.profession));
-                    const canClick = isBrand ? brandValueSkins.length < 1 : true;
+                    const canClick = isBrand ? brandValueSkins.length < 1 : ownedSkins.length < 1;
                     return (
                       <button
                         key={prof.name}
@@ -7756,9 +6575,19 @@ export default function MarketplaceDemoPage(initialDealData?: {
           {/* ── EXPLORE VIEW ──────────────────────────────────── */}
           {activeView === 'explore' && <ExploreView />}
           {/* ── SETTINGS VIEW ────────────────────────────────── */}
-          {activeView === 'settings' && <SettingsView role={marketplaceRole as 'brand' | 'creator' | 'viewer'} />}
+          {activeView === 'settings' && <SettingsView role={marketplaceRole as 'brand' | 'creator' | 'viewer'} brandValueSkins={brandValueSkins} />}
         </div>
       </div>
+
+      {/* Profile hover card */}
+      {hoverProfile && (
+        <div
+          onMouseEnter={() => { clearTimeout(hoverTimers.current.hide); }}
+          onMouseLeave={() => { hoverTimers.current.hide = setTimeout(() => setHoverProfile(null), 200); }}
+        >
+          <HoverCard profile={hoverProfile.profile} x={hoverProfile.x} y={hoverProfile.y} />
+        </div>
+      )}
 
       {/* ── MODALS ──────────────────────────────────────────── */}
 
@@ -7870,16 +6699,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
         <Modal onClose={() => { setShowStoreModal(false); setStoreCategory(null); }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
             <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: C.text, margin: 0 }}>{storeCategory}</h2>
-            {marketplaceRole === 'brand' && (
-              <span style={{ fontSize: '11px', fontWeight: 700, color: C.textSecondary, background: C.surfaceAlt, padding: '3px 8px', borderRadius: '6px' }}>
-                {brandValueSkins.length}/1 max
-              </span>
-            )}
+            <span style={{ fontSize: '11px', fontWeight: 700, color: C.textSecondary, background: C.surfaceAlt, padding: '3px 8px', borderRadius: '6px' }}>
+              {marketplaceRole === 'brand' ? brandValueSkins.length : ownedSkins.length}/1 max
+            </span>
           </div>
           <p style={{ fontSize: '13px', color: C.textSecondary, marginBottom: '16px' }}>
             {marketplaceRole === 'brand'
-              ? 'Tap any profession to add it to your brand ValueSkins ($10).'
-              : 'Tap any badge to purchase ($10) and instantly apply it as your ValueSkin.'}
+              ? `Tap any profession to add it to your brand ValueSkins (₹${SKIN_PRICE_RUPEES}).`
+              : `Tap any badge to purchase (₹${SKIN_PRICE_RUPEES}) and instantly apply it as your ValueSkin.`}
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -7891,7 +6718,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
               const stickerSrc = defined?.stickerImage || STICKER_MANIFEST[sub];
               const isOwned = isBrand && brandValueSkins.includes(sub);
               const isActiveHere = !isBrand && assignedProfessions.has(sub);
-              const isFull = isBrand && brandValueSkins.length >= 1 && !isOwned;
+              const isFull = (isBrand ? brandValueSkins.length >= 1 : ownedSkins.length >= 1) && !isOwned && !isActiveHere;
               const disabled = isFull;
               return (
                 <button
@@ -7989,6 +6816,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
             <button
               key={view}
               onClick={() => {
+                if (view === 'bank') { window.location.href = '/fake-bank'; return; }
                 setActiveView(view);
               }}
               style={{

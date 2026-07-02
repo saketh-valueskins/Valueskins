@@ -33,8 +33,6 @@ const C = {
 
 const BRAND_CATEGORIES: Record<string, { name: string; subCategories: string[] }> = {
   'Company Size':  { name: 'Company Size',  subCategories: ['Startup', 'SMB', 'Mid-Market', 'Enterprise', 'Agency', 'Solo Brand', 'Non-Profit', 'Government'] },
-  'Campaign Type': { name: 'Campaign Type', subCategories: ['Product Review', 'Brand Ambassador', 'Sponsored Content', 'Event Coverage', 'Affiliate', 'Whitelabel', 'UGC', 'Podcast'] },
-  'Budget Tier':   { name: 'Budget Tier',   subCategories: ['Micro ($500-2K)', 'Standard ($2K-10K)', 'Premium ($10K-50K)', 'Enterprise ($50K+)'] },
 };
 
 function getStickerForProfession(profession: string): string | undefined {
@@ -53,20 +51,18 @@ function Modal({ onClose, children }: { onClose: () => void; children: React.Rea
 }
 
 interface Props {
-  role: 'brand' | 'creator' | 'viewer';
+  role?: 'brand' | 'creator' | 'viewer';
+  brandValueSkins?: string[];
 }
 
-export default function SettingsView({ role = 'creator' }: Props) {
+export default function SettingsView({ role = 'creator', brandValueSkins: propBrandValueSkins }: Props) {
   // ── General (all roles) ──────────────────────────────────────────
   const [creatorSettingsOpen, setCreatorSettingsOpen] = useState<string | null>(null);
   const [selectedCountry, setSelectedCountry] = useState('');
-  const [willingToBarter, setWillingToBarter] = useState(false);
   const [purchaseToast, setPurchaseToast] = useState<string | null>(null);
 
   // ── Brand-only state ─────────────────────────────────────────────
-  const [brandValueSkins, setBrandValueSkins] = useState<string[]>([]);
-  const [activeBrandSkin, setActiveBrandSkin] = useState<string | null>(null);
-  const [brandBudget, setBrandBudget] = useState('4000');
+  const brandValueSkins = propBrandValueSkins ?? JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('vs_demo_brand_value_skins') || '[]' : '[]');
   const [brandProfileSelections, setBrandProfileSelections] = useState<Record<string, string>>({});
 
   // ── Creator-only state ───────────────────────────────────────────
@@ -155,29 +151,16 @@ export default function SettingsView({ role = 'creator' }: Props) {
                     {brandValueSkins.map(skin => (
                       <div key={skin} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(230,81,0,0.06)', borderRadius: '8px', padding: '6px 10px' }}>
                         <span style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{skin}</span>
-                        <button onClick={() => { setBrandValueSkins(prev => prev.filter(s => s !== skin)); if (activeBrandSkin === skin) setActiveBrandSkin(brandValueSkins.find(s => s !== skin) ?? null); }} style={{ background: 'none', border: 'none', color: C.textMuted, cursor: 'pointer', fontSize: '14px', padding: '0 2px', lineHeight: 1 }}>x</button>
                       </div>
                     ))}
                   </div>
-                  <div style={{ fontSize: '11px', color: C.textSecondary }}>{brandValueSkins.length}/3 slots used</div>
+                  <div style={{ fontSize: '11px', color: C.textSecondary }}>Active</div>
                 </div>
               ) : (
                 <div style={{ width: '100%', background: C.warning, border: 'none', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 700, color: '#fff', cursor: 'default', textAlign: 'center' }}>
                   No Brand ValueSkins — visit the Store
                 </div>
               )}
-            </div>
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: '12px', padding: '14px 16px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>Campaign Budget</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '13px', color: C.textMuted }}>Default budget ($)</span>
-                <input
-                  type="text"
-                  value={brandBudget}
-                  onChange={e => setBrandBudget(e.target.value.replace(/[^0-9]/g, ''))}
-                  style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, padding: '6px 10px', fontSize: '13px', fontFamily: 'inherit', outline: 'none', width: '100px' }}
-                />
-              </div>
             </div>
           </div>
         )}
@@ -237,43 +220,7 @@ export default function SettingsView({ role = 'creator' }: Props) {
           </div>
         )}
 
-        {/* ── Collaboration Preferences ── */}
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '12px' }}>
-            Collaboration Preferences
-          </div>
-          <div style={{
-            borderRadius: '12px',
-            border: `1px solid ${willingToBarter ? C.textSecondary : C.borderLight}`,
-            padding: '14px 16px',
-            backgroundColor: willingToBarter ? 'rgba(16,185,129,0.06)' : C.bg,
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
-            transition: 'all 0.2s ease',
-          }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: C.text, marginBottom: '2px' }}>
-                Open to Free / Exposure / Barter
-              </div>
-              <div style={{ fontSize: '12px', color: C.textSecondary, lineHeight: 1.4 }}>
-                Signal that you are willing to collaborate without monetary compensation. Visible on your profile and in marketplace search.
-              </div>
-            </div>
-            <button
-              onClick={() => setWillingToBarter(!willingToBarter)}
-              style={{
-                width: '44px', height: '24px', borderRadius: '12px', border: 'none',
-                backgroundColor: willingToBarter ? C.textSecondary : 'rgba(255,255,255,0.15)',
-                cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background-color 0.2s',
-              }}
-            >
-              <div style={{
-                width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#fff',
-                position: 'absolute', top: '2px', left: willingToBarter ? '22px' : '2px',
-                transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-              }} />
-            </button>
-          </div>
-        </div>
+
 
         {/* ── CREATOR-ONLY SETTINGS ── */}
         {role !== 'brand' && (<>

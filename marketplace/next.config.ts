@@ -5,12 +5,13 @@ import type { NextConfig } from "next";
 // When migrating to nonce-based CSP, use next.config.ts experimental.appDir csp support.
 const cspHeader = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob: https: http:",
   "media-src 'self' blob: data:",
-  "connect-src 'self' https://api.valueskins.io http://localhost:8080 https://localhost:8080 wss: https://*.firebaseio.com https://*.googleapis.com https://*.firebasedatabase.app https://*.supabase.co wss://*.supabase.co",
+  "connect-src 'self' https://api.valueskins.io http://localhost:8080 https://localhost:8080 wss: https://*.firebaseio.com https://*.googleapis.com https://*.firebasedatabase.app https://*.supabase.co wss://*.supabase.co https://api.razorpay.com",
+  "frame-src https://api.razorpay.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

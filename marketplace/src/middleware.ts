@@ -21,7 +21,7 @@ export function middleware(request: NextRequest) {
   // CSP - Content Security Policy (prevent XSS, clickjacking, etc.)
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://accounts.google.com https://*.supabase.co wss://*.supabase.co; frame-src https://accounts.google.com"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://accounts.google.com https://*.supabase.co wss://*.supabase.co https://api.razorpay.com; frame-src https://accounts.google.com https://api.razorpay.com"
   );
 
   // Prevent MIME type sniffing
