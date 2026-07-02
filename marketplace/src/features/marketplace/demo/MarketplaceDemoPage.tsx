@@ -3088,16 +3088,19 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         .filter(([k]) => k.includes(`|${selectedMarketplaceSkin}|`))
                         .map(([key, deal]) => ({ key, ...deal }));
 
+                      // Strict filtering: deals must be ONLY in one column
+                      // A deal is "Past Deals" if EITHER side approved it
+                      const pastDeals = pipelineDeals.filter(d => d.creatorDealLifecycle === 'approved' || d.brandApprovalPhase === 'approved');
+                      const activePipelineDeals = pipelineDeals.filter(d => d.creatorDealLifecycle !== 'approved' && d.brandApprovalPhase !== 'approved');
+
                       const columns = {
-                        'Negotiation': pipelineDeals.filter(d =>
-                          ['offer', 'chatroom', 'counter', 'brand_countered', 'pending', 'brand_considering', 'brand_reviewing'].includes(d.phase) &&
-                          d.creatorDealLifecycle !== 'approved' && d.brandApprovalPhase !== 'approved'
+                        'Negotiation': activePipelineDeals.filter(d =>
+                          ['offer', 'chatroom', 'counter', 'brand_countered', 'pending', 'brand_considering', 'brand_reviewing'].includes(d.phase)
                         ),
-                        'In Progress': pipelineDeals.filter(d =>
-                          ['checklist', 'softhold'].includes(d.phase) &&
-                          d.creatorDealLifecycle !== 'approved' && d.brandApprovalPhase !== 'approved'
+                        'In Progress': activePipelineDeals.filter(d =>
+                          ['checklist', 'softhold'].includes(d.phase)
                         ),
-                        'Past Deals': pipelineDeals.filter(d => d.creatorDealLifecycle === 'approved' || d.brandApprovalPhase === 'approved'),
+                        'Past Deals': pastDeals,
                       };
 
                       return (
