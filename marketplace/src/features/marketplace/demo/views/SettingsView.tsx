@@ -53,23 +53,108 @@ function Modal({ onClose, children }: { onClose: () => void; children: React.Rea
 interface Props {
   role?: 'brand' | 'creator' | 'viewer';
   brandValueSkins?: string[];
+  // Shared state — written here, read by hover card + profile sidebar.
+  // Optional — falls back to local state when not passed (standalone page usage).
+  activeSelectedCountry?: string;
+  setSelectedCountry?: (v: string) => void;
+  rateCard?: { reel: string; story: string; post: string; podcast: string; live: string };
+  setRateCard?: (v: { reel: string; story: string; post: string; podcast: string; live: string } | ((prev: { reel: string; story: string; post: string; podcast: string; live: string }) => { reel: string; story: string; post: string; podcast: string; live: string })) => void;
+  creatorAvailableFrom?: string;
+  setCreatorAvailableFrom?: (v: string) => void;
+  selectedLanguages?: string[];
+  setSelectedLanguages?: (v: string[] | ((prev: string[]) => string[])) => void;
+  profileDealTypes?: string[];
+  setProfileDealTypes?: (v: string[] | ((prev: string[]) => string[])) => void;
+  willingToBarter?: boolean;
+  setWillingToBarter?: (v: boolean) => void;
+  brandProfileSelections?: Record<string, string>;
+  setBrandProfileSelections?: (v: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
+  skinPitchTexts?: Record<string, string>;
+  setSkinPitchTexts?: (v: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
+  skinPitchVideos?: Record<string, { url: string; name: string }>;
+  setSkinPitchVideos?: (v: Record<string, { url: string; name: string }> | ((prev: Record<string, { url: string; name: string }>) => Record<string, { url: string; name: string }>)) => void;
+  creatorEnergy?: string;
+  setCreatorEnergy?: (v: string) => void;
+  portfolioImage?: string | null;
+  setPortfolioImage?: (v: string | null) => void;
+  profileName?: string;
+  profileBio?: string;
 }
 
-export default function SettingsView({ role = 'creator', brandValueSkins: propBrandValueSkins }: Props) {
+export default function SettingsView({
+  role = 'creator',
+  brandValueSkins: propBrandValueSkins,
+  selectedCountry: propSelectedCountry,
+  setSelectedCountry: propSetSelectedCountry,
+  rateCard: propRateCard,
+  setRateCard: propSetRateCard,
+  creatorAvailableFrom: propCreatorAvailableFrom,
+  setCreatorAvailableFrom: propSetCreatorAvailableFrom,
+  selectedLanguages: propSelectedLanguages,
+  setSelectedLanguages: propSetSelectedLanguages,
+  profileDealTypes: propProfileDealTypes,
+  setProfileDealTypes: propSetProfileDealTypes,
+  willingToBarter: propWillingToBarter,
+  setWillingToBarter: propSetWillingToBarter,
+  brandProfileSelections: propBrandProfileSelections,
+  setBrandProfileSelections: propSetBrandProfileSelections,
+  skinPitchTexts: propSkinPitchTexts,
+  setSkinPitchTexts: propSetSkinPitchTexts,
+  skinPitchVideos: propSkinPitchVideos,
+  setSkinPitchVideos: propSetSkinPitchVideos,
+  creatorEnergy: propCreatorEnergy,
+  setCreatorEnergy: propSetCreatorEnergy,
+  portfolioImage: propPortfolioImage,
+  setPortfolioImage: propSetPortfolioImage,
+  profileName: propProfileName,
+  profileBio: propProfileBio,
+}: Props) {
+  // ── Fallback local state for shared props ────────────────────────
+  const [localCountry, setLocalCountry] = useState('');
+  const [localRateCard, setLocalRateCard] = useState({ reel: '', story: '', post: '', podcast: '', live: '' });
+  const [localAvailableFrom, setLocalAvailableFrom] = useState('2026-03-01');
+  const [localLanguages, setLocalLanguages] = useState<string[]>(['English']);
+  const [localDealTypes, setLocalDealTypes] = useState<string[]>(['Paid']);
+  const [localBarter, setLocalBarter] = useState(false);
+  const [localBrandSelections, setLocalBrandSelections] = useState<Record<string, string>>({});
+  const [localPitchTexts, setLocalPitchTexts] = useState<Record<string, string>>({});
+  const [localPitchVideos, setLocalPitchVideos] = useState<Record<string, { url: string; name: string }>>({});
+  const [localPortfolioImage, setLocalPortfolioImage] = useState<string | null>(null);
+  const [localCreatorEnergy] = useState<'available' | 'limited' | 'burnout' | 'pause'>('available');
+
+  // Use prop if provided, else fall back to local
+  const activeSelectedCountry = propSelectedCountry ?? localCountry;
+  const setActiveSelectedCountry = propSetSelectedCountry ?? setLocalCountry;
+  const activeRateCard = propRateCard ?? localRateCard;
+  const setActiveRateCard = propSetRateCard ?? setLocalRateCard;
+  const activeCreatorAvailableFrom = propCreatorAvailableFrom ?? localAvailableFrom;
+  const setActiveCreatorAvailableFrom = propSetCreatorAvailableFrom ?? setLocalAvailableFrom;
+  const activeSelectedLanguages = propSelectedLanguages ?? localLanguages;
+  const setActiveSelectedLanguages = propSetSelectedLanguages ?? setLocalLanguages;
+  const activeProfileDealTypes = propProfileDealTypes ?? localDealTypes;
+  const setActiveProfileDealTypes = propSetProfileDealTypes ?? setLocalDealTypes;
+  const activeWillingToBarter = propWillingToBarter ?? localBarter;
+  const setActiveWillingToBarter = propSetWillingToBarter ?? setLocalBarter;
+  const activeBrandProfileSelections = propBrandProfileSelections ?? localBrandSelections;
+  const setActiveBrandProfileSelections = propSetBrandProfileSelections ?? setLocalBrandSelections;
+  const activeSkinPitchTexts = propSkinPitchTexts ?? localPitchTexts;
+  const setActiveSkinPitchTexts = propSetSkinPitchTexts ?? setLocalPitchTexts;
+  const activeSkinPitchVideos = propSkinPitchVideos ?? localPitchVideos;
+  const setActiveSkinPitchVideos = propSetSkinPitchVideos ?? setLocalPitchVideos;
+  const activePortfolioImage = propPortfolioImage ?? localPortfolioImage;
+  const setActivePortfolioImage = propSetPortfolioImage ?? setLocalPortfolioImage;
+  const activeCreatorEnergy = propCreatorEnergy ?? localCreatorEnergy;
+
   // ── General (all roles) ──────────────────────────────────────────
   const [creatorSettingsOpen, setCreatorSettingsOpen] = useState<string | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState('');
   const [purchaseToast, setPurchaseToast] = useState<string | null>(null);
 
   // ── Brand-only state ─────────────────────────────────────────────
   const brandValueSkins = propBrandValueSkins ?? JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('vs_demo_brand_value_skins') || '[]' : '[]');
-  const [brandProfileSelections, setBrandProfileSelections] = useState<Record<string, string>>({});
 
   // ── Creator-only state ───────────────────────────────────────────
   const [notAvailableFrom, setNotAvailableFrom] = useState('');
   const [notAvailableTo, setNotAvailableTo] = useState('');
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['English']);
-  const [profileDealTypes, setProfileDealTypes] = useState<string[]>(['Paid']);
   const [profileExclusivity, setProfileExclusivity] = useState(false);
   const [profileNda, setProfileNda] = useState(false);
   const [profileUsageRights, setProfileUsageRights] = useState(false);
@@ -79,15 +164,13 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
   // valueSkins — mock empty map (real data comes from backend)
   const [valueSkins] = useState<Record<string, any>>({});
   const [creatorSkinMode, setCreatorSkinMode] = useState<'static' | 'showcase'>('showcase');
-  const [skinPitchTexts, setSkinPitchTexts] = useState<Record<string, string>>({});
-  const [skinPitchVideos, setSkinPitchVideos] = useState<Record<string, { url: string; name: string }>>({});
   const [showSkinShowcaseModal, setShowSkinShowcaseModal] = useState<string | null>(null);
-  const creatorPitchText = showSkinShowcaseModal ? (skinPitchTexts[showSkinShowcaseModal] ?? '') : '';
-  const setCreatorPitchText = (text: string) => { if (showSkinShowcaseModal) setSkinPitchTexts(prev => ({ ...prev, [showSkinShowcaseModal]: text })); };
-  const creatorPitchVideoUrl = showSkinShowcaseModal ? (skinPitchVideos[showSkinShowcaseModal]?.url ?? '') : '';
-  const creatorPitchVideoName = showSkinShowcaseModal ? (skinPitchVideos[showSkinShowcaseModal]?.name ?? '') : '';
-  const setCreatorPitchVideoUrl = (url: string) => { if (showSkinShowcaseModal) setSkinPitchVideos(prev => ({ ...prev, [showSkinShowcaseModal]: { url, name: prev[showSkinShowcaseModal]?.name ?? '' } })); };
-  const setCreatorPitchVideoName = (name: string) => { if (showSkinShowcaseModal) setSkinPitchVideos(prev => ({ ...prev, [showSkinShowcaseModal]: { url: prev[showSkinShowcaseModal]?.url ?? '', name } })); };
+  const creatorPitchText = showSkinShowcaseModal ? (activeSkinPitchTexts[showSkinShowcaseModal] ?? '') : '';
+  const setCreatorPitchText = (text: string) => { if (showSkinShowcaseModal) setActiveSkinPitchTexts(prev => ({ ...prev, [showSkinShowcaseModal]: text })); };
+  const creatorPitchVideoUrl = showSkinShowcaseModal ? (activeSkinPitchVideos[showSkinShowcaseModal]?.url ?? '') : '';
+  const creatorPitchVideoName = showSkinShowcaseModal ? (activeSkinPitchVideos[showSkinShowcaseModal]?.name ?? '') : '';
+  const setCreatorPitchVideoUrl = (url: string) => { if (showSkinShowcaseModal) setActiveSkinPitchVideos(prev => ({ ...prev, [showSkinShowcaseModal]: { url, name: prev[showSkinShowcaseModal]?.name ?? '' } })); };
+  const setCreatorPitchVideoName = (name: string) => { if (showSkinShowcaseModal) setActiveSkinPitchVideos(prev => ({ ...prev, [showSkinShowcaseModal]: { url: prev[showSkinShowcaseModal]?.url ?? '', name } })); };
 
   // Inbox & safety
   const [creatorAllowedNiches, setCreatorAllowedNiches] = useState<string[]>([]);
@@ -95,13 +178,11 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
   const [creatorShowSafetySettings, setCreatorShowSafetySettings] = useState(false);
 
   // Rate card
-  const [rateCard, setRateCard] = useState({ reel: '', story: '', post: '', podcast: '', live: '' });
   const [contractMode, setContractMode] = useState<'one-off' | 'long-term' | 'both'>('both');
   const [creatorMaxActiveDeals, setCreatorMaxActiveDeals] = useState(3);
   const [adminShowRateCard] = useState(true);
 
   // Availability calendar
-  const [creatorAvailableFrom, setCreatorAvailableFrom] = useState('2026-03-01');
   const [isFirstDealOpen, setIsFirstDealOpen] = useState(false);
   const [adminShowAvailabilityCalendar] = useState(true);
 
@@ -109,10 +190,6 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
   const [revisionLimit, setRevisionLimit] = useState(2);
   const [usageRightsDays, setUsageRightsDays] = useState(90);
   const [exclusivityUntil, setExclusivityUntil] = useState('');
-
-  // Portfolio
-  const [portfolioImage, setPortfolioImage] = useState<string | null>(null);
-  const [creatorEnergy] = useState<'available' | 'limited' | 'burnout' | 'pause'>('available');
 
   // Metrics (for showcase modal)
   const [metrics] = useState({ followers: 18400, engagement: 4.2, dealsCompleted: 17, avgDealValue: 2500, onTimeRate: 96, brandRating: 4.6 });
@@ -182,7 +259,7 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                         Define your brand profile so creators understand who you are. Select one option from each category.
                       </div>
                       {Object.values(BRAND_CATEGORIES).map((cat) => {
-                        const currentSelection = brandProfileSelections[cat.name];
+                        const currentSelection = activeBrandProfileSelections[cat.name];
                         return (
                           <div key={cat.name} style={{ marginBottom: '14px' }}>
                             <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, letterSpacing: '0.6px', textTransform: 'uppercase', marginBottom: '8px' }}>{cat.name}</div>
@@ -193,7 +270,7 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                                   <button
                                     key={sub}
                                     onClick={() => {
-                                      setBrandProfileSelections(prev => ({ ...prev, [cat.name]: selected ? '' : sub }));
+                                      setActiveBrandProfileSelections(prev => ({ ...prev, [cat.name]: selected ? '' : sub }));
                                       if (!selected) { setPurchaseToast(`${cat.name}: ${sub}`); setTimeout(() => setPurchaseToast(null), 2000); }
                                     }}
                                     style={{
@@ -275,7 +352,7 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                       <div><div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>City</div><input placeholder="e.g. New York" style={{ width: '100%', padding: '7px 9px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '7px', color: C.text, fontSize: '12px', boxSizing: 'border-box' as const }} /></div>
                       <div><div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Country</div>
-                        <select value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)}
+                        <select value={activeSelectedCountry} onChange={e => setActiveSelectedCountry(e.target.value)}
                           style={{ width: '100%', padding: '7px 9px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '7px', color: C.text, fontSize: '12px', boxSizing: 'border-box' as const }}>
                           {['Select...','United States','United Kingdom','Canada','Australia','India','Germany','France','Brazil','Japan','South Korea','Mexico','Spain','Italy','Netherlands','Sweden','Norway','Denmark','Finland','Switzerland','Austria','Belgium','Portugal','Ireland','New Zealand','Singapore','Philippines','Indonesia','Thailand','Vietnam','Malaysia','South Africa','Nigeria','Kenya','Egypt','UAE','Saudi Arabia','Turkey','Poland','Czech Republic','Romania','Ukraine','Russia','China','Taiwan','Argentina','Colombia','Chile','Peru','Israel','Pakistan','Bangladesh'].map(c => <option key={c} value={c === 'Select...' ? '' : c}>{c}</option>)}
                         </select>
@@ -352,7 +429,7 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                         </select>
                       </div>
                       <div><div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Country</div>
-                        <select value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)}
+                        <select value={activeSelectedCountry} onChange={e => setActiveSelectedCountry(e.target.value)}
                           style={{ width: '100%', padding: '7px 9px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '7px', color: C.text, fontSize: '12px', boxSizing: 'border-box' as const }}>
                           {['Select...','United States','United Kingdom','Canada','Australia','India','Germany','France','Brazil','Japan','South Korea','Mexico','Spain','Italy','Netherlands','Sweden','Norway','Denmark','Finland','Switzerland','Austria','Belgium','Portugal','Ireland','New Zealand','Singapore','Philippines','Indonesia','Thailand','Vietnam','Malaysia','South Africa','Nigeria','Kenya','Egypt','UAE','Saudi Arabia','Turkey','Poland','Czech Republic','Romania','Ukraine','Russia','China','Taiwan','Argentina','Colombia','Chile','Peru','Israel','Pakistan','Bangladesh'].map(c => <option key={c} value={c === 'Select...' ? '' : c}>{c}</option>)}
                         </select>
@@ -361,9 +438,9 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                     <div style={{ marginTop: '4px' }}><div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Audience Languages (select all that apply)</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                         {['English','Spanish','French','Hindi','Portuguese','Arabic','Mandarin','German','Japanese','Korean','Russian','Italian','Dutch','Swedish','Norwegian','Danish','Finnish','Polish','Turkish','Thai','Vietnamese','Indonesian','Malay','Filipino','Bengali','Tamil','Telugu','Urdu','Persian','Hebrew','Swahili','Greek','Czech','Romanian','Hungarian'].map(l => {
-                          const active = selectedLanguages.includes(l);
+                          const active = activeSelectedLanguages.includes(l);
                           return (
-                            <span key={l} onClick={() => setSelectedLanguages(prev => active ? prev.filter(x => x !== l) : [...prev, l])}
+                            <span key={l} onClick={() => setActiveSelectedLanguages(prev => active ? prev.filter(x => x !== l) : [...prev, l])}
                               style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px',
                                 background: active ? `${C.primary}20` : C.bg,
                                 border: `1px solid ${active ? C.primary : C.border}`,
@@ -394,9 +471,9 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                     <div style={{ marginBottom: '10px' }}><div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Deal Type (select all that apply)</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                         {['Paid','Gifted Product','Equity','Barter','Revenue Share','Ambassador','Licensing'].map(d => {
-                          const active = profileDealTypes.includes(d);
+                          const active = activeProfileDealTypes.includes(d);
                           return (
-                            <span key={d} onClick={() => setProfileDealTypes(prev => active ? prev.filter(x => x !== d) : [...prev, d])}
+                            <span key={d} onClick={() => setActiveProfileDealTypes(prev => active ? prev.filter(x => x !== d) : [...prev, d])}
                               style={{ padding: '4px 10px', borderRadius: '10px', fontSize: '11px',
                                 background: active ? `${C.primary}20` : C.bg,
                                 border: `1px solid ${active ? C.primary : C.border}`,
@@ -457,7 +534,7 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                         {ownedSkinsList.length === 0 ? (
                           <div style={{ fontSize: '12px', color: C.textMuted, textAlign: 'center', padding: '16px' }}>Get a ValueSkin to add your pitch</div>
                         ) : ownedSkinsList.map(skinName => {
-                          const hasPitch = skinPitchTexts[skinName] || skinPitchVideos[skinName]?.url;
+                          const hasPitch = activeSkinPitchTexts[skinName] || activeSkinPitchVideos[skinName]?.url;
                           const badge = PROFESSION_BADGES[skinName];
                           return (
                             <div key={skinName} onClick={() => setShowSkinShowcaseModal(skinName)}
@@ -554,12 +631,12 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                   <div style={{ background: C.card, border: `1px solid ${C.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '14px' }}>
                     <div style={{ fontSize: '10px', color: C.textSecondary, marginBottom: '10px' }}>Set your price per content format. These are shown to brands before they send a proposal.</div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '10px' }}>
-                      {(Object.keys(rateCard) as Array<keyof typeof rateCard>).map(fmt => (
+                      {(Object.keys(activeRateCard) as Array<keyof typeof activeRateCard>).map(fmt => (
                         <div key={fmt}>
                           <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '4px', textTransform: 'capitalize' }}>{fmt}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                             <span style={{ color: C.textSecondary, fontSize: '12px' }}>$</span>
-                            <input type="number" value={rateCard[fmt]} onChange={e => setRateCard(prev => ({ ...prev, [fmt]: e.target.value }))}
+                            <input type="number" value={activeRateCard[fmt]} onChange={e => setActiveRateCard(prev => ({ ...prev, [fmt]: e.target.value }))}
                               style={{ width: '100%', padding: '6px 7px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '7px', color: C.text, fontSize: '12px', boxSizing: 'border-box' as const }} />
                           </div>
                         </div>
@@ -603,7 +680,7 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                   <div style={{ background: C.card, border: `1px solid ${C.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '14px' }}>
                     <div style={{ marginBottom: '10px' }}>
                       <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Available for new deals from</div>
-                      <input type="date" value={creatorAvailableFrom} onChange={e => setCreatorAvailableFrom(e.target.value)}
+                      <input type="date" value={activeCreatorAvailableFrom} onChange={e => setActiveCreatorAvailableFrom(e.target.value)}
                         style={{ width: '100%', padding: '7px 9px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '7px', color: C.text, fontSize: '12px', boxSizing: 'border-box' as const }} />
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: `1px solid ${C.border}` }}>
@@ -679,11 +756,11 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
               const hasAvatar = true;
               const hasBio = true;
               const hasValueSkin = Object.values(valueSkins).some(Boolean);
-              const hasDealPrefs = profileDealTypes.length > 0;
+              const hasDealPrefs = activeProfileDealTypes.length > 0;
               const hasCredential = false;
               const hasTestimonial = false;
               const hasBarterPref = true;
-              const hasEnergy = Boolean(creatorEnergy);
+              const hasEnergy = Boolean(activeCreatorEnergy);
               const score =
                 (hasAvatar ? 15 : 0) + (hasBio ? 15 : 0) + (hasValueSkin ? 20 : 0) +
                 (hasDealPrefs ? 10 : 0) + (hasCredential ? 15 : 0) + (hasTestimonial ? 15 : 0) +
@@ -738,10 +815,10 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
             <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '12px' }}>
               Why Brands Should Hire You
             </div>
-            {portfolioImage ? (
+            {activePortfolioImage ? (
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: '12px', overflow: 'hidden' }}>
                 <div style={{ width: '100%', height: '200px', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                  <img src={portfolioImage} alt="Portfolio" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                  <img src={activePortfolioImage} alt="Portfolio" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                 </div>
                 <div style={{ padding: '12px 14px', borderTop: `1px solid ${C.border}`, display: 'flex', gap: '8px' }}>
                   <button
@@ -753,7 +830,7 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                         const file = e.target.files[0];
                         if (file) {
                           const reader = new FileReader();
-                          reader.onload = (evt: any) => setPortfolioImage(evt.target.result);
+                          reader.onload = (evt: any) => setActivePortfolioImage(evt.target.result);
                           reader.readAsDataURL(file);
                         }
                       };
@@ -764,7 +841,7 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                     Change Photo
                   </button>
                   <button
-                    onClick={() => setPortfolioImage(null)}
+                    onClick={() => setActivePortfolioImage(null)}
                     style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: `${C.danger}15`, border: `1px solid ${C.danger}40`, color: C.danger }}
                   >
                     Remove
@@ -785,7 +862,7 @@ export default function SettingsView({ role = 'creator', brandValueSkins: propBr
                       const file = e.target.files[0];
                       if (file) {
                         const reader = new FileReader();
-                        reader.onload = (evt: any) => setPortfolioImage(evt.target.result);
+                        reader.onload = (evt: any) => setActivePortfolioImage(evt.target.result);
                         reader.readAsDataURL(file);
                       }
                     };

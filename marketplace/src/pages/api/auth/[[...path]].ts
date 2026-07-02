@@ -255,6 +255,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ message: 'Verification email sent' });
   }
 
+  // ── POST /api/auth/update-profile — update display_name / bio ──
+  if (req.method === 'POST' && pathStr === 'update-profile') {
+    const userRow = await getSessionUser();
+    if (!userRow) return res.status(401).json({ error: 'Not authenticated' });
+
+    const { display_name, bio } = req.body;
+    const setClauses: string[] = [];
+    const params: any[] = [];
+    let idx = 1;
+
+    if (display_name !== undefined) { setClauses.push(`display_name = $${idx++}`); params.push(display_name); }
+    if (bio !== undefined) { setClauses.push(`bio = $${idx++}`); params.push(bio); }
+
+    if (setClauses.length > 0) {
+      params.push(userRow.id);
+      await query(`UPDATE users SET ${setClauses.join(', ')} WHERE id = $${idx}`, params);
+    }
+
+    return res.status(200).json({ updated: true });
+  }
+
   // ── POST /api/auth/phone/request-otp — mock ──
   if (req.method === 'POST' && pathStr === 'phone/request-otp') {
     return res.status(200).json({ message: 'OTP sent to phone' });

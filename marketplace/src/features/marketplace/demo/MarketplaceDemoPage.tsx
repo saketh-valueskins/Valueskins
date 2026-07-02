@@ -1958,13 +1958,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
     if (marketplaceRole === 'brand') {
       setBrandValueSkins(prev => [...prev, profession]);
-      setValueSkins(prev => {
-        const newSkins = { ...prev };
-        if (!Object.values(newSkins).some(s => s?.profession === profession)) {
-          newSkins['profession'] = { profession, aboutMe: defaultAboutMe(profession) };
-        }
-        return newSkins;
-      });
       if (!activeBrandSkin) setActiveBrandSkin(profession);
       setShowStoreModal(false);
       setActiveView('mim');
@@ -1980,10 +1973,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
       ['profession']: { profession, aboutMe: defaultAboutMe(profession) },
     }));
     setSelectedMarketplaceSkin(profession);
-    if (!brandValueSkins.includes(profession)) {
-      setBrandValueSkins(prev => [...prev, profession]);
-      if (!activeBrandSkin) setActiveBrandSkin(profession);
-    }
     setShowStoreModal(false);
     setActiveView('profile');
     setPurchaseToast(`${label} applied as your ValueSkin`);
@@ -2834,11 +2823,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             <button
                               onClick={async () => {
                                 try {
-                                  await fetch('/api/user/update-profile', {
+                                  await fetch('/api/auth/update-profile', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     credentials: 'include',
-                                    body: JSON.stringify({ display_name: profileName }),
+                                    body: JSON.stringify({ display_name: profileName, bio: profileBio }),
                                   });
                                 } catch {}
                                 setEditingProfile(false);
@@ -3100,8 +3089,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         .map(([key, deal]) => ({ key, ...deal }));
 
                       const columns = {
-                        'Negotiation': pipelineDeals.filter(d => ['offer', 'chatroom', 'counter', 'brand_countered', 'pending', 'brand_considering', 'brand_reviewing'].includes(d.phase)),
-                        'In Progress': pipelineDeals.filter(d => ['checklist', 'softhold'].includes(d.phase)),
+                        'Negotiation': pipelineDeals.filter(d =>
+                          ['offer', 'chatroom', 'counter', 'brand_countered', 'pending', 'brand_considering', 'brand_reviewing'].includes(d.phase) &&
+                          d.creatorDealLifecycle !== 'approved' && d.brandApprovalPhase !== 'approved'
+                        ),
+                        'In Progress': pipelineDeals.filter(d =>
+                          ['checklist', 'softhold'].includes(d.phase) &&
+                          d.creatorDealLifecycle !== 'approved' && d.brandApprovalPhase !== 'approved'
+                        ),
                         'Past Deals': pipelineDeals.filter(d => d.creatorDealLifecycle === 'approved' || d.brandApprovalPhase === 'approved'),
                       };
 
@@ -3119,14 +3114,20 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 ) : (
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     {deals.map((deal, idx) => {
-                                      // Key format: creatorName|creatorSkin — find first matching opportunity by skin
-                                      const opp = activeOpportunities.length > 0 ? activeOpportunities[0] : undefined;
+                                      // Key format: creatorName|creatorSkin|oppIndex — find matching opportunity by oppIndex
+                                      const oppIdx = parseInt(deal.key.split('|')[2] || '0');
+                                      const opp = activeOpportunities[oppIdx];
                                       return (
-                                        <div key={idx} style={{ background: C.bg, borderRadius: '8px', padding: '10px', border: `1px solid ${C.border}`, cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => { setNegotiatingOpp(0); }}>
-                                          <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '3px' }}>{opp?.brand || 'Deal'}</div>
+                                        <div key={idx} style={{ background: C.bg, borderRadius: '8px', padding: '10px', border: `1px solid ${C.border}`, cursor: 'pointer', transition: 'all 0.2s' }} onClick={() => { setNegotiatingOpp(oppIdx); }}>
+                                          <div
+                                            onMouseEnter={(e) => opp?.brand && showHoverCard(buildBrandHover(opp.brand), e)}
+                                            onMouseMove={updateHoverPosition}
+                                            onMouseLeave={hideHoverCard}
+                                            style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '3px', cursor: opp?.brand ? 'pointer' : 'default' }}
+                                          >{opp?.brand || 'Deal'}</div>
                                           <div style={{ fontSize: '10px', color: C.textSecondary, marginBottom: '4px' }}>{opp?.budget}</div>
                                           <div style={{ fontSize: '9px', color: C.textMuted, background: `${C.primary}15`, padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
-                                            {deal.phase === 'offer' ? 'Initial offer' : deal.phase === 'chatroom' ? 'In chat' : deal.phase === 'counter' ? 'Countered' : deal.phase === 'accepted' ? 'Deal locked' : 'Active'}
+                                            {deal.phase === 'offer' ? 'Initial offer' : deal.phase === 'chatroom' ? 'In chat' : deal.phase === 'counter' ? 'Countered' : deal.phase === 'accepted' ? 'Deal locked' : 'Completed'}
                                           </div>
                                           <button onClick={e => { e.stopPropagation(); downloadDealReport(deal.key); }} style={{ width:'100%', marginTop:'8px', background:C.primary, border:'none', borderRadius:'6px', padding:'5px 8px', color:'#fff', fontSize:'10px', fontWeight:600, cursor:'pointer' }}>
                                             Download the final report
@@ -6575,7 +6576,36 @@ export default function MarketplaceDemoPage(initialDealData?: {
           {/* ── EXPLORE VIEW ──────────────────────────────────── */}
           {activeView === 'explore' && <ExploreView />}
           {/* ── SETTINGS VIEW ────────────────────────────────── */}
-          {activeView === 'settings' && <SettingsView role={marketplaceRole as 'brand' | 'creator' | 'viewer'} brandValueSkins={brandValueSkins} />}
+          {activeView === 'settings' && (
+            <SettingsView
+              role={marketplaceRole as 'brand' | 'creator' | 'viewer'}
+              brandValueSkins={brandValueSkins}
+              selectedCountry={selectedCountry}
+              setSelectedCountry={setSelectedCountry}
+              rateCard={rateCard}
+              setRateCard={setRateCard}
+              creatorAvailableFrom={creatorAvailableFrom}
+              setCreatorAvailableFrom={setCreatorAvailableFrom}
+              selectedLanguages={selectedLanguages}
+              setSelectedLanguages={setSelectedLanguages}
+              profileDealTypes={profileDealTypes}
+              setProfileDealTypes={setProfileDealTypes}
+              willingToBarter={willingToBarter}
+              setWillingToBarter={setWillingToBarter}
+              brandProfileSelections={brandProfileSelections}
+              setBrandProfileSelections={setBrandProfileSelections}
+              skinPitchTexts={skinPitchTexts}
+              setSkinPitchTexts={setSkinPitchTexts}
+              skinPitchVideos={skinPitchVideos}
+              setSkinPitchVideos={setSkinPitchVideos}
+              creatorEnergy={creatorEnergy}
+              setCreatorEnergy={setCreatorEnergy}
+              portfolioImage={portfolioImage}
+              setPortfolioImage={setPortfolioImage}
+              profileName={profileName}
+              profileBio={profileBio}
+            />
+          )}
         </div>
       </div>
 
