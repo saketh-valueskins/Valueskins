@@ -1820,34 +1820,53 @@ export default function MarketplaceDemoPage(initialDealData?: {
   }, []);
 
   const buildBrandHover = useCallback((brandName: string): HoverProfile => {
+    // Count completed deals with this brand by looking at deal.brandName (stored when deal was created)
     let brandDealCount = 0;
-    const opps = activeOppsRef.current;
+    let totalDealValue = 0;
+
     for (const [key, deal] of Object.entries(dealStates)) {
       if (!deal) continue;
       if (deal.creatorDealLifecycle !== 'approved' && deal.brandApprovalPhase !== 'approved') continue;
-      const oppIdx = parseInt(key.split('|')[2] || '0');
-      const opp = opps[oppIdx];
-      if (opp && opp.brand === brandName) { brandDealCount++; continue; }
+      // Use stored brandName from deal (this is set when deal is created)
+      if (deal.brandName === brandName) {
+        brandDealCount++;
+        // Add deal amount if available
+        if (deal.offerAmount) {
+          const amount = parseInt(deal.offerAmount.toString().replace(/[^0-9]/g, '')) || 0;
+          totalDealValue += amount;
+        }
+      }
     }
+
+    // Also count from completedDeals array if it exists
     for (const cd of completedDeals) {
-      if (cd.brand === brandName) { brandDealCount++; }
+      if (cd.brand === brandName) {
+        brandDealCount++;
+        if (cd.amount) totalDealValue += cd.amount;
+      }
     }
+
+    const avgDealValue = brandDealCount > 0 ? Math.round(totalDealValue / brandDealCount) : 0;
+
     return {
       role: 'brand',
       name: brandName,
-      skin: activeBrandSkin || brandValueSkins[0],
+      skin: undefined, // Don't show brand's own ValueSkin - show what brand they represent
       bio: profileBio,
       brandProfileSelections,
       brandValueSkins,
       completedDeals: brandDealCount,
       selectedCountry,
       metrics: {
-        followers: metrics.followers, engagement: metrics.engagement,
-        dealsCompleted: brandDealCount, avgDealValue: metrics.avgDealValue,
-        onTimeRate: metrics.onTimeRate, brandRating: metrics.brandRating,
+        followers: 0,
+        engagement: 0,
+        dealsCompleted: brandDealCount,
+        avgDealValue: avgDealValue,
+        onTimeRate: 0, // Don't show for brands
+        brandRating: metrics.brandRating,
       },
     };
-  }, [activeBrandSkin, brandValueSkins, profileBio, brandProfileSelections, completedDeals, selectedCountry, metrics, dealStates, activeOppsRef]);
+  }, [brandValueSkins, profileBio, brandProfileSelections, completedDeals, selectedCountry, metrics, dealStates]);
 
   const buildCreatorHover = useCallback((creatorName: string, creatorSkin?: string): HoverProfile => {
     const sk = creatorSkin || Object.values(valueSkins).find(e => e?.profession)?.profession;

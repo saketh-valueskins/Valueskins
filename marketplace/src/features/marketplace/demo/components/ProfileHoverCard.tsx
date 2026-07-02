@@ -122,14 +122,13 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
             {profile.selectedCountry && ` · ${profile.selectedCountry}`}
           </div>
         </div>
-        {profile.skin && (
+        {profile.role === 'creator' && profile.skin && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: '4px',
             background: 'rgba(255,255,255,0.2)',
             borderRadius: '20px', padding: '4px 10px',
             fontSize: '11px', fontWeight: 600,
           }}>
-            {skinBadge?.emoji ?? '💎'}
             <span>{skinBadge?.abbreviation ?? profile.skin.slice(0, 3).toUpperCase()}</span>
           </div>
         )}
@@ -178,8 +177,8 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
           </div>
         )}
 
-        {/* Skin / Profession badge */}
-        {profile.skin && (
+        {/* Skin / Profession badge — only show for creators */}
+        {profile.role === 'creator' && profile.skin && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: '10px',
             marginBottom: '10px',
@@ -205,11 +204,6 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
               <div style={{ fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>
                 {profile.skin}
               </div>
-              {profile.role === 'brand' && profile.brandValueSkins && (
-                <div style={{ fontSize: '10px', color: '#94a3b8' }}>
-                  Brand ValueSkin
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -266,18 +260,22 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
           </div>
         )}
 
-        {/* Metrics grid */}
+        {/* Metrics grid — different for brands vs creators */}
         {profile.metrics && (
           <div style={{
             display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px',
             marginBottom: '10px',
           }}>
-            {[
+            {(profile.role === 'brand' ? [
+              { label: 'Deals', value: profile.metrics.dealsCompleted, color: '#2563EB' },
+              { label: 'Avg Deal', value: `₹${profile.metrics.avgDealValue > 0 ? (profile.metrics.avgDealValue / 100).toLocaleString() : '0'}`, color: '#22c55e' },
+              { label: 'Rating', value: `${profile.metrics.brandRating}/5`, color: '#a855f7' },
+            ] : [
               { label: 'Deals', value: profile.metrics.dealsCompleted, color: '#2563EB' },
               { label: 'Avg Deal', value: `₹${(profile.metrics.avgDealValue / 100).toLocaleString()}`, color: '#22c55e' },
               { label: 'On Time', value: `${profile.metrics.onTimeRate}%`, color: '#3b82f6' },
               { label: 'Rating', value: `${profile.metrics.brandRating}/5`, color: '#a855f7' },
-            ].map(stat => (
+            ]).map(stat => (
               <div key={stat.label} style={{
                 padding: '6px 8px',
                 background: '#f8fafc',
