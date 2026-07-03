@@ -5,30 +5,31 @@ import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOpt
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
 import { getLevel, getProgressToNext } from '@/lib/levels';
 
+// ValueSkins Unified Brand Colors - Trust · Earned · Serious
 const C = {
-  primary: '#2563EB',
-  primaryGradient: 'linear-gradient(135deg, #2563EB, #1e40af)',
-  bg: '#ffffff',
-  surface: '#ffffff',
-  surfaceAlt: '#f9fafb',
-  card: '#f3f4f6',
-  text: '#1f2937',
-  textSecondary: '#6b7280',
-  textMuted: '#9ca3af',
-  border: '#e5e7eb',
-  borderLight: '#f3f4f6',
-  success: '#00D46A',
-  successBg: 'rgba(0,212,106,0.08)',
-  successBorder: 'rgba(0,212,106,0.25)',
-  warning: '#FFAB00',
-  warningBg: 'rgba(255,171,0,0.08)',
-  warningBorder: 'rgba(255,171,0,0.25)',
-  danger: '#ED4956',
-  dangerBg: 'rgba(237,73,86,0.08)',
-  dangerBorder: 'rgba(237,73,86,0.25)',
-  accent: '#3B82F6',
-  accentBg: 'rgba(59,130,246,0.08)',
-  accentBorder: 'rgba(59,130,246,0.25)',
+  primary: '#0A0A0A',           // Dark charcoal
+  primaryGradient: 'linear-gradient(135deg, #0A0A0A, #2D2D2D)',
+  bg: '#F5F5F0',                // Cream
+  surface: '#F5F5F0',
+  surfaceAlt: '#F0F0EA',        // Light neutral
+  card: '#FFFFFF',              // White
+  text: '#0A0A0A',              // Dark charcoal
+  textSecondary: '#2D2D2D',     // Taupe gray
+  textMuted: '#8B8B85',         // Muted gray
+  border: '#E0E0DA',            // Border
+  borderLight: '#F0F0EA',       // Light border
+  success: '#22C55E',           // Green
+  successBg: 'rgba(34, 197, 94, 0.08)',
+  successBorder: 'rgba(34, 197, 94, 0.25)',
+  warning: '#F97316',           // Orange
+  warningBg: 'rgba(249, 115, 22, 0.08)',
+  warningBorder: 'rgba(249, 115, 22, 0.25)',
+  danger: '#EF4444',            // Red
+  dangerBg: 'rgba(239, 68, 68, 0.08)',
+  dangerBorder: 'rgba(239, 68, 68, 0.25)',
+  accent: '#A08A5E',            // Gold - ValueSkins brand accent
+  accentBg: 'rgba(160, 138, 94, 0.08)',
+  accentBorder: 'rgba(160, 138, 94, 0.25)',
 };
 
 const BRAND_CATEGORIES: Record<string, { name: string; subCategories: string[] }> = {
