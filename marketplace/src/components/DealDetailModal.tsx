@@ -206,7 +206,7 @@ export default function DealDetailModal({ deal, onClose, onApply }: DealDetailMo
             onClick={onApply}
             style={{
               padding: '10px 24px',
-              background: '#2563eb',
+              background: '#0A0A0A',
               border: 'none',
               borderRadius: '6px',
               fontSize: '14px',

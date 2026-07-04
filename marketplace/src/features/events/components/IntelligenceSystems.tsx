@@ -4,9 +4,9 @@ import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 const C = {
-  bg: '#0f172a', surface: 'rgba(15,23,42,0.86)',
-  border: 'rgba(148,163,184,0.18)', text: '#f8fafc',
-  textMuted: '#94a3b8', accent: '#38bdf8', accentBg: 'rgba(56,189,248,0.14)',
+  bg: '#0A0A0A', surface: 'rgba(15,23,42,0.86)',
+  border: 'rgba(148,163,184,0.18)', text: '#F5F5F0',
+  textMuted: '#B8B4AC', accent: '#C8B89A', accentBg: 'rgba(56,189,248,0.14)',
   success: '#86efac', error: '#fca5a5', warning: '#fbbf24',
 };
 
@@ -230,7 +230,7 @@ function EventMemory({ eventId }: { eventId: string }) {
     <div style={{ display: 'grid', gap: 14 }}>
       <div style={card}>
         <h3 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: '0 0 8px' }}>Event Recap</h3>
-        <p style={{ color: '#cbd5e1', fontSize: 14, lineHeight: 1.6, margin: '0 0 12px' }}>{memory.summary}</p>
+        <p style={{ color: '#D6D2C8', fontSize: 14, lineHeight: 1.6, margin: '0 0 12px' }}>{memory.summary}</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 8 }}>
           {Object.entries(memory.stats).map(([k, v]) => (
@@ -630,7 +630,7 @@ function LoyaltyPanel({ accountId }: { accountId: number }) {
   useEffect(() => { load(); }, [load]);
 
   const tierColors: Record<string, string> = {
-    bronze: '#cd7f32', silver: '#c0c0c0', gold: '#fbbf24', platinum: '#e2e8f0',
+    bronze: '#cd7f32', silver: '#c0c0c0', gold: '#fbbf24', platinum: '#E0E0DA',
   };
 
   return (

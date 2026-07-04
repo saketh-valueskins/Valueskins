@@ -115,7 +115,7 @@ export default function DealPage() {
                   onClick={handleAgree}
                   style={{
                     padding: '10px 16px',
-                    background: '#2563eb',
+                    background: '#0A0A0A',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '6px',
@@ -151,8 +151,8 @@ export default function DealPage() {
                 style={{
                   padding: '10px 16px',
                   background: 'transparent',
-                  color: '#2563eb',
-                  border: '1px solid #2563eb',
+                  color: '#0A0A0A',
+                  border: '1px solid #0A0A0A',
                   borderRadius: '6px',
                   fontWeight: 600,
                   cursor: 'pointer',

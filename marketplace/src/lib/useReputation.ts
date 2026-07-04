@@ -77,7 +77,7 @@ export function getTierColor(tier: string): string {
     case 'A':
       return '#10b981'; // green
     case 'B':
-      return '#3b82f6'; // blue
+      return '#A08A5E'; // blue
     case 'C':
       return '#f59e0b'; // amber
     case 'D':

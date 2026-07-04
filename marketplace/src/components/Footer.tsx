@@ -25,13 +25,24 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <h3 style={{
-              fontSize: '16px',
+              fontSize: '15px',
               fontWeight: 700,
               color: C.text,
+              letterSpacing: '0.18em',
+              fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+              marginBottom: '8px',
+            }}>
+              VALUESKINS
+            </h3>
+            <div style={{
+              fontSize: '9px',
+              fontWeight: 500,
+              letterSpacing: '0.34em',
+              color: C.textSecondary,
               marginBottom: '16px',
             }}>
-              ValueSkins
-            </h3>
+              TRUST <span style={{ color: C.accent }}>·</span> EARNED <span style={{ color: C.accent }}>·</span> SERIOUS
+            </div>
             <p style={{
               fontSize: '13px',
               color: C.textSecondary,

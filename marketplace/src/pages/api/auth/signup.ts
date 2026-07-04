@@ -4,7 +4,7 @@ import { verifyCaptchaToken, isCaptchaEnabled } from '@/lib/hcaptcha';
 import { hashPassword, hashSessionToken } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
 import crypto from 'crypto';
-import { AUTH_RATE_LIMIT_REQUESTS, AUTH_RATE_LIMIT_WINDOW_MS, ALLOWED_ORIGINS } from '@/config/constants';
+import { AUTH_RATE_LIMIT_REQUESTS, AUTH_RATE_LIMIT_WINDOW_MS, ALLOWED_ORIGINS, SESSION_IDLE_TIMEOUT_MS } from '@/config/constants';
 import { withCsrfProtection } from '@/lib/security/csrf-pages';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -85,12 +85,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const hashedToken = hashSessionToken(sessionToken);
     await query(
       'INSERT INTO auth_sessions (id, user_id, expires_at) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING',
-      [hashedToken, user.id, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()]
+      [hashedToken, user.id, new Date(Date.now() + SESSION_IDLE_TIMEOUT_MS).toISOString()]
     );
 
     const csrfToken = crypto.randomBytes(32).toString('hex');
     res.setHeader('Set-Cookie', [
-      `valueskins_session=${sessionToken}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`,
+      `valueskins_session=${sessionToken}; HttpOnly; Path=/; SameSite=Lax`,
       `csrf_token=${csrfToken}; Secure; SameSite=Strict; Path=/; Max-Age=3600`,
     ]);
 

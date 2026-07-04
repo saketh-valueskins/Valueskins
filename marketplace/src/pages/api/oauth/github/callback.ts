@@ -4,7 +4,7 @@ import { exchangeGitHubCode, getGitHubUserInfo, parseOAuthState } from '@/lib/oa
 import { hashSessionToken } from '@/lib/auth';
 import { query } from '@/lib/db';
 
-const COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
+import { SESSION_IDLE_TIMEOUT_MS } from '@/config/constants';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -92,7 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const sessionId = crypto.randomUUID();
     const hashedSessionId = hashSessionToken(sessionId);
-    const expiresAt = new Date(Date.now() + COOKIE_MAX_AGE * 1000);
+    const expiresAt = new Date(Date.now() + SESSION_IDLE_TIMEOUT_MS);
 
     await query(
       'INSERT INTO auth_sessions (id, user_id, is_active, expires_at) VALUES ($1, $2, $3, $4)',
@@ -100,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     const isSecure = req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';
-    const cookieStr = `valueskins_session=${sessionId}; HttpOnly; ${isSecure ? 'Secure; ' : ''}SameSite=Lax; Path=/; Max-Age=${COOKIE_MAX_AGE}`;
+    const cookieStr = `valueskins_session=${sessionId}; HttpOnly; ${isSecure ? 'Secure; ' : ''}SameSite=Lax; Path=/`;
     res.setHeader('Set-Cookie', cookieStr);
 
     const redirectUrl = isNewUser

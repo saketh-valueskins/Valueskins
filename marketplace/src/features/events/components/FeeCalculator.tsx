@@ -5,9 +5,9 @@ import { useState } from 'react';
 import type { FeeCalculationResult } from '../data/types';
 
 const C = {
-  bg: '#0f172a', surface: 'rgba(15, 23, 42, 0.86)',
-  border: 'rgba(148, 163, 184, 0.18)', text: '#f8fafc',
-  textMuted: '#94a3b8', accent: '#38bdf8', accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A', surface: 'rgba(10, 10, 10, 0.86)',
+  border: 'rgba(184, 180, 172, 0.18)', text: '#F5F5F0',
+  textMuted: '#B8B4AC', accent: '#C8B89A', accentBg: 'rgba(200, 184, 154, 0.14)',
   success: '#86efac', error: '#fca5a5',
 };
 
@@ -18,7 +18,7 @@ const card: CSSProperties = {
 
 const inp: CSSProperties = {
   width: '100%', borderRadius: 14, border: `1px solid ${C.border}`,
-  background: 'rgba(15, 23, 42, 0.88)', color: C.text, padding: '12px 16px',
+  background: 'rgba(10, 10, 10, 0.88)', color: C.text, padding: '12px 16px',
   fontSize: 14, outline: 'none', boxSizing: 'border-box',
 };
 
@@ -78,7 +78,7 @@ export default function FeeCalculator() {
         </div>
         <div style={{ alignSelf: 'flex-end' }}>
           <button
-            style={{ ...btnBase, background: C.accent, color: '#0f172a', padding: '11px 24px' }}
+            style={{ ...btnBase, background: C.accent, color: '#0A0A0A', padding: '11px 24px' }}
             onClick={handleCalculate}
             disabled={loading}
           >
@@ -89,7 +89,7 @@ export default function FeeCalculator() {
 
       {result && (
         <div style={{
-          background: 'rgba(15, 23, 42, 0.6)', borderRadius: 16, padding: 16,
+          background: 'rgba(10, 10, 10, 0.6)', borderRadius: 16, padding: 16,
           marginTop: 8,
         }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
@@ -113,7 +113,7 @@ export default function FeeCalculator() {
             </div>
           </div>
           <div style={{
-            marginTop: 12, padding: '10px 14px', background: 'rgba(15, 23, 42, 0.4)',
+            marginTop: 12, padding: '10px 14px', background: 'rgba(10, 10, 10, 0.4)',
             borderRadius: 12, fontSize: 12, color: C.textMuted,
           }}>
             Fee breakdown: ${(result.breakdown.flatComponent / 100).toFixed(2)} flat

@@ -103,7 +103,7 @@ export default function SkinPurchaseModal({ userId, onClose, onSuccess }: SkinPu
                 style={{
                   flex: 1,
                   padding: '12px 16px',
-                  background: selectedSkin && !loading ? '#2563eb' : '#d1d5db',
+                  background: selectedSkin && !loading ? '#0A0A0A' : '#d1d5db',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '6px',
@@ -140,7 +140,7 @@ export default function SkinPurchaseModal({ userId, onClose, onSuccess }: SkinPu
             style={{
               width: '100%',
               padding: '12px 16px',
-              background: '#2563eb',
+              background: '#0A0A0A',
               color: '#ffffff',
               border: 'none',
               borderRadius: '6px',

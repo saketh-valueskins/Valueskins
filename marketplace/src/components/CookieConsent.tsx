@@ -5,14 +5,15 @@ import Link from 'next/link';
 import { cookieConsent } from '@/lib/cookie-consent';
 import type { ConsentChoice, CookiePreferences } from '@/lib/cookie-consent';
 
+// ValueSkins dark treatment — near-black surface, off-white text, warm sand accent
 const C = {
-  bg: '#0f172a',
-  surface: 'rgba(15, 23, 42, 0.95)',
-  border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc',
-  textSecondary: '#94a3b8',
-  accent: '#38bdf8',
-  success: '#86efac',
+  bg: '#0A0A0A',
+  surface: 'rgba(10, 10, 10, 0.95)',
+  border: 'rgba(200, 184, 154, 0.25)',
+  text: '#F5F5F0',
+  textSecondary: '#B8B4AC',
+  accent: '#C8B89A',
+  success: '#22C55E',
 };
 
 export default function CookieConsent() {
@@ -58,7 +59,7 @@ export default function CookieConsent() {
         overflowY: 'auto',
       }}
     >
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', color: C.text }}>
         {!showPreferences ? (
           // Initial banner
           <div
@@ -135,7 +136,7 @@ export default function CookieConsent() {
                   borderRadius: '6px',
                   background: C.accent,
                   border: 'none',
-                  color: '#0f172a',
+                  color: '#0A0A0A',
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: 600,
@@ -224,7 +225,7 @@ export default function CookieConsent() {
                   borderRadius: '6px',
                   background: C.accent,
                   border: 'none',
-                  color: '#0f172a',
+                  color: '#0A0A0A',
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: 600,

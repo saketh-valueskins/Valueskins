@@ -27,10 +27,10 @@ type ConfigState = {
 const C = {
   bg: '#0b1020',
   surface: '#121a30',
-  border: 'rgba(148, 163, 184, 0.2)',
-  text: '#f8fafc',
-  muted: '#94a3b8',
-  accent: '#38bdf8',
+  border: 'rgba(184, 180, 172, 0.2)',
+  text: '#F5F5F0',
+  muted: '#B8B4AC',
+  accent: '#C8B89A',
   success: '#86efac',
   warning: '#fbbf24',
   error: '#fca5a5',
@@ -195,7 +195,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 function StatusRow({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '10px 12px', borderRadius: 12, background: 'rgba(148, 163, 184, 0.08)' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '10px 12px', borderRadius: 12, background: 'rgba(184, 180, 172, 0.08)' }}>
       <span style={{ color: C.muted }}>{label}</span>
       <span style={{ color, fontWeight: 700 }}>{value}</span>
     </div>
@@ -206,7 +206,7 @@ const inputStyle: CSSProperties = {
   width: '100%',
   borderRadius: 12,
   border: `1px solid ${C.border}`,
-  background: '#0f172a',
+  background: '#0A0A0A',
   color: C.text,
   padding: '12px 14px',
   boxSizing: 'border-box',

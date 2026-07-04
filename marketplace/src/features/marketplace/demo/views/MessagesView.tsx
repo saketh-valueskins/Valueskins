@@ -5,8 +5,8 @@ import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOpt
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
 
 const C = {
-  primary: '#2563EB',
-  primaryGradient: 'linear-gradient(135deg, #2563EB, #1e40af)',
+  primary: '#0A0A0A',
+  primaryGradient: 'linear-gradient(135deg, #0A0A0A, #2D2D2D)',
   bg: '#ffffff',
   surface: '#ffffff',
   surfaceAlt: '#f9fafb',

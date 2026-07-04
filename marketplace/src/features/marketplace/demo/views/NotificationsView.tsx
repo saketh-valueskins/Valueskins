@@ -10,7 +10,7 @@ const C = {
   textSecondary: '#6b7280',
   textMuted: '#9ca3af',
   border: '#e5e7eb',
-  primary: '#2563EB',
+  primary: '#0A0A0A',
   success: '#00D46A',
   warning: '#FFAB00',
   danger: '#ED4956',

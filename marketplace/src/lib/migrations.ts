@@ -29,7 +29,7 @@ const migrations = [
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         is_active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMPTZ DEFAULT NOW(),
-        expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '7 days',
+        expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '30 minutes',
         last_activity_at TIMESTAMPTZ DEFAULT NOW()
       );
       CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_id ON auth_sessions(user_id);

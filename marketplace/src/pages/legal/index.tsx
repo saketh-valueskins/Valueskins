@@ -2,12 +2,12 @@
 import Link from 'next/link';
 
 const C = {
-  bg: '#0f172a',
-  surface: 'rgba(15, 23, 42, 0.86)',
-  border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc',
-  textSecondary: '#94a3b8',
-  primary: '#38bdf8',
+  bg: '#0A0A0A',
+  surface: 'rgba(10, 10, 10, 0.86)',
+  border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0',
+  textSecondary: '#B8B4AC',
+  primary: '#C8B89A',
 };
 
 const sections = [

@@ -10,9 +10,9 @@ import { FEE_TYPE_OPTIONS, PAYMENT_PROVIDER_OPTIONS, DEFAULT_PLATFORM_FEE_PERCEN
 import FeeCalculator from './FeeCalculator';
 
 const C = {
-  bg: '#0f172a', surface: 'rgba(15, 23, 42, 0.86)',
-  border: 'rgba(148, 163, 184, 0.18)', text: '#f8fafc',
-  textMuted: '#94a3b8', accent: '#38bdf8', accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A', surface: 'rgba(10, 10, 10, 0.86)',
+  border: 'rgba(184, 180, 172, 0.18)', text: '#F5F5F0',
+  textMuted: '#B8B4AC', accent: '#C8B89A', accentBg: 'rgba(200, 184, 154, 0.14)',
   success: '#86efac', error: '#fca5a5', warning: '#fbbf24',
 };
 
@@ -23,7 +23,7 @@ const card: CSSProperties = {
 
 const inp: CSSProperties = {
   width: '100%', borderRadius: 14, border: `1px solid ${C.border}`,
-  background: 'rgba(15, 23, 42, 0.88)', color: C.text, padding: '12px 16px',
+  background: 'rgba(10, 10, 10, 0.88)', color: C.text, padding: '12px 16px',
   fontSize: 14, outline: 'none', boxSizing: 'border-box',
 };
 
@@ -170,7 +170,7 @@ export default function PaymentDashboard() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h3 style={{ color: C.text, fontSize: 16, fontWeight: 700, margin: 0 }}>Platform Fee Configuration</h3>
           <button
-            style={{ ...btnBase, background: editingFee ? C.success : C.accent, color: '#0f172a' }}
+            style={{ ...btnBase, background: editingFee ? C.success : C.accent, color: '#0A0A0A' }}
             onClick={() => editingFee ? saveFeeConfig() : setEditingFee(true)}
           >
             {editingFee ? 'Save' : 'Edit'}
@@ -250,7 +250,7 @@ export default function PaymentDashboard() {
             </label>
             <input style={inp} type="number" value={editOverrideCents ?? ''} onChange={e => setEditOverrideCents(parseInt(e.target.value) || null)} placeholder="Default" />
           </div>
-          <button style={{ ...btnBase, background: C.accent, color: '#0f172a' }} onClick={saveProviderOverride}>
+          <button style={{ ...btnBase, background: C.accent, color: '#0A0A0A' }} onClick={saveProviderOverride}>
             Set Override
           </button>
         </div>
@@ -312,7 +312,7 @@ export default function PaymentDashboard() {
                   <td style={{ padding: '8px 4px', textAlign: 'center' }}>
                     <span style={{
                       display: 'inline-block', padding: '2px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600,
-                      background: tx.status === 'succeeded' ? 'rgba(134, 239, 172, 0.15)' : 'rgba(148, 163, 184, 0.15)',
+                      background: tx.status === 'succeeded' ? 'rgba(134, 239, 172, 0.15)' : 'rgba(184, 180, 172, 0.15)',
                       color: tx.status === 'succeeded' ? C.success : C.textMuted,
                     }}>
                       {tx.status}

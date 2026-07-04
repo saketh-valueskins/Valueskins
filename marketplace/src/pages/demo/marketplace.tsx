@@ -6,12 +6,14 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect, useState } from 'react';
 import MarketplaceDemoPage from '@/features/marketplace/demo/MarketplaceDemoPage';
+import ValueSkinsLogo from '@/components/ValueSkinsLogo';
 
+// ValueSkins dark treatment
 const C = {
-  bg: '#0f172a',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  accent: '#38bdf8',
+  bg: '#0A0A0A',
+  text: '#F5F5F0',
+  textMuted: '#B8B4AC',
+  accent: '#C8B89A',
 };
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
@@ -72,7 +74,7 @@ export default function DemoWrapper({ initialCampaigns = [], initialDealStates =
   if (isLocalhost && !account) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', flexDirection: 'column', gap: '20px' }}>
-        <div style={{ fontSize: '18px', fontWeight: '600' }}>ValueSkins</div>
+        <ValueSkinsLogo theme="dark" size={22} />
         <button
           onClick={() => router.push('/auth/login')}
           style={{ padding: '12px 24px', background: C.accent, border: 'none', borderRadius: '8px', color: '#000', fontWeight: '600', cursor: 'pointer', fontSize: '16px' }}

@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 const C = {
-  primary: '#2563EB',
+  primary: '#0A0A0A',
   bg: '#ffffff',
   text: '#1f2937',
   textSecondary: '#6b7280',

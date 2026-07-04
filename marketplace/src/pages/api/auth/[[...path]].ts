@@ -189,7 +189,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const crypto = require('crypto');
     const sessionToken = `dev_${crypto.randomBytes(16).toString('hex')}`;
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30-min idle timeout
 
     await ensureAuthSessions();
     await query(
@@ -198,7 +198,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     res.setHeader('Set-Cookie', [
-      `valueskins_session=${sessionToken}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`,
+      `valueskins_session=${sessionToken}; HttpOnly; Path=/; SameSite=Lax`,
     ]);
 
     const userRow = (await query('SELECT * FROM users WHERE id = $1', [userId])).rows[0];

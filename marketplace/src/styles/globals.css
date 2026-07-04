@@ -137,12 +137,12 @@
 
   .nav-item-active {
     color: #fff;
-    background: rgba(241, 131, 255, 0.08);
-    border-left: 2px solid #f183ff;
+    background: rgba(200, 184, 154, 0.12);
+    border-left: 2px solid #C8B89A;
   }
 
   .btn-primary {
-    background: #3b82f6;
+    background: #0A0A0A;
     color: #fff;
     font-weight: 500;
     padding: 10px 20px;
@@ -155,9 +155,9 @@
   }
 
   .btn-primary:hover {
-    background: #2563eb;
+    background: #2D2D2D;
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);
+    box-shadow: 0 4px 16px rgba(10, 10, 10, 0.25);
   }
 
   .btn-primary:active {
@@ -223,8 +223,8 @@
   }
 
   .tag-primary {
-    background: rgba(241, 131, 255, 0.1);
-    color: #f183ff;
+    background: rgba(200, 184, 154, 0.14);
+    color: #C8B89A;
     padding: 2px 10px;
     font-size: 11px;
     border-radius: 999px;

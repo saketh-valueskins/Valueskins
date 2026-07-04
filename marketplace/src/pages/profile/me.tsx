@@ -27,7 +27,7 @@ export default function ProfileMePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+    <div style={{ minHeight: '100vh', background: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
       <div style={{ textAlign: 'center' }}>
         <h1 style={{ fontSize: '24px', marginBottom: '16px' }}>Complete Onboarding</h1>
         <p>Please complete your onboarding to set up your profile.</p>

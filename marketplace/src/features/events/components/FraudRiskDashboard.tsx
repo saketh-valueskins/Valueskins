@@ -6,8 +6,8 @@ import type { FraudRiskScore, FraudEvent } from '../data/types';
 import { FRAUD_TYPE_LABELS } from '../data/types';
 
 const C = {
-  bg: '#0f172a', surface: 'rgba(15, 23, 42, 0.86)', border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc', textMuted: '#94a3b8', accent: '#38bdf8', accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A', surface: 'rgba(10, 10, 10, 0.86)', border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0', textMuted: '#B8B4AC', accent: '#C8B89A', accentBg: 'rgba(200, 184, 154, 0.14)',
   error: '#fca5a5', success: '#86efac', warning: '#fbbf24', orange: '#fb923c',
 };
 
@@ -112,7 +112,7 @@ export default function FraudRiskDashboard() {
                 </div>
                 <div style={{ display: 'flex', gap: 4 }}>
                   {s.actionTaken !== 'block' && <button onClick={() => reviewScore(s.id, 'block')} style={{ ...btnBase, padding: '4px 8px', fontSize: 10, background: C.error, color: '#fff' }}>Block</button>}
-                  {s.actionTaken !== 'flag' && <button onClick={() => reviewScore(s.id, 'flag')} style={{ ...btnBase, padding: '4px 8px', fontSize: 10, background: C.warning, color: '#0f172a' }}>Flag</button>}
+                  {s.actionTaken !== 'flag' && <button onClick={() => reviewScore(s.id, 'flag')} style={{ ...btnBase, padding: '4px 8px', fontSize: 10, background: C.warning, color: '#0A0A0A' }}>Flag</button>}
                   {s.actionTaken !== 'none' && <button onClick={() => reviewScore(s.id, 'none')} style={{ ...btnBase, padding: '4px 8px', fontSize: 10, background: 'rgba(148,163,184,0.2)', color: C.textMuted }}>Clear</button>}
                 </div>
               </div>

@@ -5,8 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Ticket } from '../data/types';
 
 const C = {
-  bg: '#0f172a', surface: 'rgba(15, 23, 42, 0.86)', border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc', textMuted: '#94a3b8', accent: '#38bdf8', accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A', surface: 'rgba(10, 10, 10, 0.86)', border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0', textMuted: '#B8B4AC', accent: '#C8B89A', accentBg: 'rgba(200, 184, 154, 0.14)',
   error: '#fca5a5', success: '#86efac',
 };
 
@@ -78,7 +78,7 @@ export default function TicketView({ ticketCode, onBack = () => {} }: { ticketCo
       {/* Ticket Card */}
       <div style={{
         ...card, padding: 0, overflow: 'hidden',
-        background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+        background: 'linear-gradient(135deg, #1A1A1A, #0A0A0A)',
         border: `2px solid ${isActive ? C.accent : C.border}`,
       }}>
         {/* Header */}
@@ -174,7 +174,7 @@ export default function TicketView({ ticketCode, onBack = () => {} }: { ticketCo
       {/* Entry Instructions */}
       <div style={card}>
         <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Entry instructions</div>
-        <div style={{ color: '#cbd5e1', fontSize: 13, lineHeight: 1.6 }}>
+        <div style={{ color: '#D6D2C8', fontSize: 13, lineHeight: 1.6 }}>
           <p style={{ margin: '0 0 4px' }}>Present this QR code at the venue entrance.</p>
           <p style={{ margin: '0 0 4px' }}>Have a valid ID ready for verification.</p>
           <p style={{ margin: 0, color: C.textMuted }}>VIP entrance is on the right side of the main gate.</p>

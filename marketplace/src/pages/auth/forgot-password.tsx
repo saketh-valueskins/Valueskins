@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { C } from '@/theme/colors';
+import ValueSkinsLogo from '@/components/ValueSkinsLogo';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -30,7 +31,7 @@ export default function ForgotPassword() {
     <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto' }}>
       <div style={{ width: '100%', maxWidth: '440px' }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: C.primary, marginBottom: '8px' }}>ValueSkins</div>
+          <div style={{ marginBottom: '24px' }}><ValueSkinsLogo theme="light" size={26} /></div>
           <p style={{ fontSize: '15px', color: C.textSecondary }}>Reset your password</p>
         </div>
 

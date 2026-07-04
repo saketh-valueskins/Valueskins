@@ -4,12 +4,12 @@ import BrandRegistrationPayment from '@/features/brand/components/BrandRegistrat
 import Head from 'next/head';
 
 const C = {
-  bg: '#0f172a',
-  surface: 'rgba(15, 23, 42, 0.86)',
-  border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  accent: '#38bdf8',
+  bg: '#0A0A0A',
+  surface: 'rgba(10, 10, 10, 0.86)',
+  border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0',
+  textMuted: '#B8B4AC',
+  accent: '#C8B89A',
 };
 
 const containerStyle: CSSProperties = {
@@ -47,7 +47,7 @@ const subtitleStyle: CSSProperties = {
 };
 
 const benefitsStyle: CSSProperties = {
-  background: 'rgba(15, 23, 42, 0.86)',
+  background: 'rgba(10, 10, 10, 0.86)',
   border: `1px solid ${C.border}`,
   borderRadius: 24,
   padding: 24,
@@ -85,8 +85,8 @@ const benefitDescStyle: CSSProperties = {
 };
 
 const pricingInfoStyle: CSSProperties = {
-  background: 'rgba(56, 189, 248, 0.05)',
-  border: `1px solid rgba(56, 189, 248, 0.2)`,
+  background: 'rgba(200, 184, 154, 0.05)',
+  border: `1px solid rgba(200, 184, 154, 0.2)`,
   borderRadius: 16,
   padding: 16,
   display: 'grid',
@@ -217,7 +217,7 @@ export default function BrandRegisterPage({ registrationFeeCents = 99900 }: Bran
                 value={customFee ?? registrationFeeCents}
                 onChange={(e) => setCustomFee(parseInt(e.target.value) || 0)}
                 style={{
-                  background: 'rgba(15, 23, 42, 0.5)',
+                  background: 'rgba(10, 10, 10, 0.5)',
                   border: `1px solid ${C.border}`,
                   borderRadius: 8,
                   padding: '8px 12px',
@@ -236,7 +236,7 @@ export default function BrandRegisterPage({ registrationFeeCents = 99900 }: Bran
           {process.env.NODE_ENV === 'development' && (
             <div
               style={{
-                background: 'rgba(56, 189, 248, 0.05)',
+                background: 'rgba(200, 184, 154, 0.05)',
                 border: `1px dashed ${C.border}`,
                 borderRadius: 12,
                 padding: 12,

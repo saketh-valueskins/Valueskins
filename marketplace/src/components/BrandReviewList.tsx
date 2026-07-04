@@ -17,13 +17,13 @@ interface Props {
 }
 
 const C = {
-  bg: '#0f172a',
-  surface: '#1e293b',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  textSecondary: '#cbd5e1',
-  primary: '#38bdf8',
-  border: '#334155',
+  bg: '#0A0A0A',
+  surface: '#1A1A1A',
+  text: '#F5F5F0',
+  textMuted: '#B8B4AC',
+  textSecondary: '#D6D2C8',
+  primary: '#C8B89A',
+  border: '#2D2D2D',
 };
 
 export default function BrandReviewList({ creatorId, showTitle = true, maxItems }: Props) {

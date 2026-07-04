@@ -1,66 +1,67 @@
-// ValueSkins Design System - Material 3 Inspired
-// Unified color palette across all pages
+// ValueSkins Design System — brand palette per LOGO_HANDOFF.md
+// Near-black / off-white / warm sand. No blues, no startup greens.
+// Token names kept identical so all 29 importing pages re-skin uniformly.
 
 export const COLORS = {
-  // Primary
-  primary: '#675b64',
-  primaryContainer: '#f8e7f2',
-  onPrimary: '#ffffff',
-  onPrimaryContainer: '#736670',
-  primaryFixed: '#efdee9',
-  primaryFixedDim: '#d2c2cd',
+  // Primary — near black, the brand's strong action color
+  primary: '#0A0A0A',
+  primaryContainer: '#F0F0EA',
+  onPrimary: '#F5F5F0',
+  onPrimaryContainer: '#2D2D2D',
+  primaryFixed: '#F0F0EA',
+  primaryFixedDim: '#E0E0DA',
 
-  // Secondary
-  secondary: '#625b70',
-  secondaryContainer: '#e8def7',
-  onSecondary: '#ffffff',
-  onSecondaryContainer: '#686176',
-  secondaryFixed: '#e8def7',
-  secondaryFixedDim: '#ccc2db',
+  // Secondary — charcoal
+  secondary: '#2D2D2D',
+  secondaryContainer: '#F0F0EA',
+  onSecondary: '#F5F5F0',
+  onSecondaryContainer: '#2D2D2D',
+  secondaryFixed: '#F0F0EA',
+  secondaryFixedDim: '#E0E0DA',
 
-  // Tertiary
-  tertiary: '#5d5f5f',
-  tertiaryContainer: '#ececec',
-  onTertiary: '#ffffff',
-  onTertiaryContainer: '#696a6b',
-  tertiaryFixed: '#e2e2e2',
-  tertiaryFixedDim: '#c6c6c7',
+  // Tertiary — deep sand accent family
+  tertiary: '#A08A5E',
+  tertiaryContainer: '#F0EBE0',
+  onTertiary: '#F5F5F0',
+  onTertiaryContainer: '#6B5C3E',
+  tertiaryFixed: '#F0EBE0',
+  tertiaryFixedDim: '#C8B89A',
 
-  // Background
-  background: '#fff7fb',
-  onBackground: '#1e1a1e',
-  surface: '#fff7fb',
-  surfaceBright: '#fff7fb',
-  surfaceDim: '#e1d7dd',
-  surfaceContainerLowest: '#ffffff',
-  surfaceContainerLow: '#fbf1f7',
-  surfaceContainer: '#f5ebf1',
-  surfaceContainerHigh: '#efe6eb',
-  surfaceContainerHighest: '#e9e0e6',
-  onSurface: '#1e1a1e',
-  onSurfaceVariant: '#4b4549',
-  inverseSurface: '#342f33',
-  inverseOnSurface: '#f8eef4',
+  // Background — off-white
+  background: '#F5F5F0',
+  onBackground: '#0A0A0A',
+  surface: '#F5F5F0',
+  surfaceBright: '#F5F5F0',
+  surfaceDim: '#E8E8E2',
+  surfaceContainerLowest: '#FFFFFF',
+  surfaceContainerLow: '#FAFAF7',
+  surfaceContainer: '#F0F0EA',
+  surfaceContainerHigh: '#EAEAE4',
+  surfaceContainerHighest: '#E0E0DA',
+  onSurface: '#0A0A0A',
+  onSurfaceVariant: '#2D2D2D',
+  inverseSurface: '#0A0A0A',
+  inverseOnSurface: '#F5F5F0',
 
   // Outline
-  outline: '#7d757a',
-  outlineVariant: '#cec4c9',
+  outline: '#8B8B85',
+  outlineVariant: '#E0E0DA',
 
   // Error
-  error: '#ba1a1a',
-  errorContainer: '#ffdad6',
-  onError: '#ffffff',
-  onErrorContainer: '#93000a',
+  error: '#EF4444',
+  errorContainer: '#FEE2E2',
+  onError: '#FFFFFF',
+  onErrorContainer: '#991B1B',
 
   // Semantic
-  success: '#86efac',
-  accent: '#38bdf8',
-  warning: '#fbbf24',
+  success: '#22C55E',
+  accent: '#A08A5E', // deep sand — brand accent (no blues)
+  warning: '#F97316',
 
   // Text variants
-  text: '#1e1a1e',
-  textMuted: '#4b4549',
-  textVariant: '#94a3b8',
+  text: '#0A0A0A',
+  textMuted: '#2D2D2D',
+  textVariant: '#8B8B85',
 
   // Utility
   transparent: 'transparent',
@@ -86,8 +87,8 @@ export const C = {
   error: COLORS.error,
   warning: COLORS.warning,
   text: COLORS.text,
-  border: `rgba(148, 163, 184, 0.18)`,
-  borderLight: `rgba(207, 197, 225, 0.2)`,
+  border: '#E0E0DA',
+  borderLight: '#F0F0EA',
 };
 
 export default COLORS;

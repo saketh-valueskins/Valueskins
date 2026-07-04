@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 const C = {
-  primary: '#2563EB',
+  primary: '#0A0A0A',
   bg: '#ffffff',
-  surface: '#f8fafc',
+  surface: '#F5F5F0',
   card: '#ffffff',
-  text: '#0f172a',
+  text: '#0A0A0A',
   textSecondary: '#475569',
-  textMuted: '#94a3b8',
-  border: '#e2e8f0',
+  textMuted: '#B8B4AC',
+  border: '#E0E0DA',
   success: '#22c55e',
   danger: '#ef4444',
 };

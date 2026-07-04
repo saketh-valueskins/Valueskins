@@ -7,8 +7,8 @@ import type { SupportTicket, SupportMessage, KnowledgeBaseArticle, TicketCategor
 import { TICKET_CATEGORY_OPTIONS } from '../data/types';
 
 const C = {
-  bg: '#0f172a', surface: 'rgba(15, 23, 42, 0.86)', border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc', textMuted: '#94a3b8', accent: '#38bdf8', accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A', surface: 'rgba(10, 10, 10, 0.86)', border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0', textMuted: '#B8B4AC', accent: '#C8B89A', accentBg: 'rgba(200, 184, 154, 0.14)',
   error: '#fca5a5', success: '#86efac', warning: '#fbbf24',
 };
 
@@ -19,7 +19,7 @@ const card: CSSProperties = {
 
 const inp: CSSProperties = {
   width: '100%', borderRadius: 14, border: `1px solid ${C.border}`,
-  background: 'rgba(15, 23, 42, 0.88)', color: C.text, padding: '10px 14px',
+  background: 'rgba(10, 10, 10, 0.88)', color: C.text, padding: '10px 14px',
   fontSize: 14, outline: 'none', boxSizing: 'border-box',
 };
 
@@ -179,13 +179,13 @@ export default function SupportCenter({ eventId, minimized }: { eventId?: string
       {view === 'new' && (
         <div style={{ display: 'grid', gap: 12 }}>
           <div style={lbl}>
-            <span style={{ color: '#cbd5e1', fontSize: 13, fontWeight: 700 }}>Category</span>
+            <span style={{ color: '#D6D2C8', fontSize: 13, fontWeight: 700 }}>Category</span>
             <select value={newCategory} onChange={e => setNewCategory(e.target.value as TicketCategory)} style={inp}>
               {TICKET_CATEGORY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
           <div style={lbl}>
-            <span style={{ color: '#cbd5e1', fontSize: 13, fontWeight: 700 }}>Priority</span>
+            <span style={{ color: '#D6D2C8', fontSize: 13, fontWeight: 700 }}>Priority</span>
             <select value={newPriority} onChange={e => setNewPriority(e.target.value as TicketPriority)} style={inp}>
               <option value="low">Low</option>
               <option value="normal">Normal</option>
@@ -195,11 +195,11 @@ export default function SupportCenter({ eventId, minimized }: { eventId?: string
             </select>
           </div>
           <div style={lbl}>
-            <span style={{ color: '#cbd5e1', fontSize: 13, fontWeight: 700 }}>Subject</span>
+            <span style={{ color: '#D6D2C8', fontSize: 13, fontWeight: 700 }}>Subject</span>
             <input value={newSubject} onChange={e => setNewSubject(e.target.value)} placeholder="Brief summary" style={inp} />
           </div>
           <div style={lbl}>
-            <span style={{ color: '#cbd5e1', fontSize: 13, fontWeight: 700 }}>Description</span>
+            <span style={{ color: '#D6D2C8', fontSize: 13, fontWeight: 700 }}>Description</span>
             <textarea value={newDescription} onChange={e => setNewDescription(e.target.value)}
               placeholder="Describe your issue in detail..." style={{ ...inp, minHeight: 120, resize: 'vertical' }} />
           </div>
@@ -220,11 +220,11 @@ export default function SupportCenter({ eventId, minimized }: { eventId?: string
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
               {selectedTicket.status === 'open' && <button onClick={() => updateStatus(selectedTicket.id, 'investigating')} style={{ ...btnBase, padding: '4px 10px', fontSize: 10, background: C.accent, color: '#082f49' }}>Investigate</button>}
-              {selectedTicket.status !== 'resolved' && <button onClick={() => updateStatus(selectedTicket.id, 'resolved')} style={{ ...btnBase, padding: '4px 10px', fontSize: 10, background: C.success, color: '#0f172a' }}>Resolve</button>}
+              {selectedTicket.status !== 'resolved' && <button onClick={() => updateStatus(selectedTicket.id, 'resolved')} style={{ ...btnBase, padding: '4px 10px', fontSize: 10, background: C.success, color: '#0A0A0A' }}>Resolve</button>}
             </div>
           </div>
 
-          <p style={{ margin: 0, color: '#cbd5e1', fontSize: 14 }}>{selectedTicket.description}</p>
+          <p style={{ margin: 0, color: '#D6D2C8', fontSize: 14 }}>{selectedTicket.description}</p>
 
           {/* Messages */}
           <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
@@ -235,7 +235,7 @@ export default function SupportCenter({ eventId, minimized }: { eventId?: string
                 alignSelf: m.senderId === 'support-agent' ? 'flex-start' : 'flex-end',
                 maxWidth: '85%',
               }}>
-                <p style={{ margin: 0, color: '#cbd5e1', fontSize: 13 }}>{m.message}</p>
+                <p style={{ margin: 0, color: '#D6D2C8', fontSize: 13 }}>{m.message}</p>
                 <div style={{ fontSize: 10, color: C.textMuted, marginTop: 4 }}>{new Date(m.createdAt).toLocaleString()}</div>
               </div>
             ))}
@@ -263,7 +263,7 @@ export default function SupportCenter({ eventId, minimized }: { eventId?: string
             articles.map(a => (
               <details key={a.id} style={{ borderBottom: `1px solid ${C.border}`, paddingBottom: 8 }}>
                 <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: 13, color: C.accent, padding: '8px 0' }}>{a.question}</summary>
-                <p style={{ margin: '6px 0', color: '#cbd5e1', fontSize: 13, lineHeight: 1.6 }}>{a.answer}</p>
+                <p style={{ margin: '6px 0', color: '#D6D2C8', fontSize: 13, lineHeight: 1.6 }}>{a.answer}</p>
                 <div style={{ fontSize: 11, color: C.textMuted }}>
                   Tags: {a.tags.join(', ')} | Helpful: {a.helpfulCount}
                 </div>

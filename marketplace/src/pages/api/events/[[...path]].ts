@@ -96,7 +96,7 @@ async function fetchTableSections(eventId: number) {
     capacity: r.capacity,
     priceCents: r.price_cents || 0,
     description: r.description || '',
-    color: r.color || '#38bdf8',
+    color: r.color || '#C8B89A',
   }));
 }
 
@@ -276,7 +276,7 @@ async function insertTableSections(eventId: number, sections: any[]) {
     const s = sections[i];
     await query(
       'INSERT INTO table_sections (event_id, name, section_type, capacity, price_cents, description, sort_order, color) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-      [eventId, s.name || 'Section', s.sectionType || 'general', s.capacity || 0, s.priceCents || 0, s.description || null, i, s.color || '#38bdf8']
+      [eventId, s.name || 'Section', s.sectionType || 'general', s.capacity || 0, s.priceCents || 0, s.description || null, i, s.color || '#C8B89A']
     );
   }
 }

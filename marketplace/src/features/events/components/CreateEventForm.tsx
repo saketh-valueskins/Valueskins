@@ -68,13 +68,13 @@ function hasSocialBypass(text: string): boolean {
 }
 
 const C = {
-  bg: '#0f172a',
-  surface: 'rgba(15, 23, 42, 0.86)',
-  border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  accent: '#38bdf8',
-  accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A',
+  surface: 'rgba(10, 10, 10, 0.86)',
+  border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0',
+  textMuted: '#B8B4AC',
+  accent: '#C8B89A',
+  accentBg: 'rgba(200, 184, 154, 0.14)',
   error: '#fca5a5',
   errorBg: 'rgba(252, 165, 165, 0.12)',
   success: '#86efac',
@@ -92,7 +92,7 @@ const inp: CSSProperties = {
   width: '100%',
   borderRadius: 14,
   border: `1px solid ${C.border}`,
-  background: 'rgba(15, 23, 42, 0.88)',
+  background: 'rgba(10, 10, 10, 0.88)',
   color: C.text,
   padding: '12px 16px',
   fontSize: 14,
@@ -905,7 +905,7 @@ function SearchableCurrencySelect({
       {open && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 100, marginTop: 4,
-          background: '#1e293b', border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden',
+          background: '#1A1A1A', border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden',
           boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
         }}>
           <div style={{ padding: '8px 10px', borderBottom: `1px solid ${C.border}` }}>
@@ -1250,7 +1250,7 @@ function DateTimeSection({
   const today = new Date();
   const minDate = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-  const btnStyle = { ...btnBase, padding: '6px 12px', fontSize: 12, background: 'rgba(56,189,248,0.1)', color: '#38bdf8' };
+  const btnStyle = { ...btnBase, padding: '6px 12px', fontSize: 12, background: 'rgba(56,189,248,0.1)', color: '#C8B89A' };
 
   return (
     <>
@@ -1722,7 +1722,7 @@ function FeaturedPeopleSection({
       {f.featuredPeople.length > 0 && (
         <div style={{ display: 'grid', gap: 8 }}>
           {f.featuredPeople.map(p => (
-            <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 14, background: 'rgba(15, 23, 42, 0.6)' }}>
+            <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderRadius: 14, background: 'rgba(10, 10, 10, 0.6)' }}>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{p.tag.name}</div>
                 <div style={{ fontSize: 12, color: C.textMuted }}>{p.featuredRole} — {p.tag.handle}</div>
@@ -2109,7 +2109,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   return (
     <label style={{ display: 'grid', gap: 6 }}>
       <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ color: '#cbd5e1', fontSize: 13, fontWeight: 700 }}>{label}</span>
+        <span style={{ color: '#D6D2C8', fontSize: 13, fontWeight: 700 }}>{label}</span>
         {error && <span style={{ color: C.error, fontSize: 12, fontWeight: 600 }}>{error}</span>}
       </span>
       {children}

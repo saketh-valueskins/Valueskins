@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 
 const C = {
-  bg: '#0f172a',
-  surface: 'rgba(15, 23, 42, 0.86)',
-  border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  accent: '#38bdf8',
+  bg: '#0A0A0A',
+  surface: 'rgba(10, 10, 10, 0.86)',
+  border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0',
+  textMuted: '#B8B4AC',
+  accent: '#C8B89A',
   success: '#86efac',
 };
 
@@ -56,12 +56,12 @@ export default function PromoterAnalyticsSection({ eventId }: { eventId?: string
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-            <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: 12, borderRadius: 8 }}>
+            <div style={{ background: 'rgba(200, 184, 154, 0.1)', padding: 12, borderRadius: 8 }}>
               <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 4 }}>TICKETS SOLD</div>
               <div style={{ fontSize: 18, fontWeight: 700, color: C.accent }}>{promo.ticketsSold}</div>
             </div>
 
-            <div style={{ background: 'rgba(56, 189, 248, 0.1)', padding: 12, borderRadius: 8 }}>
+            <div style={{ background: 'rgba(200, 184, 154, 0.1)', padding: 12, borderRadius: 8 }}>
               <div style={{ color: C.textMuted, fontSize: 11, marginBottom: 4 }}>REVENUE GENERATED</div>
               <div style={{ fontSize: 16, fontWeight: 700 }}>₹{(promo.totalRevenueCents / 100).toFixed(0)}</div>
             </div>

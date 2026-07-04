@@ -8,7 +8,7 @@ const C = {
   text: '#1f2937',
   textMuted: '#6b7280',
   border: '#e5e7eb',
-  primary: '#2563eb',
+  primary: '#0A0A0A',
   success: '#10b981',
   warning: '#f59e0b',
   danger: '#ef4444',

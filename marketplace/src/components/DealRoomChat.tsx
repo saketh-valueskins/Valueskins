@@ -18,7 +18,7 @@ interface DealRoomChatProps {
   onSendMessage: (text: string) => void;
 }
 
-const C_DOCUMENTED = '#2563eb';
+const C_DOCUMENTED = '#0A0A0A';
 
 export default function DealRoomChat({
   dealId,
@@ -150,8 +150,8 @@ export default function DealRoomChat({
               gap: '5px',
               padding: '4px 10px',
               borderRadius: '20px',
-              background: 'rgba(37, 99, 235, 0.08)',
-              border: '1px solid rgba(37, 99, 235, 0.3)',
+              background: 'rgba(10, 10, 10, 0.08)',
+              border: '1px solid rgba(10, 10, 10, 0.3)',
               fontSize: '11px',
               fontWeight: 600,
               color: C_DOCUMENTED,
@@ -170,7 +170,7 @@ export default function DealRoomChat({
           onClick={handleCalendarExport}
           style={{
             padding: '8px 12px',
-            background: '#2563eb',
+            background: '#0A0A0A',
             color: '#ffffff',
             border: 'none',
             borderRadius: '6px',
@@ -190,10 +190,10 @@ export default function DealRoomChat({
         <div
           style={{
             padding: '12px 16px',
-            background: 'rgba(37, 99, 235, 0.04)',
-            borderBottom: '1px solid rgba(37, 99, 235, 0.15)',
+            background: 'rgba(10, 10, 10, 0.04)',
+            borderBottom: '1px solid rgba(10, 10, 10, 0.15)',
             fontSize: '12px',
-            color: '#1e40af',
+            color: '#2D2D2D',
             lineHeight: 1.5,
           }}
         >
@@ -238,7 +238,7 @@ export default function DealRoomChat({
               <div
                 style={{
                   maxWidth: '70%',
-                  background: msg.sender === 'me' ? '#2563eb' : '#f3f4f6',
+                  background: msg.sender === 'me' ? '#0A0A0A' : '#f3f4f6',
                   color: msg.sender === 'me' ? '#ffffff' : '#1f2937',
                   padding: '12px 16px',
                   borderRadius: '12px',
@@ -301,7 +301,7 @@ export default function DealRoomChat({
           onClick={handleSend}
           style={{
             padding: '10px 16px',
-            background: '#2563eb',
+            background: '#0A0A0A',
             color: '#ffffff',
             border: 'none',
             borderRadius: '6px',

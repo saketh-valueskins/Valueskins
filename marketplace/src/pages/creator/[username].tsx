@@ -4,12 +4,12 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 
 const C = {
-  primary: '#2563EB',
-  bg: '#0f172a',
-  surface: '#1e293b',
-  text: '#f8fafc',
-  textSecondary: '#cbd5e1',
-  border: '#334155',
+  primary: '#0A0A0A',
+  bg: '#0A0A0A',
+  surface: '#1A1A1A',
+  text: '#F5F5F0',
+  textSecondary: '#D6D2C8',
+  border: '#2D2D2D',
   success: '#22c55e',
   accent: '#f59e0b',
 };
@@ -175,7 +175,7 @@ export default function CreatorProfilePage() {
 
   const statCardStyle: CSSProperties = {
     padding: '16px',
-    background: 'rgba(37, 99, 235, 0.1)',
+    background: 'rgba(10, 10, 10, 0.1)',
     borderRadius: '8px',
     border: `1px solid ${C.border}`,
   };
@@ -242,7 +242,7 @@ export default function CreatorProfilePage() {
     const colors: Record<string, [string, string]> = {
       completed: ['rgba(34, 197, 94, 0.1)', C.success],
       'in-progress': ['rgba(245, 158, 11, 0.1)', C.accent],
-      pending: ['rgba(148, 163, 184, 0.1)', C.textSecondary],
+      pending: ['rgba(184, 180, 172, 0.1)', C.textSecondary],
     };
     const [bg, color] = colors[status] || colors.pending;
     return {
@@ -395,7 +395,7 @@ export default function CreatorProfilePage() {
               ].map((rating) => (
                 <div key={rating.label} style={{
                   padding: '12px',
-                  background: 'rgba(37, 99, 235, 0.05)',
+                  background: 'rgba(10, 10, 10, 0.05)',
                   borderRadius: '8px',
                 }}>
                   <div style={{ fontSize: '12px', color: C.textSecondary, marginBottom: '8px' }}>

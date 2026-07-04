@@ -83,12 +83,12 @@ export const DEMO_COLORS = {
   success: '#22c55e',
   warning: '#f59e0b',
   danger: '#ef4444',
-  info: '#38bdf8',
-  bg: '#0f172a',
-  surface: '#1e293b',
-  border: '#334155',
-  text: '#f8fafc',
-  textSecondary: '#cbd5e1'
+  info: '#C8B89A',
+  bg: '#0A0A0A',
+  surface: '#1A1A1A',
+  border: '#2D2D2D',
+  text: '#F5F5F0',
+  textSecondary: '#D6D2C8'
 };
 
 export const DEMO_LIMITS = {

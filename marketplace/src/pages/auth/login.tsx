@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { getGoogleAuthUrl } from '@/lib/oauth';
 import { C } from '@/theme/colors';
+import ValueSkinsLogo from '@/components/ValueSkinsLogo';
 
 export default function Login() {
   const [error, setError] = useState('');
@@ -21,8 +22,8 @@ export default function Login() {
     <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto' }}>
       <div style={{ width: '100%', maxWidth: '440px' }}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: C.primary, marginBottom: '8px' }}>ValueSkins</div>
-          <p style={{ fontSize: '15px', color: C.textSecondary }}>
+          <ValueSkinsLogo theme="light" size={26} />
+          <p style={{ fontSize: '15px', color: C.textSecondary, marginTop: '28px' }}>
             One account for everything.
           </p>
         </div>

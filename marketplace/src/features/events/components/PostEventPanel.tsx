@@ -4,8 +4,8 @@ import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
 const C = {
-  bg: '#0f172a', surface: 'rgba(15, 23, 42, 0.86)', border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc', textMuted: '#94a3b8', accent: '#38bdf8', accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A', surface: 'rgba(10, 10, 10, 0.86)', border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0', textMuted: '#B8B4AC', accent: '#C8B89A', accentBg: 'rgba(200, 184, 154, 0.14)',
   error: '#fca5a5', success: '#86efac', warning: '#fbbf24',
 };
 
@@ -16,7 +16,7 @@ const card: CSSProperties = {
 
 const inp: CSSProperties = {
   width: '100%', borderRadius: 14, border: `1px solid ${C.border}`,
-  background: 'rgba(15, 23, 42, 0.88)', color: C.text, padding: '10px 14px',
+  background: 'rgba(10, 10, 10, 0.88)', color: C.text, padding: '10px 14px',
   fontSize: 14, outline: 'none', boxSizing: 'border-box',
 };
 
@@ -131,7 +131,7 @@ export default function PostEventPanel({ eventId }: { eventId: string }) {
               <button key={v} onClick={() => !submitted && setRating(v)} style={{
                 width: 40, height: 40, borderRadius: 999, border: 'none', fontSize: 20, cursor: submitted ? 'default' : 'pointer',
                 background: v <= rating ? C.warning : 'rgba(148,163,184,0.1)',
-                color: v <= rating ? '#0f172a' : C.textMuted,
+                color: v <= rating ? '#0A0A0A' : C.textMuted,
                 transition: 'all 0.15s',
               }}>{v}</button>
             ))}
@@ -146,7 +146,7 @@ export default function PostEventPanel({ eventId }: { eventId: string }) {
               }}>Submit rating</button>
             </>
           ) : (
-            review && <p style={{ color: '#cbd5e1', fontSize: 13 }}>{review}</p>
+            review && <p style={{ color: '#D6D2C8', fontSize: 13 }}>{review}</p>
           )}
         </>
       )}
@@ -165,7 +165,7 @@ export default function PostEventPanel({ eventId }: { eventId: string }) {
                 <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: `1px solid ${C.border}` }}>
                   <span style={{ fontSize: 13 }}>{r.from}</span>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <button onClick={() => respond(r.id, true)} style={{ ...btnBase, padding: '4px 12px', fontSize: 11, background: C.success, color: '#0f172a' }}>Accept</button>
+                    <button onClick={() => respond(r.id, true)} style={{ ...btnBase, padding: '4px 12px', fontSize: 11, background: C.success, color: '#0A0A0A' }}>Accept</button>
                     <button onClick={() => respond(r.id, false)} style={{ ...btnBase, padding: '4px 12px', fontSize: 11, background: C.error, color: '#fff' }}>Decline</button>
                   </div>
                 </div>
@@ -188,7 +188,7 @@ export default function PostEventPanel({ eventId }: { eventId: string }) {
           {suggestions.length > 0 && (
             <div style={{ display: 'grid', gap: 6 }}>
               {suggestions.map((s, i) => (
-                <div key={i} style={{ padding: 8, borderRadius: 12, background: 'rgba(15,23,42,0.6)', color: '#cbd5e1', fontSize: 13 }}>{s}</div>
+                <div key={i} style={{ padding: 8, borderRadius: 12, background: 'rgba(15,23,42,0.6)', color: '#D6D2C8', fontSize: 13 }}>{s}</div>
               ))}
             </div>
           )}

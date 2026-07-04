@@ -51,7 +51,7 @@ export default function CreatorLevelBadge({ dealsCompleted, size = 'md', showLab
         </div>
 
         {showLabel && !showProgress && (
-          <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.2 }}>
+          <div style={{ fontSize: '11px', color: '#B8B4AC', lineHeight: 1.2 }}>
             {dealsCompleted} deal{dealsCompleted !== 1 ? 's' : ''} completed
           </div>
         )}
@@ -61,7 +61,7 @@ export default function CreatorLevelBadge({ dealsCompleted, size = 'md', showLab
             <div style={{
               width: '100px',
               height: '4px',
-              background: '#1e293b',
+              background: '#1A1A1A',
               borderRadius: '2px',
               overflow: 'hidden',
             }}>

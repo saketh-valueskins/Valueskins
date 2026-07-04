@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 const C = {
-  surface: 'rgba(15, 23, 42, 0.86)',
-  border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  accent: '#38bdf8',
-  accentBg: 'rgba(56, 189, 248, 0.14)',
+  surface: 'rgba(10, 10, 10, 0.86)',
+  border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0',
+  textMuted: '#B8B4AC',
+  accent: '#C8B89A',
+  accentBg: 'rgba(200, 184, 154, 0.14)',
   success: '#86efac',
   error: '#fca5a5',
   warning: '#fbbf24',

@@ -51,9 +51,9 @@ interface BrowseCampaignsProps {
 }
 
 const C = {
-  bg: '#0f172a', surface: '#1e293b', surfaceAlt: '#334155',
-  text: '#f8fafc', textMuted: '#94a3b8', primary: '#38bdf8',
-  success: '#10b981', warning: '#f59e0b', border: '#334155',
+  bg: '#0A0A0A', surface: '#1A1A1A', surfaceAlt: '#2D2D2D',
+  text: '#F5F5F0', textMuted: '#B8B4AC', primary: '#C8B89A',
+  success: '#10b981', warning: '#f59e0b', border: '#2D2D2D',
 };
 
 export default function BrowseCampaigns({ initialCampaigns = [], initialPagination = null }: BrowseCampaignsProps) {

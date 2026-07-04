@@ -1,6 +1,10 @@
 // Security & Session
+// Standard web session policy: 30-min idle timeout (slides on activity),
+// hard-capped at 24h absolute lifetime. Cookie is a browser-session cookie;
+// expiry is enforced server-side against auth_sessions.expires_at.
 export const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-export const SESSION_IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+export const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes idle
+export const SESSION_ABSOLUTE_TIMEOUT_MS = 24 * 60 * 60 * 1000; // 24 hours absolute
 export const SESSION_COOKIE_NAME = 'valueskins_session';
 export const SESSION_COOKIE_PATH = '/';
 export const SESSION_COOKIE_SECURE = process.env.NODE_ENV === 'production';

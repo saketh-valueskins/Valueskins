@@ -19,13 +19,13 @@ import type {
 const shell: CSSProperties = {
   minHeight: '100vh',
   background:
-    'radial-gradient(circle at top, rgba(14, 165, 233, 0.18), transparent 28%), linear-gradient(180deg, #07111f 0%, #0f172a 40%, #111827 100%)',
-  color: '#f8fafc',
+    'radial-gradient(circle at top, rgba(14, 165, 233, 0.18), transparent 28%), linear-gradient(180deg, #07111f 0%, #0A0A0A 40%, #111827 100%)',
+  color: '#F5F5F0',
 };
 
 const card: CSSProperties = {
-  background: 'rgba(15, 23, 42, 0.86)',
-  border: '1px solid rgba(148, 163, 184, 0.18)',
+  background: 'rgba(10, 10, 10, 0.86)',
+  border: '1px solid rgba(184, 180, 172, 0.18)',
   borderRadius: 24,
   boxShadow: '0 20px 60px rgba(2, 6, 23, 0.28)',
 };
@@ -33,9 +33,9 @@ const card: CSSProperties = {
 const inputStyle: CSSProperties = {
   width: '100%',
   borderRadius: 14,
-  border: '1px solid rgba(148, 163, 184, 0.22)',
-  background: 'rgba(15, 23, 42, 0.88)',
-  color: '#f8fafc',
+  border: '1px solid rgba(184, 180, 172, 0.22)',
+  background: 'rgba(10, 10, 10, 0.88)',
+  color: '#F5F5F0',
   padding: '14px 16px',
   fontSize: 14,
   outline: 'none',
@@ -407,7 +407,7 @@ export default function EventManagementPage() {
               <h1 style={{ margin: 0, fontSize: 30, lineHeight: 1.05 }}>
                 Hosts and participants enter freely. Their ValueSkins do not matter here.
               </h1>
-              <p style={{ margin: 0, color: '#cbd5e1', lineHeight: 1.55 }}>
+              <p style={{ margin: 0, color: '#D6D2C8', lineHeight: 1.55 }}>
                 New section built first with local workflow. Events can be created now, attendees can be added without any
                 ValueSkin gate, host and attendee ValueSkins are ignored inside events, and DJs, influencers, venue owners,
                 or sponsors are only accepted when marked as separate ValueSkin holders.
@@ -416,7 +416,7 @@ export default function EventManagementPage() {
           </section>
 
           <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12 }}>
-            <MetricCard label="Events live" value={String(events.length).padStart(2, '0')} accent="#38bdf8" />
+            <MetricCard label="Events live" value={String(events.length).padStart(2, '0')} accent="#C8B89A" />
             <MetricCard label="Open attendees" value={String(totalAttendees).padStart(2, '0')} accent="#f59e0b" />
             <MetricCard label="Tagged pros" value={String(totalTaggedCollaborators).padStart(2, '0')} accent="#34d399" />
           </section>
@@ -426,7 +426,7 @@ export default function EventManagementPage() {
               {canHost && <section style={{ ...card, padding: 22, display: 'grid', gap: 16 }}>
                 <div>
                   <h2 style={{ margin: '0 0 6px', fontSize: 20 }}>Create Event</h2>
-                  <p style={{ margin: 0, color: '#94a3b8', fontSize: 14 }}>
+                  <p style={{ margin: 0, color: '#B8B4AC', fontSize: 14 }}>
                     Separate event section with built-in rules: host and attendee ValueSkins are ignored, third-person tags are not.
                   </p>
                 </div>
@@ -501,9 +501,9 @@ export default function EventManagementPage() {
                               ...buttonBase,
                               flex: 1,
                               padding: '12px 14px',
-                              background: selected ? '#22d3ee' : 'rgba(15, 23, 42, 0.82)',
-                              color: selected ? '#082f49' : '#cbd5e1',
-                              border: selected ? 'none' : '1px solid rgba(148, 163, 184, 0.22)',
+                              background: selected ? '#22d3ee' : 'rgba(10, 10, 10, 0.82)',
+                              color: selected ? '#082f49' : '#D6D2C8',
+                              border: selected ? 'none' : '1px solid rgba(184, 180, 172, 0.22)',
                             }}
                           >
                             {option}
@@ -549,18 +549,18 @@ export default function EventManagementPage() {
                           gap: 8,
                           padding: 12,
                           borderRadius: 16,
-                          border: '1px solid rgba(148, 163, 184, 0.18)',
-                          background: 'rgba(15, 23, 42, 0.72)',
+                          border: '1px solid rgba(184, 180, 172, 0.18)',
+                          background: 'rgba(10, 10, 10, 0.72)',
                           maxHeight: 240,
                           overflowY: 'auto',
                         }}
                       >
-                        {candidatesLoading ? <p style={{ margin: 0, color: '#94a3b8', fontSize: 12 }}>Searching ValueSkin holders...</p> : null}
+                        {candidatesLoading ? <p style={{ margin: 0, color: '#B8B4AC', fontSize: 12 }}>Searching ValueSkin holders...</p> : null}
                         {!candidatesLoading && candidatesError ? (
                           <p style={{ margin: 0, color: '#fca5a5', fontSize: 12 }}>{candidatesError}</p>
                         ) : null}
                         {!candidatesLoading && !candidatesError && candidates.length === 0 ? (
-                          <p style={{ margin: 0, color: '#94a3b8', fontSize: 12 }}>
+                          <p style={{ margin: 0, color: '#B8B4AC', fontSize: 12 }}>
                             No separate ValueSkin holder found for this search.
                           </p>
                         ) : null}
@@ -576,7 +576,7 @@ export default function EventManagementPage() {
                               textAlign: 'left',
                               background:
                                 draftTag.personaId === candidate.personaId ? 'rgba(34, 211, 238, 0.18)' : 'rgba(8, 47, 73, 0.8)',
-                              color: '#f8fafc',
+                              color: '#F5F5F0',
                             }}
                           >
                             <div style={{ fontWeight: 700 }}>{candidate.name}</div>
@@ -627,13 +627,13 @@ export default function EventManagementPage() {
                         gap: 12,
                         padding: '12px 14px',
                         borderRadius: 16,
-                        border: '1px solid rgba(148, 163, 184, 0.2)',
-                        background: 'rgba(15, 23, 42, 0.8)',
+                        border: '1px solid rgba(184, 180, 172, 0.2)',
+                        background: 'rgba(10, 10, 10, 0.8)',
                       }}
                     >
                       <div>
                         <div style={{ fontWeight: 700 }}>Selected person has a ValueSkin</div>
-                        <div style={{ color: '#94a3b8', fontSize: 12 }}>This check comes from the selected separate profile.</div>
+                        <div style={{ color: '#B8B4AC', fontSize: 12 }}>This check comes from the selected separate profile.</div>
                       </div>
                       <div
                         style={{
@@ -642,7 +642,7 @@ export default function EventManagementPage() {
                           padding: 6,
                           textAlign: 'center',
                           background: draftTag.hasValueSkin ? '#10b981' : '#ef4444',
-                          color: '#f8fafc',
+                          color: '#F5F5F0',
                         }}
                       >
                         {draftTag.hasValueSkin ? 'Yes' : 'No'}
@@ -731,7 +731,7 @@ export default function EventManagementPage() {
                         <div style={{ display: 'grid', gap: 6 }}>
                           <span style={{ color: '#67e8f9', fontSize: 12, fontWeight: 700 }}>{event.access}</span>
                           <h3 style={{ margin: 0, fontSize: 20 }}>{event.title}</h3>
-                          <p style={{ margin: 0, color: '#94a3b8', fontSize: 13 }}>
+                          <p style={{ margin: 0, color: '#B8B4AC', fontSize: 13 }}>
                             Hosted by {event.hostName} • {event.venue}, {event.city}
                           </p>
                         </div>
@@ -739,7 +739,7 @@ export default function EventManagementPage() {
                           style={{
                             padding: '10px 12px',
                             borderRadius: 18,
-                            background: 'rgba(56, 189, 248, 0.14)',
+                            background: 'rgba(200, 184, 154, 0.14)',
                             color: '#bae6fd',
                             minWidth: 72,
                             textAlign: 'center',
@@ -750,7 +750,7 @@ export default function EventManagementPage() {
                         </div>
                       </div>
 
-                      <p style={{ margin: '12px 0 0', color: '#cbd5e1', lineHeight: 1.5 }}>{event.description}</p>
+                      <p style={{ margin: '12px 0 0', color: '#D6D2C8', lineHeight: 1.5 }}>{event.description}</p>
 
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
                         <Pill tone="warm">{event.attendees.length} open attendees</Pill>
@@ -766,7 +766,7 @@ export default function EventManagementPage() {
                 <section style={{ ...card, padding: 22, display: 'grid', gap: 16 }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: 20 }}>Live Event Control</h2>
-                <p style={{ margin: '6px 0 0', color: '#94a3b8', fontSize: 14 }}>
+                <p style={{ margin: '6px 0 0', color: '#B8B4AC', fontSize: 14 }}>
                   Manage attendance and tagged third parties for {activeEvent.title}.
                 </p>
               </div>
@@ -801,8 +801,8 @@ export default function EventManagementPage() {
                   style={{
                     ...buttonBase,
                     padding: '0 18px',
-                    background: '#e2e8f0',
-                    color: '#0f172a',
+                    background: '#E0E0DA',
+                    color: '#0A0A0A',
                   }}
                 >
                   Add attendee
@@ -822,19 +822,19 @@ export default function EventManagementPage() {
                         alignItems: 'center',
                         padding: '12px 14px',
                         borderRadius: 16,
-                        background: 'rgba(15, 23, 42, 0.72)',
-                        border: '1px solid rgba(148, 163, 184, 0.14)',
+                        background: 'rgba(10, 10, 10, 0.72)',
+                        border: '1px solid rgba(184, 180, 172, 0.14)',
                       }}
                     >
                       <div>
                         <div style={{ fontWeight: 700 }}>{attendee.name}</div>
-                        <div style={{ color: '#94a3b8', fontSize: 12 }}>{attendee.status}</div>
+                        <div style={{ color: '#B8B4AC', fontSize: 12 }}>{attendee.status}</div>
                       </div>
                       <span style={{ color: '#fdba74', fontSize: 12, fontWeight: 700 }}>No ValueSkin required</span>
                     </div>
                   ))
                 ) : (
-                  <p style={{ margin: 0, color: '#94a3b8', fontSize: 13 }}>No participants added yet.</p>
+                  <p style={{ margin: 0, color: '#B8B4AC', fontSize: 13 }}>No participants added yet.</p>
                 )}
               </div>
 
@@ -856,7 +856,7 @@ export default function EventManagementPage() {
                         padding: '12px 14px',
                         borderRadius: 16,
                         background: 'rgba(8, 47, 73, 0.7)',
-                        color: '#f8fafc',
+                        color: '#F5F5F0',
                         textAlign: 'left',
                       }}
                     >
@@ -872,7 +872,7 @@ export default function EventManagementPage() {
                     </button>
                   ))
                 ) : (
-                  <p style={{ margin: 0, color: '#94a3b8', fontSize: 13 }}>No collaborators tagged yet.</p>
+                  <p style={{ margin: 0, color: '#B8B4AC', fontSize: 13 }}>No collaborators tagged yet.</p>
                 )}
               </div>
                 </section>
@@ -892,7 +892,7 @@ function MetricCard({ label, value, accent }: { label: string; value: string; ac
         ...card,
         padding: '16px 12px',
         borderRadius: 20,
-        background: 'rgba(15, 23, 42, 0.84)',
+        background: 'rgba(10, 10, 10, 0.84)',
       }}
     >
       <div style={{ color: accent, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>{label}</div>
@@ -904,7 +904,7 @@ function MetricCard({ label, value, accent }: { label: string; value: string; ac
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label style={{ display: 'grid', gap: 8 }}>
-      <span style={{ color: '#cbd5e1', fontSize: 13, fontWeight: 700 }}>{label}</span>
+      <span style={{ color: '#D6D2C8', fontSize: 13, fontWeight: 700 }}>{label}</span>
       {children}
     </label>
   );

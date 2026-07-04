@@ -94,8 +94,8 @@ export default function DealCard({
         justifyContent: 'space-between',
         alignItems: 'center',
       }}>
-        <span style={{ fontSize: '12px', color: '#1e40af', fontWeight: 600 }}>Match Score</span>
-        <span style={{ fontSize: '14px', fontWeight: 700, color: '#2563eb' }}>{matchScore}</span>
+        <span style={{ fontSize: '12px', color: '#2D2D2D', fontWeight: 600 }}>Match Score</span>
+        <span style={{ fontSize: '14px', fontWeight: 700, color: '#0A0A0A' }}>{matchScore}</span>
       </div>
     </div>
   );

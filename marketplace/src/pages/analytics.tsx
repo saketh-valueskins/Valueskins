@@ -10,13 +10,13 @@ const C = {
   surface: '#1a1f3a',
   text: '#f1f5f9',
   textMuted: '#64748b',
-  textSecondary: '#94a3b8',
+  textSecondary: '#B8B4AC',
   primary: '#6366f1',
   success: '#22c55e',
   warning: '#f59e0b',
   danger: '#ef4444',
   accent: '#a855f7',
-  chart: '#38bdf8',
+  chart: '#C8B89A',
 };
 
 function formatCurrency(n: number): string {

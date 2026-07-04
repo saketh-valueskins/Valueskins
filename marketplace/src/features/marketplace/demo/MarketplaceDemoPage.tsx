@@ -41,8 +41,8 @@ function getStickerForProfession(profession: string): string | undefined {
 }
 
 const C = { // Marketplace neutral theme
-  primary: '#2563EB',
-  primaryGradient: 'linear-gradient(135deg, #2563EB, #1e40af)',
+  primary: '#0A0A0A',
+  primaryGradient: 'linear-gradient(135deg, #0A0A0A, #2D2D2D)',
   bg: '#ffffff',
   surface: '#ffffff',
   surfaceAlt: '#f9fafb',
@@ -62,9 +62,9 @@ const C = { // Marketplace neutral theme
   danger: '#ED4956',
   dangerBg: 'rgba(237,73,86,0.08)',
   dangerBorder: 'rgba(237,73,86,0.25)',
-  accent: '#3B82F6',
-  accentBg: 'rgba(59,130,246,0.08)',
-  accentBorder: 'rgba(59,130,246,0.25)',
+  accent: '#A08A5E',
+  accentBg: 'rgba(160,138,94,0.08)',
+  accentBorder: 'rgba(160,138,94,0.25)',
 };
 
 // ---- Deal type helpers ----
@@ -2892,7 +2892,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             style={{ fontSize: '22px', fontWeight: 800, color: C.text, marginBottom: '4px', cursor: 'pointer' }}>{account?.display_name || profileName || 'Your Name'}</div>
                           <div style={{ fontSize: '13px', color: C.textSecondary, marginBottom: '8px' }}>{account?.email || ''}</div>
                           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <span style={{ padding: '4px 12px', borderRadius: '20px', background: isBrand ? 'rgba(59,130,246,0.1)' : 'rgba(34,197,94,0.1)', border: `1px solid ${isBrand ? '#3b82f6' : '#22c55e'}`, color: isBrand ? '#3b82f6' : '#22c55e', fontSize: '12px', fontWeight: 600 }}>
+                            <span style={{ padding: '4px 12px', borderRadius: '20px', background: isBrand ? 'rgba(160,138,94,0.1)' : 'rgba(34,197,94,0.1)', border: `1px solid ${isBrand ? '#A08A5E' : '#22c55e'}`, color: isBrand ? '#A08A5E' : '#22c55e', fontSize: '12px', fontWeight: 600 }}>
                               {isBrand ? '🏢 Brand' : '🎨 Creator'}
                             </span>
                             <button onClick={() => setEditingProfile(true)} style={{ padding: '4px 12px', borderRadius: '20px', border: `1px solid ${C.border}`, background: 'none', color: C.textSecondary, fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
@@ -4914,7 +4914,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           <>
                                             <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>Goods Tracking</div>
                                             {status === 'goods_preparing' && (
-                                              <div style={{ background:'rgba(59,130,246,0.06)', border:`1px solid rgba(59,130,246,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
+                                              <div style={{ background:'rgba(160,138,94,0.06)', border:`1px solid rgba(160,138,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Brand is Preparing Your Product</div>
                                                 <div style={{ fontSize:'11px', color:C.textSecondary }}>Your product is being selected and packaged. You will receive tracking information once it ships.</div>
                                               </div>
@@ -4954,7 +4954,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               </div>
                                             )}
                                             {status === 'content_due' && (
-                                              <div style={{ background:'rgba(59,130,246,0.06)', border:`1px solid rgba(59,130,246,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
+                                              <div style={{ background:'rgba(160,138,94,0.06)', border:`1px solid rgba(160,138,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Create Content</div>
                                                 <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Submit a link to your published content featuring the product</div>
                                                 <input
@@ -4983,7 +4983,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               </div>
                                             )}
                                             {status === 'content_submitted' && (
-                                              <div style={{ background:'rgba(59,130,246,0.06)', border:`1px solid rgba(59,130,246,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
+                                              <div style={{ background:'rgba(160,138,94,0.06)', border:`1px solid rgba(160,138,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Content Submitted</div>
                                                 <div style={{ fontSize:'11px', color:C.textSecondary }}>Your content is awaiting brand approval. This typically takes 24-48 hours.</div>
                                               </div>
@@ -5013,7 +5013,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           <>
                                             <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>Content Collaboration</div>
                                             {status === 'content_creating' && (
-                                              <div style={{ background:'rgba(59,130,246,0.06)', border:`1px solid rgba(59,130,246,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
+                                              <div style={{ background:'rgba(160,138,94,0.06)', border:`1px solid rgba(160,138,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>In Progress</div>
                                                 <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Submit your content link when ready</div>
                                                 <input
@@ -5042,7 +5042,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               </div>
                                             )}
                                             {status === 'content_submitted' && (
-                                              <div style={{ background:'rgba(59,130,246,0.06)', border:`1px solid rgba(59,130,246,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
+                                              <div style={{ background:'rgba(160,138,94,0.06)', border:`1px solid rgba(160,138,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Submitted</div>
                                                 <div style={{ fontSize:'11px', color:C.textSecondary }}>Waiting for collaborator approval</div>
                                               </div>

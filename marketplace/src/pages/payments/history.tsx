@@ -6,8 +6,8 @@ import LoadingSkeleton from '@/components/LoadingSkeleton';
 import EmptyState from '@/components/EmptyState';
 
 const C = {
-  bg: '#0b0e1a', surface: '#111827', text: '#e2e8f0', textMuted: '#6b7280',
-  primary: '#6366f1', success: '#22c55e', danger: '#ef4444', border: '#1e293b',
+  bg: '#0b0e1a', surface: '#111827', text: '#E0E0DA', textMuted: '#6b7280',
+  primary: '#6366f1', success: '#22c55e', danger: '#ef4444', border: '#1A1A1A',
 };
 
 export default function PaymentHistoryPage() {

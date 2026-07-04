@@ -4,14 +4,17 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 import CookieConsent from '@/components/CookieConsent';
+import SplashIntro from '@/components/SplashIntro';
 import '@/styles/globals.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ErrorBoundary>
       <AuthProvider>
+      <SplashIntro />
       <Link
         href="/"
+        aria-label="ValueSkins home"
         style={{
           position: 'fixed',
           top: '20px',
@@ -20,20 +23,21 @@ export default function App({ Component, pageProps }: AppProps) {
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '8px 16px',
+          padding: '10px 18px',
           borderRadius: '999px',
-          background: 'rgba(0,0,0,0.85)',
+          background: 'rgba(10,10,10,0.9)',
           backdropFilter: 'blur(12px)',
-          color: '#fff',
+          color: '#F5F5F0',
           textDecoration: 'none',
-          fontSize: '14px',
+          fontSize: '12px',
           fontWeight: 700,
-          border: '1px solid rgba(255,255,255,0.15)',
+          letterSpacing: '0.18em',
+          border: '1px solid rgba(200,184,154,0.35)',
           boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif"
         }}
       >
-        ValueSkins
+        VALUESKINS
       </Link>
       <Component {...pageProps} />
       <Footer />

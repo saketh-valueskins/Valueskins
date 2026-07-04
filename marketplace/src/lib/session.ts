@@ -1,4 +1,19 @@
 import { query } from '@/lib/db';
+import { SESSION_IDLE_TIMEOUT_MS, SESSION_ABSOLUTE_TIMEOUT_MS } from '@/config/constants';
+
+// Sliding idle timeout: each authenticated request pushes expires_at forward
+// by SESSION_IDLE_TIMEOUT_MS, but never past created_at + SESSION_ABSOLUTE_TIMEOUT_MS.
+export async function touchSession(sessionToken: string): Promise<void> {
+  await query(
+    `UPDATE auth_sessions
+     SET expires_at = LEAST(
+       NOW() + ($2 || ' milliseconds')::interval,
+       created_at + ($3 || ' milliseconds')::interval
+     )
+     WHERE id = $1 AND is_active = true AND expires_at > NOW()`,
+    [sessionToken, String(SESSION_IDLE_TIMEOUT_MS), String(SESSION_ABSOLUTE_TIMEOUT_MS)]
+  ).catch(() => {}); // renewal is best-effort; validation still gates access
+}
 
 export async function getSessionUserId(cookie: string): Promise<string | null> {
   const match = cookie.match(/valueskins_session=([^;]+)/);
@@ -12,6 +27,8 @@ export async function getSessionUserId(cookie: string): Promise<string | null> {
     [sessionToken]
   );
   if (result.rows.length === 0) return null;
+
+  await touchSession(sessionToken);
   return result.rows[0].user_id;
 }
 

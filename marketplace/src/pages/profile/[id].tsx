@@ -12,8 +12,8 @@ export async function getServerSideProps(_ctx: GetServerSidePropsContext) {
 }
 
 const C = {
-  primary: '#2563EB',
-  primaryGradient: 'linear-gradient(135deg, #2563EB, #1e40af)',
+  primary: '#0A0A0A',
+  primaryGradient: 'linear-gradient(135deg, #0A0A0A, #2D2D2D)',
   bg: '#ffffff',
   surface: '#ffffff',
   surfaceAlt: '#f9fafb',
@@ -25,7 +25,7 @@ const C = {
   success: '#00D46A',
   warning: '#FFAB00',
   danger: '#ED4956',
-  accent: '#3B82F6',
+  accent: '#A08A5E',
 };
 
 export default function PublicProfilePage() {
@@ -78,7 +78,7 @@ export default function PublicProfilePage() {
         skins: skinsResult.data?.map((skin) => skin.profession_name) ?? [],
         level: Math.max(...(skinsResult.data?.map((skin) => skin.level) ?? [1])),
         verified: true,
-        avatarColor: '#2563EB',
+        avatarColor: '#0A0A0A',
         avatarAbbr: profileResult.data.display_name.slice(0, 2).toUpperCase(),
         recentDeals: [],
         reviews: [],

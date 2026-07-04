@@ -122,7 +122,7 @@ export default function PayoutOnboardingPage() {
   }
 
   return (
-    <div style={{ padding: 32, maxWidth: 640, margin: '0 auto', color: '#e2e8f0', background: '#0b0e1a', minHeight: '100vh' }}>
+    <div style={{ padding: 32, maxWidth: 640, margin: '0 auto', color: '#E0E0DA', background: '#0b0e1a', minHeight: '100vh' }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4, color: '#fff' }}>Payout Settings</h1>
       <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>
         Link your bank account to receive payouts for completed deals.
@@ -147,7 +147,7 @@ export default function PayoutOnboardingPage() {
           {accounts.map(acc => (
             <div key={acc.id} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '12px 16px', background: '#111827', borderRadius: 8, border: '1px solid #1e293b',
+              padding: '12px 16px', background: '#111827', borderRadius: 8, border: '1px solid #1A1A1A',
               marginBottom: 8,
             }}>
               <div>
@@ -162,7 +162,7 @@ export default function PayoutOnboardingPage() {
               <div style={{ display: 'flex', gap: 8 }}>
                 {!acc.is_default && (
                   <button onClick={() => setAsDefault(acc.id)} style={{
-                    padding: '4px 12px', background: '#1e293b', color: '#94a3b8', border: '1px solid #334155',
+                    padding: '4px 12px', background: '#1A1A1A', color: '#B8B4AC', border: '1px solid #2D2D2D',
                     borderRadius: 6, fontSize: 12, cursor: 'pointer',
                   }}>
                     Set Default
@@ -181,7 +181,7 @@ export default function PayoutOnboardingPage() {
       )}
 
       {/* Add new account form */}
-      <div style={{ background: '#111827', borderRadius: 12, padding: 24, border: '1px solid #1e293b' }}>
+      <div style={{ background: '#111827', borderRadius: 12, padding: 24, border: '1px solid #1A1A1A' }}>
         <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#fff' }}>Link a Bank Account</h2>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 16 }}>
@@ -248,6 +248,6 @@ export default function PayoutOnboardingPage() {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: '#0b0e1a', border: '1px solid #1e293b',
-  borderRadius: 8, color: '#e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', padding: '10px 12px', background: '#0b0e1a', border: '1px solid #1A1A1A',
+  borderRadius: 8, color: '#E0E0DA', fontSize: 14, outline: 'none', boxSizing: 'border-box',
 };

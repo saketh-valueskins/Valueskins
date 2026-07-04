@@ -25,10 +25,10 @@ export default function TabNav({ tabs, activeTab, onTabChange }: TabNavProps) {
           style={{
             flex: 1,
             padding: '16px',
-            background: activeTab === tab.id ? '#2563eb' : '#ffffff',
+            background: activeTab === tab.id ? '#0A0A0A' : '#ffffff',
             color: activeTab === tab.id ? '#ffffff' : '#6b7280',
             border: 'none',
-            borderBottom: activeTab === tab.id ? '3px solid #2563eb' : 'none',
+            borderBottom: activeTab === tab.id ? '3px solid #0A0A0A' : 'none',
             fontWeight: activeTab === tab.id ? 600 : 500,
             fontSize: '14px',
             cursor: 'pointer',

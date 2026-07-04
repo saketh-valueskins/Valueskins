@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 
 const C = {
-  surface: 'rgba(15, 23, 42, 0.86)',
-  border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  accent: '#38bdf8',
-  accentBg: 'rgba(56, 189, 248, 0.14)',
+  surface: 'rgba(10, 10, 10, 0.86)',
+  border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0',
+  textMuted: '#B8B4AC',
+  accent: '#C8B89A',
+  accentBg: 'rgba(200, 184, 154, 0.14)',
   success: '#86efac',
   error: '#fca5a5',
 };
@@ -81,7 +81,7 @@ export default function SeatMapView({ eventId, onSelectSeat, selectedSeatId }: {
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, fontSize: 12 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <span style={{ width: 14, height: 14, borderRadius: 3, background: '#1e293b', border: `1px solid ${C.border}`, display: 'inline-block' }} /> Available
+          <span style={{ width: 14, height: 14, borderRadius: 3, background: '#1A1A1A', border: `1px solid ${C.border}`, display: 'inline-block' }} /> Available
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ width: 14, height: 14, borderRadius: 3, background: C.accentBg, border: `1px solid ${C.accent}`, display: 'inline-block' }} /> Selected
@@ -105,7 +105,7 @@ export default function SeatMapView({ eventId, onSelectSeat, selectedSeatId }: {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
             {section.seats.map(seat => {
               const isSelected = seat.id === selectedId;
-              let bg = '#1e293b';
+              let bg = '#1A1A1A';
               let border = C.border;
               let cursor = 'pointer';
               let opacity = 1;

@@ -3,10 +3,10 @@
 import { useState } from 'react';
 
 const C = {
-  bg: '#fff7fb',
+  bg: '#F5F5F0',
   surface: '#ffffff',
-  primary: '#675b64',
-  primaryContainer: '#f8e7f2',
+  primary: '#0A0A0A',
+  primaryContainer: '#F0F0EA',
   outline: '#7d757a',
   outlineVariant: '#cec4c9',
   onSurface: '#1e1a1e',
@@ -16,8 +16,8 @@ const C = {
 
 const colorVariants = [
   { name: 'lavender', hex: '#e8def7' },
-  { name: 'rose', hex: '#f8e7f2' },
-  { name: 'dawn', hex: '#fff7fb' },
+  { name: 'rose', hex: '#F0F0EA' },
+  { name: 'dawn', hex: '#F5F5F0' },
   { name: 'void', hex: '#342f33' },
 ];
 
@@ -51,7 +51,7 @@ export default function ValueSkinsCustomizer() {
             aspectRatio: '4/5',
             borderRadius: 24,
             overflow: 'hidden',
-            background: `linear-gradient(135deg, #f8e7f2 0%, #fff7fb 100%)`,
+            background: `linear-gradient(135deg, #F0F0EA 0%, #F5F5F0 100%)`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

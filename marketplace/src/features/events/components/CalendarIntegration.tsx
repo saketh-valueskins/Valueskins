@@ -5,8 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { CalendarLinks, EventReminder, ReminderType, CalendarPlatform, ReminderChannel } from '../data/types';
 
 const C = {
-  bg: '#0f172a', surface: 'rgba(15, 23, 42, 0.86)', border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc', textMuted: '#94a3b8', accent: '#38bdf8', accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A', surface: 'rgba(10, 10, 10, 0.86)', border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0', textMuted: '#B8B4AC', accent: '#C8B89A', accentBg: 'rgba(200, 184, 154, 0.14)',
   error: '#fca5a5', success: '#86efac', warning: '#fbbf24',
 };
 
@@ -129,7 +129,7 @@ export default function CalendarIntegration({ eventId, eventName, eventDate, sta
 
       {/* Event Details for Calendar */}
       <div style={{ fontSize: 13, color: C.textMuted, lineHeight: 1.6, padding: '10px 14px', borderRadius: 12, background: 'rgba(15,23,42,0.6)', marginBottom: 12 }}>
-        <div><strong style={{ color: '#cbd5e1' }}>{eventName}</strong></div>
+        <div><strong style={{ color: '#D6D2C8' }}>{eventName}</strong></div>
         <div>{weekday}, {dateFormatted} | {startTime} - {endTime}</div>
         <div>{venueName}{fullAddress ? `, ${fullAddress}` : ''}</div>
       </div>

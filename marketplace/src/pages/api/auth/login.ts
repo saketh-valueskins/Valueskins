@@ -4,12 +4,12 @@ import { verifyCaptchaToken, isCaptchaEnabled } from '@/lib/hcaptcha';
 import { verifyPassword, hashSessionToken } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
 import crypto from 'crypto';
-import { AUTH_RATE_LIMIT_REQUESTS, AUTH_RATE_LIMIT_WINDOW_MS, ALLOWED_ORIGINS } from '@/config/constants';
+import { AUTH_RATE_LIMIT_REQUESTS, AUTH_RATE_LIMIT_WINDOW_MS, ALLOWED_ORIGINS, SESSION_IDLE_TIMEOUT_MS } from '@/config/constants';
 import { withCsrfProtection } from '@/lib/security/csrf-pages';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
-const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -106,7 +106,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const csrfToken = crypto.randomBytes(32).toString('hex');
     res.setHeader('Set-Cookie', [
-      `valueskins_session=${sessionToken}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${SESSION_IDLE_TIMEOUT_MS / 1000}`,
+      `valueskins_session=${sessionToken}; HttpOnly; Path=/; SameSite=Lax`,
       `csrf_token=${csrfToken}; Secure; SameSite=Strict; Path=/; Max-Age=3600`,
     ]);
 

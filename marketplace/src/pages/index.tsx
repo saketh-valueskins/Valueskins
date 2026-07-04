@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { C } from '@/theme/colors';
+import ValueSkinsLogo from '@/components/ValueSkinsLogo';
 
 // Note: Using unified ValueSkins theme - same functionality, consistent styling
 
@@ -28,10 +29,10 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto' }}>
+      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: C.primary, marginBottom: '8px' }}>ValueSkins</div>
-          <div style={{ fontSize: '14px', color: C.textSecondary }}>Loading...</div>
+          <ValueSkinsLogo theme="light" size={26} />
+          <div style={{ fontSize: '13px', color: C.textSecondary, marginTop: '24px' }}>Loading...</div>
         </div>
       </div>
     );
@@ -51,7 +52,7 @@ export default function HomePage() {
           <h1 style={{ fontSize: '32px', fontWeight: 800, color: C.text, margin: '0' }}>
             Welcome back, {account.display_name.split(' ')[0]}!
           </h1>
-          <button onClick={handleLogout} style={{ padding: '8px 16px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={handleLogout} style={{ padding: '8px 16px', background: C.error, color: '#fff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
             Logout
           </button>
         </div>
@@ -65,7 +66,7 @@ export default function HomePage() {
             title="Marketplace"
             desc="Discover brands, creators & deals"
             link="/demo/marketplace"
-            color="#8b5cf6"
+            color="#A08A5E"
           />
 
           <div style={{ display: 'none' }}>
@@ -73,7 +74,7 @@ export default function HomePage() {
               title="Events"
               desc="Host, explore, and manage events"
               link="/events"
-              color="#ec4899"
+              color="#C8B89A"
             />
           </div>
 
@@ -81,7 +82,7 @@ export default function HomePage() {
             title="Preferences"
             desc="Set your availability, rates & pitch"
             link="/profile/me"
-            color="#10b981"
+            color="#2D2D2D"
           />
 
         </div>

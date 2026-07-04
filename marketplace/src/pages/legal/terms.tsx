@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-const C = { bg: '#0f172a', text: '#f8fafc', textSecondary: '#94a3b8', primary: '#38bdf8' };
+const C = { bg: '#0A0A0A', text: '#F5F5F0', textSecondary: '#B8B4AC', primary: '#C8B89A' };
 export default function Terms() {
   return (
     <div style={{ minHeight: '100vh', background: C.bg, color: C.text, padding: '60px 20px' }}>

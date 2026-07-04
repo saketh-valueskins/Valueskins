@@ -4,19 +4,19 @@ import type { CSSProperties } from 'react';
 import { useState } from 'react';
 
 const C = {
-  bg: '#0f172a',
-  surface: 'rgba(15, 23, 42, 0.86)',
-  border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  accent: '#38bdf8',
-  accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A',
+  surface: 'rgba(10, 10, 10, 0.86)',
+  border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0',
+  textMuted: '#B8B4AC',
+  accent: '#C8B89A',
+  accentBg: 'rgba(200, 184, 154, 0.14)',
   error: '#fca5a5',
 };
 
 const card: CSSProperties = {
-  background: 'rgba(15, 23, 42, 0.86)',
-  border: `1px solid rgba(148, 163, 184, 0.18)`,
+  background: 'rgba(10, 10, 10, 0.86)',
+  border: `1px solid rgba(184, 180, 172, 0.18)`,
   borderRadius: 20,
   padding: 20,
   boxShadow: '0 20px 60px rgba(2, 6, 23, 0.28)',
@@ -24,11 +24,11 @@ const card: CSSProperties = {
 
 const inputStyle: CSSProperties = {
   width: '100%',
-  background: 'rgba(15, 23, 42, 0.8)',
-  border: '1px solid rgba(148, 163, 184, 0.18)',
+  background: 'rgba(10, 10, 10, 0.8)',
+  border: '1px solid rgba(184, 180, 172, 0.18)',
   borderRadius: 12,
   padding: '10px 14px',
-  color: '#f8fafc',
+  color: '#F5F5F0',
   fontSize: 14,
   outline: 'none',
   boxSizing: 'border-box',

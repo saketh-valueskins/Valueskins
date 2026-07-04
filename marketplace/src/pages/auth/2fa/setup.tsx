@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 const C = {
-  primary: '#2563EB',
+  primary: '#0A0A0A',
   bg: '#ffffff',
   text: '#1f2937',
   textSecondary: '#6b7280',
@@ -92,7 +92,7 @@ export default function TwoFactorSetup() {
               <code style={{ fontSize: '14px', color: C.text, fontWeight: 600 }}>{secret}</code>
             </div>
             <p style={{ fontSize: '13px', fontWeight: 600, color: C.text, marginBottom: '8px' }}>Recovery codes (save these):</p>
-                    <div style={{ background: '#f8fafc', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
+                    <div style={{ background: '#F5F5F0', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
               {codes.map((code, i) => (
                 <div key={i} style={{ fontFamily: 'monospace', fontSize: '14px', color: C.text, padding: '2px 0' }}>{code}</div>
               ))}

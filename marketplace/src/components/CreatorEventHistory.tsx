@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react';
 
 const C = {
-  bg: '#0f172a',
-  surface: '#1e293b',
-  border: '#334155',
-  text: '#f8fafc',
-  textSecondary: '#cbd5e1',
+  bg: '#0A0A0A',
+  surface: '#1A1A1A',
+  border: '#2D2D2D',
+  text: '#F5F5F0',
+  textSecondary: '#D6D2C8',
   primary: '#0066CC',
   success: '#22c55e',
   warning: '#f59e0b',
-  accent: '#38bdf8',
+  accent: '#C8B89A',
 };
 
 interface EventTag {

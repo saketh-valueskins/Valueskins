@@ -35,11 +35,11 @@ export default function TopNav({
       {/* Left - Home button and Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <Link href="/" passHref>
-          <a style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>
+          <a style={{ color: '#0A0A0A', textDecoration: 'none', fontWeight: 600 }}>
             Home
           </a>
         </Link>
-        <div style={{ fontSize: '20px', fontWeight: 700, color: '#2563eb' }}>
+        <div style={{ fontSize: '20px', fontWeight: 700, color: '#0A0A0A' }}>
           ValueSkins
         </div>
       </div>

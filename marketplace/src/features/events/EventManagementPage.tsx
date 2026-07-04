@@ -47,13 +47,13 @@ const VenueIntel = dynamic(() => import('./components/IntelligenceSystems').then
 const AdminIntelligence = dynamic(() => import('./components/IntelligenceSystems').then((m) => m.AdminIntelligence));
 
 const C = {
-  bg: '#0f172a',
-  surface: 'rgba(15, 23, 42, 0.86)',
-  border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  accent: '#38bdf8',
-  accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A',
+  surface: 'rgba(10, 10, 10, 0.86)',
+  border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0',
+  textMuted: '#B8B4AC',
+  accent: '#C8B89A',
+  accentBg: 'rgba(200, 184, 154, 0.14)',
   error: '#fca5a5',
   success: '#86efac',
   gradient: 'linear-gradient(135deg, #f97316, #fb7185)',
@@ -61,7 +61,7 @@ const C = {
 
 const shell: CSSProperties = {
   minHeight: '100vh',
-  background: 'linear-gradient(180deg, #07111f 0%, #0f172a 40%, #111827 100%)',
+  background: 'linear-gradient(180deg, #07111f 0%, #0A0A0A 40%, #111827 100%)',
   color: C.text,
   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
 };
@@ -77,7 +77,7 @@ const inputStyle: CSSProperties = {
   width: '100%',
   borderRadius: 14,
   border: `1px solid ${C.border}`,
-  background: 'rgba(15, 23, 42, 0.88)',
+  background: 'rgba(10, 10, 10, 0.88)',
   color: C.text,
   padding: '14px 16px',
   fontSize: 14,
@@ -464,7 +464,7 @@ function ChoiceCard({ title, desc, onClick }: { title: string; desc: string; onC
         textAlign: 'center', background: C.surface,
         transition: 'transform 0.15s, border-color 0.15s',
       }}
-      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.borderColor = '#38bdf8'; }}
+      onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.03)'; e.currentTarget.style.borderColor = '#C8B89A'; }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = C.border; }}
     >
       <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 6, marginTop: 4 }}>{title}</div>
@@ -820,7 +820,7 @@ function EventCard({ event, onClick }: { event: EventRecord; onClick: () => void
         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{f.eventName}</div>
         <div style={{ fontSize: 13, color: C.textMuted }}>By {event.hostName}</div>
         {f.oneLineSummary && (
-          <p style={{ margin: '6px 0 0', color: '#cbd5e1', fontSize: 13, lineHeight: 1.5 }}>{f.oneLineSummary}</p>
+          <p style={{ margin: '6px 0 0', color: '#D6D2C8', fontSize: 13, lineHeight: 1.5 }}>{f.oneLineSummary}</p>
         )}
       </div>
 
@@ -878,7 +878,7 @@ function BackButton({ onClick }: { onClick: () => void }) {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label style={{ display: 'grid', gap: 6 }}>
-      <span style={{ color: '#cbd5e1', fontSize: 13, fontWeight: 700 }}>{label}</span>
+      <span style={{ color: '#D6D2C8', fontSize: 13, fontWeight: 700 }}>{label}</span>
       {children}
     </label>
   );
@@ -907,7 +907,7 @@ function SectionLabel({ children }: { children: string }) {
 function DetailRow({ icon, label }: { icon: string; label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: C.textMuted }}>
-      <span style={{ fontWeight: 600, color: '#cbd5e1', minWidth: 80 }}>{icon}</span>
+      <span style={{ fontWeight: 600, color: '#D6D2C8', minWidth: 80 }}>{icon}</span>
       <span>{label}</span>
     </div>
   );
@@ -1188,10 +1188,10 @@ function EventDetailView({
       </div>
 
       {f.oneLineSummary && (
-        <p style={{ margin: 0, color: '#cbd5e1', fontSize: 15, fontWeight: 600 }}>{f.oneLineSummary}</p>
+        <p style={{ margin: 0, color: '#D6D2C8', fontSize: 15, fontWeight: 600 }}>{f.oneLineSummary}</p>
       )}
       {f.fullDescription && (
-        <p style={{ margin: 0, color: '#cbd5e1', lineHeight: 1.7, fontSize: 14, whiteSpace: 'pre-wrap' }}>{f.fullDescription}</p>
+        <p style={{ margin: 0, color: '#D6D2C8', lineHeight: 1.7, fontSize: 14, whiteSpace: 'pre-wrap' }}>{f.fullDescription}</p>
       )}
 
       {f.tags.length > 0 && (
@@ -1211,7 +1211,7 @@ function EventDetailView({
 
       <div>
         <SectionLabel>Location</SectionLabel>
-        <p style={{ margin: '4px 0 2px', color: '#cbd5e1', fontSize: 14 }}>{f.venueName}</p>
+        <p style={{ margin: '4px 0 2px', color: '#D6D2C8', fontSize: 14 }}>{f.venueName}</p>
         <p style={{ margin: 0, color: C.textMuted, fontSize: 13 }}>{f.fullAddress}</p>
         {f.landmark && <p style={{ margin: '2px 0 0', color: C.textMuted, fontSize: 13 }}>Near {f.landmark}</p>}
         <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -1380,13 +1380,13 @@ function EventDetailView({
         <div>
           <SectionLabel>Logistics</SectionLabel>
           <div style={{ display: 'grid', gap: 10, fontSize: 13, color: C.textMuted }}>
-            {f.whatToBring.length > 0 && <div><strong style={{ color: '#cbd5e1' }}>Bring:</strong> {f.whatToBring.join(', ')}</div>}
-            {f.foodAndDrink && <div><strong style={{ color: '#cbd5e1' }}>Food & drink:</strong> {f.foodAndDrink}</div>}
-            {f.accessibility && <div><strong style={{ color: '#cbd5e1' }}>Accessibility:</strong> {f.accessibility}</div>}
-            {f.weatherContingency && <div><strong style={{ color: '#cbd5e1' }}>Weather:</strong> {f.weatherContingency}</div>}
-            {f.socialLinks.length > 0 && <div><strong style={{ color: '#cbd5e1' }}>Social:</strong> {f.socialLinks.join(' | ')}</div>}
-            {f.eventWebsite && <div><strong style={{ color: '#cbd5e1' }}>Website:</strong> {f.eventWebsite}</div>}
-            {f.language && <div><strong style={{ color: '#cbd5e1' }}>Language:</strong> {f.language}</div>}
+            {f.whatToBring.length > 0 && <div><strong style={{ color: '#D6D2C8' }}>Bring:</strong> {f.whatToBring.join(', ')}</div>}
+            {f.foodAndDrink && <div><strong style={{ color: '#D6D2C8' }}>Food & drink:</strong> {f.foodAndDrink}</div>}
+            {f.accessibility && <div><strong style={{ color: '#D6D2C8' }}>Accessibility:</strong> {f.accessibility}</div>}
+            {f.weatherContingency && <div><strong style={{ color: '#D6D2C8' }}>Weather:</strong> {f.weatherContingency}</div>}
+            {f.socialLinks.length > 0 && <div><strong style={{ color: '#D6D2C8' }}>Social:</strong> {f.socialLinks.join(' | ')}</div>}
+            {f.eventWebsite && <div><strong style={{ color: '#D6D2C8' }}>Website:</strong> {f.eventWebsite}</div>}
+            {f.language && <div><strong style={{ color: '#D6D2C8' }}>Language:</strong> {f.language}</div>}
           </div>
         </div>
       )}

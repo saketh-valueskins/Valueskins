@@ -7,13 +7,13 @@ import { emptyBusinessProfile } from '../data/types';
 import { MultiImageUpload } from './ImageUpload';
 
 const C = {
-  bg: '#0f172a',
-  surface: 'rgba(15, 23, 42, 0.86)',
-  border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  accent: '#38bdf8',
-  accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A',
+  surface: 'rgba(10, 10, 10, 0.86)',
+  border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0',
+  textMuted: '#B8B4AC',
+  accent: '#C8B89A',
+  accentBg: 'rgba(200, 184, 154, 0.14)',
   error: '#fca5a5',
   success: '#86efac',
 };
@@ -30,7 +30,7 @@ const inp: CSSProperties = {
   width: '100%',
   borderRadius: 14,
   border: `1px solid ${C.border}`,
-  background: 'rgba(15, 23, 42, 0.88)',
+  background: 'rgba(10, 10, 10, 0.88)',
   color: C.text,
   padding: '12px 16px',
   fontSize: 14,
@@ -55,7 +55,7 @@ const sectionStyle: CSSProperties = {
 };
 
 const labelStyle: CSSProperties = {
-  color: '#cbd5e1', fontSize: 13, fontWeight: 700,
+  color: '#D6D2C8', fontSize: 13, fontWeight: 700,
 };
 
 const rowStyle: CSSProperties = {

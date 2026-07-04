@@ -107,7 +107,7 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
                     padding: '12px 16px',
                     borderBottom: '1px solid #f3f4f6',
                     cursor: 'pointer',
-                    background: n.read_at ? '#ffffff' : 'rgba(37, 99, 235, 0.05)',
+                    background: n.read_at ? '#ffffff' : 'rgba(10, 10, 10, 0.05)',
                     fontSize: '14px',
                   }}
                 >

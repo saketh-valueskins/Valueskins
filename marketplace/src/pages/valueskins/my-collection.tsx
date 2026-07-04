@@ -4,10 +4,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 const C = {
-  bg: '#fff7fb',
+  bg: '#F5F5F0',
   surface: '#ffffff',
-  primary: '#675b64',
-  primaryContainer: '#f8e7f2',
+  primary: '#0A0A0A',
+  primaryContainer: '#F0F0EA',
   outline: '#7d757a',
   outlineVariant: '#cec4c9',
   onSurface: '#1e1a1e',

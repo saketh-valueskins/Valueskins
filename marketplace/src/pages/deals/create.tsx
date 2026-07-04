@@ -163,7 +163,7 @@ export default function CreateDealPage() {
           disabled={loading}
           style={{
             padding: '12px 16px',
-            background: selectedSkin && !loading ? '#2563eb' : '#d1d5db',
+            background: selectedSkin && !loading ? '#0A0A0A' : '#d1d5db',
             color: '#ffffff',
             border: 'none',
             borderRadius: '6px',

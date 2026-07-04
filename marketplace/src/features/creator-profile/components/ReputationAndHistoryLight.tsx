@@ -21,7 +21,7 @@ interface ActivityHistoryEntry {
 }
 
 const C = {
-  primary: '#2563EB',
+  primary: '#0A0A0A',
   bg: '#ffffff',
   surface: '#ffffff',
   surfaceAlt: '#f9fafb',
@@ -33,7 +33,7 @@ const C = {
   success: '#00D46A',
   warning: '#FFAB00',
   danger: '#ED4956',
-  accent: '#3B82F6',
+  accent: '#A08A5E',
 };
 
 interface Props {

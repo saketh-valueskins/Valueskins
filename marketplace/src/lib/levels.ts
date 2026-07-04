@@ -1,9 +1,9 @@
 type Level = 1 | 2 | 3 | 4 | 5;
 
 const LEVEL_THRESHOLDS: { level: Level; minDeals: number; label: string; color: string }[] = [
-  { level: 1, minDeals: 0, label: 'Newcomer', color: '#94a3b8' },
+  { level: 1, minDeals: 0, label: 'Newcomer', color: '#B8B4AC' },
   { level: 2, minDeals: 5, label: 'Emerging', color: '#22c55e' },
-  { level: 3, minDeals: 15, label: 'Experienced', color: '#3b82f6' },
+  { level: 3, minDeals: 15, label: 'Experienced', color: '#A08A5E' },
   { level: 4, minDeals: 35, label: 'Expert', color: '#a855f7' },
   { level: 5, minDeals: 75, label: 'Elite', color: '#f59e0b' },
 ];

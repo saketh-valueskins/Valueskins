@@ -9,7 +9,7 @@ export default function CampaignDetailPage() {
 
   return (
     <MarketplaceLayout title="Campaign" hideHeader>
-      {id ? <CampaignDetail campaignId={Number(id)} /> : <div style={{ padding: '20px', color: '#94a3b8' }}>Loading...</div>}
+      {id ? <CampaignDetail campaignId={Number(id)} /> : <div style={{ padding: '20px', color: '#B8B4AC' }}>Loading...</div>}
     </MarketplaceLayout>
   );
 }

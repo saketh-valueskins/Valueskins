@@ -5,8 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ArrivalInfo } from '../data/types';
 
 const C = {
-  bg: '#0f172a', surface: 'rgba(15, 23, 42, 0.86)', border: 'rgba(148, 163, 184, 0.18)',
-  text: '#f8fafc', textMuted: '#94a3b8', accent: '#38bdf8', accentBg: 'rgba(56, 189, 248, 0.14)',
+  bg: '#0A0A0A', surface: 'rgba(10, 10, 10, 0.86)', border: 'rgba(184, 180, 172, 0.18)',
+  text: '#F5F5F0', textMuted: '#B8B4AC', accent: '#C8B89A', accentBg: 'rgba(200, 184, 154, 0.14)',
   error: '#fca5a5', success: '#86efac',
 };
 
@@ -17,7 +17,7 @@ const card: CSSProperties = {
 
 const inp: CSSProperties = {
   width: '100%', borderRadius: 14, border: `1px solid ${C.border}`,
-  background: 'rgba(15, 23, 42, 0.88)', color: C.text, padding: '10px 14px',
+  background: 'rgba(10, 10, 10, 0.88)', color: C.text, padding: '10px 14px',
   fontSize: 14, outline: 'none', boxSizing: 'border-box',
 };
 
@@ -73,25 +73,25 @@ export default function ArrivalInfoView({ eventId, isHost }: { eventId: string; 
               {arrival.parkingDetails && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase' }}>Parking</div>
-                  <p style={{ margin: '4px 0 0', color: '#cbd5e1', fontSize: 13 }}>{arrival.parkingDetails}</p>
+                  <p style={{ margin: '4px 0 0', color: '#D6D2C8', fontSize: 13 }}>{arrival.parkingDetails}</p>
                 </div>
               )}
               {arrival.gateNumber && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase' }}>Entry gate</div>
-                  <p style={{ margin: '4px 0 0', color: '#cbd5e1', fontSize: 13 }}>{arrival.gateNumber}</p>
+                  <p style={{ margin: '4px 0 0', color: '#D6D2C8', fontSize: 13 }}>{arrival.gateNumber}</p>
                 </div>
               )}
               {arrival.floorNumber && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase' }}>Floor / Section</div>
-                  <p style={{ margin: '4px 0 0', color: '#cbd5e1', fontSize: 13 }}>{arrival.floorNumber}</p>
+                  <p style={{ margin: '4px 0 0', color: '#D6D2C8', fontSize: 13 }}>{arrival.floorNumber}</p>
                 </div>
               )}
               {arrival.tableAssignment && (
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, textTransform: 'uppercase' }}>Table / Seat</div>
-                  <p style={{ margin: '4px 0 0', color: '#cbd5e1', fontSize: 13 }}>{arrival.tableAssignment}</p>
+                  <p style={{ margin: '4px 0 0', color: '#D6D2C8', fontSize: 13 }}>{arrival.tableAssignment}</p>
                 </div>
               )}
               {arrival.mapUrl && (

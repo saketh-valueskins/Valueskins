@@ -2,7 +2,7 @@
 import { useState, useEffect, CSSProperties } from 'react';
 
 const C = {
-  primary: '#2563EB',
+  primary: '#0A0A0A',
   bg: '#ffffff',
   surface: '#f9fafb',
   text: '#1f2937',

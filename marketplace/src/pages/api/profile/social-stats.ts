@@ -3,7 +3,7 @@ import { query } from '@/lib/db';
 import { getAccountId } from '@/lib/session';
 
 const avatars = [
-  { url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator1', bg: '#2563EB' },
+  { url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator1', bg: '#0A0A0A' },
   { url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator2', bg: '#7C3AED' },
   { url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator3', bg: '#DC2626' },
   { url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=creator4', bg: '#059669' },
