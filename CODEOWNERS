@@ -19,6 +19,14 @@
 # CI/CD pipelines — high-risk: require explicit approval
 /.github/workflows/**              @sakethvelamuri
 
+# Deployment configs
+/render.yaml                        @sakethvelamuri
+/vercel.json                        @sakethvelamuri
+/marketplace/vercel.json            @sakethvelamuri
+
+# Environment documentation
+/ENVIRONMENTS.md                    @sakethvelamuri
+
 # Security-sensitive files — always require owner review
 /SECURITY.md                        @sakethvelamuri
 /backend/migrations/**              @sakethvelamuri

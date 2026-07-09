@@ -4,7 +4,8 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+  workflow_call:
   workflow_dispatch:
     inputs:
       run_load_tests:
@@ -271,18 +272,33 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.created=${{ github.event.head_commit.timestamp }}
 
-  # ── Deploy to Production ────────────────────────────────────────────
-  deploy:
-    name: Deploy ValueSkins
-    needs: [build-images]
-    if: github.ref == 'refs/heads/main'
+  # ── Environment Summary ─────────────────────────────────────────────
+  environment-summary:
+    name: Environment Summary
+    needs: [lint, security, test-backend, test-frontend, build-images]
+    if: always()
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Run database migrations
+      - name: Display CI Results
         run: |
-          cargo install sqlx-cli --no-default-features --features postgres
-          sqlx database setup
-        working-directory: backend
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL_PROD }}
+          echo "# CI Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Branch: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint & Format | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Tests | ${{ needs.test-backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Tests | ${{ needs.test-frontend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Builds | ${{ needs.build-images.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "### Next: Production Deploy" >> $GITHUB_STEP_SUMMARY
+            echo "View: [Production Deploy Workflow](../../actions/workflows/production.yml)" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ github.ref_name }}" = "develop" ]; then
+            echo "### Next: Staging Deploy" >> $GITHUB_STEP_SUMMARY
+            echo "View: [Staging Deploy Workflow](../../actions/workflows/staging.yml)" >> $GITHUB_STEP_SUMMARY
+          fi

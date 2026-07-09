@@ -1,0 +1,31 @@
+#!/bin/bash
+set -e
+
+echo "=== Pre-push environment checks ==="
+
+# Protect main branch — only push via PR
+while read local_ref local_sha remote_ref remote_sha; do
+  if [[ "$remote_ref" == "refs/heads/main" ]]; then
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║  BLOCKED: Direct push to 'main' is not allowed              ║"
+    echo "║                                                            ║"
+    echo "║  Production flow:                                           ║"
+    echo "║    feature → develop (staging) → main (production)         ║"
+    echo "║                                                            ║"
+    echo "║  1. Push your branch to 'develop' first                     ║"
+    echo "║  2. Create a PR from 'develop' → 'main'                    ║"
+    echo "║  3. Get approval → merge → auto-deploys to production      ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "  See ENVIRONMENTS.md for the full deployment workflow."
+    exit 1
+  fi
+
+  if [[ "$remote_ref" == "refs/heads/develop" ]]; then
+    echo "Pushing to develop — staging deploy will trigger automatically."
+    echo "Verify at: https://github.com/redleg789/Valueskins---final-/actions/workflows/staging.yml"
+  fi
+done
+
+echo "=== Pre-push checks passed ==="

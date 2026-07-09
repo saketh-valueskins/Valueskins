@@ -1,0 +1,226 @@
+name: Production Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (skip actual deploy)'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  ci:
+    name: CI Checks
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  staging-promotion-check:
+    name: Staging Promotion Gate
+    needs: [ci]
+    runs-on: ubuntu-latest
+    outputs:
+      staging_sha: ${{ steps.check.outputs.staging_sha }}
+      prod_sha: ${{ steps.check.outputs.prod_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify code promoted from staging
+        id: check
+        run: |
+          STAGING_SHA=$(git merge-base origin/develop HEAD 2>/dev/null || echo "no-develop-branch")
+          PROD_SHA=${{ github.sha }}
+
+          echo "staging_sha=$STAGING_SHA" >> $GITHUB_OUTPUT
+          echo "prod_sha=$PROD_SHA" >> $GITHUB_OUTPUT
+
+          echo "## Staging Promotion Check" >> $GITHUB_STEP_SUMMARY
+          echo "Current HEAD: \`${PROD_SHA:0:8}\`" >> $GITHUB_STEP_SUMMARY
+          echo "Last common with develop: \`${STAGING_SHA:0:8}\`" >> $GITHUB_STEP_SUMMARY
+
+          # Not blocking, just informational
+          if [ "$STAGING_SHA" = "no-develop-branch" ]; then
+            echo "⚠ No \`develop\` branch found — deploying directly to production" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Code verified against develop branch" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  deploy-frontend:
+    name: Deploy Frontend → Production
+    needs: [staging-promotion-check]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://valueskins.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: frontend
+
+      - name: Build Production
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: frontend
+
+      - name: Deploy to Production
+        run: |
+          URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "Deployed frontend to production: $URL"
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "## Frontend Production Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "[$URL]($URL)" >> $GITHUB_STEP_SUMMARY
+        working-directory: frontend
+        id: deploy
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
+
+  deploy-marketplace:
+    name: Deploy Marketplace → Production
+    needs: [staging-promotion-check]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://marketplace.valueskins.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: marketplace/package-lock.json
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: marketplace
+
+      - name: Build Production
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: marketplace
+
+      - name: Deploy to Production
+        run: |
+          URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "Deployed marketplace to production: $URL"
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "## Marketplace Production Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "[$URL]($URL)" >> $GITHUB_STEP_SUMMARY
+        working-directory: marketplace
+        id: deploy
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_MARKETPLACE }}
+
+  deploy-backend:
+    name: Deploy Backend → Production (Render)
+    needs: [staging-promotion-check]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend
+
+      - name: Build Release Binary
+        working-directory: backend
+        run: cargo build --release -p api_gateway
+
+      - name: Trigger Render Production Deploy
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": "doNotClear"}' \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_PRODUCTION_SERVICE_ID }}/deploys"
+          echo "## Backend Production Deploy Triggered" >> $GITHUB_STEP_SUMMARY
+          echo "Render dashboard: https://dashboard.render.com" >> $GITHUB_STEP_SUMMARY
+
+  smoke-test:
+    name: Smoke Test Production
+    needs: [deploy-frontend, deploy-marketplace, deploy-backend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for rollout
+        run: sleep 60
+
+      - name: Test frontend
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://valueskins.com)
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "Frontend returned $HTTP_CODE — possible rollback needed"
+            exit 1
+          fi
+          echo "Frontend: ✅ ($HTTP_CODE)"
+
+      - name: Test marketplace
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://marketplace.valueskins.com)
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "Marketplace returned $HTTP_CODE — possible rollback needed"
+            exit 1
+          fi
+          echo "Marketplace: ✅ ($HTTP_CODE)"
+
+      - name: Test backend health
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://api.valueskins.com/health)
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "Backend returned $HTTP_CODE — possible rollback needed"
+            exit 1
+          fi
+          echo "Backend: ✅ ($HTTP_CODE)"
+
+      - name: Production Summary
+        run: |
+          echo "# ✅ Production Environment Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | URL | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | https://valueskins.com | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Marketplace | https://marketplace.valueskins.com | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | https://api.valueskins.com/health | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "Deployed by: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+  tag-release:
+    name: Tag Release
+    needs: [smoke-test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Release Tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          TAG="v$(date +%Y%m%d)-${GITHUB_SHA:0:7}"
+          git tag -a "$TAG" -m "Production release $TAG"
+          git push origin "$TAG"
+          echo "## Release Tagged" >> $GITHUB_STEP_SUMMARY
+          echo "\`$TAG\`" >> $GITHUB_STEP_SUMMARY

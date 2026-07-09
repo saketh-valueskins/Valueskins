@@ -1,4 +1,5 @@
 services:
+  # ── Production Backend ───────────────────────────────────────────────
   - type: web
     name: valueskins-api
     runtime: rust
@@ -28,4 +29,38 @@ services:
         sync: false
       - key: SMTP_FROM
         value: noreply@valueskins.io
-    autoDeploy: true
+    autoDeploy: false
+
+  # ── Staging Backend ──────────────────────────────────────────────────
+  - type: web
+    name: valueskins-api-staging
+    runtime: rust
+    plan: free
+    buildCommand: "cd backend && cargo build --release -p api_gateway"
+    startCommand: "./target/release/api_gateway"
+    envVars:
+      - key: RUST_LOG
+        value: debug
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: API_KEY_HMAC_SALT
+        value: api_key_hmac_salt_staging_key_change_in_production_12345
+      - key: VERIFICATION_HMAC_SECRET
+        value: verification_hmac_secret_staging_key_32_chars
+      - key: PLATFORM_SIGNING_KEY_ED25519
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://staging.valueskins.com,https://staging-marketplace.valueskins.com
+      - key: SMTP_HOST
+        value: smtp.example.com
+      - key: SMTP_USER
+        value: user
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        value: noreply@valueskins.io
+      - key: RENDER_ENV
+        value: staging
+    autoDeploy: false
