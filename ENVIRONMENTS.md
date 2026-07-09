@@ -1,5 +1,16 @@
 # ValueSkins Environment Architecture
 
+> **Status: 🚧 Workflows staged, setup incomplete**
+>
+> All workflow files and configs are committed on `develop`. The following
+> manual steps are still needed before the pipeline is live:
+> 1. Merge `develop` → `main`
+> 2. Set GitHub secrets (see [Required Secrets](#required-secrets))
+> 3. Create GitHub environments (see [GitHub Environments](#github-environments-configuration))
+> 4. Enable branch protection (see [Branch Protection](#branch-protection-rules))
+> 5. Create staging backend on Render
+> 6. Enable Vercel Git integration for preview aliases
+
 ## Overview
 
 ```

@@ -23,24 +23,81 @@ export default function MyData() {
     })();
   }, []);
 
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteSuccess, setDeleteSuccess] = useState(false);
+
   const exportData = async () => {
-    const res = await fetch('/api/legal/export');
-    if (res.ok) {
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `valueskins-export-${Date.now()}.json`;
-      a.click();
+    setIsExporting(true);
+    try {
+      const res = await fetch('/api/legal/export-history');
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `valueskins-history-${Date.now()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } else {
+        const fallbackRes = await fetch('/api/legal/export');
+        if (fallbackRes.ok) {
+          const blob = await fallbackRes.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `valueskins-export-${Date.now()}.json`;
+          a.click();
+        }
+      }
+    } finally {
+      setIsExporting(false);
     }
   };
 
   const requestDeletion = async () => {
-    if (!confirm('This will delete your account after 30 days. Continue?')) return;
-    const res = await fetch('/api/legal/delete', { method: 'POST' });
-    if (res.ok) {
-      alert('Account deletion scheduled. You have 30 days to cancel.');
-      window.location.href = '/';
+    setIsDeleting(true);
+    setDeleteError('');
+    setDeleteSuccess(false);
+
+    try {
+      const res = await fetch('/api/legal/request-deletion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        if (res.status === 409) {
+          setDeleteError('Deletion already requested. Check your account status.');
+          return;
+        }
+        throw new Error(data.error || 'Failed to request deletion');
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `valueskins-deletion-export-${Date.now()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      setDeleteSuccess(true);
+      localStorage.clear();
+
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 4000);
+    } catch (err: any) {
+      setDeleteError(err.message || 'Failed to process deletion');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -64,19 +121,38 @@ export default function MyData() {
 
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px' }}>Data Management</h2>
-              <button onClick={exportData} style={{ width: '100%', padding: '12px', background: C.primary, color: '#0A0A0A', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', marginBottom: '12px' }}>
-                📥 Download My Data
+              <button onClick={exportData} disabled={isExporting} style={{ width: '100%', padding: '12px', background: C.primary, color: '#0A0A0A', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: isExporting ? 'default' : 'pointer', marginBottom: '12px', opacity: isExporting ? 0.6 : 1 }}>
+                {isExporting ? 'Generating PDF...' : '📥 Download My Data (PDF)'}
               </button>
-              <p style={{ color: C.textSecondary, fontSize: '13px' }}>Get a copy of all your data in JSON format</p>
+              <p style={{ color: C.textSecondary, fontSize: '13px' }}>Get a comprehensive PDF of your account history and collected data</p>
             </div>
 
-            <div style={{ background: C.surface, border: `1px solid ${C.danger}`, borderRadius: '12px', padding: '24px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', color: C.danger }}>Danger Zone</h2>
-              <button onClick={requestDeletion} style={{ width: '100%', padding: '12px', background: C.danger, color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>
-                🗑️ Delete Account
-              </button>
-              <p style={{ color: C.textSecondary, fontSize: '13px', marginTop: '12px' }}>Permanently delete your account. You have 30 days to cancel.</p>
-            </div>
+            {deleteSuccess ? (
+              <div style={{ background: C.surface, border: '1px solid #22c55e40', borderRadius: '12px', padding: '24px' }}>
+                <div style={{ color: '#22c55e', fontWeight: 700, fontSize: '15px', marginBottom: '8px' }}>
+                  ✓ Deletion Scheduled
+                </div>
+                <p style={{ color: C.textSecondary, fontSize: '13px', margin: 0 }}>
+                  Your PDF export was downloaded. Your account will be permanently deleted after 30 days.
+                  You can re-register with the same email after deletion.
+                </p>
+              </div>
+            ) : (
+              <div style={{ background: C.surface, border: `1px solid ${C.danger}`, borderRadius: '12px', padding: '24px' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', color: C.danger }}>Danger Zone</h2>
+                <button onClick={requestDeletion} disabled={isDeleting} style={{ width: '100%', padding: '12px', background: isDeleting ? `${C.danger}60` : C.danger, color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: isDeleting ? 'default' : 'pointer', marginBottom: '12px' }}>
+                  {isDeleting ? 'Downloading PDF...' : '🗑️ Delete Account'}
+                </button>
+                {deleteError && (
+                  <div style={{ color: C.danger, fontSize: '12px', padding: '8px', background: 'rgba(252,165,165,0.1)', borderRadius: '6px', marginBottom: '8px' }}>
+                    {deleteError}
+                  </div>
+                )}
+                <p style={{ color: C.textSecondary, fontSize: '13px', margin: 0 }}>
+                  A PDF export of all your data will be downloaded first. You have 30 days to cancel. After deletion, you can re-register with the same email.
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <p>You need to log in</p>

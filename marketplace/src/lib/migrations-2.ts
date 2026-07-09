@@ -237,6 +237,50 @@ export async function addEscrowMigrations() {
   }
 }
 
+export async function addDeletionExportMigration() {
+  const migrations = [
+    {
+      name: 'create_pending_deletion_exports_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS pending_deletion_exports (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          history_pdf_base64 TEXT NOT NULL,
+          compliance_json JSONB DEFAULT '{}',
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '7 days'
+        );
+        CREATE INDEX IF NOT EXISTS idx_pending_deletion_exports_user ON pending_deletion_exports(user_id);
+      `,
+    },
+    {
+      name: 'add_retention_country_column',
+      sql: `
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS retention_country VARCHAR(2) DEFAULT 'US';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS is_anonymized BOOLEAN DEFAULT FALSE;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS anonymized_at TIMESTAMPTZ;
+      `,
+    },
+    {
+      name: 'add_deletion_queue_columns',
+      sql: `
+        ALTER TABLE deletion_queue ADD COLUMN IF NOT EXISTS export_id UUID;
+        ALTER TABLE deletion_queue ADD COLUMN IF NOT EXISTS retention_months INT DEFAULT 0;
+        ALTER TABLE deletion_queue ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
+      `,
+    },
+  ];
+
+  for (const migration of migrations) {
+    try {
+      await query(migration.sql);
+      console.log(`Migration: ${migration.name}`);
+    } catch (error) {
+      console.log(`Migration ${migration.name} skipped or already applied`);
+    }
+  }
+}
+
 export async function addEventFeaturesMigrations() {
   const migrations = [
     {
