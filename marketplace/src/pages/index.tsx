@@ -22,7 +22,7 @@ export default function HomePage() {
     }
 
     if (account.onboarding_stage !== 'complete') {
-      router.replace('/auth/onboarding');
+      router.replace('/auth/onboarding-enhanced');
       return;
     }
   }, [account, loading, router]);
