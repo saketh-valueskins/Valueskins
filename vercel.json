@@ -1,8 +1,8 @@
 {
   "framework": "nextjs",
-  "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/.next",
-  "installCommand": "cd frontend && npm ci",
+  "buildCommand": "cd marketplace && npm run build",
+  "outputDirectory": "marketplace/.next",
+  "installCommand": "cd marketplace && npm ci",
   "github": {
     "silent": false,
     "autoJobCancelation": true
