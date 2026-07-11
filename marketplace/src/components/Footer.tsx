@@ -47,8 +47,17 @@ export default function Footer() {
               fontSize: '13px',
               color: C.textSecondary,
               lineHeight: '1.6',
+              marginBottom: '12px',
             }}>
-              Connect creators with brands. Build reputation. Complete deals.
+              ValueSkins is a marketplace platform connecting content creators with brands for paid campaigns. Every deal is backed by escrow.
+            </p>
+            <p style={{
+              fontSize: '13px',
+              color: C.textSecondary,
+              lineHeight: '1.6',
+            }}>
+              ValueSkins Technologies Pvt. Ltd.<br />
+              Mumbai, Maharashtra, India
             </p>
           </div>
 
@@ -64,12 +73,12 @@ export default function Footer() {
               Legal
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Link href="/legal/privacy" style={{
+              <Link href="/legal/about" style={{
                 fontSize: '13px',
                 color: C.textSecondary,
                 textDecoration: 'none',
               }}>
-                Privacy Policy
+                About Us
               </Link>
               <Link href="/legal/terms" style={{
                 fontSize: '13px',
@@ -78,19 +87,26 @@ export default function Footer() {
               }}>
                 Terms of Service
               </Link>
-              <Link href="/legal/cookies" style={{
+              <Link href="/legal/privacy" style={{
                 fontSize: '13px',
                 color: C.textSecondary,
                 textDecoration: 'none',
               }}>
-                Cookie Policy
+                Privacy Policy
               </Link>
               <Link href="/legal/refund" style={{
                 fontSize: '13px',
                 color: C.textSecondary,
                 textDecoration: 'none',
               }}>
-                Refund & Cancellation Policy
+                Refund & Cancellation
+              </Link>
+              <Link href="/legal/cookies" style={{
+                fontSize: '13px',
+                color: C.textSecondary,
+                textDecoration: 'none',
+              }}>
+                Cookie Policy
               </Link>
             </div>
           </div>
@@ -121,13 +137,6 @@ export default function Footer() {
               }}>
                 Delete My Account
               </Link>
-              <Link href="/legal/security" style={{
-                fontSize: '13px',
-                color: C.textSecondary,
-                textDecoration: 'none',
-              }}>
-                Security & Compliance
-              </Link>
               <Link href="/legal/grievance" style={{
                 fontSize: '13px',
                 color: C.textSecondary,
@@ -138,7 +147,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Support */}
+          {/* Contact */}
           <div>
             <h4 style={{
               fontSize: '13px',
@@ -147,22 +156,29 @@ export default function Footer() {
               marginBottom: '12px',
               textTransform: 'uppercase',
             }}>
-              Support
+              Contact
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <a href="mailto:support@valueskins.com" style={{
+              <Link href="/legal/contact" style={{
                 fontSize: '13px',
                 color: C.textSecondary,
                 textDecoration: 'none',
               }}>
-                Email Support
+                Contact Us
+              </Link>
+              <a href="mailto:founder@valueskins.com" style={{
+                fontSize: '13px',
+                color: C.textSecondary,
+                textDecoration: 'none',
+              }}>
+                founder@valueskins.com
               </a>
-              <a href="https://github.com/redleg789/Valueskins---final-/issues" style={{
+              <a href="tel:+919665820468" style={{
                 fontSize: '13px',
                 color: C.textSecondary,
                 textDecoration: 'none',
               }}>
-                Report Issue
+                +91 96658 20468
               </a>
             </div>
           </div>
@@ -183,7 +199,7 @@ export default function Footer() {
             color: C.textSecondary,
             margin: 0,
           }}>
-            © {currentYear} ValueSkins. All rights reserved.
+            © {currentYear} ValueSkins Technologies Pvt. Ltd. All rights reserved.
           </p>
           <div style={{
             fontSize: '12px',

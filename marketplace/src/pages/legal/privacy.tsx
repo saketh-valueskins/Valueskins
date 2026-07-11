@@ -144,9 +144,9 @@ export default function Privacy() {
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>18. Contact Us</h2>
           <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
-          <p><strong>Email:</strong> <Link href="mailto:privacy@valueskins.com" style={{color: C.primary}}>privacy@valueskins.com</Link></p>
-          <p><strong>Support:</strong> <Link href="mailto:support@valueskins.com" style={{color: C.primary}}>support@valueskins.com</Link></p>
-          <p><strong>Grievance:</strong> <Link href="mailto:grievance@valueskins.com" style={{color: C.primary}}>grievance@valueskins.com</Link></p>
+          <p><strong>Email:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a></p>
+          <p><strong>Phone:</strong> <a href="tel:+919665820468" style={{color: C.primary}}>+91 96658 20468</a></p>
+          <p><strong>Support:</strong> <a href="mailto:support@valueskins.com" style={{color: C.primary}}>support@valueskins.com</a></p>
           <p><strong>Address:</strong> ValueSkins Technologies Pvt. Ltd., Mumbai, Maharashtra, India</p>
 
         </div>

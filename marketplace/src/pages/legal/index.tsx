@@ -16,12 +16,15 @@ const sections = [
     items: [
       { href: '/legal/terms', label: 'Terms of Service', desc: 'Rules governing your use of the platform, liability limits, and dispute resolution.' },
       { href: '/legal/privacy', label: 'Privacy Policy', desc: 'How we collect, process, store, and protect your personal data.' },
+      { href: '/legal/refund', label: 'Refund & Cancellation Policy', desc: 'How cancellations and refunds work on the platform.' },
       { href: '/legal/cookies', label: 'Cookie Policy', desc: 'How we use cookies and similar tracking technologies.' },
     ],
   },
   {
     title: 'Your Rights',
     items: [
+      { href: '/legal/about', label: 'About ValueSkins', desc: 'What we do, how it works, and company information.' },
+      { href: '/legal/contact', label: 'Contact Us', desc: 'Get in touch with our team.' },
       { href: '/legal/data-request', label: 'Data Access & Export', desc: 'Request access to your data or export it (GDPR/CCPA).' },
       { href: '/legal/grievance', label: 'Grievance Officer', desc: 'Contact our Grievance Officer under IT Act and DPDP Act.' },
       { href: '/account/settings', label: 'Delete My Account', desc: 'Request permanent deletion of your account and data.' },
@@ -83,10 +86,10 @@ export default function LegalHub() {
 
         <div style={{ marginTop: '48px', padding: '20px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px' }}>
           <p style={{ fontSize: '13px', color: C.textSecondary, lineHeight: 1.6, margin: 0 }}>
-            <strong style={{ color: C.text }}>Questions?</strong> Contact our Grievance Officer at{' '}
-            <a href="mailto:valueskinsfounder@gmail.com" style={{ color: C.primary }}>valueskinsfounder@gmail.com</a>
-            {' '}or email{' '}
-            <a href="mailto:support@valueskins.com" style={{ color: C.primary }}>support@valueskins.com</a>.
+            <strong style={{ color: C.text }}>Questions?</strong> Contact us at{' '}
+            <a href="mailto:founder@valueskins.com" style={{ color: C.primary }}>founder@valueskins.com</a>
+            {' '}or call{' '}
+            <a href="tel:+919665820468" style={{ color: C.primary }}>+91 96658 20468</a>.
             We respond within 24 hours.
           </p>
         </div>
