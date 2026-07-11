@@ -85,6 +85,13 @@ export default function Footer() {
               }}>
                 Cookie Policy
               </Link>
+              <Link href="/legal/refund" style={{
+                fontSize: '13px',
+                color: C.textSecondary,
+                textDecoration: 'none',
+              }}>
+                Refund & Cancellation Policy
+              </Link>
             </div>
           </div>
 
@@ -120,6 +127,13 @@ export default function Footer() {
                 textDecoration: 'none',
               }}>
                 Security & Compliance
+              </Link>
+              <Link href="/legal/grievance" style={{
+                fontSize: '13px',
+                color: C.textSecondary,
+                textDecoration: 'none',
+              }}>
+                Grievance Officer
               </Link>
             </div>
           </div>
