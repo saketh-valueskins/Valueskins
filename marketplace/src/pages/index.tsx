@@ -87,6 +87,45 @@ export default function HomePage() {
 
         </div>
 
+        <div style={{
+          marginTop: '48px',
+          padding: '32px',
+          background: C.bg,
+          borderRadius: '16px',
+          border: `1px solid ${C.border}`,
+        }}>
+          <h2 style={{ fontSize: '22px', fontWeight: 700, color: C.text, margin: '0 0 16px 0' }}>
+            About the Marketplace
+          </h2>
+          <p style={{ fontSize: '14px', color: C.textSecondary, lineHeight: 1.7, margin: '0 0 16px 0' }}>
+            The marketplace connects creators with brands. Creators list their skills and
+            experience. Brands post campaigns and browse profiles. Every deal is tracked
+            from offer to completion, with all terms, payments, and deliverables documented
+            in one place.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+            {[
+              'Deal terms are written and signed by both sides',
+              'Payment milestones are set upfront',
+              'Deliverables and deadlines are tracked per deal',
+              'All communication stays on the record',
+              'Completed deals build your reputation on the platform',
+            ].map((item, i) => (
+              <div key={i} style={{
+                padding: '10px 16px',
+                background: C.surface,
+                borderRadius: '8px',
+                border: `1px solid ${C.border}`,
+                fontSize: '13px',
+                color: C.text,
+                lineHeight: 1.4,
+              }}>
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );
