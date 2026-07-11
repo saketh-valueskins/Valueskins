@@ -9,23 +9,31 @@ import '@/styles/globals.css';
 
 function HomeButton() {
   const router = useRouter();
-  const { account } = useAuth();
+  const { account, loading } = useAuth();
   const isOnboarding = router.pathname.startsWith('/auth/onboarding')
     || router.pathname === '/auth/verify-email';
+  const isLoginOrSignup = router.pathname.startsWith('/auth/login')
+    || router.pathname.startsWith('/auth/signup');
+
+  const target = loading ? '/'
+    : account?.onboarding_stage === 'complete' ? '/demo/marketplace'
+    : '/';
 
   const handleClick = (e: React.MouseEvent) => {
     if (isOnboarding) {
       e.preventDefault();
       if (account && account.onboarding_stage !== 'complete') {
-        // Already on an onboarding page — refresh to stay
         router.replace(router.pathname);
       }
+      return;
     }
+    e.preventDefault();
+    router.push(target);
   };
 
   return (
     <a
-      href={isOnboarding ? undefined : '/'}
+      href={target}
       onClick={handleClick}
       aria-label="ValueSkins home"
       style={{
@@ -33,7 +41,7 @@ function HomeButton() {
         top: '20px',
         left: '20px',
         zIndex: 9999,
-        display: 'inline-flex',
+        display: isLoginOrSignup ? 'none' : 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '10px 18px',
