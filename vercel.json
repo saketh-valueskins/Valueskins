@@ -1,3 +1,6 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "buildCommand": "cd marketplace && npm run build",
+  "outputDirectory": "marketplace/.next",
+  "installCommand": "cd marketplace && npm ci"
 }
