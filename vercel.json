@@ -1,10 +1,3 @@
 {
-  "framework": "nextjs",
-  "buildCommand": "cd marketplace && npm run build",
-  "outputDirectory": "marketplace/.next",
-  "installCommand": "cd marketplace && npm ci",
-  "github": {
-    "silent": false,
-    "autoJobCancelation": true
-  }
+  "framework": "nextjs"
 }
