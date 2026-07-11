@@ -49,15 +49,7 @@ export default function Footer() {
               lineHeight: '1.6',
               marginBottom: '12px',
             }}>
-              ValueSkins is a marketplace platform connecting content creators with brands for paid campaigns. Every deal is backed by escrow.
-            </p>
-            <p style={{
-              fontSize: '13px',
-              color: C.textSecondary,
-              lineHeight: '1.6',
-            }}>
-              ValueSkins Technologies Pvt. Ltd.<br />
-              Mumbai, Maharashtra, India
+              The marketplace for creators and brands. Every deal is backed by escrow.
             </p>
           </div>
 
@@ -199,7 +191,7 @@ export default function Footer() {
             color: C.textSecondary,
             margin: 0,
           }}>
-            © {currentYear} ValueSkins Technologies Pvt. Ltd. All rights reserved.
+            © {currentYear} ValueSkins. All rights reserved.
           </p>
           <div style={{
             fontSize: '12px',

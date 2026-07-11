@@ -76,7 +76,7 @@ export default function HelpPage() {
         </div>
 
         <div style={{ textAlign: 'center', padding: '24px', color: C.textMuted, fontSize: '13px' }}>
-          Need more help? <a href={`mailto:support@valueskins.com`} style={{ color: C.primary }}>Contact support</a>
+          Need more help? <a href="mailto:founder@valueskins.com" style={{ color: C.primary }}>Contact us</a>
         </div>
       </div>
     </MarketplaceLayout>

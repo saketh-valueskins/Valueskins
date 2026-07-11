@@ -11,7 +11,7 @@ export default function Privacy() {
         <div style={{ lineHeight: '1.8', color: C.textSecondary }}>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>1. Introduction</h2>
-          <p>ValueSkins Technologies Pvt. Ltd. ("Company," "we," "us," or "our") respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform, website, and related services (collectively, the "Platform").</p>
+          <p>ValueSkins ("Company," "we," "us," or "our") respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform, website, and related services (collectively, the "Platform").</p>
           <p>This Policy complies with the Information Technology Act, 2000; the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011; the Digital Personal Data Protection Act, 2023 (DPDP Act) of India; the General Data Protection Regulation (GDPR) of the European Union; and the California Consumer Privacy Act (CCPA).</p>
           <p>Please read this Policy carefully. By using the Platform, you consent to the practices described in this Policy. If you do not agree with this Policy, please do not use the Platform.</p>
 
@@ -84,7 +84,7 @@ export default function Privacy() {
           <p>• <strong>Right to Delete:</strong> Request deletion of your personal information</p>
           <p>• <strong>Right to Opt-Out:</strong> Opt out of the sale of your personal information (we do not sell data)</p>
           <p>• <strong>Right to Non-Discrimination:</strong> We will not discriminate against you for exercising these rights</p>
-          <p><strong>To Exercise Your Rights:</strong> Contact us at <Link href="mailto:privacy@valueskins.com" style={{color: C.primary}}>privacy@valueskins.com</Link>. We will respond to your request within the timeframes required by applicable law (generally 30 days). We may need to verify your identity before processing your request.</p>
+          <p><strong>To Exercise Your Rights:</strong> Contact us at <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a>. We will respond to your request within the timeframes required by applicable law (generally 30 days). We may need to verify your identity before processing your request.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>9. Data Security</h2>
           <p>We implement robust security measures to protect your data:</p>
@@ -132,12 +132,12 @@ export default function Privacy() {
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>15. Grievance Officer (India)</h2>
           <p>In compliance with the Information Technology Act, 2000 and the DPDP Act, 2023, we have appointed a Grievance Officer to address your concerns regarding data processing and privacy:</p>
           <p><strong>Grievance Officer:</strong> [Name]<br/>
-          <strong>Email:</strong> <Link href="mailto:grievance@valueskins.com" style={{color: C.primary}}>grievance@valueskins.com</Link><br/>
-          <strong>Address:</strong> ValueSkins Technologies Pvt. Ltd., Mumbai, Maharashtra, India</p>
+          <strong>Email:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a><br/>
+          <strong>Phone:</strong> <a href="tel:+919665820468" style={{color: C.primary}}>+91 96658 20468</a></p>
           <p>We will acknowledge your complaint within 24 hours and resolve it within 30 days as required by law.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>16. Data Protection Officer (GDPR)</h2>
-          <p>For users in the European Economic Area, you may contact our Data Protection Officer at <Link href="mailto:dpo@valueskins.com" style={{color: C.primary}}>dpo@valueskins.com</Link>. You also have the right to lodge a complaint with your local data protection supervisory authority.</p>
+          <p>          For users in the European Economic Area, you may contact our Data Protection Officer at <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a>. You also have the right to lodge a complaint with your local data protection supervisory authority.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>17. Changes to This Policy</h2>
           <p>We may update this Privacy Policy from time to time. We will notify you of material changes by email or through a prominent notice on the Platform. The "Last updated" date at the top of this Policy indicates when it was last revised. Your continued use of the Platform after the changes take effect constitutes your acceptance of the updated Policy.</p>
@@ -146,8 +146,8 @@ export default function Privacy() {
           <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
           <p><strong>Email:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a></p>
           <p><strong>Phone:</strong> <a href="tel:+919665820468" style={{color: C.primary}}>+91 96658 20468</a></p>
-          <p><strong>Support:</strong> <a href="mailto:support@valueskins.com" style={{color: C.primary}}>support@valueskins.com</a></p>
-          <p><strong>Address:</strong> ValueSkins Technologies Pvt. Ltd., Mumbai, Maharashtra, India</p>
+          <p><strong>Support:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a></p>
+          <p><strong>Phone:</strong> <a href="tel:+919665820468" style={{color: C.primary}}>+91 96658 20468</a></p>
 
         </div>
       </div>

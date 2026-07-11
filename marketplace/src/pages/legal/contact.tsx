@@ -25,11 +25,11 @@ export default function Contact() {
             </div>
             <div style={{ marginBottom: '20px' }}>
               <p style={{ margin: '0 0 4px 0' }}><strong style={{ color: C.text }}>Support:</strong></p>
-              <a href="mailto:support@valueskins.com" style={{ color: C.primary, fontSize: '15px' }}>support@valueskins.com</a>
+              <a href="mailto:founder@valueskins.com" style={{ color: C.primary, fontSize: '15px' }}>founder@valueskins.com</a>
             </div>
             <div>
-              <p style={{ margin: '0 0 4px 0' }}><strong style={{ color: C.text }}>Address:</strong></p>
-              <p style={{ margin: 0 }}>ValueSkins Technologies Pvt. Ltd.<br/>Mumbai, Maharashtra, India</p>
+              <p style={{ margin: '0 0 4px 0' }}><strong style={{ color: C.text }}>Phone:</strong></p>
+              <a href="tel:+919665820468" style={{ color: C.primary, fontSize: '15px' }}>+91 96658 20468</a>
             </div>
           </div>
 
