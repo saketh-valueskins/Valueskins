@@ -33,9 +33,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse<UpdateResponse>
 
     const { display_name, avatar_url } = validation.data!;
 
-    // Get session
+    // Get session (with expiry check)
     const session = await queryOne(
-      'SELECT user_id FROM auth_sessions WHERE id = $1 AND is_active = TRUE',
+      'SELECT user_id FROM auth_sessions WHERE id = $1 AND is_active = TRUE AND expires_at > NOW()',
       [sessionToken]
     );
 
@@ -70,7 +70,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse<UpdateResponse>
       UPDATE users
       SET ${updates.join(', ')}
       WHERE id = $${paramIdx}
-      RETURNING id, display_name, avatar_url
+      RETURNING id, display_name
     `;
 
     const result = await queryOne(sql, params);
@@ -86,11 +86,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse<UpdateResponse>
     return res.status(200).json({
       id: result.id,
       display_name: result.display_name || '',
-      avatar_url: result.avatar_url || null,
+      avatar_url: avatar_url || null,
     });
   } catch (error) {
     console.error('Account update error:', error);
-    return res.status(500).json({ error: 'Server error' });
+    const detail = process.env.NODE_ENV !== 'production' ? (error as Error).message : undefined;
+    return res.status(500).json({ error: detail || 'Server error' });
   }
 }
 

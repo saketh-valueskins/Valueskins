@@ -11,7 +11,7 @@ async function ensureEmailPrefsSchema() {
   await query(`
     CREATE TABLE IF NOT EXISTS user_email_preferences (
       id SERIAL PRIMARY KEY,
-      user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      user_id BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
       marketing BOOLEAN DEFAULT FALSE,
       notifications BOOLEAN DEFAULT TRUE,
       product_updates BOOLEAN DEFAULT TRUE,

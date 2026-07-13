@@ -7,11 +7,11 @@ const sslConfig = isLocal ? false : { rejectUnauthorized: false };
 const pool = new Pool({
   connectionString: dbUrl,
   ssl: sslConfig,
-  max: 100,  // Support 10k concurrent with connection pooling
-  min: 10,   // Keep warm connections ready
+  max: 100,
+  min: isLocal ? 0 : 2,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
-  statement_timeout: 30000,  // Kill hanging queries
+  connectionTimeoutMillis: 30000,
+  statement_timeout: 30000,
   query_timeout: 30000,
 });
 
