@@ -36,10 +36,32 @@ export async function getAccountId(cookie: string): Promise<string | null> {
   const userId = await getSessionUserId(cookie);
   if (!userId) return null;
 
-  await query(
-    'INSERT INTO accounts (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING',
-    [userId]
-  );
+  // Ensure an account row exists for this user.
+  // The accounts table may have different schemas depending on which migrations ran:
+  //   - Backend schema: accounts(id, legacy_user_id, ...) — no user_id column
+  //   - Marketplace schema: accounts(id, user_id, ...) — has user_id column
+  // Try the marketplace schema first; if the column doesn't exist, fall back gracefully.
+  try {
+    await query(
+      'INSERT INTO accounts (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING',
+      [userId]
+    );
+  } catch (e: any) {
+    // If the column doesn't exist (backend schema), try the legacy_user_id column
+    if (e?.code === '42703') {
+      // 42703 = undefined_column
+      try {
+        await query(
+          'INSERT INTO accounts (legacy_user_id) VALUES ($1) ON CONFLICT (legacy_user_id) DO NOTHING',
+          [userId]
+        );
+      } catch {
+        // If neither works, the accounts table may not support this user type.
+        // Return the userId anyway — callers can still use it for auth checks.
+      }
+    }
+    // For other errors, also continue — the userId is still valid for auth.
+  }
 
   return userId;
 }

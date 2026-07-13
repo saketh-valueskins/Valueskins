@@ -3,6 +3,26 @@ import { setupCors } from '@/lib/cors';
 import { query, queryOne } from '@/lib/db-pool';
 import { getAccountId } from '@/lib/session';
 
+let emailPrefsSchemaReady = false;
+
+async function ensureEmailPrefsSchema() {
+  if (emailPrefsSchemaReady) return;
+
+  await query(`
+    CREATE TABLE IF NOT EXISTS user_email_preferences (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      marketing BOOLEAN DEFAULT FALSE,
+      notifications BOOLEAN DEFAULT TRUE,
+      product_updates BOOLEAN DEFAULT TRUE,
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await query('CREATE INDEX IF NOT EXISTS idx_user_email_prefs_user ON user_email_preferences(user_id)');
+
+  emailPrefsSchemaReady = true;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (setupCors(req, res)) return;
   if (req.method !== 'GET' && req.method !== 'PUT') return res.status(405).json({ error: 'Method not allowed' });
@@ -10,6 +30,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const userId = await getAccountId(req.headers.cookie || '');
     if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    await ensureEmailPrefsSchema();
 
     if (req.method === 'GET') {
       await query(

@@ -75,6 +75,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse<UpdateResponse>
 
     const result = await queryOne(sql, params);
 
+    if (!result) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
     // Clear cache
     sessionCache.delete(`session:${sessionToken}`);
     sessionCache.delete(`user:${session.user_id}`);
