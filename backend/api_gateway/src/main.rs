@@ -678,37 +678,41 @@ async fn main() -> std::io::Result<()> {
                     // )
 
                     // Offer round responses
-                    .service(
-                        web::scope("/offers")
-                            .route("/{id}/respond", web::post().to(marketplace_handlers::respond_to_offer))
-                    )
+                    // TEMPORARILY DISABLED due to marketplace_service compilation errors
+                    // .service(
+                    //     web::scope("/offers")
+                    //         .route("/{id}/respond", web::post().to(marketplace_handlers::respond_to_offer))
+                    // )
 
                     // Creator self-management
-                    .service(
-                        web::scope("/creators/me")
-                            .route("/price-band", web::post().to(marketplace_handlers::set_price_band))
-                            .route("/auto-escalation", web::post().to(marketplace_handlers::set_auto_escalation))
-                            .route("/energy", web::post().to(marketplace_handlers::set_energy_state))
-                            .route("/deliverables", web::post().to(marketplace_handlers::upload_deliverable))
-                            .route("/calendar", web::post().to(marketplace_handlers::set_calendar_slot))
-                            .route("/barter", web::get().to(marketplace_handlers::get_barter_preference))
-                            .route("/barter", web::post().to(marketplace_handlers::set_barter_preference))
-                            .route("/valueskins/{id}/hide", web::post().to(marketplace_handlers::hide_valueskin))
-                            .route("/valueskins/{id}/unhide", web::post().to(marketplace_handlers::unhide_valueskin))
-                            .route("/valueskins/{id}", web::delete().to(marketplace_handlers::delete_valueskin))
-                    )
+                    // TEMPORARILY DISABLED due to marketplace_service compilation errors
+                    // .service(
+                    //     web::scope("/creators/me")
+                    //         .route("/price-band", web::post().to(marketplace_handlers::set_price_band))
+                    //         .route("/auto-escalation", web::post().to(marketplace_handlers::set_auto_escalation))
+                    //         .route("/energy", web::post().to(marketplace_handlers::set_energy_state))
+                    //         .route("/deliverables", web::post().to(marketplace_handlers::upload_deliverable))
+                    //         .route("/calendar", web::post().to(marketplace_handlers::set_calendar_slot))
+                    //         .route("/barter", web::get().to(marketplace_handlers::get_barter_preference))
+                    //         .route("/barter", web::post().to(marketplace_handlers::set_barter_preference))
+                    //         .route("/valueskins/{id}/hide", web::post().to(marketplace_handlers::hide_valueskin))
+                    //         .route("/valueskins/{id}/unhide", web::post().to(marketplace_handlers::unhide_valueskin))
+                    //         .route("/valueskins/{id}", web::delete().to(marketplace_handlers::delete_valueskin))
+                    // )
 
                     // Barter discovery (for brands)
-                    .service(
-                        web::scope("/creators")
-                            .route("/barter-willing", web::get().to(marketplace_handlers::list_barter_willing_creators))
-                    )
+                    // TEMPORARILY DISABLED due to marketplace_service compilation errors
+                    // .service(
+                    //     web::scope("/creators")
+                    //         .route("/barter-willing", web::get().to(marketplace_handlers::list_barter_willing_creators))
+                    // )
 
                     // Testimonials
-                    .service(
-                        web::scope("/testimonials")
-                            .route("", web::post().to(marketplace_handlers::submit_testimonial))
-                    )
+                    // TEMPORARILY DISABLED due to marketplace_service compilation errors
+                    // .service(
+                    //     web::scope("/testimonials")
+                    //         .route("", web::post().to(marketplace_handlers::submit_testimonial))
+                    // )
 
                     // Communities
                     .service(
@@ -876,51 +880,57 @@ async fn main() -> std::io::Result<()> {
                         web::scope("/brands")
                             .route("/dashboard", web::get().to(handlers::brand::get_brand_dashboard))
                             .route("/discover", web::get().to(handlers::brand::discover_creators))
-                            .route("/opportunities/{id}/applications", web::get().to(marketplace_handlers::get_opportunity_applications))
-                            .route("/applications/accept", web::post().to(marketplace_handlers::accept_application))
-                            .route("/deals/complete", web::post().to(marketplace_handlers::complete_deal))
+                            // TEMPORARILY DISABLED due to marketplace_service compilation errors
+                            // .route("/opportunities/{id}/applications", web::get().to(marketplace_handlers::get_opportunity_applications))
+                            // .route("/applications/accept", web::post().to(marketplace_handlers::accept_application))
+                            // .route("/deals/complete", web::post().to(marketplace_handlers::complete_deal))
                             // Brand verification (self-serve)
-                            .route("/verify", web::post().to(marketplace_handlers::submit_brand_verification))
-                            .route("/verify", web::get().to(marketplace_handlers::get_brand_verification_status))
+                            // .route("/verify", web::post().to(marketplace_handlers::submit_brand_verification))
+                            // .route("/verify", web::get().to(marketplace_handlers::get_brand_verification_status))
                     )
 
                     // GDPR Data Deletion (user self-service)
-                    .service(
-                        web::scope("/users/me/data-deletion")
-                            .route("", web::post().to(marketplace_handlers::request_data_deletion))
-                            .route("", web::get().to(marketplace_handlers::get_deletion_status))
-                            .route("", web::delete().to(marketplace_handlers::cancel_data_deletion))
-                    )
+                    // TEMPORARILY DISABLED due to marketplace_service compilation errors
+                    // .service(
+                    //     web::scope("/users/me/data-deletion")
+                    //         .route("", web::post().to(marketplace_handlers::request_data_deletion))
+                    //         .route("", web::get().to(marketplace_handlers::get_deletion_status))
+                    //         .route("", web::delete().to(marketplace_handlers::cancel_data_deletion))
+                    // )
 
                     // Creator completeness
-                    .service(
-                        web::scope("/creators/me/completeness")
-                            .route("", web::get().to(marketplace_handlers::get_my_completeness))
-                    )
-                    .service(
-                        web::scope("/creators/{user_id}/completeness")
-                            .route("", web::get().to(marketplace_handlers::get_creator_completeness))
-                    )
+                    // TEMPORARILY DISABLED due to marketplace_service compilation errors
+                    // .service(
+                    //     web::scope("/creators/me/completeness")
+                    //         .route("", web::get().to(marketplace_handlers::get_my_completeness))
+                    // )
+                    // .service(
+                    //     web::scope("/creators/{user_id}/completeness")
+                    //         .route("", web::get().to(marketplace_handlers::get_creator_completeness))
+                    // )
 
                     // Payout history (creator)
-                    .service(
-                        web::scope("/creators/me/payouts")
-                            .route("", web::get().to(marketplace_handlers::get_my_payouts))
-                    )
+                    // TEMPORARILY DISABLED due to marketplace_service compilation errors
+                    // .service(
+                    //     web::scope("/creators/me/payouts")
+                    //         .route("", web::get().to(marketplace_handlers::get_my_payouts))
+                    // )
 
                     // Admin: brand verification, payouts, interest signups, leaderboard, stats, flags
                     .service(
                         web::scope("/admin")
-                            .route("/brands/verify", web::get().to(marketplace_handlers::admin_list_brand_verifications))
-                            .route("/brands/{user_id}/verify", web::post().to(marketplace_handlers::admin_review_brand_verification))
-                            .route("/payouts", web::post().to(marketplace_handlers::create_payout))
-                            .route("/payouts/reconciliation", web::get().to(marketplace_handlers::admin_payout_reconciliation))
+                            // TEMPORARILY DISABLED due to marketplace_service compilation errors
+                            // .route("/brands/verify", web::get().to(marketplace_handlers::admin_list_brand_verifications))
+                            // .route("/brands/{user_id}/verify", web::post().to(marketplace_handlers::admin_review_brand_verification))
+                            // .route("/payouts", web::post().to(marketplace_handlers::create_payout))
+                            // .route("/payouts/reconciliation", web::get().to(marketplace_handlers::admin_payout_reconciliation))
                             // Creator Interest Signup Management
-                            .route("/interest/signups", web::get().to(interest_handlers::list_interest_signups))
-                            .route("/interest/stats", web::get().to(interest_handlers::get_interest_stats))
-                            .route("/interest/signups/{id}/contact", web::post().to(interest_handlers::contact_interest_signup))
-                            .route("/interest/signups/{id}/convert", web::post().to(interest_handlers::convert_interest_signup))
-                            .route("/interest/signups/{id}/reject", web::post().to(interest_handlers::reject_interest_signup))
+                            // TEMPORARILY DISABLED due to marketplace_service compilation errors
+                            // .route("/interest/signups", web::get().to(interest_handlers::list_interest_signups))
+                            // .route("/interest/stats", web::get().to(interest_handlers::get_interest_stats))
+                            // .route("/interest/signups/{id}/contact", web::post().to(interest_handlers::contact_interest_signup))
+                            // .route("/interest/signups/{id}/convert", web::post().to(interest_handlers::convert_interest_signup))
+                            // .route("/interest/signups/{id}/reject", web::post().to(interest_handlers::reject_interest_signup))
                             // Leaderboard (materialized view)
                             .route("/leaderboard", web::get().to(handlers::admin::get_leaderboard))
                             // Platform stats
