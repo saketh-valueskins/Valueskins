@@ -1,8 +1,7 @@
-use actix::*;
+use actix::prelude::*;
 use actix_web::{web, HttpRequest, HttpResponse, Error};
 use actix_web_actors::ws;
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
 use std::sync::Arc;
 use tokio::sync::broadcast;
 
@@ -55,11 +54,23 @@ pub enum EventType {
     OfferReceived,
 }
 
+// ── Internal actor messages ──────────────────────────────────────────
+
+/// Forward a serialized broadcast message to the WebSocket client.
+struct ForwardBroadcast(String);
+
+impl Message for ForwardBroadcast {
+    type Result = ();
+}
+
+// ── WebSocket actor ──────────────────────────────────────────────────
+
 /// WebSocket actor for individual connections
 pub struct WsClient {
     user_id: i32,
+    #[allow(dead_code)]
     server: Arc<RealTimeServer>,
-    rx: broadcast::Receiver<RealtimeMessage>,
+    rx: Option<broadcast::Receiver<RealtimeMessage>>,
 }
 
 impl Actor for WsClient {
@@ -68,21 +79,34 @@ impl Actor for WsClient {
     fn started(&mut self, ctx: &mut Self::Context) {
         tracing::info!(user_id = self.user_id, "WebSocket connection started");
 
-        // Spawn task to receive broadcast messages
-        let rx = self.rx.clone();
-        let user_id = self.user_id;
+        // Take ownership of the receiver (broadcast::Receiver is not Clone)
+        let mut rx = match self.rx.take() {
+            Some(rx) => rx,
+            None => return,
+        };
 
-        ctx.spawn(async move {
-            let mut rx = rx;
+        let user_id = self.user_id;
+        let addr = ctx.address();
+
+        async move {
             while let Ok(msg) = rx.recv().await {
-                // Broadcast to all connected clients for this user
-                if msg.user_id == user_id || msg.user_id == 0 { // 0 = broadcast to all
+                if msg.user_id == user_id || msg.user_id == 0 {
                     if let Ok(json_msg) = serde_json::to_string(&msg) {
-                        return WsMessage::Text(json_msg);
+                        let _ = addr.send(ForwardBroadcast(json_msg)).await;
                     }
                 }
             }
-        }.into_actor(self));
+        }
+        .into_actor(self)
+        .wait(ctx);
+    }
+}
+
+impl Handler<ForwardBroadcast> for WsClient {
+    type Result = ();
+
+    fn handle(&mut self, msg: ForwardBroadcast, ctx: &mut Self::Context) {
+        ctx.text(msg.0);
     }
 }
 
@@ -93,8 +117,8 @@ pub struct WsSubscribe {
     pub room_id: Option<String>,
 }
 
-impl StreamHandler<Result<ws::Message, ws::WsProtocolError>> for WsClient {
-    fn handle(&mut self, msg: Result<ws::Message, ws::WsProtocolError>, ctx: &mut Self::Context) {
+impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsClient {
+    fn handle(&mut self, msg: Result<ws::Message, ws::ProtocolError>, ctx: &mut Self::Context) {
         match msg {
             Ok(ws::Message::Text(text)) => {
                 tracing::debug!(user_id = self.user_id, text = %text, "WebSocket message received");
@@ -152,8 +176,8 @@ pub async fn ws_handler(
     let rx = server.subscribe();
     let client = WsClient {
         user_id,
-        server: server.into_inner(),
-        rx,
+        server: Arc::clone(server.get_ref()),
+        rx: Some(rx),
     };
 
     ws::start(client, &req, stream)
