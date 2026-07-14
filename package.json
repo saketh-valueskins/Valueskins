@@ -9,11 +9,7 @@
     "install:all": "npm install && npm install --prefix ./frontend && npm install --prefix ./marketplace",
     "clean": "rm -rf frontend/node_modules frontend/.next marketplace/node_modules marketplace/.next && npm cache clean --force"
   },
-  "workspaces": [
-    "frontend",
-    "marketplace",
-    "backend"
-  ],
+
   "keywords": [
     "creator-economy",
     "social-media",
