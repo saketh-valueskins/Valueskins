@@ -44,7 +44,7 @@ export default function HomePage() {
           The marketplace for<br />creators and brands
         </h1>
         <p style={{ fontSize: '18px', color: C.textSecondary, margin: '0 auto 40px', maxWidth: '600px', lineHeight: 1.6 }}>
-          ValueSkins connects content creators with brands for paid campaigns. Every deal is backed by escrow — creators get guaranteed payment, brands only pay for work they approve.
+          ValueSkins connects content creators with brands for paid campaigns. Every deal is backed by escrow. Creators get guaranteed payment, brands only pay for work they approve.
         </p>
 
         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -72,7 +72,7 @@ export default function HomePage() {
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '32px' }}>
           {[
-            { step: '01', title: 'Create Your Profile', desc: 'Showcase your skills, portfolio, and rates. Brands find you — or you find them.' },
+            { step: '01', title: 'Create Your Profile', desc: 'Showcase your skills, portfolio, and rates. Brands find you, or you find them.' },
             { step: '02', title: 'Make a Deal', desc: 'Brands post briefs, creators negotiate terms. Deliverables, deadlines, and payment are agreed upfront.' },
             { step: '03', title: 'Escrow Protects Both Sides', desc: 'Brand funds the deal. Money is held securely by Razorpay or Stripe. Released only on approval.' },
             { step: '04', title: 'Deliver and Get Paid', desc: 'Creator submits work. Brand reviews and approves. Payment releases instantly. Reputation grows.' },
