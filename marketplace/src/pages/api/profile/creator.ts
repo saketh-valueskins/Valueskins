@@ -1,8 +1,43 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db';
 
+let profileMigrated = false;
+
+async function ensureProfileColumns() {
+  if (profileMigrated) return;
+  const cols = [
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS location TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS country TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS niche TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS website TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS instagram_handle TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS tiktok_handle TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS youtube_handle TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS twitter_handle TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_handle TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS engagement_rate NUMERIC DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS languages JSONB DEFAULT '[]'::jsonb",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS open_for_work BOOLEAN DEFAULT true",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS min_deal_value INTEGER DEFAULT 500",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_deal_types JSONB DEFAULT '[\"paid\",\"barter\"]'::jsonb",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS availability TEXT DEFAULT 'available'",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS response_time TEXT DEFAULT '24'",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS pitch_video_url TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS pitch_text TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_items JSONB DEFAULT '[]'::jsonb",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'creator'",
+  ];
+  for (const sql of cols) {
+    try { await query(sql); } catch {}
+  }
+  profileMigrated = true;
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    await ensureProfileColumns();
+
     const sessionToken = req.cookies.valueskins_session;
 
     if (!sessionToken) {
