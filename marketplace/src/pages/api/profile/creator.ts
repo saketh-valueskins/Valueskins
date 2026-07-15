@@ -27,6 +27,8 @@ async function ensureProfileColumns() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS pitch_text TEXT DEFAULT ''",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_items JSONB DEFAULT '[]'::jsonb",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'creator'",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT",
   ];
   for (const sql of cols) {
     try { await query(sql); } catch {}
@@ -109,12 +111,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         pitch_text: 'pitch_text',
       };
 
+      // Numeric columns: coerce strings -> numbers so the pg driver doesn't
+      // choke inserting a string into NUMERIC/INTEGER columns.
+      const numericColumns = new Set(['followers_count', 'engagement_rate', 'min_deal_value']);
+
       for (const [key, value] of Object.entries(body)) {
         const dbColumn = mapping[key];
         if (dbColumn && value !== undefined && value !== null) {
+          // username is UNIQUE — skip blank values to avoid unique-constraint 500s
+          if (dbColumn === 'username' && String(value).trim() === '') {
+            continue;
+          }
           // Deduplicate: if both instagram and instagram_handle are present, use one
           if (!fields[dbColumn]) {
-            fields[dbColumn] = value;
+            if (numericColumns.has(dbColumn)) {
+              const num = Number(value);
+              fields[dbColumn] = Number.isFinite(num) ? num : 0;
+            } else {
+              fields[dbColumn] = value;
+            }
           }
         }
       }
