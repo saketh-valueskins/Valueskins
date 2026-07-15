@@ -41,53 +41,87 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT' || req.method === 'PATCH') {
-      const {
-        display_name, username, bio, location, country,
-        instagram_handle, tiktok_handle, youtube_handle, twitter_handle, linkedin_handle,
-        website, niche, languages, open_for_work, min_deal_value, preferred_deal_types,
-        availability, response_time, pitch_video_url, pitch_text
-      } = req.body;
+      const body = req.body || {};
 
-      // Build UPDATE query dynamically to handle optional fields
-      const updates = [];
-      const params = [];
-      let paramCount = 1;
-
-      const fields = {
-        display_name, username, bio, location, country,
-        instagram_handle, tiktok_handle, youtube_handle, twitter_handle, linkedin_handle,
-        website, niche, languages, open_for_work, min_deal_value, preferred_deal_types,
-        availability, response_time, pitch_video_url, pitch_text
+      // Map frontend field names to DB column names
+      const fields: Record<string, any> = {};
+      const mapping: Record<string, string> = {
+        display_name: 'display_name',
+        username: 'username',
+        bio: 'bio',
+        location: 'location',
+        country: 'country',
+        instagram: 'instagram_handle',
+        instagram_handle: 'instagram_handle',
+        tiktok: 'tiktok_handle',
+        tiktok_handle: 'tiktok_handle',
+        youtube: 'youtube_handle',
+        youtube_handle: 'youtube_handle',
+        twitter: 'twitter_handle',
+        twitter_handle: 'twitter_handle',
+        linkedin: 'linkedin_handle',
+        linkedin_handle: 'linkedin_handle',
+        website: 'website',
+        niche: 'niche',
+        followers_count: 'followers_count',
+        engagement_rate: 'engagement_rate',
+        open_for_work: 'open_for_work',
+        min_deal_value: 'min_deal_value',
+        preferred_deal_types: 'preferred_deal_types',
+        availability: 'availability',
+        response_time: 'response_time',
+        pitch_video_url: 'pitch_video_url',
+        pitch_text: 'pitch_text',
       };
 
-      for (const [key, value] of Object.entries(fields)) {
-        if (value !== undefined && value !== null) {
-          updates.push(`${key} = $${paramCount}`);
-          params.push(value);
-          paramCount++;
+      for (const [key, value] of Object.entries(body)) {
+        const dbColumn = mapping[key];
+        if (dbColumn && value !== undefined && value !== null) {
+          // Deduplicate: if both instagram and instagram_handle are present, use one
+          if (!fields[dbColumn]) {
+            fields[dbColumn] = value;
+          }
         }
+      }
+
+      // Build UPDATE query dynamically
+      const updates: string[] = [];
+      const params: any[] = [];
+      let paramCount = 1;
+
+      // JSONB columns need to be serialized as JSON strings for the pg driver
+      const jsonbColumns = new Set(['languages', 'preferred_deal_types', 'portfolio_items', 'modules']);
+
+      for (const [column, value] of Object.entries(fields)) {
+        updates.push(`${column} = $${paramCount}`);
+        // Serialize arrays/objects for JSONB columns
+        if (jsonbColumns.has(column) && (Array.isArray(value) || typeof value === 'object')) {
+          params.push(JSON.stringify(value));
+        } else {
+          params.push(value);
+        }
+        paramCount++;
+      }
+
+      if (updates.length === 0) {
+        return res.status(200).json({ message: 'No fields to update', userId });
       }
 
       updates.push(`updated_at = NOW()`);
       params.push(userId);
 
-      if (updates.length === 1) {
-        // Only updated_at changed
-        updates.pop(); // remove the NOW() addition
-        await query(`UPDATE users SET updated_at = NOW() WHERE id = $1`, [userId]);
-      } else {
-        await query(
-          `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount}`,
-          params
-        );
-      }
+      await query(
+        `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramCount}`,
+        params
+      );
 
       return res.status(200).json({ message: 'Profile updated', userId });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
-  } catch (error) {
-    console.error('Creator profile error:', error);
-    return res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    console.error('Creator profile error:', error?.message || error);
+    const detail = process.env.NODE_ENV !== 'production' ? error?.message : undefined;
+    return res.status(500).json({ error: detail || 'Server error' });
   }
 }

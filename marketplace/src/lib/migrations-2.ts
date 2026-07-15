@@ -281,6 +281,47 @@ export async function addDeletionExportMigration() {
   }
 }
 
+export async function addCreatorProfileColumns() {
+  const migrations = [
+    {
+      name: 'add_creator_profile_columns',
+      sql: `
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS location TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS country TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS niche TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS website TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS instagram_handle TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS tiktok_handle TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS youtube_handle TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS twitter_handle TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_handle TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS engagement_rate NUMERIC DEFAULT 0;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS languages JSONB DEFAULT '[]'::jsonb;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS open_for_work BOOLEAN DEFAULT TRUE;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS min_deal_value INTEGER DEFAULT 500;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_deal_types JSONB DEFAULT '["paid","barter"]'::jsonb;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS availability TEXT DEFAULT 'available';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS response_time TEXT DEFAULT '24';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS pitch_video_url TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS pitch_text TEXT DEFAULT '';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS portfolio_items JSONB DEFAULT '[]';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'creator';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS modules JSONB DEFAULT '[]';
+      `,
+    },
+  ];
+
+  for (const migration of migrations) {
+    try {
+      await query(migration.sql);
+      console.log(`Migration: ${migration.name}`);
+    } catch (error) {
+      console.log(`Migration ${migration.name} skipped or already applied`);
+    }
+  }
+}
+
 export async function addEventFeaturesMigrations() {
   const migrations = [
     {

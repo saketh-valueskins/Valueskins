@@ -61,13 +61,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Also run the TypeScript-based migrations for older tables
   try {
-    const { runMigrations2, addRemindersTables, addEscrowMigrations, addEventFeaturesMigrations } = await import('@/lib/migrations-2');
+    const { runMigrations2, addRemindersTables, addEscrowMigrations, addCreatorProfileColumns, addEventFeaturesMigrations } = await import('@/lib/migrations-2');
     await runMigrations2();
     results.push({ name: 'runMigrations2', success: true });
     await addRemindersTables();
     results.push({ name: 'addRemindersTables', success: true });
     await addEscrowMigrations();
     results.push({ name: 'addEscrowMigrations', success: true });
+    await addCreatorProfileColumns();
+    results.push({ name: 'addCreatorProfileColumns', success: true });
     await addEventFeaturesMigrations();
     results.push({ name: 'addEventFeaturesMigrations', success: true });
   } catch (err: any) {

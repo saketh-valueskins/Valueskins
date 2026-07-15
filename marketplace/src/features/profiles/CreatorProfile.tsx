@@ -131,7 +131,17 @@ export default function CreatorProfile() {
       const res = await fetch('/api/profile/creator', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        setProfile({ ...initialData, ...data });
+        // Map DB column names back to frontend field names
+        const mapped = {
+          ...initialData,
+          ...data,
+          instagram: data.instagram_handle || data.instagram || '',
+          tiktok: data.tiktok_handle || data.tiktok || '',
+          youtube: data.youtube_handle || data.youtube || '',
+          twitter: data.twitter_handle || data.twitter || '',
+          linkedin: data.linkedin_handle || data.linkedin || '',
+        };
+        setProfile(mapped);
       }
     } catch (err) {
       console.error('Failed to fetch profile:', err);
