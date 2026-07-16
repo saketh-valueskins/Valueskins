@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
+import { getCurrencySymbol } from '@/lib/currency';
 
 const C = {
   bg: '#0A0A0A',
@@ -24,14 +25,7 @@ interface BrandProfileData {
   country: string;
   languages: string[];
   niche: string;
-  instagram: string;
-  tiktok: string;
-  youtube: string;
-  twitter: string;
-  linkedin: string;
-  website: string;
   followers_count: number;
-  engagement_rate: number;
   pitch_text: string;
   open_for_work: boolean;
   min_deal_value: number;
@@ -49,14 +43,7 @@ const initialData: BrandProfileData = {
   country: '',
   languages: [],
   niche: '',
-  instagram: '',
-  tiktok: '',
-  youtube: '',
-  twitter: '',
-  linkedin: '',
-  website: '',
   followers_count: 0,
-  engagement_rate: 0,
   pitch_text: '',
   open_for_work: true,
   min_deal_value: 500,
@@ -68,56 +55,6 @@ const initialData: BrandProfileData = {
 
 type EditSection = null | 'identity' | 'social' | 'pitch' | 'marketplace';
 
-const InputField = ({ label, value, onChange, placeholder = '', type = 'text' }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) => (
-  <div style={{ display: 'flex', flexDirection: 'column' }}>
-    <label style={{ fontSize: '12px', color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase', fontWeight: 600 }}>{label}</label>
-    <input
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      style={{ padding: '10px 12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, fontFamily: 'inherit', fontSize: '14px', outline: 'none' }}
-    />
-  </div>
-);
-
-const SaveButton = ({ onClick, loading }: { onClick: () => void; loading: boolean }) => (
-  <button
-    onClick={onClick}
-    disabled={loading}
-    style={{ padding: '12px 24px', background: C.primary, color: C.bg, border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, gridColumn: '1 / -1' }}
-  >
-    {loading ? 'Saving...' : 'Save Changes'}
-  </button>
-);
-
-const Section = ({ title, isOpen, onToggle, children }: { title: string; isOpen: boolean; onToggle: () => void; children: React.ReactNode }) => (
-  <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px', overflow: 'hidden', marginBottom: '24px' }}>
-    <button
-      onClick={onToggle}
-      style={{ width: '100%', padding: '16px', background: 'transparent', border: 'none', color: C.text, fontSize: '16px', fontWeight: 600, cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-    >
-      {title}
-      <span style={{ fontSize: '20px' }}>{isOpen ? '−' : '+'}</span>
-    </button>
-    {isOpen && <div style={{ padding: '16px', borderTop: `1px solid ${C.border}` }}>{children}</div>}
-  </div>
-);
-
-const StatBox = ({ label, value, color = C.primary }: { label: string; value: string; color?: string }) => (
-  <div style={{ padding: '12px 16px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', textAlign: 'center' }}>
-    <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>{label}</div>
-    <div style={{ fontSize: '18px', fontWeight: 700, color }}>{value}</div>
-  </div>
-);
-
-const SocialHandle = ({ platform, handle }: { platform: string; handle: string }) => (
-  <div style={{ padding: '12px 16px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', fontSize: '14px' }}>
-    <div style={{ color: C.textMuted, fontSize: '11px', marginBottom: '2px' }}>{platform}</div>
-    <div style={{ color: C.text, fontWeight: 600 }}>@{handle}</div>
-  </div>
-);
-
 export default function BrandProfile() {
   const router = useRouter();
   const { account } = useAuth();
@@ -125,6 +62,7 @@ export default function BrandProfile() {
   const [editing, setEditing] = useState<EditSection>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [currencySymbol, setCurrencySymbol] = useState('$');
 
   useEffect(() => {
     if (account) {
@@ -134,6 +72,7 @@ export default function BrandProfile() {
       }));
       fetchProfile();
     }
+    getCurrencySymbol().then(sym => setCurrencySymbol(sym));
   }, [account]);
 
   const fetchProfile = async () => {
@@ -144,11 +83,6 @@ export default function BrandProfile() {
         const mapped = {
           ...initialData,
           ...data,
-          instagram: data.instagram_handle || data.instagram || '',
-          tiktok: data.tiktok_handle || data.tiktok || '',
-          youtube: data.youtube_handle || data.youtube || '',
-          twitter: data.twitter_handle || data.twitter || '',
-          linkedin: data.linkedin_handle || data.linkedin || '',
         };
         setProfile(mapped);
       }
@@ -192,11 +126,10 @@ export default function BrandProfile() {
   }
 
   const missingFields = [
-    { label: 'Name', done: !!profile.display_name },
+    { label: 'Brand name', done: !!profile.display_name },
     { label: 'Bio', done: !!profile.bio },
     { label: 'Location', done: !!profile.location },
-    { label: 'A social handle', done: !!(profile.instagram || profile.tiktok || profile.youtube || profile.twitter || profile.linkedin) },
-    { label: 'Your pitch', done: !!profile.pitch_text },
+    { label: 'About this brand', done: !!profile.pitch_text },
   ].filter((f) => !f.done).map((f) => f.label);
 
   return (
@@ -278,49 +211,37 @@ export default function BrandProfile() {
           )}
         </Section>
 
-        <Section title="Social & Web" isOpen={editing === 'social'} onToggle={() => setEditing(editing === 'social' ? null : 'social')}>
+        <Section title="Followers" isOpen={editing === 'social'} onToggle={() => setEditing(editing === 'social' ? null : 'social')}>
           {editing !== 'social' ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
               <StatBox label="Followers" value={`${(profile.followers_count / 1000).toFixed(1)}K`} />
-              <StatBox label="Engagement" value={`${profile.engagement_rate}%`} />
-              {profile.instagram && <SocialHandle platform="Instagram" handle={profile.instagram} />}
-              {profile.tiktok && <SocialHandle platform="TikTok" handle={profile.tiktok} />}
-              {profile.youtube && <SocialHandle platform="YouTube" handle={profile.youtube} />}
             </div>
           ) : (
             <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
               <InputField type="number" label="Follower Count" value={String(profile.followers_count)} onChange={v => setProfile({ ...profile, followers_count: parseInt(v) || 0 })} />
-              <InputField type="number" label="Engagement Rate (%)" value={String(profile.engagement_rate)} onChange={v => setProfile({ ...profile, engagement_rate: parseInt(v) || 0 })} />
-              <InputField label="Instagram Handle" value={profile.instagram} onChange={v => setProfile({ ...profile, instagram: v })} placeholder="username (no @)" />
-              <InputField label="TikTok Handle" value={profile.tiktok} onChange={v => setProfile({ ...profile, tiktok: v })} placeholder="username (no @)" />
-              <InputField label="YouTube Channel" value={profile.youtube} onChange={v => setProfile({ ...profile, youtube: v })} placeholder="channel name" />
-              <InputField label="Twitter/X Handle" value={profile.twitter} onChange={v => setProfile({ ...profile, twitter: v })} placeholder="username (no @)" />
-              <InputField label="LinkedIn Profile" value={profile.linkedin} onChange={v => setProfile({ ...profile, linkedin: v })} placeholder="username" />
-              <InputField label="Website" value={profile.website} onChange={v => setProfile({ ...profile, website: v })} placeholder="https://..." type="url" />
               <SaveButton onClick={handleSave} loading={saving} />
             </form>
           )}
         </Section>
 
-        <Section title="Pitch" isOpen={editing === 'pitch'} onToggle={() => setEditing(editing === 'pitch' ? null : 'pitch')}>
+        <Section title="About This Brand" isOpen={editing === 'pitch'} onToggle={() => setEditing(editing === 'pitch' ? null : 'pitch')}>
           {editing !== 'pitch' ? (
             <div>
               {profile.pitch_text && (
                 <div>
-                  <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Your Pitch</div>
                   <div style={{ fontSize: '14px', lineHeight: '1.6' }}>{profile.pitch_text}</div>
                 </div>
               )}
-              {!profile.pitch_text && <div style={{ color: C.textMuted }}>No pitch added yet. Add a message explaining why creators should collaborate with your brand.</div>}
+              {!profile.pitch_text && <div style={{ color: C.textMuted }}>No brand description added yet. Add information about your brand, what you look for in creators, and your campaign goals.</div>}
             </div>
           ) : (
             <form style={{ display: 'grid', gridTemplateColumns: '1 / -1', gap: '16px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', fontSize: '12px', color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Pitch</label>
+                <label style={{ display: 'block', fontSize: '12px', color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Brand Description</label>
                 <textarea
                   value={profile.pitch_text}
                   onChange={e => setProfile({ ...profile, pitch_text: e.target.value })}
-                  placeholder="Tell creators why they should work with your brand, what kind of collaborations you're looking for..."
+                  placeholder="Tell creators about your brand. What do you do? What kind of partnerships are you looking for? What makes your brand special?"
                   style={{ width: '100%', padding: '12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, minHeight: '100px', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: '14px' }}
                 />
               </div>
@@ -329,38 +250,116 @@ export default function BrandProfile() {
           )}
         </Section>
 
-        <Section title="Marketplace Settings" isOpen={editing === 'marketplace'} onToggle={() => setEditing(editing === 'marketplace' ? null : 'marketplace')}>
+        <Section title="Marketplace & Availability" isOpen={editing === 'marketplace'} onToggle={() => setEditing(editing === 'marketplace' ? null : 'marketplace')}>
           {editing !== 'marketplace' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
-              <StatBox label="Open for Work" value={profile.open_for_work ? 'Yes' : 'No'} color={profile.open_for_work ? C.success : C.warning} />
-              <StatBox label="Min. Deal Value" value={`$${profile.min_deal_value}`} />
-              <StatBox label="Availability" value={profile.availability === 'available' ? 'Available' : 'Limited'} />
-              <StatBox label="Response Time" value={`${profile.response_time}h`} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+              <div>
+                <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Status</div>
+                <div style={{ fontSize: '16px', fontWeight: 600, color: profile.open_for_work ? C.success : C.danger }}>
+                  {profile.open_for_work ? 'Actively Hiring' : 'Not Hiring'}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Min Deal Value</div>
+                <div style={{ fontSize: '16px', fontWeight: 600 }}>{currencySymbol}{profile.min_deal_value}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Response Time</div>
+                <div style={{ fontSize: '16px', fontWeight: 600 }}>{profile.response_time} hours</div>
+              </div>
             </div>
           ) : (
-            <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label style={{ fontSize: '12px', color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase', fontWeight: 600 }}>Open for Collaborations</label>
-                <select value={profile.open_for_work ? 'yes' : 'no'} onChange={e => setProfile({ ...profile, open_for_work: e.target.value === 'yes' })} style={{ padding: '10px 12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, fontFamily: 'inherit', fontSize: '14px', outline: 'none' }}>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
-              </div>
-              <InputField type="number" label="Minimum Deal Value ($)" value={String(profile.min_deal_value)} onChange={v => setProfile({ ...profile, min_deal_value: parseInt(v) || 500 })} />
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label style={{ fontSize: '12px', color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase', fontWeight: 600 }}>Availability</label>
-                <select value={profile.availability} onChange={e => setProfile({ ...profile, availability: e.target.value })} style={{ padding: '10px 12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, fontFamily: 'inherit', fontSize: '14px', outline: 'none' }}>
-                  <option value="available">Available</option>
-                  <option value="limited">Limited</option>
-                  <option value="not-available">Not Available</option>
-                </select>
-              </div>
-              <InputField type="number" label="Response Time (hours)" value={String(profile.response_time)} onChange={v => setProfile({ ...profile, response_time: v })} />
+            <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="checkbox"
+                  checked={profile.open_for_work}
+                  onChange={e => setProfile({ ...profile, open_for_work: e.target.checked })}
+                />
+                <span style={{ fontSize: '14px' }}>Actively hiring creators</span>
+              </label>
+
+              <InputField type="number" label={`Minimum Deal Value (${currencySymbol})`} value={String(profile.min_deal_value)} onChange={v => setProfile({ ...profile, min_deal_value: parseInt(v) || 500 })} />
+              <InputField type="number" label="Typical Response Time (hours)" value={String(profile.response_time)} onChange={v => setProfile({ ...profile, response_time: v })} />
+
               <SaveButton onClick={handleSave} loading={saving} />
             </form>
           )}
         </Section>
       </div>
     </div>
+  );
+}
+
+function Section({ title, isOpen, onToggle, children }: { title: string; isOpen: boolean; onToggle: () => void; children: React.ReactNode }) {
+  return (
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px', marginBottom: '20px', overflow: 'hidden' }}>
+      <button
+        onClick={onToggle}
+        style={{
+          width: '100%',
+          padding: '16px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: C.text }}>{title}</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '12px', color: C.textMuted }}>Edit</span>
+          <span style={{ fontSize: '20px', color: C.textMuted, transform: `rotate(${isOpen ? 180 : 0}deg)`, transition: 'transform 0.3s' }}>▼</span>
+        </div>
+      </button>
+      {isOpen && <div style={{ padding: '20px', paddingTop: 0, borderTop: `1px solid ${C.border}` }}>{children}</div>}
+    </div>
+  );
+}
+
+function InputField({ label, value, onChange, placeholder = '', type = 'text' }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
+  return (
+    <label style={{ display: 'block' }}>
+      <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>{label}</div>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        style={{ width: '100%', padding: '10px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, fontSize: '14px', boxSizing: 'border-box' }}
+      />
+    </label>
+  );
+}
+
+function StatBox({ label, value, color = C.primary }: { label: string; value: string; color?: string }) {
+  return (
+    <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
+      <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ fontSize: '24px', fontWeight: 700, color }}>{value}</div>
+    </div>
+  );
+}
+
+function SaveButton({ onClick, loading }: { onClick: () => void; loading: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      style={{
+        padding: '12px 24px',
+        background: C.primary,
+        color: '#000',
+        border: 'none',
+        borderRadius: '8px',
+        fontWeight: 700,
+        cursor: loading ? 'not-allowed' : 'pointer',
+        opacity: loading ? 0.6 : 1,
+        fontSize: '14px',
+      }}
+    >
+      {loading ? 'Saving...' : 'Save Changes'}
+    </button>
   );
 }

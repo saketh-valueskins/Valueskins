@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
+import { getCurrencySymbol } from '@/lib/currency';
 
 const C = {
   bg: '#0A0A0A',
@@ -27,20 +28,13 @@ interface CreatorProfileData {
   niche: string;
 
   // Social Capital
-  instagram: string;
-  tiktok: string;
-  youtube: string;
-  twitter: string;
-  linkedin: string;
-  website: string;
   followers_count: number;
-  engagement_rate: number;
 
   // Pitch System
   pitch_video_url: string;
   pitch_text: string;
 
-  // Portfolio
+  // Work History
   portfolio_items: Array<{
     id: string;
     title: string;
@@ -73,14 +67,7 @@ const initialData: CreatorProfileData = {
   country: '',
   languages: [],
   niche: '',
-  instagram: '',
-  tiktok: '',
-  youtube: '',
-  twitter: '',
-  linkedin: '',
-  website: '',
   followers_count: 0,
-  engagement_rate: 0,
   pitch_video_url: '',
   pitch_text: '',
   portfolio_items: [],
@@ -105,6 +92,7 @@ export default function CreatorProfile() {
   const [editing, setEditing] = useState<EditSection>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [currencySymbol, setCurrencySymbol] = useState('$');
 
   // Check if user has ValueSkins or is a brand
   const hasValueSkins = account?.modules?.some(m => m.code === 'valueskin' && m.is_active) || false;
@@ -113,13 +101,14 @@ export default function CreatorProfile() {
 
   useEffect(() => {
     if (account) {
-      // Initialize with account email and name
       setProfile(prev => ({
         ...prev,
         display_name: account.display_name || prev.display_name
       }));
       fetchProfile();
     }
+    // Get currency symbol from IP
+    getCurrencySymbol().then(sym => setCurrencySymbol(sym));
   }, [account]);
 
   const fetchProfile = async () => {
@@ -131,11 +120,6 @@ export default function CreatorProfile() {
         const mapped = {
           ...initialData,
           ...data,
-          instagram: data.instagram_handle || data.instagram || '',
-          tiktok: data.tiktok_handle || data.tiktok || '',
-          youtube: data.youtube_handle || data.youtube || '',
-          twitter: data.twitter_handle || data.twitter || '',
-          linkedin: data.linkedin_handle || data.linkedin || '',
         };
         setProfile(mapped);
       }
@@ -184,9 +168,8 @@ export default function CreatorProfile() {
     { label: 'Name', done: !!profile.display_name },
     { label: 'Bio', done: !!profile.bio },
     { label: 'Location', done: !!profile.location },
-    { label: 'A social handle', done: !!(profile.instagram || profile.tiktok || profile.youtube || profile.twitter || profile.linkedin) },
     { label: 'Your pitch', done: !!(profile.pitch_text || profile.pitch_video_url) },
-    { label: 'A portfolio item', done: profile.portfolio_items.length > 0 },
+    { label: 'Work history item', done: profile.portfolio_items.length > 0 },
   ].filter((f) => !f.done).map((f) => f.label);
 
   const TrustBadge = ({ score }: { score: number }) => {
@@ -288,27 +271,16 @@ export default function CreatorProfile() {
           )}
         </Section>
 
-        {/* Social Capital — only for creators/brands with ValueSkins */}
+        {/* Followers — only for creators/brands with ValueSkins */}
         {showMarketplaceSettings && (
-        <Section title="Social Capital" isOpen={editing === 'social'} onToggle={() => setEditing(editing === 'social' ? null : 'social')}>
+        <Section title="Followers" isOpen={editing === 'social'} onToggle={() => setEditing(editing === 'social' ? null : 'social')}>
           {editing !== 'social' ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
               <StatBox label="Followers" value={`${(profile.followers_count / 1000).toFixed(1)}K`} />
-              <StatBox label="Engagement" value={`${profile.engagement_rate}%`} />
-              {profile.instagram && <SocialHandle platform="Instagram" handle={profile.instagram} />}
-              {profile.tiktok && <SocialHandle platform="TikTok" handle={profile.tiktok} />}
-              {profile.youtube && <SocialHandle platform="YouTube" handle={profile.youtube} />}
             </div>
           ) : (
             <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
               <InputField type="number" label="Follower Count" value={String(profile.followers_count)} onChange={v => setProfile({ ...profile, followers_count: parseInt(v) || 0 })} />
-              <InputField type="number" label="Engagement Rate (%)" value={String(profile.engagement_rate)} onChange={v => setProfile({ ...profile, engagement_rate: parseInt(v) || 0 })} />
-              <InputField label="Instagram Handle" value={profile.instagram} onChange={v => setProfile({ ...profile, instagram: v })} placeholder="username (no @)" />
-              <InputField label="TikTok Handle" value={profile.tiktok} onChange={v => setProfile({ ...profile, tiktok: v })} placeholder="username (no @)" />
-              <InputField label="YouTube Channel" value={profile.youtube} onChange={v => setProfile({ ...profile, youtube: v })} placeholder="channel name" />
-              <InputField label="Twitter/X Handle" value={profile.twitter} onChange={v => setProfile({ ...profile, twitter: v })} placeholder="username (no @)" />
-              <InputField label="LinkedIn Profile" value={profile.linkedin} onChange={v => setProfile({ ...profile, linkedin: v })} placeholder="username" />
-              <InputField label="Personal Website" value={profile.website} onChange={v => setProfile({ ...profile, website: v })} placeholder="https://..." type="url" />
               <SaveButton onClick={handleSave} loading={saving} />
             </form>
           )}
@@ -392,7 +364,7 @@ export default function CreatorProfile() {
               </div>
               <div>
                 <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Min Deal Value</div>
-                <div style={{ fontSize: '16px', fontWeight: 600 }}>${profile.min_deal_value}</div>
+                <div style={{ fontSize: '16px', fontWeight: 600 }}>{currencySymbol}{profile.min_deal_value}</div>
               </div>
               <div>
                 <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Response Time</div>
@@ -410,7 +382,7 @@ export default function CreatorProfile() {
                 <span style={{ fontSize: '14px' }}>Open for work</span>
               </label>
 
-              <InputField type="number" label="Minimum Deal Value ($)" value={String(profile.min_deal_value)} onChange={v => setProfile({ ...profile, min_deal_value: parseInt(v) || 500 })} />
+              <InputField type="number" label={`Minimum Deal Value (${currencySymbol})`} value={String(profile.min_deal_value)} onChange={v => setProfile({ ...profile, min_deal_value: parseInt(v) || 500 })} />
 
               <InputField type="number" label="Typical Response Time (hours)" value={String(profile.response_time)} onChange={v => setProfile({ ...profile, response_time: v })} />
 
@@ -501,15 +473,6 @@ function StatBox({ label, value, color = C.primary }: { label: string; value: st
     <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
       <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>{label}</div>
       <div style={{ fontSize: '24px', fontWeight: 700, color }}>{value}</div>
-    </div>
-  );
-}
-
-function SocialHandle({ platform, handle }: { platform: string; handle: string }) {
-  return (
-    <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '12px' }}>
-      <div style={{ fontSize: '11px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>{platform}</div>
-      <div style={{ fontSize: '14px', fontWeight: 600 }}>@{handle}</div>
     </div>
   );
 }
