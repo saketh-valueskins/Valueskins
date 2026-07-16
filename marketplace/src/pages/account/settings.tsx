@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
 import { C } from '@/theme/colors';
 
 interface Account {
@@ -15,7 +14,6 @@ export default function AccountSettings() {
   const router = useRouter();
   const [account, setAccount] = useState<Account | null>(null);
   const [displayName, setDisplayName] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -44,7 +42,6 @@ export default function AccountSettings() {
         setAccount(json as any);
         if (json) {
           setDisplayName(json.display_name || '');
-          setAvatarUrl(json.avatar_url || '');
         }
         setLoading(false);
       } catch (err: any) {
@@ -67,7 +64,6 @@ export default function AccountSettings() {
         credentials: 'include',
         body: JSON.stringify({
           display_name: displayName,
-          avatar_url: avatarUrl || undefined,
         }),
       });
 
@@ -80,7 +76,6 @@ export default function AccountSettings() {
       setAccount(prev => prev ? {
         ...prev,
         display_name: result.display_name,
-        avatar_url: result.avatar_url,
       } : prev);
 
       setSuccess('Profile updated successfully');
@@ -126,9 +121,9 @@ export default function AccountSettings() {
         {error && <div style={{ padding: '12px 16px', background: '#fee2e2', color: '#991b1b', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', border: `1px solid #fecaca` }}>{error}</div>}
         {success && <div style={{ padding: '12px 16px', background: '#f0fdf4', color: '#166534', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', border: `1px solid #bbf7d0` }}>{success}</div>}
 
-        {/* Account Settings */}
+        {/* Account Basics */}
         <div style={{ background: C.bg, borderRadius: '12px', padding: '24px', border: `1px solid ${C.border}`, marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, color: C.text, marginBottom: '20px' }}>Account Settings</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: 600, color: C.text, marginBottom: '20px' }}>Account</h2>
 
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: C.text, marginBottom: '8px' }}>Display Name</label>
@@ -183,49 +178,9 @@ export default function AccountSettings() {
           </button>
         </div>
 
-        {/* Creator Profile Link */}
-        <div style={{ background: C.bg, borderRadius: '12px', padding: '24px', border: `1px solid ${C.border}`, marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, color: C.text, marginBottom: '12px' }}>Creator Profile</h2>
-          <p style={{ fontSize: '14px', color: C.textSecondary, marginBottom: '16px' }}>
-            Edit your detailed creator profile including bio, social links, portfolio, and marketplace settings.
-          </p>
-          <Link href="/profile/me" style={{
-            display: 'inline-block',
-            padding: '10px 20px',
-            background: C.primary,
-            color: '#fff',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontWeight: 600,
-            fontSize: '14px',
-          }}>
-            Go to Profile Editor
-          </Link>
-        </div>
-
-        {/* ValueSkins */}
-        <div style={{ background: C.bg, borderRadius: '12px', padding: '24px', border: `1px solid ${C.border}` }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, color: C.text, marginBottom: '12px' }}>ValueSkins</h2>
-          <p style={{ fontSize: '14px', color: C.textSecondary, marginBottom: '16px' }}>
-            Manage your custom ValueSkin images and settings.
-          </p>
-          <Link href="/account/valueskins" style={{
-            display: 'inline-block',
-            padding: '10px 20px',
-            background: C.primary,
-            color: '#fff',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontWeight: 600,
-            fontSize: '14px',
-          }}>
-            Manage ValueSkins
-          </Link>
-        </div>
-
         {/* Logout */}
         <div style={{ background: C.bg, borderRadius: '12px', padding: '24px', border: `1px solid ${C.border}` }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, color: C.text, marginBottom: '12px' }}>Logout</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: 600, color: C.text, marginBottom: '12px' }}>Sign Out</h2>
           <button
             onClick={handleLogout}
             style={{
