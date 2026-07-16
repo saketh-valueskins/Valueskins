@@ -35,9 +35,8 @@ export default function HomePage() {
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}>
       {/* Hero */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '80px 24px 60px', textAlign: 'center' }}>
-        <ValueSkinsLogo theme="light" size={32} />
-        <div style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.35em', color: C.textSecondary, marginTop: '12px', marginBottom: '40px' }}>
-          TRUST <span style={{ color: C.accent }}>·</span> EARNED <span style={{ color: C.accent }}>·</span> SERIOUS
+        <div style={{ marginBottom: '40px' }}>
+          <ValueSkinsLogo theme="light" size={32} />
         </div>
 
         <h1 style={{ fontSize: '48px', fontWeight: 800, color: C.text, margin: '0 0 20px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
