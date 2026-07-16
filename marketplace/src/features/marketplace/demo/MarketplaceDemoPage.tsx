@@ -2066,6 +2066,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
     }
   };
 
+  // TEST PAYMENT CODE (DISABLED) - Re-enable with purchaseProfession if needed
+  /*
   const startRazorpayPayment = async (profession: string) => {
     try {
       await ensureRazorpayLoaded();
@@ -2132,6 +2134,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       setTimeout(() => setPurchaseToast(null), 3000);
     }
   };
+  */
 
   const purchaseProfession = (profession: string) => {
     if (marketplaceRole === 'brand') {
@@ -2151,7 +2154,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
       setTimeout(() => setPurchaseToast(null), 3000);
       return;
     }
-    startRazorpayPayment(profession);
+    // Directly assign ValueSkin without payment (test payment code is commented out above)
+    assignSkinAfterPayment(profession);
   };
 
   const handleDealComplete = (earnedAmount: number, brandName: string, deliverable: string, skinProfession?: string, usageRightsDays?: number, exclusivityDays?: number, exclusivitySkin?: string) => {
