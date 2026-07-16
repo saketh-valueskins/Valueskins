@@ -33,6 +33,14 @@ interface BrandProfileData {
   availability: string;
   response_time: string;
   verified: boolean;
+  // Work History (auto-fetched from completed ValueSkins deals)
+  completed_deals: Array<{
+    id: string;
+    deal_title: string;
+    creator_name: string;
+    completion_date: string;
+    pdf_url: string;
+  }>;
 }
 
 const initialData: BrandProfileData = {
@@ -51,9 +59,10 @@ const initialData: BrandProfileData = {
   availability: 'available',
   response_time: '24',
   verified: false,
+  completed_deals: [],
 };
 
-type EditSection = null | 'identity' | 'social' | 'pitch' | 'marketplace';
+type EditSection = null | 'identity' | 'social' | 'pitch' | 'portfolio' | 'marketplace';
 
 export default function BrandProfile() {
   const router = useRouter();
@@ -125,12 +134,21 @@ export default function BrandProfile() {
     );
   }
 
-  const missingFields = [
+  // Essential fields (required to use the platform)
+  const essentialFields = [
     { label: 'Brand name', done: !!profile.display_name },
     { label: 'Bio', done: !!profile.bio },
     { label: 'Location', done: !!profile.location },
+  ];
+
+  const essentialMissing = essentialFields.filter((f) => !f.done).map((f) => f.label);
+
+  // Optional fields (nice to have, shown as warnings)
+  const optionalFields = [
     { label: 'About this brand', done: !!profile.pitch_text },
-  ].filter((f) => !f.done).map((f) => f.label);
+  ];
+
+  const optionalMissing = optionalFields.filter((f) => !f.done).map((f) => f.label);
 
   return (
     <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${C.bg} 0%, #111827 100%)`, color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '20px' }}>
@@ -154,18 +172,34 @@ export default function BrandProfile() {
 
           {profile.verified && <div style={{ padding: '10px 16px', background: `${C.success}20`, border: `1px solid ${C.success}`, borderRadius: '8px', color: C.success, fontSize: '13px', fontWeight: 600, display: 'inline-block', marginBottom: '16px' }}>Verified</div>}
 
-          {missingFields.length > 0 ? (
+          {/* Essential fields missing - blocks access */}
+          {essentialMissing.length > 0 && (
+            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${C.danger}20`, border: `1px solid ${C.danger}`, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '13px', color: C.danger, fontWeight: 600 }}>Complete these to get started:</span>
+              {essentialMissing.map((label) => (
+                <span key={label} style={{ fontSize: '12px', color: C.danger, background: `${C.danger}22`, border: `1px solid ${C.danger}55`, borderRadius: '20px', padding: '3px 10px', fontWeight: 500 }}>
+                  {label}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Optional fields missing - just a warning */}
+          {essentialMissing.length === 0 && optionalMissing.length > 0 && (
             <div style={{ marginTop: '16px', padding: '12px 16px', background: `${C.warning}14`, border: `1px solid ${C.warning}`, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '13px', color: C.warning, fontWeight: 600 }}>Still missing:</span>
-              {missingFields.map((label) => (
+              <span style={{ fontSize: '13px', color: C.warning, fontWeight: 600 }}>Optional - helps attract creators:</span>
+              {optionalMissing.map((label) => (
                 <span key={label} style={{ fontSize: '12px', color: C.warning, background: `${C.warning}22`, border: `1px solid ${C.warning}55`, borderRadius: '20px', padding: '3px 10px', fontWeight: 500 }}>
                   {label}
                 </span>
               ))}
             </div>
-          ) : (
+          )}
+
+          {/* All done */}
+          {essentialMissing.length === 0 && optionalMissing.length === 0 && (
             <div style={{ marginTop: '16px', padding: '12px 16px', background: `${C.success}14`, border: `1px solid ${C.success}`, borderRadius: '8px', fontSize: '13px', color: C.success, fontWeight: 600 }}>
-              Your profile is complete. Nothing left to add.
+              Your profile is complete!
             </div>
           )}
         </div>
@@ -247,6 +281,43 @@ export default function BrandProfile() {
               </div>
               <SaveButton onClick={handleSave} loading={saving} />
             </form>
+          )}
+        </Section>
+
+        {/* Work History Section (auto-fetched from completed ValueSkins deals) */}
+        <Section title="Work History" isOpen={editing === 'portfolio'} onToggle={() => setEditing(editing === 'portfolio' ? null : 'portfolio')} canEdit={false}>
+          {profile.completed_deals.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+              {profile.completed_deals.map((deal) => (
+                <div key={deal.id} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px' }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{deal.deal_title}</div>
+                    <div style={{ fontSize: '12px', color: C.textMuted }}>with {deal.creator_name}</div>
+                  </div>
+                  <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '12px' }}>
+                    Completed: {new Date(deal.completion_date).toLocaleDateString()}
+                  </div>
+                  {deal.pdf_url && (
+                    <a href={deal.pdf_url} download style={{
+                      display: 'inline-block',
+                      padding: '8px 12px',
+                      background: C.primary,
+                      color: '#000',
+                      borderRadius: '6px',
+                      textDecoration: 'none',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                    }}>
+                      📥 Download PDF
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: C.textMuted, fontSize: '14px' }}>
+              No completed deals yet. Your work history will appear here after you complete your first ValueSkins deal.
+            </div>
           )}
         </Section>
 
