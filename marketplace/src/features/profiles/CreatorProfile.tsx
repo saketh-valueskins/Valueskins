@@ -182,16 +182,16 @@ export default function CreatorProfile() {
     );
   }
 
-  const completionPercentage = Math.round(
-    ((profile.display_name ? 1 : 0) +
-      (profile.bio ? 1 : 0) +
-      (profile.location ? 1 : 0) +
-      (profile.instagram || profile.tiktok ? 1 : 0) +
-      (profile.pitch_text || profile.pitch_video_url ? 1 : 0) +
-      (profile.portfolio_items.length > 0 ? 1 : 0)) /
-      6 *
-      100
-  );
+  // Derive what's still missing from the live profile data (nothing hardcoded).
+  // Each entry checks a real field the user can fill in through the sections below.
+  const missingFields = [
+    { label: 'Name', done: !!profile.display_name },
+    { label: 'Bio', done: !!profile.bio },
+    { label: 'Location', done: !!profile.location },
+    { label: 'A social handle', done: !!(profile.instagram || profile.tiktok || profile.youtube || profile.twitter || profile.linkedin) },
+    { label: 'Your pitch', done: !!(profile.pitch_text || profile.pitch_video_url) },
+    { label: 'A portfolio item', done: profile.portfolio_items.length > 0 },
+  ].filter((f) => !f.done).map((f) => f.label);
 
   const TrustBadge = ({ score }: { score: number }) => {
     const tier = score >= 90 ? 'Trusted Pro' : score >= 75 ? 'Reliable' : score >= 60 ? 'Growing' : 'New';
@@ -226,11 +226,24 @@ export default function CreatorProfile() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
             <TrustBadge score={profile.trust_score} />
-            <div style={{ padding: '10px 16px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: '8px', fontSize: '13px' }}>
-              Completion: <strong>{completionPercentage}%</strong>
-            </div>
             {profile.verified && <div style={{ padding: '10px 16px', background: `${C.success}20`, border: `1px solid ${C.success}`, borderRadius: '8px', color: C.success, fontSize: '13px', fontWeight: 600 }}>Verified</div>}
           </div>
+
+          {/* What's missing bar */}
+          {missingFields.length > 0 ? (
+            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${C.warning}14`, border: `1px solid ${C.warning}`, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '13px', color: C.warning, fontWeight: 600 }}>Still missing:</span>
+              {missingFields.map((label) => (
+                <span key={label} style={{ fontSize: '12px', color: C.warning, background: `${C.warning}22`, border: `1px solid ${C.warning}55`, borderRadius: '20px', padding: '3px 10px', fontWeight: 500 }}>
+                  {label}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${C.success}14`, border: `1px solid ${C.success}`, borderRadius: '8px', fontSize: '13px', color: C.success, fontWeight: 600 }}>
+              Your profile is complete. Nothing left to add.
+            </div>
+          )}
         </div>
 
         {/* Email (Account) */}
