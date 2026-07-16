@@ -17,9 +17,6 @@ const C = {
 };
 
 interface CreatorProfileData {
-  // Account
-  email?: string;
-
   // Identity
   display_name: string;
   username: string;
@@ -119,7 +116,6 @@ export default function CreatorProfile() {
       // Initialize with account email and name
       setProfile(prev => ({
         ...prev,
-        email: account.email || undefined,
         display_name: account.display_name || prev.display_name
       }));
       fetchProfile();
@@ -244,12 +240,6 @@ export default function CreatorProfile() {
               Your profile is complete. Nothing left to add.
             </div>
           )}
-        </div>
-
-        {/* Email (Account) */}
-        <div style={{ padding: '16px', background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, marginBottom: '20px' }}>
-          <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Email</div>
-          <div style={{ fontSize: '16px', fontWeight: 600 }}>{profile.email || 'Not set'}</div>
         </div>
 
         {/* Identity Section */}

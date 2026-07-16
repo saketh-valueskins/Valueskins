@@ -17,7 +17,6 @@ const C = {
 };
 
 interface BrandProfileData {
-  email?: string;
   display_name: string;
   username: string;
   bio: string;
@@ -131,7 +130,6 @@ export default function BrandProfile() {
     if (account) {
       setProfile(prev => ({
         ...prev,
-        email: account.email || undefined,
         display_name: account.display_name || prev.display_name
       }));
       fetchProfile();
@@ -237,11 +235,6 @@ export default function BrandProfile() {
               Your profile is complete. Nothing left to add.
             </div>
           )}
-        </div>
-
-        <div style={{ padding: '16px', background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, marginBottom: '20px' }}>
-          <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Email</div>
-          <div style={{ fontSize: '16px', fontWeight: 600 }}>{profile.email || 'Not set'}</div>
         </div>
 
         <Section title="Identity" isOpen={editing === 'identity'} onToggle={() => setEditing(editing === 'identity' ? null : 'identity')}>
