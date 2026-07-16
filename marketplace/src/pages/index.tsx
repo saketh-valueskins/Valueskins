@@ -131,18 +131,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Pricing */}
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 24px 60px' }}>
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '16px', padding: '40px', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: 700, color: C.text, margin: '0 0 12px' }}>Simple Pricing</h2>
-          <p style={{ fontSize: '16px', color: C.textSecondary, margin: '0 0 24px' }}>
-            No subscription. No upfront fees. We only charge when deals complete.
-          </p>
-          <div style={{ fontSize: '48px', fontWeight: 800, color: C.text, margin: '0 0 8px' }}>2%</div>
-          <p style={{ fontSize: '14px', color: C.textSecondary, margin: 0 }}>platform fee on completed transactions</p>
-        </div>
-      </div>
-
       {/* CTA */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 24px 80px', textAlign: 'center' }}>
         <h2 style={{ fontSize: '28px', fontWeight: 700, color: C.text, margin: '0 0 16px' }}>Ready to get started?</h2>
