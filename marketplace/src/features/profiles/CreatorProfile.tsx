@@ -34,7 +34,7 @@ interface CreatorProfileData {
   pitch_video_url: string;
   pitch_text: string;
 
-  // Portfolio
+  // Work History
   portfolio_items: Array<{
     id: string;
     title: string;
@@ -169,7 +169,7 @@ export default function CreatorProfile() {
     { label: 'Bio', done: !!profile.bio },
     { label: 'Location', done: !!profile.location },
     { label: 'Your pitch', done: !!(profile.pitch_text || profile.pitch_video_url) },
-    { label: 'A portfolio item', done: profile.portfolio_items.length > 0 },
+    { label: 'Work history item', done: profile.portfolio_items.length > 0 },
   ].filter((f) => !f.done).map((f) => f.label);
 
   const TrustBadge = ({ score }: { score: number }) => {
