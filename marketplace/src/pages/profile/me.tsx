@@ -1,6 +1,7 @@
 'use client';
 import { useAuth } from '@/context/AuthContext';
 import CreatorProfile from '@/features/profiles/CreatorProfile';
+import BrandProfile from '@/features/profiles/BrandProfile';
 
 export default function ProfileMePage() {
   const { account, loading } = useAuth();
@@ -23,7 +24,7 @@ export default function ProfileMePage() {
   }
 
   if (isBrand) {
-    return <div>Brand Profile Coming Soon</div>;
+    return <BrandProfile />;
   }
 
   return (
