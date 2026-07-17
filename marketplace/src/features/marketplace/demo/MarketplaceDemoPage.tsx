@@ -1281,14 +1281,25 @@ export default function MarketplaceDemoPage(initialDealData?: {
   }, [fetchAllCreators, forceRefreshCampaigns]);
 
   // Merge Firebase campaigns into local state (cross-device sync)
+  // Updates existing campaigns and adds new ones for real-time visibility
   useEffect(() => {
     if (firebaseState.campaigns.length > 0) {
       setCampaigns(prev => {
-        const localIds = new Set(prev.map(c => c.id));
         const fbCampaigns = firebaseState.campaigns as Campaign[];
-        const newOnes = fbCampaigns.filter(c => !localIds.has(c.id));
-        if (newOnes.length === 0) return prev;
-        return [...prev, ...newOnes];
+        const localMap = new Map(prev.map(c => [c.id, c]));
+
+        // Update existing or add new campaigns
+        let hasChanges = false;
+        fbCampaigns.forEach(fbCampaign => {
+          const localCampaign = localMap.get(fbCampaign.id);
+          if (!localCampaign || JSON.stringify(localCampaign) !== JSON.stringify(fbCampaign)) {
+            localMap.set(fbCampaign.id, fbCampaign);
+            hasChanges = true;
+          }
+        });
+
+        if (!hasChanges) return prev;
+        return Array.from(localMap.values());
       });
     }
   }, [firebaseState.campaigns, setCampaigns]);
@@ -2334,9 +2345,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
   // Check if creator matches campaign requirements
   const creatorMatchesCampaignRequirements = (campaign: Campaign, creatorProfession: string, creatorData?: any): boolean => {
-    // Must have matching profession
+    // ONLY hard-block on profession. All other preferences are soft-blocks (show warning instead)
     if (!campaign.requiredProfessions.includes(creatorProfession)) {
-      // Try partial match
+      // Try partial match on profession
       const skinLower = creatorProfession.toLowerCase();
       const match = campaign.requiredProfessions.some(r => {
         const rLower = r.toLowerCase();
@@ -2351,44 +2362,35 @@ export default function MarketplaceDemoPage(initialDealData?: {
       if (!match) return false;
     }
 
-    // If creator data provided, check other requirements
-    if (creatorData) {
-      // Country: HARD GATE — must match if campaign has a country set
-      if (campaign.country) {
-        const creatorCountry = creatorData.country || creatorData.audienceLocation || '';
-        if (creatorCountry && campaign.country.toLowerCase().trim() !== creatorCountry.toLowerCase().trim()) {
-          return false;
-        }
-      }
+    // REMOVED: Hard-blocks on country, location, age, language
+    // All creators matching the profession can see the campaign
+    // Preference mismatches show a warning but allow application
 
-      // Location: must match if campaign specifies a non-remote location
-      if (campaign.location && campaign.location.trim().toLowerCase() !== 'remote') {
-        const campaignLoc = campaign.location.toLowerCase().trim();
-        const creatorLoc = creatorData.audienceLocation?.toLowerCase().trim() || '';
-        if (creatorLoc && !creatorLoc.includes(campaignLoc) && campaignLoc !== creatorLoc) {
-          return false;
-        }
-      }
+    return true;
+  };
 
-      // Age range: must overlap
-      if (campaign.requirements?.some(r => r.toLowerCase().includes('age') || r.toLowerCase().includes('25-34'))) {
-        const creatorAge = creatorData.audienceAgeRange || '';
-        const ageMatch = campaign.requirements?.some(r => {
-          const lower = r.toLowerCase();
-          return lower.includes(creatorAge.toLowerCase()) || creatorAge.toLowerCase().includes(lower.split(' ')[0]);
-        });
-        if (!ageMatch && campaign.requirements?.some(r => /\d+-\d+/.test(r))) return false;
-      }
+  // Helper: Check if campaign matches creator's preferences (used for warning badge)
+  const campaignMatchesCreatorPreferences = (campaign: Campaign, creatorData?: any): { matches: boolean; reason?: string } => {
+    if (!creatorData) return { matches: true };
 
-      // Language: must match if specified
-      if (campaign.requirements?.some(r => r.toLowerCase().includes('language') || r.toLowerCase().includes('english'))) {
-        const creatorLang = creatorData.audienceLang || '';
-        const langMatch = campaign.requirements?.some(r => creatorLang.toLowerCase().includes(r.toLowerCase().split(/\s+/)[0]));
-        if (!langMatch && campaign.requirements?.some(r => /language|english|spanish/i.test(r))) return false;
+    // Check country match
+    if (campaign.country) {
+      const creatorCountry = creatorData.country || creatorData.audienceLocation || '';
+      if (creatorCountry && campaign.country.toLowerCase().trim() !== creatorCountry.toLowerCase().trim()) {
+        return { matches: false, reason: `This brand is in ${campaign.country}, but your preferences are set to ${creatorCountry}` };
       }
     }
 
-    return true;
+    // Check location match
+    if (campaign.location && campaign.location.trim().toLowerCase() !== 'remote') {
+      const campaignLoc = campaign.location.toLowerCase().trim();
+      const creatorLoc = creatorData.audienceLocation?.toLowerCase().trim() || '';
+      if (creatorLoc && !creatorLoc.includes(campaignLoc) && campaignLoc !== creatorLoc) {
+        return { matches: false, reason: `Campaign requires ${campaign.location}, but your preferences are set to ${creatorData.audienceLocation}` };
+      }
+    }
+
+    return { matches: true };
   };
 
   // Opportunities for the currently selected skin — sorted by match % descending
