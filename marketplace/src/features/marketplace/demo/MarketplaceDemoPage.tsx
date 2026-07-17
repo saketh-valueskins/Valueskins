@@ -1256,16 +1256,27 @@ export default function MarketplaceDemoPage(initialDealData?: {
           body: JSON.stringify({ value: { campaigns } }),
         });
       }
-      // 2. Pull latest from shared DB (merge, don't replace)
+      // 2. Pull latest from shared DB (update in-place, don't append-only)
       const res = await fetch('/api/realtime/state');
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.campaigns)) {
           setCampaigns(prev => {
-            const localIds = new Set(prev.map(c => c.id));
-            const newOnes = (data.campaigns as Campaign[]).filter(c => !localIds.has(c.id));
-            if (newOnes.length === 0) return prev;
-            return [...prev, ...newOnes];
+            const dbCampaigns = data.campaigns as Campaign[];
+            const localMap = new Map(prev.map(c => [c.id, c]));
+
+            // Update existing or add new campaigns
+            let hasChanges = false;
+            dbCampaigns.forEach(dbCampaign => {
+              const localCampaign = localMap.get(dbCampaign.id);
+              if (!localCampaign || JSON.stringify(localCampaign) !== JSON.stringify(dbCampaign)) {
+                localMap.set(dbCampaign.id, dbCampaign);
+                hasChanges = true;
+              }
+            });
+
+            if (!hasChanges) return prev;
+            return Array.from(localMap.values());
           });
         }
       }
