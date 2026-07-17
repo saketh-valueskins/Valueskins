@@ -5816,23 +5816,31 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>
                             Active Campaigns ({activeCampaigns.length})
                           </div>
-                          {activeCampaigns.map((c, i) => (
-                            <div key={i} style={{ padding:'12px 0', borderTop:i>0?`1px solid ${C.border}`:'none' }}>
-                              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'6px', flexWrap:'wrap', gap:'4px' }}>
-                                <span style={{ fontSize:'13px', fontWeight:700, color:C.text }}>{c.title}</span>
-                                <span style={{ fontSize:'12px', fontWeight:700, color:C.success }}>₹{parseInt(c.budget||'0').toLocaleString()}</span>
+                          {activeCampaigns.map((c, i) => {
+                            const preferenceMatch = campaignMatchesCreatorPreferences(c, creatorData);
+                            return (
+                              <div key={i} style={{ padding:'12px 0', borderTop:i>0?`1px solid ${C.border}`:'none' }}>
+                                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'6px', flexWrap:'wrap', gap:'4px' }}>
+                                  <span style={{ fontSize:'13px', fontWeight:700, color:C.text }}>{c.title}</span>
+                                  <span style={{ fontSize:'12px', fontWeight:700, color:C.success }}>₹{parseInt(c.budget||'0').toLocaleString()}</span>
+                                </div>
+                                {c.brandName && <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'4px' }}>by {c.brandName}</div>}
+                                <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px', lineHeight:1.4 }}>{c.description}</div>
+                                <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'8px' }}>
+                                  {c.requiredProfessions.map(p => <span key={p} style={{ fontSize:'10px', fontWeight:600, color:C.primary, background:`${C.primary}12`, padding:'2px 7px', borderRadius:'6px', border:`1px solid ${C.primary}30` }}>{p}</span>)}
+                                </div>
+                                {!preferenceMatch.matches && preferenceMatch.reason && (
+                                  <div style={{ fontSize:'10px', color:'#F59E0B', background:'rgba(245, 158, 11, 0.12)', border:'1px solid rgba(245, 158, 11, 0.3)', padding:'6px 8px', borderRadius:'6px', marginBottom:'8px' }}>
+                                    ⚠️ {preferenceMatch.reason} but you can still apply if you want.
+                                  </div>
+                                )}
+                                <div style={{ display:'flex', gap:'12px', flexWrap:'wrap', fontSize:'10px', color:C.textMuted }}>
+                                  <span>Escrow: {c.escrowFunded ? '✓ Funded' : 'Pending'}</span>
+                                  {c.deadline && <span>{c.deadline}</span>}
+                                </div>
                               </div>
-                              {c.brandName && <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'4px' }}>by {c.brandName}</div>}
-                              <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px', lineHeight:1.4 }}>{c.description}</div>
-                              <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'8px' }}>
-                                {c.requiredProfessions.map(p => <span key={p} style={{ fontSize:'10px', fontWeight:600, color:C.primary, background:`${C.primary}12`, padding:'2px 7px', borderRadius:'6px', border:`1px solid ${C.primary}30` }}>{p}</span>)}
-                              </div>
-                              <div style={{ display:'flex', gap:'12px', flexWrap:'wrap', fontSize:'10px', color:C.textMuted }}>
-                                <span>Escrow: {c.escrowFunded ? '✓ Funded' : 'Pending'}</span>
-                                {c.deadline && <span>{c.deadline}</span>}
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : null;
                     })()}
