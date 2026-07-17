@@ -5524,7 +5524,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 setEscrowFundingInProgress2(false);
                                 setShowEscrowFundingModal(false);
                                 setCampaignsSectionOpen(true);
-                                setPurchaseToast(`Escrow funded — $${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured. Platform found ${liveMatches.length} matching creator${liveMatches.length !== 1 ? 's' : ''}.`);
+                                setPurchaseToast(`Escrow funded — $${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured.`);
                                 setTimeout(() => setPurchaseToast(null), 4000);
                               }, 2000);
                             }}
@@ -5805,6 +5805,35 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         </div>
                       )
                     )}
+
+                    {/* Active Campaigns — campaigns with status 'open' */}
+                    {(() => {
+                      const activeCampaigns = liveCampaigns.filter(c => c.status === 'open');
+                      return activeCampaigns.length > 0 ? (
+                        <div style={{ background:C.card, borderRadius:'12px', padding:'14px', marginBottom:'14px', border:`1px solid ${C.border}` }}>
+                          <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>
+                            Active Campaigns ({activeCampaigns.length})
+                          </div>
+                          {activeCampaigns.map((c, i) => (
+                            <div key={i} style={{ padding:'12px 0', borderTop:i>0?`1px solid ${C.border}`:'none' }}>
+                              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'6px', flexWrap:'wrap', gap:'4px' }}>
+                                <span style={{ fontSize:'13px', fontWeight:700, color:C.text }}>{c.title}</span>
+                                <span style={{ fontSize:'12px', fontWeight:700, color:C.success }}>₹{parseInt(c.budget||'0').toLocaleString()}</span>
+                              </div>
+                              {c.brandName && <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'4px' }}>by {c.brandName}</div>}
+                              <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px', lineHeight:1.4 }}>{c.description}</div>
+                              <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'8px' }}>
+                                {c.requiredProfessions.map(p => <span key={p} style={{ fontSize:'10px', fontWeight:600, color:C.primary, background:`${C.primary}12`, padding:'2px 7px', borderRadius:'6px', border:`1px solid ${C.primary}30` }}>{p}</span>)}
+                              </div>
+                              <div style={{ display:'flex', gap:'12px', flexWrap:'wrap', fontSize:'10px', color:C.textMuted }}>
+                                <span>Escrow: {c.escrowFunded ? '✓ Funded' : 'Pending'}</span>
+                                {c.deadline && <span>{c.deadline}</span>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null;
+                    })()}
 
                     {/* Brand Past Deals — computed from dealStates */}
                     {(() => {
