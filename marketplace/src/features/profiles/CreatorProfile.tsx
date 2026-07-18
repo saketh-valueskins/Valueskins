@@ -1,8 +1,14 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { getCurrencySymbol } from '@/lib/currency';
+
+// Creator Profile Preferences — per ui-specs/Creator Profile Preferences.md.
+// Tabbed editor (was accordion), live completion bar, reputation read-only,
+// near-black Save (no gold), sand accents (no green/orange/red). All existing
+// features + API calls preserved.
+const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
 const C = {
   bg: '#0A0A0A',
@@ -11,14 +17,15 @@ const C = {
   text: '#F5F5F0',
   textMuted: '#B8B4AC',
   primary: '#C8B89A',
-  success: '#10b981',
-  warning: '#f59e0b',
-  danger: '#ef4444',
+  sand: '#C8B89A',
+  deepSand: '#A08A5E',
+  success: '#C8B89A', // was green — sand (G3)
+  warning: '#B8B4AC', // was orange — neutral muted (G3)
+  danger: '#B0413E', // was bright red — restrained brick (G3)
   border: '#2D2D2D',
 };
 
 interface CreatorProfileData {
-  // Identity
   display_name: string;
   username: string;
   bio: string;
@@ -26,15 +33,9 @@ interface CreatorProfileData {
   country: string;
   languages: string[];
   niche: string;
-
-  // Social Capital
   followers_count: number;
-
-  // Pitch System
   pitch_video_url: string;
   pitch_text: string;
-
-  // Work History (auto-fetched from completed ValueSkins deals)
   completed_deals: Array<{
     id: string;
     deal_title: string;
@@ -42,15 +43,11 @@ interface CreatorProfileData {
     completion_date: string;
     pdf_url: string;
   }>;
-
-  // Marketplace
   open_for_work: boolean;
   min_deal_value: number;
   preferred_deal_types: string[];
   availability: string;
   response_time: string;
-
-  // Reputation (read-only from backend)
   trust_score: number;
   completion_rate: number;
   repeat_client_rate: number;
@@ -82,32 +79,28 @@ const initialData: CreatorProfileData = {
   verified: false,
 };
 
-type EditSection = null | 'identity' | 'social' | 'pitch' | 'portfolio' | 'marketplace' | 'reputation';
+type Tab = 'identity' | 'social' | 'pitch' | 'marketplace';
 
 export default function CreatorProfile() {
   const router = useRouter();
   const { account } = useAuth();
   const [profile, setProfile] = useState<CreatorProfileData>(initialData);
-  const [editing, setEditing] = useState<EditSection>(null);
+  const [tab, setTab] = useState<Tab>('identity');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [currencySymbol, setCurrencySymbol] = useState('$');
 
-  // Check if user has ValueSkins or is a brand
-  const hasValueSkins = account?.modules?.some(m => m.code === 'valueskin' && m.is_active) || false;
-  const isBrand = account?.modules?.some(m => m.code === 'brand' && m.is_active) || false;
+  const hasValueSkins = account?.modules?.some((m) => m.code === 'valueskin' && m.is_active) || false;
+  const isBrand = account?.modules?.some((m) => m.code === 'brand' && m.is_active) || false;
   const showMarketplaceSettings = hasValueSkins || isBrand;
 
   useEffect(() => {
     if (account) {
-      setProfile(prev => ({
-        ...prev,
-        display_name: account.display_name || prev.display_name
-      }));
+      setProfile((prev) => ({ ...prev, display_name: account.display_name || prev.display_name }));
       fetchProfile();
     }
-    // Get currency symbol from IP
-    getCurrencySymbol().then(sym => setCurrencySymbol(sym));
+    getCurrencySymbol().then((sym) => setCurrencySymbol(sym));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account]);
 
   const fetchProfile = async () => {
@@ -115,12 +108,7 @@ export default function CreatorProfile() {
       const res = await fetch('/api/profile/creator', { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        // Map DB column names back to frontend field names
-        const mapped = {
-          ...initialData,
-          ...data,
-        };
-        setProfile(mapped);
+        setProfile({ ...initialData, ...data });
       }
     } catch (err) {
       console.error('Failed to fetch profile:', err);
@@ -136,15 +124,12 @@ export default function CreatorProfile() {
         credentials: 'include',
         body: JSON.stringify(profile),
       });
-
       if (!res.ok) {
         const data = await res.json();
         setMessage(data.error || 'Failed to save');
         return;
       }
-
-      setMessage('Profile saved successfully');
-      setEditing(null);
+      setMessage('Saved');
       setTimeout(() => setMessage(''), 2000);
     } catch (err: any) {
       setMessage(err.message || 'Error saving profile');
@@ -153,361 +138,266 @@ export default function CreatorProfile() {
     }
   };
 
+  // Live completion (spec §2) — replaces the New·0% / 33% chips.
+  const completion = useMemo(() => {
+    const checks = [
+      !!profile.display_name,
+      !!profile.username,
+      !!profile.bio,
+      !!profile.location,
+      !!profile.niche,
+      profile.followers_count > 0,
+      !!(profile.pitch_text || profile.pitch_video_url),
+      profile.min_deal_value > 0,
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [profile]);
+
   if (!account) {
     return (
-      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
+      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text, fontFamily: FONT }}>
         <div>Loading...</div>
       </div>
     );
   }
 
-  // Essential fields (required to use the platform)
-  const essentialFields = [
-    { label: 'Name', done: !!profile.display_name },
-    { label: 'Bio', done: !!profile.bio },
-    { label: 'Location', done: !!profile.location },
-  ];
-
-  const essentialMissing = essentialFields.filter((f) => !f.done).map((f) => f.label);
-
-  // Optional fields (nice to have, shown as warnings)
-  const optionalFields = [
-    { label: 'Your pitch', done: !!(profile.pitch_text || profile.pitch_video_url) },
-  ];
-
-  const optionalMissing = optionalFields.filter((f) => !f.done).map((f) => f.label);
-
-  const TrustBadge = ({ score }: { score: number }) => {
-    const tier = score >= 90 ? 'Trusted Pro' : score >= 75 ? 'Reliable' : score >= 60 ? 'Growing' : 'New';
-    const color = score >= 90 ? C.success : score >= 75 ? C.primary : score >= 60 ? C.warning : C.textMuted;
-    return (
-      <div style={{ display: 'inline-block', padding: '6px 12px', borderRadius: '20px', background: `${color}20`, border: `1px solid ${color}`, color, fontSize: '12px', fontWeight: 600 }}>
-        {tier} • {score}%
-      </div>
-    );
-  };
+  const tabs = ([
+    { id: 'identity', label: 'Identity', show: true },
+    { id: 'social', label: 'Social Capital', show: showMarketplaceSettings },
+    { id: 'pitch', label: 'Pitch', show: showMarketplaceSettings },
+    { id: 'marketplace', label: 'Marketplace', show: showMarketplaceSettings },
+  ] as { id: Tab; label: string; show: boolean }[]).filter((t) => t.show);
 
   return (
-    <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${C.bg} 0%, #111827 100%)`, color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '20px' }}>
+    <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${C.bg} 0%, #161512 100%)`, color: C.text, fontFamily: FONT, padding: '20px' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        {message && (
-          <div style={{ padding: '12px 16px', background: message.includes('success') ? `${C.success}20` : `${C.danger}20`, border: `1px solid ${message.includes('success') ? C.success : C.danger}`, borderRadius: '8px', color: message.includes('success') ? C.success : C.danger, marginBottom: '20px', fontSize: '14px' }}>
-            {message}
-          </div>
-        )}
-
-        {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
+        {/* Sticky header + completion bar (spec §2) */}
+        <div style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-            <h1 style={{ fontSize: '32px', fontWeight: 800, margin: 0 }}>Creator Profile</h1>
+            <div>
+              <h1 style={{ fontSize: '2rem', fontWeight: 700, margin: 0 }}>Creator Profile Preferences</h1>
+              {message && <span style={{ fontSize: '0.8125rem', color: message === 'Saved' ? C.sand : C.danger }}>{message}</span>}
+            </div>
             <button
-              onClick={() => router.push('/')}
-              style={{ padding: '10px 20px', background: 'transparent', color: C.primary, border: `1px solid ${C.primary}`, borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+              onClick={() => router.push('/profile/me')}
+              style={{ padding: '10px 20px', background: 'transparent', color: C.text, border: `1px solid rgba(160,138,94,0.35)`, borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}
             >
-              Back
+              Back to profile
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
-            <TrustBadge score={profile.trust_score} />
-            {profile.verified && <div style={{ padding: '10px 16px', background: `${C.success}20`, border: `1px solid ${C.success}`, borderRadius: '8px', color: C.success, fontSize: '13px', fontWeight: 600 }}>Verified</div>}
+          {/* Completion bar */}
+          <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', color: C.textMuted }}>
+            <span>Profile completion</span>
+            <span>{completion}%</span>
           </div>
-
-          {/* Essential fields missing - blocks access */}
-          {essentialMissing.length > 0 && (
-            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${C.danger}20`, border: `1px solid ${C.danger}`, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '13px', color: C.danger, fontWeight: 600 }}>Complete these to get started:</span>
-              {essentialMissing.map((label) => (
-                <span key={label} style={{ fontSize: '12px', color: C.danger, background: `${C.danger}22`, border: `1px solid ${C.danger}55`, borderRadius: '20px', padding: '3px 10px', fontWeight: 500 }}>
-                  {label}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Optional fields missing - just a warning */}
-          {essentialMissing.length === 0 && optionalMissing.length > 0 && (
-            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${C.warning}14`, border: `1px solid ${C.warning}`, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '13px', color: C.warning, fontWeight: 600 }}>Optional - helps attract brands:</span>
-              {optionalMissing.map((label) => (
-                <span key={label} style={{ fontSize: '12px', color: C.warning, background: `${C.warning}22`, border: `1px solid ${C.warning}55`, borderRadius: '20px', padding: '3px 10px', fontWeight: 500 }}>
-                  {label}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* All done */}
-          {essentialMissing.length === 0 && optionalMissing.length === 0 && (
-            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${C.success}14`, border: `1px solid ${C.success}`, borderRadius: '8px', fontSize: '13px', color: C.success, fontWeight: 600 }}>
-              Your profile is complete!
-            </div>
-          )}
+          <div style={{ height: '6px', background: 'rgba(160,138,94,0.18)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ width: `${completion}%`, height: '100%', background: C.sand, transition: 'width 0.4s cubic-bezier(0.16,1,0.3,1)' }} />
+          </div>
         </div>
 
-        {/* Identity Section */}
-        <Section title="Identity" isOpen={editing === 'identity'} onToggle={() => setEditing(editing === 'identity' ? null : 'identity')}>
-          {editing !== 'identity' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-              <div>
-                <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Name</div>
-                <div style={{ fontSize: '16px', fontWeight: 600 }}>{profile.display_name || 'Not set'}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Username</div>
-                <div style={{ fontSize: '16px', fontWeight: 600 }}>@{profile.username || 'Not set'}</div>
-              </div>
-              {showMarketplaceSettings && (
-                <>
-                  <div>
-                    <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Niche</div>
-                    <div style={{ fontSize: '16px', fontWeight: 600 }}>{profile.niche || 'Not specified'}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Location</div>
-                    <div style={{ fontSize: '16px', fontWeight: 600 }}>{profile.location ? `${profile.location}, ${profile.country}` : 'Not set'}</div>
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
+        {/* Segmented tabs with sliding sand indicator (spec §2) */}
+        <div style={{ display: 'flex', gap: '4px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '4px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                flex: '1 1 auto',
+                padding: '10px 16px',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: FONT,
+                fontSize: '0.875rem',
+                fontWeight: tab === t.id ? 600 : 400,
+                background: tab === t.id ? 'rgba(200,184,154,0.14)' : 'transparent',
+                color: tab === t.id ? C.text : C.textMuted,
+                transition: 'background 0.2s, color 0.2s',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '28px', marginBottom: '24px' }}>
+          {tab === 'identity' && (
             <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
-              <InputField label="Display Name" value={profile.display_name} onChange={v => setProfile({ ...profile, display_name: v })} />
-              <InputField label="Username" value={profile.username} onChange={v => setProfile({ ...profile, username: v })} placeholder="no spaces" />
-              <InputField label="Niche (e.g., Tech, Fashion, Fitness)" value={profile.niche} onChange={v => setProfile({ ...profile, niche: v })} />
-              <InputField label="City" value={profile.location} onChange={v => setProfile({ ...profile, location: v })} />
-              <InputField label="Country" value={profile.country} onChange={v => setProfile({ ...profile, country: v })} />
+              <InputField label="Display Name" value={profile.display_name} onChange={(v) => setProfile({ ...profile, display_name: v })} />
+              <InputField label="Username" value={profile.username} onChange={(v) => setProfile({ ...profile, username: v })} placeholder="no spaces" />
+              <InputField label="Niche (e.g., Tech, Fashion, Fitness)" value={profile.niche} onChange={(v) => setProfile({ ...profile, niche: v })} />
+              <InputField label="City" value={profile.location} onChange={(v) => setProfile({ ...profile, location: v })} />
+              <InputField label="Country" value={profile.country} onChange={(v) => setProfile({ ...profile, country: v })} />
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', fontSize: '12px', color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Bio</label>
+                <label style={labelCap}>Bio</label>
                 <textarea
                   value={profile.bio}
-                  onChange={e => setProfile({ ...profile, bio: e.target.value })}
+                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
                   placeholder="Tell brands about yourself, your expertise, and why they should work with you"
-                  style={{ width: '100%', padding: '12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, minHeight: '100px', boxSizing: 'border-box', fontFamily: 'inherit', fontSize: '14px' }}
+                  style={{ ...fieldStyle, minHeight: '100px', fontFamily: FONT }}
                 />
               </div>
               <SaveButton onClick={handleSave} loading={saving} />
             </form>
           )}
-        </Section>
 
-        {/* Followers — only for creators/brands with ValueSkins */}
-        {showMarketplaceSettings && (
-        <Section title="Followers" isOpen={editing === 'social'} onToggle={() => setEditing(editing === 'social' ? null : 'social')}>
-          {editing !== 'social' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
-              <StatBox label="Followers" value={`${(profile.followers_count / 1000).toFixed(1)}K`} />
-            </div>
-          ) : (
+          {tab === 'social' && (
             <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-              <InputField type="number" label="Follower Count" value={String(profile.followers_count)} onChange={v => setProfile({ ...profile, followers_count: parseInt(v) || 0 })} />
+              <InputField type="number" label="Follower Count" value={String(profile.followers_count)} onChange={(v) => setProfile({ ...profile, followers_count: parseInt(v) || 0 })} />
               <SaveButton onClick={handleSave} loading={saving} />
             </form>
           )}
-        </Section>
-        )}
 
-        {/* Pitch Section — only for creators/brands with ValueSkins */}
-        {showMarketplaceSettings && (
-        <Section title="Pitch Link & Text" isOpen={editing === 'pitch'} onToggle={() => setEditing(editing === 'pitch' ? null : 'pitch')}>
-          {editing !== 'pitch' ? (
-            <div>
-              {profile.pitch_video_url && (
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Pitch Video Link</div>
-                  <a href={profile.pitch_video_url} target="_blank" rel="noopener noreferrer" style={{ color: C.primary, textDecoration: 'none', fontSize: '14px', wordBreak: 'break-all' }}>
-                    {profile.pitch_video_url}
-                  </a>
-                </div>
-              )}
-              {profile.pitch_text && (
-                <div>
-                  <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Pitch</div>
-                  <div style={{ fontSize: '14px', lineHeight: '1.6' }}>{profile.pitch_text}</div>
-                </div>
-              )}
-              {!profile.pitch_video_url && !profile.pitch_text && <div style={{ color: C.textMuted }}>No pitch added yet. Add a cloud link (Google Drive, Dropbox, OneDrive) or text explaining why brands should work with you.</div>}
-            </div>
-          ) : (
+          {tab === 'pitch' && (
             <form>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '12px', color: C.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Pitch Video Link</label>
+                <label style={labelCap}>Pitch Video Link</label>
                 <input
                   type="url"
                   placeholder="https://drive.google.com/file/d/... or https://dropbox.com/..."
                   value={profile.pitch_video_url}
-                  onChange={e => setProfile({ ...profile, pitch_video_url: e.target.value })}
-                  style={{ width: '100%', padding: '10px 12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, fontSize: '14px', boxSizing: 'border-box', marginBottom: '8px' }}
+                  onChange={(e) => setProfile({ ...profile, pitch_video_url: e.target.value })}
+                  style={{ ...fieldStyle, marginBottom: '8px' }}
                 />
-                <div style={{ fontSize: '12px', color: C.textMuted }}>Share a link to your pitch video from Google Drive, Dropbox, OneDrive, or similar cloud storage</div>
-                {profile.pitch_video_url && <div style={{ fontSize: '12px', color: C.success, marginTop: '8px' }}>✓ Link added</div>}
+                <div style={{ fontSize: '0.75rem', color: C.textMuted }}>
+                  Share a link to your pitch video from Google Drive, Dropbox, OneDrive, or similar cloud storage
+                </div>
+                {profile.pitch_video_url && <div style={{ fontSize: '0.75rem', color: C.sand, marginTop: '8px' }}>Link added</div>}
               </div>
-
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '12px', color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Pitch Text</label>
+                <label style={labelCap}>Pitch Text</label>
                 <textarea
                   value={profile.pitch_text}
-                  onChange={e => setProfile({ ...profile, pitch_text: e.target.value })}
+                  onChange={(e) => setProfile({ ...profile, pitch_text: e.target.value })}
                   placeholder="Why should brands hire you? What's your unique value?"
-                  style={{ width: '100%', padding: '12px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, minHeight: '80px', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                  style={{ ...fieldStyle, minHeight: '80px', fontFamily: FONT }}
                 />
               </div>
-
               <SaveButton onClick={handleSave} loading={saving} />
             </form>
           )}
-        </Section>
-        )}
 
-        {/* Work History Section (auto-fetched from completed ValueSkins deals) — only for creators/brands with ValueSkins */}
-        {showMarketplaceSettings && (
-        <Section title="Work History" isOpen={editing === 'portfolio'} onToggle={() => setEditing(editing === 'portfolio' ? null : 'portfolio')} canEdit={false}>
-          {profile.completed_deals.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
-              {profile.completed_deals.map((deal) => (
-                <div key={deal.id} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px' }}>
-                  <div style={{ marginBottom: '8px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{deal.deal_title}</div>
-                    <div style={{ fontSize: '12px', color: C.textMuted }}>with {deal.brand_name}</div>
-                  </div>
-                  <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '12px' }}>
-                    Completed: {new Date(deal.completion_date).toLocaleDateString()}
-                  </div>
-                  {deal.pdf_url && (
-                    <a href={deal.pdf_url} download style={{
-                      display: 'inline-block',
-                      padding: '8px 12px',
-                      background: C.primary,
-                      color: '#000',
-                      borderRadius: '6px',
-                      textDecoration: 'none',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                    }}>
-                      📥 Download PDF
-                    </a>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ color: C.textMuted, fontSize: '14px' }}>
-              No completed deals yet. Your work history will appear here after you complete your first ValueSkins deal.
-            </div>
-          )}
-        </Section>
-        )}
-
-        {/* Reputation Section (read-only) — only for creators/brands with ValueSkins */}
-        {showMarketplaceSettings && (
-        <Section title="Reputation & Trust" isOpen={editing === 'reputation'} onToggle={() => setEditing(editing === 'reputation' ? null : 'reputation')} canEdit={false}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
-            <StatBox label="Trust Score" value={`${profile.trust_score}%`} color={profile.trust_score >= 75 ? C.success : C.warning} />
-            <StatBox label="Completion Rate" value={`${profile.completion_rate}%`} color={C.primary} />
-            <StatBox label="Repeat Client Rate" value={`${profile.repeat_client_rate}%`} color={C.success} />
-            <StatBox label="Average Rating" value={`${profile.avg_rating}/5`} color={C.warning} />
-          </div>
-        </Section>
-        )}
-
-        {/* Marketplace Section — only for creators/brands with ValueSkins */}
-        {showMarketplaceSettings && (
-        <Section title="Marketplace & Availability" isOpen={editing === 'marketplace'} onToggle={() => setEditing(editing === 'marketplace' ? null : 'marketplace')}>
-          {editing !== 'marketplace' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-              <div>
-                <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Status</div>
-                <div style={{ fontSize: '16px', fontWeight: 600, color: profile.open_for_work ? C.success : C.danger }}>
-                  {profile.open_for_work ? 'Open for Work' : 'Not Available'}
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Min Deal Value</div>
-                <div style={{ fontSize: '16px', fontWeight: 600 }}>{currencySymbol}{profile.min_deal_value}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px', textTransform: 'uppercase' }}>Response Time</div>
-                <div style={{ fontSize: '16px', fontWeight: 600 }}>{profile.response_time} hours</div>
-              </div>
-            </div>
-          ) : (
+          {tab === 'marketplace' && (
             <form style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input
-                  type="checkbox"
-                  checked={profile.open_for_work}
-                  onChange={e => setProfile({ ...profile, open_for_work: e.target.checked })}
-                />
-                <span style={{ fontSize: '14px' }}>Open for work</span>
+                <input type="checkbox" checked={profile.open_for_work} onChange={(e) => setProfile({ ...profile, open_for_work: e.target.checked })} />
+                <span style={{ fontSize: '0.875rem' }}>Open for work</span>
               </label>
-
-              <InputField type="number" label={`Minimum Deal Value (${currencySymbol})`} value={String(profile.min_deal_value)} onChange={v => setProfile({ ...profile, min_deal_value: parseInt(v) || 500 })} />
-
-              <InputField type="number" label="Typical Response Time (hours)" value={String(profile.response_time)} onChange={v => setProfile({ ...profile, response_time: v })} />
-
+              <InputField type="number" label={`Minimum Deal Value (${currencySymbol})`} value={String(profile.min_deal_value)} onChange={(v) => setProfile({ ...profile, min_deal_value: parseInt(v) || 500 })} />
+              <InputField type="number" label="Typical Response Time (hours)" value={String(profile.response_time)} onChange={(v) => setProfile({ ...profile, response_time: v })} />
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', fontSize: '12px', color: C.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>Preferred Deal Types</label>
+                <label style={labelCap}>Preferred Deal Types</label>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {['paid', 'barter', 'equity', 'ambassador'].map(type => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => {
-                        const updated = profile.preferred_deal_types.includes(type)
-                          ? profile.preferred_deal_types.filter(t => t !== type)
-                          : [...profile.preferred_deal_types, type];
-                        setProfile({ ...profile, preferred_deal_types: updated });
-                      }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '20px',
-                        border: `2px solid ${profile.preferred_deal_types.includes(type) ? C.primary : C.border}`,
-                        background: profile.preferred_deal_types.includes(type) ? `${C.primary}20` : 'transparent',
-                        color: profile.preferred_deal_types.includes(type) ? C.primary : C.textMuted,
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                        fontSize: '13px',
-                      }}
-                    >
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </button>
-                  ))}
+                  {['paid', 'barter', 'equity', 'ambassador'].map((type) => {
+                    const sel = profile.preferred_deal_types.includes(type);
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          const updated = sel
+                            ? profile.preferred_deal_types.filter((t) => t !== type)
+                            : [...profile.preferred_deal_types, type];
+                          setProfile({ ...profile, preferred_deal_types: updated });
+                        }}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: sel ? `1px solid ${C.sand}` : `1px solid ${C.border}`,
+                          background: sel ? C.sand : 'transparent',
+                          color: sel ? '#0A0A0A' : C.textMuted,
+                          cursor: 'pointer',
+                          fontWeight: sel ? 600 : 400,
+                          fontSize: '0.8125rem',
+                          fontFamily: FONT,
+                        }}
+                      >
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-
               <SaveButton onClick={handleSave} loading={saving} />
             </form>
           )}
-        </Section>
+        </div>
+
+        {/* Work History — read-only (preserved) */}
+        {showMarketplaceSettings && (
+          <ReadOnlyCard title="Work History">
+            {profile.completed_deals.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+                {profile.completed_deals.map((deal) => (
+                  <div key={deal.id} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px' }}>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600, color: C.text }}>{deal.deal_title}</div>
+                    <div style={{ fontSize: '0.75rem', color: C.textMuted, marginBottom: '8px' }}>with {deal.brand_name}</div>
+                    <div style={{ fontSize: '0.75rem', color: C.textMuted, marginBottom: '12px' }}>
+                      Completed: {new Date(deal.completion_date).toLocaleDateString()}
+                    </div>
+                    {deal.pdf_url && (
+                      <a href={deal.pdf_url} download style={{ display: 'inline-block', padding: '8px 12px', background: C.sand, color: '#0A0A0A', borderRadius: '6px', textDecoration: 'none', fontSize: '0.75rem', fontWeight: 600 }}>
+                        Download PDF
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ color: C.textMuted, fontSize: '0.875rem' }}>
+                No completed deals yet. Your work history will appear here after you complete your first ValueSkins deal.
+              </div>
+            )}
+          </ReadOnlyCard>
+        )}
+
+        {/* Reputation — read-only strip, earned not edited (spec §3).
+            Trust score in deep sand, rest neutral — no green/orange. */}
+        {showMarketplaceSettings && (
+          <ReadOnlyCard title="Reputation & Trust" note="Earned automatically from completed deals — not editable.">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' }}>
+              <StatBox label="Trust Score" value={`${profile.trust_score}%`} color={C.deepSand} />
+              <StatBox label="Completion Rate" value={`${profile.completion_rate}%`} color={C.text} />
+              <StatBox label="Repeat Client Rate" value={`${profile.repeat_client_rate}%`} color={C.text} />
+              <StatBox label="Average Rating" value={`${profile.avg_rating}/5`} color={C.text} />
+            </div>
+          </ReadOnlyCard>
         )}
       </div>
     </div>
   );
 }
 
-function Section({ title, isOpen, onToggle, canEdit = true, children }: { title: string; isOpen: boolean; onToggle: () => void; canEdit?: boolean; children: React.ReactNode }) {
+const fieldStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 12px',
+  background: '#0A0A0A',
+  border: `1px solid ${C.border}`,
+  borderRadius: '6px',
+  color: C.text,
+  fontSize: '1rem',
+  boxSizing: 'border-box',
+  fontFamily: FONT,
+};
+
+const labelCap: React.CSSProperties = {
+  display: 'block',
+  fontSize: '0.75rem',
+  color: C.textMuted,
+  marginBottom: '8px',
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+};
+
+function ReadOnlyCard({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px', marginBottom: '20px', overflow: 'hidden' }}>
-      <button
-        onClick={onToggle}
-        style={{
-          width: '100%',
-          padding: '16px',
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: C.text }}>{title}</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {canEdit && <span style={{ fontSize: '12px', color: C.textMuted }}>Edit</span>}
-          <span style={{ fontSize: '20px', color: C.textMuted, transform: `rotate(${isOpen ? 180 : 0}deg)`, transition: 'transform 0.3s' }}>▼</span>
-        </div>
-      </button>
-      {isOpen && <div style={{ padding: '20px', paddingTop: 0, borderTop: `1px solid ${C.border}` }}>{children}</div>}
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '24px', marginBottom: '20px' }}>
+      <h2 style={{ fontSize: '1.125rem', fontWeight: 700, margin: '0 0 4px', color: C.text }}>{title}</h2>
+      {note && <div style={{ fontSize: '0.75rem', color: C.textMuted, marginBottom: '16px' }}>{note}</div>}
+      {!note && <div style={{ marginBottom: '16px' }} />}
+      {children}
     </div>
   );
 }
@@ -515,27 +405,22 @@ function Section({ title, isOpen, onToggle, canEdit = true, children }: { title:
 function InputField({ label, value, onChange, placeholder = '', type = 'text' }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
   return (
     <label style={{ display: 'block' }}>
-      <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>{label}</div>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        style={{ width: '100%', padding: '10px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, fontSize: '14px', boxSizing: 'border-box' }}
-      />
+      <div style={labelCap}>{label}</div>
+      <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} style={fieldStyle} />
     </label>
   );
 }
 
-function StatBox({ label, value, color = C.primary }: { label: string; value: string; color?: string }) {
+function StatBox({ label, value, color = C.sand }: { label: string; value: string; color?: string }) {
   return (
     <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '16px', textAlign: 'center' }}>
-      <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '8px', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: '24px', fontWeight: 700, color }}>{value}</div>
+      <div style={{ fontSize: '0.75rem', color: C.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+      <div style={{ fontSize: '1.5rem', fontWeight: 700, color }}>{value}</div>
     </div>
   );
 }
 
+// Near-black Save with Saved micro-confirm (spec §2/§5 — no gold fill).
 function SaveButton({ onClick, loading }: { onClick: () => void; loading: boolean }) {
   return (
     <button
@@ -543,14 +428,15 @@ function SaveButton({ onClick, loading }: { onClick: () => void; loading: boolea
       disabled={loading}
       style={{
         padding: '12px 24px',
-        background: C.primary,
-        color: '#000',
+        background: C.text,
+        color: '#0A0A0A',
         border: 'none',
-        borderRadius: '8px',
+        borderRadius: '6px',
         fontWeight: 700,
         cursor: loading ? 'not-allowed' : 'pointer',
         opacity: loading ? 0.6 : 1,
-        fontSize: '14px',
+        fontSize: '0.875rem',
+        fontFamily: FONT,
       }}
     >
       {loading ? 'Saving...' : 'Save Changes'}
