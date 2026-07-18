@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { getCurrencySymbol } from '@/lib/currency';
 
+// G3: no green/orange/red — sand/neutral/brick per BRANDING §4/§10.7
 const C = {
   bg: '#0A0A0A',
   surface: '#1A1A1A',
@@ -11,11 +12,13 @@ const C = {
   text: '#F5F5F0',
   textMuted: '#B8B4AC',
   primary: '#C8B89A',
-  success: '#10b981',
-  warning: '#f59e0b',
-  danger: '#ef4444',
+  success: '#C8B89A', // was green
+  warning: '#B8B4AC', // was orange
+  danger: '#B0413E', // was bright red — restrained brick
   border: '#2D2D2D',
 };
+
+const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
 interface BrandProfileData {
   display_name: string;
@@ -151,7 +154,7 @@ export default function BrandProfile() {
   const optionalMissing = optionalFields.filter((f) => !f.done).map((f) => f.label);
 
   return (
-    <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${C.bg} 0%, #111827 100%)`, color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', padding: '20px' }}>
+    <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${C.bg} 0%, #161512 100%)`, color: C.text, fontFamily: FONT, padding: '20px' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         {message && (
           <div style={{ padding: '12px 16px', background: message.includes('success') ? `${C.success}20` : `${C.danger}20`, border: `1px solid ${message.includes('success') ? C.success : C.danger}`, borderRadius: '8px', color: message.includes('success') ? C.success : C.danger, marginBottom: '20px', fontSize: '14px' }}>
@@ -308,7 +311,7 @@ export default function BrandProfile() {
                       fontSize: '12px',
                       fontWeight: 600,
                     }}>
-                      📥 Download PDF
+                      Download PDF
                     </a>
                   )}
                 </div>
@@ -362,9 +365,9 @@ export default function BrandProfile() {
   );
 }
 
-function Section({ title, isOpen, onToggle, children }: { title: string; isOpen: boolean; onToggle: () => void; children: React.ReactNode }) {
+function Section({ title, isOpen, onToggle, canEdit = true, children }: { title: string; isOpen: boolean; onToggle: () => void; canEdit?: boolean; children: React.ReactNode }) {
   return (
-    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px', marginBottom: '20px', overflow: 'hidden' }}>
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '10px', marginBottom: '20px', overflow: 'hidden' }}>
       <button
         onClick={onToggle}
         style={{
@@ -376,12 +379,15 @@ function Section({ title, isOpen, onToggle, children }: { title: string; isOpen:
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          fontFamily: FONT,
         }}
       >
-        <h2 style={{ fontSize: '18px', fontWeight: 700, margin: 0, color: C.text }}>{title}</h2>
+        <h2 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0, color: C.text }}>{title}</h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '12px', color: C.textMuted }}>Edit</span>
-          <span style={{ fontSize: '20px', color: C.textMuted, transform: `rotate(${isOpen ? 180 : 0}deg)`, transition: 'transform 0.3s' }}>▼</span>
+          {canEdit && <span style={{ fontSize: '0.75rem', color: C.textMuted }}>Edit</span>}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ transform: `rotate(${isOpen ? 180 : 0}deg)`, transition: 'transform 0.3s' }}>
+            <path d="M6 9l6 6 6-6" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </div>
       </button>
       {isOpen && <div style={{ padding: '20px', paddingTop: 0, borderTop: `1px solid ${C.border}` }}>{children}</div>}
@@ -420,14 +426,15 @@ function SaveButton({ onClick, loading }: { onClick: () => void; loading: boolea
       disabled={loading}
       style={{
         padding: '12px 24px',
-        background: C.primary,
-        color: '#000',
+        background: C.text,
+        color: '#0A0A0A',
         border: 'none',
-        borderRadius: '8px',
+        borderRadius: '6px',
         fontWeight: 700,
         cursor: loading ? 'not-allowed' : 'pointer',
         opacity: loading ? 0.6 : 1,
-        fontSize: '14px',
+        fontSize: '0.875rem',
+        fontFamily: FONT,
       }}
     >
       {loading ? 'Saving...' : 'Save Changes'}
