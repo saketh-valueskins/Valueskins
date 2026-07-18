@@ -74,16 +74,28 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      # NOTE: run vercel from the repo ROOT, not marketplace/. The Vercel
-      # project has Root Directory = marketplace, so running these inside
-      # marketplace/ doubled the path (marketplace/marketplace/package.json)
-      # and the build failed — leaving staging-marketplace stale. From root,
-      # Vercel's Root Directory setting is applied exactly once.
+      # Canonical Vercel CI pattern: run from repo root with ORG/PROJECT IDs
+      # in env (read from the committed marketplace/.vercel/project.json), so
+      # Vercel links to the right project and applies Root Directory=marketplace
+      # exactly once. Running inside marketplace/ previously doubled the path
+      # (marketplace/marketplace/package.json) and failed.
+      - name: Read Vercel project link
+        id: vlink
+        run: |
+          echo "org=$(node -p "require('./marketplace/.vercel/project.json').orgId")" >> $GITHUB_OUTPUT
+          echo "project=$(node -p "require('./marketplace/.vercel/project.json').projectId")" >> $GITHUB_OUTPUT
+
       - name: Pull Vercel Environment
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ steps.vlink.outputs.org }}
+          VERCEL_PROJECT_ID: ${{ steps.vlink.outputs.project }}
 
       - name: Build Staging
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ steps.vlink.outputs.org }}
+          VERCEL_PROJECT_ID: ${{ steps.vlink.outputs.project }}
 
       - name: Deploy to Staging
         run: |
@@ -94,7 +106,8 @@ jobs:
           echo "[$URL]($URL)" >> $GITHUB_STEP_SUMMARY
         id: deploy
         env:
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_MARKETPLACE }}
+          VERCEL_ORG_ID: ${{ steps.vlink.outputs.org }}
+          VERCEL_PROJECT_ID: ${{ steps.vlink.outputs.project }}
 
   staging-backend:
     name: Deploy Backend → Staging (Render)
