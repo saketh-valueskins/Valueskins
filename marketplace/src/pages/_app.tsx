@@ -31,6 +31,9 @@ function HomeButton() {
     router.push(target);
   };
 
+  // G1: no wordmark pill anywhere. The black oval/background/border is removed —
+  // brand presence in nav is the plain VALUESKINS wordmark as text, no container.
+  // Uses currentColor so each page's own text colour keeps it visible in light/dark.
   return (
     <a
       href={target}
@@ -43,18 +46,12 @@ function HomeButton() {
         zIndex: 9999,
         display: isLoginOrSignup ? 'none' : 'inline-flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: '10px 18px',
-        borderRadius: '999px',
-        background: 'rgba(10,10,10,0.9)',
-        backdropFilter: 'blur(12px)',
-        color: '#F5F5F0',
+        color: 'currentColor',
+        mixBlendMode: 'difference',
         textDecoration: 'none',
-        fontSize: '12px',
+        fontSize: '15px',
         fontWeight: 700,
         letterSpacing: '0.18em',
-        border: '1px solid rgba(200,184,154,0.35)',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
         fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
         cursor: isOnboarding ? 'default' : 'pointer',
         opacity: isOnboarding ? 0.6 : 1,
