@@ -47,16 +47,20 @@ export const COLORS = {
   outline: '#8B8B85',
   outlineVariant: '#E0E0DA',
 
-  // Error
-  error: '#EF4444',
-  errorContainer: '#FEE2E2',
+  // Error — restrained brick/oxblood, NOT fire-engine red (BRANDING §4/§10.7).
+  // Reserved for inline error TEXT and the inside of confirm dialogs only —
+  // never a resting CTA or button fill. Muted so it reads on off-white/near-black
+  // without fighting the sand accent.
+  error: '#B0413E',
+  errorContainer: '#F3E3E1',
   onError: '#FFFFFF',
-  onErrorContainer: '#991B1B',
+  onErrorContainer: '#7A2B29',
 
-  // Semantic
-  success: '#22C55E',
+  // Semantic — no startup green, no orange (BRANDING §4).
+  // Positive/success reads in the brand's own language: deep sand.
+  success: '#A08A5E', // deep sand — success/active/positive (was green)
   accent: '#A08A5E', // deep sand — brand accent (no blues)
-  warning: '#F97316',
+  warning: '#8A7A56', // muted sand-charcoal — caution (was orange)
 
   // Text variants
   text: '#0A0A0A',
