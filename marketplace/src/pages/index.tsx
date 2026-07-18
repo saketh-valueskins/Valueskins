@@ -1,15 +1,141 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { C } from '@/theme/colors';
 import ValueSkinsLogo from '@/components/ValueSkinsLogo';
 
+const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
+
+// prefers-reduced-motion — reveals resolve to visible, count-up/parallax off.
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(mq.matches);
+    const on = () => setReduced(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return reduced;
+}
+
+// Staggered scroll reveal (spec §2) — fades + rises on enter. Transform/opacity only.
+function Reveal({
+  children,
+  from = 'up',
+  delay = 0,
+  reduced,
+  style,
+}: {
+  children: React.ReactNode;
+  from?: 'up' | 'left' | 'right';
+  delay?: number;
+  reduced: boolean;
+  style?: React.CSSProperties;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    if (reduced) {
+      setShown(true);
+      return;
+    }
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            setShown(true);
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.15 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [reduced]);
+
+  const offset =
+    from === 'left' ? 'translateX(-40px)' : from === 'right' ? 'translateX(40px)' : 'translateY(28px)';
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        opacity: shown ? 1 : 0,
+        transform: shown ? 'none' : offset,
+        transition: `opacity 700ms cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 700ms cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Count-up (spec §2/§3a) — animates the pricing number into view.
+function CountUp({ to, suffix = '', reduced }: { to: number; suffix?: string; reduced: boolean }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [val, setVal] = useState(reduced ? to : 0);
+
+  useEffect(() => {
+    if (reduced) {
+      setVal(to);
+      return;
+    }
+    const el = ref.current;
+    if (!el) return;
+    let raf = 0;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          const start = performance.now();
+          const dur = 1100;
+          const tick = (now: number) => {
+            const p = Math.min(1, (now - start) / dur);
+            const eased = 1 - Math.pow(1 - p, 3);
+            setVal(Math.round(eased * to));
+            if (p < 1) raf = requestAnimationFrame(tick);
+          };
+          raf = requestAnimationFrame(tick);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      cancelAnimationFrame(raf);
+    };
+  }, [to, reduced]);
+
+  return (
+    <span ref={ref}>
+      {val}
+      {suffix}
+    </span>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
   const { account, loading } = useAuth();
+  const reduced = usePrefersReducedMotion();
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    if (reduced) return;
+    const on = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', on, { passive: true });
+    return () => window.removeEventListener('scroll', on);
+  }, [reduced]);
 
   useEffect(() => {
     if (loading) return;
@@ -20,10 +146,10 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}>
+      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT }}>
         <div style={{ textAlign: 'center' }}>
           <ValueSkinsLogo theme="light" size={26} />
-          <div style={{ fontSize: '13px', color: C.textSecondary, marginTop: '24px' }}>Loading...</div>
+          <div style={{ fontSize: '0.8125rem', color: C.textSecondary, marginTop: '24px' }}>Loading...</div>
         </div>
       </div>
     );
@@ -31,118 +157,191 @@ export default function HomePage() {
 
   if (account && account.onboarding_stage === 'complete') return null;
 
+  // Hero parallax + fade as you leave it (spec §2). Transform/opacity only.
+  const heroFade = reduced ? 1 : Math.max(0, 1 - scrollY / 420);
+  const heroLift = reduced ? 0 : Math.min(60, scrollY * 0.25);
+
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: C.bg, fontFamily: FONT }}>
       {/* Hero */}
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '80px 24px 60px', textAlign: 'center' }}>
+      <div
+        style={{
+          maxWidth: '960px',
+          margin: '0 auto',
+          padding: '80px 24px 60px',
+          textAlign: 'center',
+          opacity: heroFade,
+          transform: `translateY(-${heroLift}px)`,
+        }}
+      >
         <div style={{ marginBottom: '40px' }}>
           <ValueSkinsLogo theme="light" size={32} />
         </div>
 
-        <h1 style={{ fontSize: '48px', fontWeight: 800, color: C.text, margin: '0 0 20px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+        <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 3rem)', fontWeight: 800, color: C.text, margin: '0 0 20px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
           The marketplace for<br />creators and brands
         </h1>
-        <p style={{ fontSize: '18px', color: C.textSecondary, margin: '0 auto 40px', maxWidth: '600px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '1.125rem', color: C.textSecondary, margin: '0 auto 40px', maxWidth: '600px', lineHeight: 1.6 }}>
           ValueSkins connects content creators with brands for paid campaigns. Every deal is backed by escrow. Creators get guaranteed payment, brands only pay for work they approve.
         </p>
 
         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/auth/signup" style={{
             display: 'inline-block', padding: '14px 32px', background: C.text, color: C.bg,
-            borderRadius: '12px', fontSize: '15px', fontWeight: 700, textDecoration: 'none',
-            transition: 'opacity 0.15s',
+            borderRadius: '8px', fontSize: '0.9375rem', fontWeight: 700, textDecoration: 'none',
+            transition: 'transform 0.15s',
           }}>
             Get Started
           </Link>
           <Link href="/auth/login" style={{
             display: 'inline-block', padding: '14px 32px', background: 'transparent', color: C.text,
-            borderRadius: '12px', fontSize: '15px', fontWeight: 700, textDecoration: 'none',
+            borderRadius: '8px', fontSize: '0.9375rem', fontWeight: 700, textDecoration: 'none',
             border: `1px solid ${C.border}`, transition: 'border-color 0.15s',
           }}>
             Sign In
           </Link>
         </div>
+
+        {/* Scroll hint — bobbing chevron (spec §2) */}
+        {!reduced && (
+          <div style={{ marginTop: '56px', opacity: heroFade }}>
+            <div style={{ fontSize: '0.75rem', letterSpacing: '0.14em', color: C.textSecondary, marginBottom: '8px' }}>SCROLL</div>
+            <div style={{ animation: 'vsBob 1.8s ease-in-out infinite', color: C.accent, fontSize: '18px' }}>⌄</div>
+          </div>
+        )}
       </div>
 
       {/* How It Works */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '60px 24px' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, color: C.text, textAlign: 'center', marginBottom: '48px' }}>
-          How It Works
-        </h2>
+        <Reveal reduced={reduced}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: C.text, textAlign: 'center', marginBottom: '48px' }}>
+            How It Works
+          </h2>
+        </Reveal>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '32px' }}>
           {[
             { step: '01', title: 'Create Your Profile', desc: 'Showcase your skills, portfolio, and rates. Brands find you, or you find them.' },
             { step: '02', title: 'Make a Deal', desc: 'Brands post briefs, creators negotiate terms. Deliverables, deadlines, and payment are agreed upfront.' },
-            { step: '03', title: 'Escrow Protects Both Sides', desc: 'Brand funds the deal. Money is held securely by Razorpay or Stripe. Released only on approval.' },
+            { step: '03', title: 'Escrow Protects Both Sides', desc: 'Brand funds the deal. Money is held securely in escrow by Razorpay. Released only on approval.' },
             { step: '04', title: 'Deliver and Get Paid', desc: 'Creator submits work. Brand reviews and approves. Payment releases instantly. Reputation grows.' },
-          ].map(item => (
-            <div key={item.step} style={{
-              background: C.surface, border: `1px solid ${C.border}`, borderRadius: '16px',
-              padding: '28px', transition: 'border-color 0.15s',
-            }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: C.accent, marginBottom: '12px', letterSpacing: '0.1em' }}>
-                STEP {item.step}
+          ].map((item, i) => (
+            <Reveal key={item.step} reduced={reduced} delay={i * 90}>
+              <div style={{
+                background: C.surface, border: `1px solid ${C.border}`, borderRadius: '10px',
+                padding: '28px', transition: 'border-color 0.15s', height: '100%',
+              }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.accent, marginBottom: '12px', letterSpacing: '0.1em' }}>
+                  STEP {item.step}
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: C.text, margin: '0 0 10px' }}>{item.title}</h3>
+                <p style={{ fontSize: '0.9375rem', color: C.textSecondary, margin: 0, lineHeight: 1.6 }}>{item.desc}</p>
               </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: C.text, margin: '0 0 10px' }}>{item.title}</h3>
-              <p style={{ fontSize: '14px', color: C.textSecondary, margin: 0, lineHeight: 1.6 }}>{item.desc}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
 
-      {/* For Creators / For Brands */}
+      {/* For Creators / For Brands — opposing reveal (spec §2) */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 24px 60px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
-          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '16px', padding: '32px' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 700, color: C.text, margin: '0 0 16px' }}>For Creators</h3>
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-              {[
-                'Build a public profile with your portfolio',
-                'Get discovered by brands looking for creators',
-                'Negotiate deal terms before committing',
-                'Guaranteed payment through escrow',
-                'All communication documented and on-record',
-                'Build reputation with completed deals',
-              ].map((item, i) => (
-                <li key={i} style={{ fontSize: '14px', color: C.textSecondary, padding: '6px 0', lineHeight: 1.5 }}>
-                  <span style={{ color: C.accent, marginRight: '8px' }}>→</span>{item}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '16px', padding: '32px' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 700, color: C.text, margin: '0 0 16px' }}>For Brands</h3>
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-              {[
-                'Browse verified creator profiles and portfolios',
-                'Post campaign briefs and receive pitches',
-                'Set clear deliverables, deadlines, and budgets',
-                'Funds held in escrow until you approve',
-                'Only pay for work you are satisfied with',
-                'Track every deal from start to finish',
-              ].map((item, i) => (
-                <li key={i} style={{ fontSize: '14px', color: C.textSecondary, padding: '6px 0', lineHeight: 1.5 }}>
-                  <span style={{ color: C.accent, marginRight: '8px' }}>→</span>{item}
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Reveal reduced={reduced} from="left">
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '32px', height: '100%' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: C.text, margin: '0 0 16px' }}>For Creators</h3>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                {[
+                  'Build a public profile with your portfolio',
+                  'Get discovered by brands looking for creators',
+                  'Negotiate deal terms before committing',
+                  'Guaranteed payment through escrow',
+                  'All communication documented and on-record',
+                  'Build reputation with completed deals',
+                ].map((item, i) => (
+                  <li key={i} style={{ fontSize: '0.9375rem', color: C.textSecondary, padding: '6px 0', lineHeight: 1.5 }}>
+                    <span style={{ color: C.accent, marginRight: '8px' }}>→</span>{item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
+          <Reveal reduced={reduced} from="right">
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '32px', height: '100%' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: C.text, margin: '0 0 16px' }}>For Brands</h3>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                {[
+                  'Browse verified creator profiles and portfolios',
+                  'Post campaign briefs and receive pitches',
+                  'Set clear deliverables, deadlines, and budgets',
+                  'Funds held in escrow until you approve',
+                  'Only pay for work you are satisfied with',
+                  'Track every deal from start to finish',
+                ].map((item, i) => (
+                  <li key={i} style={{ fontSize: '0.9375rem', color: C.textSecondary, padding: '6px 0', lineHeight: 1.5 }}>
+                    <span style={{ color: C.accent, marginRight: '8px' }}>→</span>{item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </Reveal>
         </div>
+      </div>
+
+      {/* Pricing — reshaped, 12% vs agencies (spec §3a). Not led by a giant number. */}
+      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '40px 24px 60px', textAlign: 'center' }}>
+        <Reveal reduced={reduced}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
+            Pricing that only wins when you do
+          </h2>
+          <p style={{ fontSize: '1rem', color: C.textSecondary, margin: '0 auto 36px', maxWidth: '520px', lineHeight: 1.6 }}>
+            No subscription, no upfront fees. You only pay when a deal completes.
+          </p>
+          <div
+            style={{
+              display: 'flex',
+              gap: '24px',
+              justifyContent: 'center',
+              alignItems: 'stretch',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '28px 36px', minWidth: '200px' }}>
+              <div style={{ fontSize: '0.75rem', letterSpacing: '0.1em', color: C.textSecondary, marginBottom: '10px' }}>VALUESKINS</div>
+              <div style={{ fontSize: '2.25rem', fontWeight: 800, color: C.accent, lineHeight: 1 }}>
+                <CountUp to={12} suffix="%" reduced={reduced} />
+              </div>
+            </div>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '28px 36px', minWidth: '200px' }}>
+              <div style={{ fontSize: '0.75rem', letterSpacing: '0.1em', color: C.textSecondary, marginBottom: '10px' }}>TYPICAL AGENCIES</div>
+              <div style={{ fontSize: '2.25rem', fontWeight: 800, color: C.textSecondary, lineHeight: 1 }}>15–25%</div>
+            </div>
+          </div>
+          <p style={{ fontSize: '0.9375rem', color: C.textSecondary, margin: '28px auto 0', maxWidth: '480px', lineHeight: 1.6 }}>
+            Less than half of what agencies charge — and only when the work is done.
+          </p>
+        </Reveal>
       </div>
 
       {/* CTA */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 24px 80px', textAlign: 'center' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, color: C.text, margin: '0 0 16px' }}>Ready to get started?</h2>
-        <p style={{ fontSize: '16px', color: C.textSecondary, margin: '0 0 32px' }}>
-          Join ValueSkins and start building real partnerships.
-        </p>
-        <Link href="/auth/signup" style={{
-          display: 'inline-block', padding: '16px 40px', background: C.text, color: C.bg,
-          borderRadius: '12px', fontSize: '16px', fontWeight: 700, textDecoration: 'none',
-        }}>
-          Create Your Account
-        </Link>
+        <Reveal reduced={reduced}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: C.text, margin: '0 0 16px' }}>Ready to get started?</h2>
+          <p style={{ fontSize: '1rem', color: C.textSecondary, margin: '0 0 32px' }}>
+            Join ValueSkins and start building real partnerships.
+          </p>
+          <Link href="/auth/signup" style={{
+            display: 'inline-block', padding: '16px 40px', background: C.text, color: C.bg,
+            borderRadius: '8px', fontSize: '1rem', fontWeight: 700, textDecoration: 'none',
+          }}>
+            Create Your Account
+          </Link>
+        </Reveal>
       </div>
+
+      <style>{`
+        @keyframes vsBob {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(6px); }
+        }
+      `}</style>
     </div>
   );
 }
