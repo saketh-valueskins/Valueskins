@@ -1,10 +1,16 @@
 'use client';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { C } from '@/theme/colors';
 import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
 
-type Step = 'role-select' | 'identity' | 'social' | 'content' | 'languages' | 'deal-prefs' | 'pricing' | 'availability' | 'review';
+// Creator Setup (Onboarding) — per ui-specs/Creator setup Page.md.
+// 5 consolidated steps with a live creator-card preview. Sand accents, no
+// emoji, near-black primary button (no gold fill). The onboarding-complete
+// API call + payload are UNCHANGED — this is a UI + inputs pass.
+const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
+
+type Step = 'role-select' | 'identity' | 'valueskin' | 'howyouwork' | 'rate' | 'review';
 
 interface CreatorOnboarding {
   userRole: 'creator' | 'brand' | '';
@@ -52,16 +58,18 @@ interface CreatorOnboarding {
   testimonials: string[];
   exclusivityRestrictions: string[];
   selectedValueSkin: string;
+  availabilityStatus: 'open' | 'limited' | 'booked';
 }
+
+const LANGUAGE_OPTIONS = ['English', 'Hindi', 'Tamil', 'Telugu', 'Kannada', 'Malayalam', 'Marathi', 'Bengali', 'Gujarati', 'Punjabi'];
+const SCRIPT_STYLES = ['Full creative freedom', 'Collaborative script', 'Brand-provided script'];
 
 export default function OnboardingCreator() {
   const router = useRouter();
   const { userId: userIdParam } = router.query;
   const [step, setStep] = useState<Step>('role-select');
   const [loading, setLoading] = useState(false);
-  const [showSkipWarning, setShowSkipWarning] = useState(false);
-  const [citySuggestions, setCitySuggestions] = useState<any[]>([]);
-  const [languageSuggestions, setLanguageSuggestions] = useState<string[]>([]);
+  const [skinQuery, setSkinQuery] = useState('');
 
   const [data, setData] = useState<CreatorOnboarding>({
     userRole: '',
@@ -94,6 +102,7 @@ export default function OnboardingCreator() {
     testimonials: [],
     exclusivityRestrictions: [],
     selectedValueSkin: '',
+    availabilityStatus: 'open',
   });
 
   const handleRoleSelect = (role: 'creator' | 'brand') => {
@@ -105,16 +114,14 @@ export default function OnboardingCreator() {
     setStep('identity');
   };
 
+  // FLOW UNCHANGED — same onboarding-complete payload + skin save as before.
   const handleComplete = async () => {
     setLoading(true);
     try {
       const userId = localStorage.getItem('user_id') || userIdParam;
       const res = await fetch('/api/auth/onboarding-complete', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': userId as string,
-        },
+        headers: { 'Content-Type': 'application/json', 'x-user-id': userId as string },
         credentials: 'include',
         body: JSON.stringify({
           role: data.userRole,
@@ -132,17 +139,14 @@ export default function OnboardingCreator() {
           creatorProfile: data,
         }),
       });
-
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Failed to complete onboarding');
       }
-
       await fetch('/api/auth/onboarding-draft', {
         method: 'DELETE',
         headers: { 'x-user-id': userId as string },
       }).catch(() => {});
-
       if (data.selectedValueSkin) {
         await fetch('/api/skins/manage', {
           method: 'POST',
@@ -150,7 +154,6 @@ export default function OnboardingCreator() {
           body: JSON.stringify({ userId, valueSkin: data.selectedValueSkin }),
         }).catch((e) => console.warn('Failed to save value skin during onboarding:', e));
       }
-
       router.push('/demo/marketplace');
     } catch (err: any) {
       alert(`Error: ${err.message}`);
@@ -159,149 +162,292 @@ export default function OnboardingCreator() {
     }
   };
 
-  const fillDemoData = () => {
-    setData({
-      ...data,
-      userRole: 'creator',
-      displayName: 'Demo Creator',
-      location: { city: 'Mumbai', country: 'India', countryCode: 'IN' },
-      timezone: 'IST',
-      languages: ['English', 'Hindi'],
-      ageRange: '25-34',
-      socialAccounts: [{
-        platform: 'instagram',
-        username: 'democreator',
-        followerCount: 50000,
-        engagementRate: 5.2,
-        audienceDemographics: { ageRanges: ['18-24', '25-34'], genders: ['Female', 'Male'] }
-      }],
-      niches: ['Fashion', 'Lifestyle'],
-      contentStyle: 'Minimalist',
-      tone: 'Friendly',
-      keywords: ['sustainable', 'eco-friendly'],
-      archetype: 'lifestyle',
-      collaborationOpenness: 'open',
-      dealTypes: ['sponsored post', 'product placement'],
-      rateCard: { post: 5000, story: 2000, reel: 7500 },
-      minDealValue: 1000,
-      negotiable: true,
-      workingHours: { start: '09:00', end: '18:00' },
-      shootAvailability: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-      travelWilling: true,
-      travelBudget: '5000',
-      turnaroundDays: 5,
-      revisionLimit: 2,
-      communicationStyle: 'professional',
-      equipment: ['camera', 'lights', 'tripod'],
-      hasStudio: true,
-      personalPreferences: { clothingSizes: 'M', foodAllergies: 'None' },
-      previousCampaigns: [{ brand: 'Nike', contentType: 'sponsored post', date: '2026-01-15' }],
-      testimonials: ['Great to work with!'],
-      exclusivityRestrictions: ['Competing brands'],
-      selectedValueSkin: 'Software Engineer',
-    });
-    setStep('identity');
-  };
-
-  const steps: Step[] = data.userRole === 'creator' 
-    ? ['identity', 'social', 'content', 'languages', 'deal-prefs', 'pricing', 'availability', 'review']
-    : [];
+  const steps: Step[] = data.userRole === 'creator' ? ['identity', 'valueskin', 'howyouwork', 'rate', 'review'] : [];
   const currentStepIndex = steps.indexOf(step as any);
 
+  // Live completion % (spec §2) — how much of the identity is filled.
+  const completion = useMemo(() => {
+    const checks = [
+      !!data.displayName,
+      !!data.location.city,
+      !!data.selectedValueSkin,
+      data.languages.length > 0,
+      !!data.contentStyle,
+      data.minDealValue > 0,
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [data]);
+
+  const toggle = (arr: string[], val: string) =>
+    arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '12px 14px',
+    border: '1px solid rgba(160,138,94,0.28)',
+    borderRadius: '6px',
+    background: C.bg,
+    color: C.text,
+    fontSize: '1rem',
+    fontFamily: FONT,
+    marginBottom: '12px',
+    boxSizing: 'border-box',
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '0.75rem',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: C.textSecondary,
+    marginBottom: '8px',
+    fontWeight: 600,
+  };
+
+  // Sand-selected pill (spec §5 — no green/blue, no gold fill on primary)
+  const pill = (selected: boolean): React.CSSProperties => ({
+    padding: '8px 14px',
+    borderRadius: '6px',
+    border: selected ? '1px solid #C8B89A' : '1px solid rgba(160,138,94,0.28)',
+    background: selected ? '#C8B89A' : C.bg,
+    color: selected ? '#0A0A0A' : C.textSecondary,
+    fontSize: '0.8125rem',
+    fontWeight: selected ? 600 : 400,
+    cursor: 'pointer',
+    fontFamily: FONT,
+    transition: 'all 0.15s cubic-bezier(0.16,1,0.3,1)',
+  });
+
+  // ---- Role select (kept as first step; UI restyled, flow unchanged) ----
   if (step === 'role-select') {
     return (
-      <div style={{ minHeight: '100vh', background: C.bg, color: C.text, padding: '20px' }}>
+      <div style={{ minHeight: '100vh', background: C.bg, color: C.text, padding: '20px', fontFamily: FONT }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '60px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px', textAlign: 'center' }}>Welcome to ValueSkins</h1>
-          <p style={{ fontSize: '16px', color: C.textSecondary, textAlign: 'center', marginBottom: '48px' }}>Are you a creator or a brand?</p>
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '12px', textAlign: 'center' }}>Welcome to ValueSkins</h1>
+          <p style={{ fontSize: '1rem', color: C.textSecondary, textAlign: 'center', marginBottom: '48px' }}>Are you a creator or a brand?</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            <button onClick={() => handleRoleSelect('creator')} style={{ padding: '32px 24px', background: C.surface, border: `2px solid ${C.border}`, borderRadius: '12px', cursor: 'pointer', textAlign: 'center' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.background = 'rgba(200, 184, 154, 0.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; }}>
-              <div style={{ fontSize: '48px', marginBottom: '12px' }}>[CREATOR]</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Creator</div>
-              <p style={{ fontSize: '13px', color: C.textSecondary, margin: 0 }}>Share your content and collaborate with brands</p>
-            </button>
-            <button onClick={() => handleRoleSelect('brand')} style={{ padding: '32px 24px', background: C.surface, border: `2px solid ${C.border}`, borderRadius: '12px', cursor: 'pointer', textAlign: 'center' }} onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.background = 'rgba(200, 184, 154, 0.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; }}>
-              <div style={{ fontSize: '48px', marginBottom: '12px' }}>[BRAND]</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Brand</div>
-              <p style={{ fontSize: '13px', color: C.textSecondary, margin: 0 }}>Find creators and launch campaigns</p>
-            </button>
-          </div>
-          <div style={{ marginTop: '48px', textAlign: 'center' }}>
-            <button onClick={fillDemoData} style={{ padding: '12px 24px', border: `1px solid ${C.border}`, background: 'transparent', color: C.accent, borderRadius: '8px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' }}>Fill Demo Data (Creator)</button>
+            {([
+              { role: 'creator' as const, title: 'Creator', desc: 'Share your content and collaborate with brands' },
+              { role: 'brand' as const, title: 'Brand', desc: 'Find creators and launch campaigns' },
+            ]).map((r) => (
+              <button
+                key={r.role}
+                onClick={() => handleRoleSelect(r.role)}
+                style={{ padding: '32px 24px', background: C.surface, border: '1px solid rgba(160,138,94,0.28)', borderRadius: '10px', cursor: 'pointer', textAlign: 'center', fontFamily: FONT }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#C8B89A'; e.currentTarget.style.background = 'rgba(200,184,154,0.05)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(160,138,94,0.28)'; e.currentTarget.style.background = C.surface; }}
+              >
+                <div style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '8px', color: C.text }}>{r.title}</div>
+                <p style={{ fontSize: '0.8125rem', color: C.textSecondary, margin: 0 }}>{r.desc}</p>
+              </button>
+            ))}
           </div>
         </div>
       </div>
     );
   }
 
+  const skinEntries = Object.entries(PROFESSION_BADGES).filter(
+    ([name, badge]) => !skinQuery || name.toLowerCase().includes(skinQuery.toLowerCase()) || badge.label.toLowerCase().includes(skinQuery.toLowerCase()),
+  );
+  const selectedBadge = data.selectedValueSkin ? PROFESSION_BADGES[data.selectedValueSkin] : undefined;
+
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, padding: '20px' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '32px' }}>
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-            {steps.map((_, idx) => (
-              <button key={idx} onClick={() => idx < currentStepIndex && setStep(steps[idx])} style={{ flex: 1, height: '4px', background: idx <= currentStepIndex ? C.accent : C.border, border: 'none', borderRadius: '2px', cursor: idx < currentStepIndex ? 'pointer' : 'default' }} />
-            ))}
+    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, padding: '20px', fontFamily: FONT }}>
+      <div style={{ maxWidth: '980px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: '32px', alignItems: 'start' }}>
+        {/* ---- Form column ---- */}
+        <div>
+          {/* Segmented progress (spec §3) */}
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              {steps.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => idx < currentStepIndex && setStep(steps[idx])}
+                  style={{ flex: 1, height: '4px', background: idx <= currentStepIndex ? '#C8B89A' : 'rgba(160,138,94,0.22)', border: 'none', borderRadius: '2px', cursor: idx < currentStepIndex ? 'pointer' : 'default', transition: 'background 0.3s' }}
+                  aria-label={`Step ${idx + 1}`}
+                />
+              ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: C.textSecondary }}>
+              <span>Step {currentStepIndex + 1} of {steps.length}</span>
+              <span>{Math.round(((currentStepIndex + 1) / steps.length) * 100)}%</span>
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: C.textSecondary }}>
-            <span>Step {currentStepIndex + 1} of {steps.length}</span>
-            <span>{Math.round(((currentStepIndex + 1) / steps.length) * 100)}%</span>
+
+          <div style={{ background: C.surface, border: '1px solid rgba(160,138,94,0.22)', borderRadius: '10px', padding: '32px', marginBottom: '24px' }}>
+            {/* Step 1 — Identity */}
+            {step === 'identity' && (
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '4px' }}>Identity</h2>
+                <p style={{ fontSize: '0.875rem', color: C.textSecondary, marginBottom: '20px' }}>The basics brands see first.</p>
+                <label style={labelStyle}>Display name</label>
+                <input autoFocus type="text" placeholder="e.g. Anshul Mehta" value={data.displayName} onChange={(e) => setData({ ...data, displayName: e.target.value })} style={inputStyle} />
+                <label style={labelStyle}>Instagram handle</label>
+                <input
+                  type="text"
+                  placeholder="@yourhandle"
+                  value={data.socialAccounts[0]?.username || ''}
+                  onChange={(e) => setData({ ...data, socialAccounts: [{ ...data.socialAccounts[0], platform: 'instagram', username: e.target.value }] })}
+                  style={inputStyle}
+                />
+                <label style={labelStyle}>City</label>
+                <input type="text" placeholder="e.g. Bengaluru" value={data.location.city} onChange={(e) => setData({ ...data, location: { ...data.location, city: e.target.value } })} style={inputStyle} />
+              </div>
+            )}
+
+            {/* Step 2 — Choose your ValueSkin (search + list) */}
+            {step === 'valueskin' && (
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '4px' }}>Choose your ValueSkin</h2>
+                <p style={{ fontSize: '0.875rem', color: C.textSecondary, marginBottom: '16px' }}>Your profession identity — brands match with you on this.</p>
+                <input type="text" placeholder="Search professions…" value={skinQuery} onChange={(e) => setSkinQuery(e.target.value)} style={inputStyle} />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxHeight: '260px', overflowY: 'auto' }}>
+                  {skinEntries.map(([name, badge]) => {
+                    const sel = data.selectedValueSkin === name;
+                    return (
+                      <button key={name} onClick={() => setData({ ...data, selectedValueSkin: name })} style={pill(sel)}>
+                        {badge.label}
+                      </button>
+                    );
+                  })}
+                  {skinEntries.length === 0 && <p style={{ fontSize: '0.8125rem', color: C.textSecondary }}>No professions match “{skinQuery}”.</p>}
+                </div>
+              </div>
+            )}
+
+            {/* Step 3 — How you work (languages + script style) */}
+            {step === 'howyouwork' && (
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '4px' }}>How you work</h2>
+                <p style={{ fontSize: '0.875rem', color: C.textSecondary, marginBottom: '20px' }}>Languages you create in, and how you like to work with scripts.</p>
+                <label style={labelStyle}>Content languages</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
+                  {LANGUAGE_OPTIONS.map((lang) => (
+                    <button key={lang} onClick={() => setData({ ...data, languages: toggle(data.languages, lang) })} style={pill(data.languages.includes(lang))}>
+                      {lang}
+                    </button>
+                  ))}
+                </div>
+                <label style={labelStyle}>Script collaboration style</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {SCRIPT_STYLES.map((s) => (
+                    <button key={s} onClick={() => setData({ ...data, contentStyle: s })} style={pill(data.contentStyle === s)}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 4 — Rate & availability */}
+            {step === 'rate' && (
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '4px' }}>Rate & availability</h2>
+                <p style={{ fontSize: '0.875rem', color: C.textSecondary, marginBottom: '20px' }}>Your starting rate and how open you are to work.</p>
+                <label style={labelStyle}>Rate from (₹)</label>
+                <input type="number" min={0} placeholder="e.g. 5000" value={data.minDealValue || ''} onChange={(e) => setData({ ...data, minDealValue: Number(e.target.value) || 0 })} style={inputStyle} />
+                <label style={labelStyle}>Availability</label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {(['open', 'limited', 'booked'] as const).map((s) => (
+                    <button key={s} onClick={() => setData({ ...data, availabilityStatus: s })} style={pill(data.availabilityStatus === s)}>
+                      {s === 'open' ? 'Open' : s === 'limited' ? 'Limited' : 'Booked'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 5 — Review */}
+            {step === 'review' && (
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '4px' }}>You&apos;re set</h2>
+                <p style={{ fontSize: '0.875rem', color: C.textSecondary, marginBottom: '20px' }}>Review your identity, then launch your profile.</p>
+                <div style={{ fontSize: '0.9375rem', color: C.text, lineHeight: 1.9 }}>
+                  <div><span style={{ color: C.textSecondary }}>Name — </span>{data.displayName || '—'}</div>
+                  <div><span style={{ color: C.textSecondary }}>City — </span>{data.location.city || '—'}</div>
+                  <div><span style={{ color: C.textSecondary }}>ValueSkin — </span>{data.selectedValueSkin || '—'}</div>
+                  <div><span style={{ color: C.textSecondary }}>Languages — </span>{data.languages.join(', ') || '—'}</div>
+                  <div><span style={{ color: C.textSecondary }}>Rate from — </span>{data.minDealValue ? `₹${data.minDealValue.toLocaleString('en-IN')}` : '—'}</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Nav — near-black primary (no gold fill, spec §3) */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentStepIndex > 0 && (
+              <button onClick={() => setStep(steps[currentStepIndex - 1])} style={{ flex: 1, padding: '12px', border: '1px solid rgba(160,138,94,0.28)', background: 'transparent', color: C.text, borderRadius: '6px', cursor: 'pointer', fontFamily: FONT, fontWeight: 500 }}>
+                Back
+              </button>
+            )}
+            {currentStepIndex < steps.length - 1 && (
+              <button onClick={() => setStep(steps[currentStepIndex + 1])} style={{ flex: 1, padding: '12px', background: C.text, color: C.bg, border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontFamily: FONT }}>
+                Continue
+              </button>
+            )}
+            {currentStepIndex === steps.length - 1 && (
+              <button onClick={handleComplete} disabled={loading} style={{ flex: 1, padding: '12px', background: C.text, color: C.bg, border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600, fontFamily: FONT, opacity: loading ? 0.6 : 1 }}>
+                {loading ? 'Launching…' : 'Launch profile'}
+              </button>
+            )}
           </div>
         </div>
 
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px', padding: '32px', marginBottom: '24px' }}>
-          {step === 'identity' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Tell us about yourself</h2><input type="text" placeholder="Display name" value={data.displayName} onChange={(e) => setData({ ...data, displayName: e.target.value })} style={{ width: '100%', padding: '12px', border: `1px solid ${C.border}`, borderRadius: '8px', background: C.bg, color: C.text, fontSize: '14px', marginBottom: '12px', boxSizing: 'border-box' }} /></div>}
-          {step === 'social' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Social accounts</h2><p style={{ color: C.textSecondary, fontSize: '13px', marginBottom: '16px' }}>Add your social accounts</p></div>}
-          {step === 'content' && (
-            <div>
-              <h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px' }}>Your value skin</h2>
-              <p style={{ fontSize: '13px', color: C.textSecondary, marginBottom: '20px' }}>
-                Choose the profession that best describes you. This is your ValueSkin — brands will use it to find and match with you.
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {Object.entries(PROFESSION_BADGES).map(([name, badge]) => (
-                  <button
-                    key={name}
-                    onClick={() => setData({ ...data, selectedValueSkin: name })}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      border: data.selectedValueSkin === name ? `2px solid ${badge.color}` : `1px solid ${C.border}`,
-                      background: data.selectedValueSkin === name ? `${badge.color}20` : C.bg,
-                      color: data.selectedValueSkin === name ? badge.color : C.textSecondary,
-                      fontSize: '12px',
-                      fontWeight: data.selectedValueSkin === name ? 600 : 400,
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    {badge.emoji && <span style={{ marginRight: '4px' }}>{badge.emoji}</span>}
-                    {badge.label}
-                  </button>
+        {/* ---- Live preview card (spec §2) — premium dark, fills as you go ---- */}
+        <div style={{ position: 'sticky', top: '20px' }}>
+          <div
+            style={{
+              background: 'linear-gradient(160deg,#0A0A0A,#161512 60%,#20201B)',
+              border: '1px solid rgba(200,184,154,0.28)',
+              borderRadius: '12px',
+              padding: '24px',
+              color: '#F5F5F0',
+            }}
+          >
+            <div style={{ fontSize: '0.7rem', letterSpacing: '0.14em', color: '#B8B4AC', marginBottom: '16px' }}>LIVE PREVIEW</div>
+            {/* ValueSkin slot */}
+            <div
+              style={{
+                width: '96px',
+                height: '96px',
+                margin: '0 auto 16px',
+                borderRadius: '10px',
+                border: '1px solid rgba(200,184,154,0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'rgba(255,255,255,0.02)',
+                fontSize: '1.5rem',
+                fontWeight: 700,
+                color: '#C8B89A',
+              }}
+            >
+              {selectedBadge ? selectedBadge.abbreviation : '—'}
+            </div>
+            <div style={{ textAlign: 'center', fontSize: '1.125rem', fontWeight: 700 }}>{data.displayName || 'Your name'}</div>
+            <div style={{ textAlign: 'center', fontSize: '0.8125rem', color: '#B8B4AC', marginBottom: '16px' }}>
+              {data.socialAccounts[0]?.username ? `@${data.socialAccounts[0].username.replace(/^@/, '')}` : '@handle'}
+              {data.location.city ? ` · ${data.location.city}` : ''}
+            </div>
+            {data.selectedValueSkin && (
+              <div style={{ textAlign: 'center', fontSize: '0.8125rem', color: '#C8B89A', marginBottom: '12px' }}>{data.selectedValueSkin}</div>
+            )}
+            {data.languages.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'center', marginBottom: '12px' }}>
+                {data.languages.map((l) => (
+                  <span key={l} style={{ fontSize: '0.7rem', color: '#B8B4AC', border: '1px solid rgba(200,184,154,0.25)', borderRadius: '4px', padding: '2px 8px' }}>{l}</span>
                 ))}
               </div>
-              {data.selectedValueSkin && (
-                <div style={{ marginTop: '16px', padding: '12px', background: '#0066CC10', borderRadius: '8px', fontSize: '13px', color: C.text }}>
-                  Selected: <strong>{data.selectedValueSkin}</strong>
-                </div>
-              )}
+            )}
+            {data.minDealValue > 0 && (
+              <div style={{ textAlign: 'center', fontSize: '0.8125rem', color: '#F5F5F0' }}>From ₹{data.minDealValue.toLocaleString('en-IN')}</div>
+            )}
+            <div style={{ marginTop: '18px', borderTop: '1px solid rgba(200,184,154,0.18)', paddingTop: '12px', fontSize: '0.7rem', color: '#B8B4AC', textAlign: 'center' }}>
+              {completion}% complete
             </div>
-          )}
-          {step === 'languages' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Languages</h2><div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>{data.languages.map((lang) => (<div key={lang} style={{ background: C.accent, color: '#000', padding: '6px 12px', borderRadius: '6px', fontSize: '12px' }}>{lang}</div>))}</div></div>}
-          {step === 'deal-prefs' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Deal preferences</h2></div>}
-          {step === 'pricing' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Pricing</h2></div>}
-          {step === 'availability' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Availability</h2></div>}
-          {step === 'review' && <div><h2 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '16px' }}>Review your profile</h2><div style={{ fontSize: '13px', color: C.textSecondary }}><p>Name: {data.displayName}</p><p>Location: {data.location.city}, {data.location.country}</p>{data.selectedValueSkin && <p>Value skin: {data.selectedValueSkin}</p>}</div></div>}
+          </div>
         </div>
-
-        <div style={{ display: 'flex', gap: '12px' }}>
-          {currentStepIndex > 0 && <button onClick={() => setStep(steps[currentStepIndex - 1])} style={{ flex: 1, padding: '12px', border: `1px solid ${C.border}`, background: 'transparent', color: C.text, borderRadius: '8px', cursor: 'pointer' }}>Back</button>}
-          {currentStepIndex < steps.length - 1 && <button onClick={() => setStep(steps[currentStepIndex + 1])} style={{ flex: 1, padding: '12px', background: C.accent, color: '#000', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>Next</button>}
-          {currentStepIndex === steps.length - 1 && <button onClick={handleComplete} style={{ flex: 1, padding: '12px', background: C.accent, color: '#000', border: 'none', borderRadius: '8px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 600 }}>{loading ? 'Completing...' : 'Complete Setup'}</button>}
-          <button onClick={() => setShowSkipWarning(true)} style={{ padding: '12px 20px', border: `1px solid ${C.border}`, background: 'transparent', color: C.textSecondary, borderRadius: '8px', cursor: 'pointer', fontWeight: 500, fontSize: '13px' }}>Skip</button>
-        </div>
-
-        {showSkipWarning && <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ background: C.surface, padding: '24px', borderRadius: '12px', maxWidth: '400px', border: `1px solid ${C.border}` }}><h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>Save progress?</h3><p style={{ color: C.textSecondary, fontSize: '13px', marginBottom: '16px' }}>Your draft is auto-saved.</p><div style={{ display: 'flex', gap: '12px' }}><button onClick={() => setShowSkipWarning(false)} style={{ flex: 1, padding: '10px', border: `1px solid ${C.border}`, background: 'transparent', color: C.text, borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}>Continue</button><button onClick={() => router.push('/demo/marketplace')} style={{ flex: 1, padding: '10px', background: C.accent, color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 500 }}>Exit</button></div></div></div>}
       </div>
     </div>
   );
