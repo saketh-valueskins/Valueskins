@@ -1,31 +1,74 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/router';
-import { C } from '@/theme/colors';
+import { useEffect, useState } from 'react';
+import ValueSkinsLogo from '@/components/ValueSkinsLogo';
+
+// Role Selection (Front Door) — per ui-specs/Role Selection.md.
+// Dark premium surface, hero wordmark, split-spotlight role cards, proof
+// counters. UI-only restyle — the onboarding-complete flow is UNCHANGED.
+const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
+
+function useReduced() {
+  const [r, setR] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setR(mq.matches);
+    const on = () => setR(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return r;
+}
+
+// Proof counter count-up on load (spec §1). Illustrative pre-launch (spec §4).
+function Counter({ to, prefix = '', reduced }: { to: number; prefix?: string; reduced: boolean }) {
+  const [v, setV] = useState(reduced ? to : 0);
+  useEffect(() => {
+    if (reduced) {
+      setV(to);
+      return;
+    }
+    const start = performance.now();
+    const dur = 1200;
+    let raf = 0;
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / dur);
+      setV(Math.round((1 - Math.pow(1 - p, 3)) * to));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [to, reduced]);
+  return (
+    <span>
+      {prefix}
+      {v.toLocaleString('en-IN')}
+    </span>
+  );
+}
 
 export default function Onboarding() {
-  const router = useRouter();
+  const reduced = useReduced();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [hovered, setHovered] = useState<'creator' | 'brand' | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
+  // FLOW UNCHANGED — same onboarding-complete call as before.
   const handleSelect = async (role: 'brand' | 'creator') => {
     setLoading(true);
     setError('');
     try {
-      // Save role + complete onboarding in one call
       const res = await fetch('/api/auth/onboarding-complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ role }),
       });
-
       if (!res.ok) {
         const d = await res.json();
         throw new Error(d.error || 'Failed');
       }
-
-      // Hard redirect to home — AuthContext will re-fetch account with new role
       window.location.href = '/';
     } catch (err: any) {
       setError(err.message);
@@ -33,48 +76,136 @@ export default function Onboarding() {
     }
   };
 
+  const cards: { role: 'creator' | 'brand'; title: string; desc: string; reveal: string[] }[] = [
+    {
+      role: 'creator',
+      title: "I'm a Creator",
+      desc: 'Apply to brand campaigns, showcase your content, and get paid for your influence.',
+      reveal: ['Earned reputation', 'Guaranteed escrow payment', 'On-record deals'],
+    },
+    {
+      role: 'brand',
+      title: "I'm a Brand",
+      desc: 'Create campaigns, find the right creators, and grow your brand through authentic content.',
+      reveal: ['Verified creators', 'Pay only on approval', 'Real outcomes'],
+    },
+  ];
+
+  const entrance = (i: number): React.CSSProperties =>
+    reduced
+      ? {}
+      : {
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'none' : 'translateY(16px)',
+          transition: `opacity 600ms cubic-bezier(0.16,1,0.3,1) ${i * 110}ms, transform 600ms cubic-bezier(0.16,1,0.3,1) ${i * 110}ms`,
+        };
+
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto' }}>
-      <div style={{ width: '100%', maxWidth: '520px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <div style={{ fontSize: '32px', fontWeight: 800, color: C.text, marginBottom: '12px' }}>Welcome to ValueSkins</div>
-          <div style={{ fontSize: '16px', color: C.textSecondary }}>How do you want to use ValueSkins?</div>
+    <div
+      style={{
+        minHeight: '100vh',
+        // Tonal dark gradient + faint sand glow (BRANDING §10.2 / spec §1)
+        background:
+          'radial-gradient(60% 45% at 82% 0%, rgba(160,138,94,0.16), transparent 66%), linear-gradient(150deg, #0A0A0A 0%, #161512 55%, #20201B 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '48px 20px',
+        fontFamily: FONT,
+        color: '#F5F5F0',
+      }}
+    >
+      <div style={{ width: '100%', maxWidth: '860px' }}>
+        {/* Hero */}
+        <div style={{ textAlign: 'center', marginBottom: '40px', ...entrance(0) }}>
+          <ValueSkinsLogo theme="dark" size={34} />
+          <h1 style={{ fontSize: 'clamp(1.6rem, 4vw, 2rem)', fontWeight: 700, margin: '28px 0 10px', lineHeight: 1.15 }}>
+            Where creators and brands close deals on{' '}
+            <span style={{ color: '#C8B89A' }}>earned trust</span>.
+          </h1>
+          <p style={{ fontSize: '1rem', color: '#B8B4AC', margin: 0 }}>
+            Verified identities. Real reputation. Money that actually moves.
+          </p>
+        </div>
+
+        {/* Proof counters (spec §1/§4 — illustrative pre-launch) */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap', marginBottom: '40px', ...entrance(1) }}>
+          {[
+            { label: 'Creators verified', node: <Counter to={1200} reduced={reduced} /> },
+            { label: 'Deals completed', node: <Counter to={3400} reduced={reduced} /> },
+            { label: 'Paid to creators', node: <Counter to={9800000} prefix="₹" reduced={reduced} /> },
+          ].map((s) => (
+            <div key={s.label} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#F5F5F0' }}>{s.node}</div>
+              <div style={{ fontSize: '0.75rem', letterSpacing: '0.08em', color: '#B8B4AC', marginTop: '4px' }}>{s.label}</div>
+            </div>
+          ))}
         </div>
 
         {error && (
-          <div style={{ padding: '10px 14px', background: '#fef2f2', color: '#ef4444', borderRadius: '8px', fontSize: '13px', marginBottom: '20px', textAlign: 'center' }}>
+          <div style={{ padding: '10px 14px', background: 'rgba(176,65,62,0.12)', color: '#E88', borderRadius: '6px', fontSize: '0.8125rem', marginBottom: '20px', textAlign: 'center', border: '1px solid rgba(176,65,62,0.4)' }}>
             {error}
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          <button
-            onClick={() => handleSelect('creator')}
-            disabled={loading}
-            style={{ padding: '32px 20px', border: `2px solid ${C.border}`, borderRadius: '16px', background: C.surface, cursor: loading ? 'not-allowed' : 'pointer', textAlign: 'center', transition: 'all 0.2s', opacity: loading ? 0.6 : 1 }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = C.primary)}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = C.border)}
-          >
-            <div style={{ fontSize: '40px', marginBottom: '16px' }}>🎨</div>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>I'm a Creator</div>
-            <div style={{ fontSize: '13px', color: C.textSecondary, lineHeight: 1.5 }}>Apply to brand campaigns, showcase your content, and get paid for your influence.</div>
-          </button>
-
-          <button
-            onClick={() => handleSelect('brand')}
-            disabled={loading}
-            style={{ padding: '32px 20px', border: `2px solid ${C.border}`, borderRadius: '16px', background: C.surface, cursor: loading ? 'not-allowed' : 'pointer', textAlign: 'center', transition: 'all 0.2s', opacity: loading ? 0.6 : 1 }}
-            onMouseEnter={e => (e.currentTarget.style.borderColor = C.primary)}
-            onMouseLeave={e => (e.currentTarget.style.borderColor = C.border)}
-          >
-            <div style={{ fontSize: '40px', marginBottom: '16px' }}>🏢</div>
-            <div style={{ fontSize: '18px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>I'm a Brand</div>
-            <div style={{ fontSize: '13px', color: C.textSecondary, lineHeight: 1.5 }}>Create campaigns, find the right creators, and grow your brand through authentic content.</div>
-          </button>
+        {/* Role split — spotlight on hover, dims the other (spec §1) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', ...entrance(2) }}>
+          {cards.map((card) => {
+            const isHovered = hovered === card.role;
+            const dimmed = hovered !== null && !isHovered;
+            return (
+              <button
+                key={card.role}
+                onClick={() => handleSelect(card.role)}
+                disabled={loading}
+                onMouseEnter={() => setHovered(card.role)}
+                onMouseLeave={() => setHovered(null)}
+                onFocus={() => setHovered(card.role)}
+                onBlur={() => setHovered(null)}
+                style={{
+                  padding: '36px 28px',
+                  border: `1px solid ${isHovered ? 'rgba(200,184,154,0.55)' : 'rgba(200,184,154,0.2)'}`,
+                  borderRadius: '10px',
+                  background: isHovered ? 'rgba(200,184,154,0.06)' : 'rgba(255,255,255,0.02)',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  textAlign: 'left',
+                  color: '#F5F5F0',
+                  fontFamily: FONT,
+                  transition: reduced ? 'none' : 'transform 0.25s cubic-bezier(0.16,1,0.3,1), border-color 0.2s, background 0.2s, opacity 0.2s',
+                  transform: !reduced && isHovered ? 'translateY(-4px)' : 'none',
+                  opacity: loading ? 0.5 : dimmed ? 0.55 : 1,
+                }}
+              >
+                <div style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '10px' }}>{card.title}</div>
+                <div style={{ fontSize: '0.9375rem', color: '#B8B4AC', lineHeight: 1.5, marginBottom: '16px' }}>{card.desc}</div>
+                {/* Hidden feature lines reveal on hover (spec §1) */}
+                <div
+                  style={{
+                    maxHeight: isHovered && !reduced ? '120px' : reduced ? 'none' : '0',
+                    opacity: isHovered || reduced ? 1 : 0,
+                    overflow: 'hidden',
+                    transition: reduced ? 'none' : 'max-height 0.3s ease, opacity 0.3s ease',
+                  }}
+                >
+                  {card.reveal.map((line) => (
+                    <div key={line} style={{ fontSize: '0.8125rem', color: '#C8B89A', padding: '3px 0' }}>
+                      <span style={{ marginRight: '8px' }}>→</span>
+                      {line}
+                    </div>
+                  ))}
+                  <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#F5F5F0', marginTop: '10px' }}>
+                    Continue as {card.role === 'creator' ? 'Creator' : 'Brand'} →
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '12px', color: C.textMuted }}>
-          {loading ? 'Setting up your account...' : 'This selection is permanent and cannot be changed later.'}
+        {/* Current-flow copy kept verbatim. NOTE: contradicts Role Selection.md §1
+            ("You can change your role anytime in settings.") — flagged, not changed. */}
+        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.75rem', color: '#B8B4AC' }}>
+          {loading ? 'Setting up your account…' : 'This selection is permanent and cannot be changed later.'}
         </div>
       </div>
     </div>
