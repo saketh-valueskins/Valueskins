@@ -110,13 +110,28 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
+      # Run vercel from the repo ROOT, not marketplace/. The Vercel project has
+      # Root Directory = marketplace, so running inside marketplace/ doubled the
+      # path (marketplace/marketplace/package.json) and the deploy failed. Read
+      # the real orgId/projectId from the committed marketplace/.vercel/project.json
+      # and pass them as env so Root Directory is applied exactly once.
+      - name: Read Vercel project link
+        id: vlink
+        run: |
+          echo "org=$(node -p "require('./marketplace/.vercel/project.json').orgId")" >> $GITHUB_OUTPUT
+          echo "project=$(node -p "require('./marketplace/.vercel/project.json').projectId")" >> $GITHUB_OUTPUT
+
       - name: Pull Vercel Environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: marketplace
+        env:
+          VERCEL_ORG_ID: ${{ steps.vlink.outputs.org }}
+          VERCEL_PROJECT_ID: ${{ steps.vlink.outputs.project }}
 
       - name: Build Production
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: marketplace
+        env:
+          VERCEL_ORG_ID: ${{ steps.vlink.outputs.org }}
+          VERCEL_PROJECT_ID: ${{ steps.vlink.outputs.project }}
 
       - name: Deploy to Production
         run: |
@@ -125,10 +140,10 @@ jobs:
           echo "url=$URL" >> $GITHUB_OUTPUT
           echo "## Marketplace Production Deployed" >> $GITHUB_STEP_SUMMARY
           echo "[$URL]($URL)" >> $GITHUB_STEP_SUMMARY
-        working-directory: marketplace
         id: deploy
         env:
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_MARKETPLACE }}
+          VERCEL_ORG_ID: ${{ steps.vlink.outputs.org }}
+          VERCEL_PROJECT_ID: ${{ steps.vlink.outputs.project }}
 
   deploy-backend:
     name: Deploy Backend → Production (Render)
