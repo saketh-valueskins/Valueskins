@@ -35,6 +35,7 @@ import {
   syncAllPendingPayoutLinks,
   retryFailedPayoutLinkCreations,
 } from '@/lib/escrow/escrow-engine-v3-liability-free';
+import { findMismatchedDeals } from '@/lib/escrow/calculation-reconciliation';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (setupCors(req, res)) return;
@@ -323,6 +324,33 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(200).json({
         success: true,
         message: 'Retried failed payout link creations'
+      });
+    }
+
+    // ── RECONCILIATION AUDIT (Cron) ──
+    // Verify all deals have milestone_releases that sum to deal_escrow total
+    if (act === 'reconcile-calculations' && req.method === 'POST') {
+      const cronSecret = req.headers['x-cron-secret'];
+      if (cronSecret !== process.env.CRON_SECRET) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const mismatchedDeals = await findMismatchedDeals();
+
+      if (mismatchedDeals.length === 0) {
+        return res.status(200).json({
+          success: true,
+          message: 'All deals reconciled correctly',
+          mismatchedDeals: [],
+          totalDealsChecked: mismatchedDeals.length,
+        });
+      }
+
+      return res.status(200).json({
+        success: false,
+        message: `Found ${mismatchedDeals.length} deals with calculation mismatches`,
+        mismatchedDeals,
+        alert: 'CRITICAL: Review these deals immediately for calculation errors',
       });
     }
 

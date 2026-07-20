@@ -22,6 +22,11 @@ import {
   refundPayment,
 } from '@/lib/razorpay';
 import { VALUESKIN_PRICE_CENTS, CURRENCY } from '@/lib/pricing';
+import {
+  calculateMilestonePayouts,
+  verifyMilestoneReconciliation,
+  logReconciliationMismatch,
+} from './calculation-reconciliation';
 import crypto from 'crypto';
 
 // ── Types ──
@@ -84,11 +89,19 @@ function generateIdempotencyKey(dealId: string, milestoneType: string, timestamp
 // ── Deal Creation ──
 
 export async function createDeal(input: EscrowDealInput) {
-  const totalPct = input.advancePct +
-    input.milestonePcts.reduce((a, b) => a + b, 0) +
-    input.finalPct;
-  if (Math.abs(totalPct - 100) > 0.01) {
-    throw new Error(`Milestone percentages must sum to 100 (got ${totalPct})`);
+  // Calculate payouts using correct algorithm (last bucket absorbs residual)
+  const calculation = calculateMilestonePayouts(
+    input.totalAmountCents,
+    input.advancePct,
+    input.milestonePcts,
+    input.finalPct
+  );
+
+  // Verify calculation is exact (no rounding errors)
+  if (!calculation.isValid) {
+    throw new Error(
+      `Calculation error: milestone split failed validation (residual: ${calculation.residualCents} cents)`
+    );
   }
 
   await transaction(async (client) => {
@@ -103,40 +116,59 @@ export async function createDeal(input: EscrowDealInput) {
       [input.dealId, input.advancePct, JSON.stringify(input.milestonePcts), input.finalPct]
     );
 
-    if (input.advancePct > 0) {
-      const advanceCents = Math.round(input.totalAmountCents * (input.advancePct / 100));
+    // Insert milestone releases with EXACT amounts (no rounding error)
+    if (calculation.advanceCents > 0) {
       await client.query(
         `INSERT INTO milestone_releases (deal_id, milestone_type, milestone_index, amount_cents, status, created_at)
          VALUES ($1, 'advance', 0, $2, 'pending', NOW())`,
-        [input.dealId, advanceCents]
+        [input.dealId, calculation.advanceCents]
       );
     }
 
-    for (let i = 0; i < input.milestonePcts.length; i++) {
-      const pct = input.milestonePcts[i];
-      const milestoneCents = Math.round(input.totalAmountCents * (pct / 100));
-      await client.query(
-        `INSERT INTO milestone_releases (deal_id, milestone_type, milestone_index, amount_cents, status, created_at)
-         VALUES ($1, 'milestone', $2, $3, 'pending', NOW())`,
-        [input.dealId, i, milestoneCents]
-      );
+    for (let i = 0; i < calculation.milestoneCents.length; i++) {
+      const milestoneCents = calculation.milestoneCents[i];
+      if (milestoneCents > 0) {
+        await client.query(
+          `INSERT INTO milestone_releases (deal_id, milestone_type, milestone_index, amount_cents, status, created_at)
+           VALUES ($1, 'milestone', $2, $3, 'pending', NOW())`,
+          [input.dealId, i, milestoneCents]
+        );
+      }
     }
 
-    if (input.finalPct > 0) {
-      const finalCents = Math.round(input.totalAmountCents * (input.finalPct / 100));
+    if (calculation.finalCents > 0) {
       await client.query(
         `INSERT INTO milestone_releases (deal_id, milestone_type, milestone_index, amount_cents, status, created_at)
          VALUES ($1, 'final', 0, $2, 'pending', NOW())`,
-        [input.dealId, finalCents]
+        [input.dealId, calculation.finalCents]
       );
     }
   });
 
+  // Post-write verification: ensure milestone_releases sum to escrow total
+  const reconciliation = await verifyMilestoneReconciliation(input.dealId);
+  if (!reconciliation.isReconciled) {
+    await logReconciliationMismatch(
+      input.dealId,
+      reconciliation.totalEscrowed,
+      reconciliation.totalScheduled,
+      reconciliation.mismatchCents
+    );
+    throw new Error(
+      `Reconciliation failed after deal creation: escrow ${reconciliation.totalEscrowed} vs scheduled ${reconciliation.totalScheduled} (mismatch: ${reconciliation.mismatchCents} cents)`
+    );
+  }
+
   await logAudit(input.dealId, null, 'system', 'deal_created', {
     totalAmountCents: input.totalAmountCents,
     advancePct: input.advancePct,
+    milestonePcts: input.milestonePcts,
     finalPct: input.finalPct,
-    message: 'Deal created with milestone structure'
+    advanceCents: calculation.advanceCents,
+    milestoneCents: calculation.milestoneCents,
+    finalCents: calculation.finalCents,
+    message: 'Deal created with exact milestone amounts (no rounding error)',
+    reconciliationVerified: reconciliation.isReconciled,
   });
 }
 
