@@ -140,3 +140,88 @@ const KNOWN_RAZORPAY_IPS: string[] = [];
 export function isKnownRazorpayIp(ip: string): boolean {
   return KNOWN_RAZORPAY_IPS.includes(ip);
 }
+
+// ── PAYOUT LINKS API (for liability-free escrow) ──
+// Creator confirms payout via link, Razorpay executes transfer
+
+export interface CreatePayoutLinkParams {
+  amount: number; // in paise (₹100 = 10000)
+  currency?: string;
+  accept_partial?: boolean;
+  first_min_partial_amount?: number;
+  reference_id?: string;
+  recipient: {
+    name: string;
+    email?: string;
+    contact?: string;
+  };
+  notify?: {
+    sms?: boolean;
+    email?: boolean;
+  };
+  callback_url?: string;
+  callback_method?: string;
+  notes?: Record<string, any>;
+  idempotency_key?: string;
+}
+
+export async function createPayoutLink(params: CreatePayoutLinkParams) {
+  try {
+    const payoutLink = await (razorpay as any).payoutLinks.create({
+      amount: params.amount,
+      currency: params.currency || 'INR',
+      accept_partial: params.accept_partial ?? false,
+      first_min_partial_amount: params.first_min_partial_amount,
+      reference_id: params.reference_id,
+      recipient: params.recipient,
+      notify: params.notify || { sms: true, email: true },
+      callback_url: params.callback_url,
+      callback_method: params.callback_method || 'post',
+      notes: params.notes,
+    }, {
+      'Idempotency-Key': params.idempotency_key,
+    });
+    return { success: true, data: payoutLink };
+  } catch (error) {
+    console.error('Razorpay payout link creation failed:', error);
+    return { success: false, error };
+  }
+}
+
+export async function fetchPayoutLink(payoutLinkId: string) {
+  try {
+    const payoutLink = await (razorpay as any).payoutLinks.fetch(payoutLinkId);
+    return { success: true, data: payoutLink };
+  } catch (error) {
+    console.error('Razorpay payout link fetch failed:', error);
+    return { success: false, error };
+  }
+}
+
+export async function cancelPayoutLink(payoutLinkId: string, cancelReason?: string) {
+  try {
+    const result = await (razorpay as any).payoutLinks.cancel(payoutLinkId, {
+      reason: cancelReason || 'cancelled_by_merchant',
+    });
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Razorpay payout link cancellation failed:', error);
+    return { success: false, error };
+  }
+}
+
+// ── REFUND API (Razorpay executes refunds, not ValueSkins) ──
+
+export async function refundPayment(paymentId: string, amountCents?: number) {
+  try {
+    const refundParams: any = {};
+    if (amountCents) {
+      refundParams.amount = amountCents;
+    }
+    const refund = await (razorpay as any).payments.refund(paymentId, refundParams);
+    return { success: true, data: refund };
+  } catch (error) {
+    console.error('Razorpay refund failed:', error);
+    return { success: false, error };
+  }
+}
