@@ -8,3 +8,6 @@ backend/target/
 .vercel
 .env*.local
 *.tsbuildinfo
+
+# stale backup of node_modules — never ship, never track
+node_modules.bak/
