@@ -23,12 +23,16 @@
   }
 
   body {
-    background: #000;
+    /* Brand near-black, not pure #000 (BRANDING) */
+    background: #0A0A0A;
     color: #e5e5e5;
     font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
     font-size: 1rem; /* G6: 16px base, no smaller root */
     line-height: 1.6;
-    min-height: 100vh;
+    /* dvh, never vh — mobile browser chrome makes 100vh overflow */
+    min-height: 100dvh;
+    /* no horizontal scroll, ever */
+    overflow-x: hidden;
   }
 
   /* G3: sand selection, never pink */
@@ -43,7 +47,7 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #000;
+    background: #0A0A0A;
   }
 
   ::-webkit-scrollbar-thumb {
@@ -291,4 +295,22 @@
 .material-symbols-filled {
   font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
   font-size: 20px;
+}
+
+/* Reduced-motion safety net. Pages carry their own fallbacks, but anything
+   that ships an animation without one is neutralised here: motion collapses
+   to its final state rather than being removed. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
 }

@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { downloadDealPDF } from '@/lib/firebase-storage';
-import { getAuth } from '@/lib/auth';
+import { getSessionUserId } from '@/lib/session';
 import { query } from '@/lib/db-pool';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -16,8 +16,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Get current user
-    const auth = getAuth(req);
-    if (!auth.userId) {
+    const userId = await getSessionUserId(req.headers.cookie || '');
+    if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const deal = dealResult.rows[0];
-    if (deal.creator_id !== auth.userId && deal.brand_id !== auth.userId) {
+    if (deal.creator_id !== userId && deal.brand_id !== userId) {
       return res.status(403).json({ error: 'Unauthorized: not deal participant' });
     }
 

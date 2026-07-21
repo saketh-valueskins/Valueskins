@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db-pool';
 import { generateDealPDF } from '@/lib/pdf-generator';
 import { uploadDealPDF, getDealPDFVersions } from '@/lib/firebase-storage';
-import { getAuth } from '@/lib/auth';
+import { getSessionUserId } from '@/lib/session';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -17,8 +17,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Get current user
-    const auth = getAuth(req);
-    if (!auth.userId) {
+    const userId = await getSessionUserId(req.headers.cookie || '');
+    if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -47,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const deal = dealResult.rows[0];
 
       // Check if user is creator or brand
-      if (deal.creator_id !== auth.userId && deal.brand_id !== auth.userId) {
+      if (deal.creator_id !== userId && deal.brand_id !== userId) {
         return res.status(403).json({ error: 'Unauthorized: not deal participant' });
       }
 
