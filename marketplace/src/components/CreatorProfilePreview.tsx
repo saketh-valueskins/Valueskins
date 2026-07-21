@@ -6,7 +6,7 @@ import {
   ProfileCardDisplay,
   ValueskinAvatarToggle,
   ProfilePhotoWithLongPress,
-} from './AvatarOptions';
+} from '@/features/valueskins/core/identity/AvatarOptions';
 
 interface InstagramProfilePreviewProps {
   displayName: string;
