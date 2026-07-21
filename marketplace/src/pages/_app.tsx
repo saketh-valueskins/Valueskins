@@ -7,13 +7,25 @@ import CookieConsent from '@/components/CookieConsent';
 import SplashIntro from '@/components/SplashIntro';
 import '@/styles/globals.css';
 
+// P2-F2: pages that draw their own VALUESKINS wordmark. The global fixed
+// wordmark below must not render on these or the two overlap (the reported
+// glitchy doubled wordmark).
+const ROUTES_WITH_OWN_WORDMARK = [
+  '/',
+  '/auth/login',
+  '/auth/signup',
+  '/auth/onboarding',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/demo/marketplace',
+];
+
 function HomeButton() {
   const router = useRouter();
   const { account, loading } = useAuth();
   const isOnboarding = router.pathname.startsWith('/auth/onboarding')
     || router.pathname === '/auth/verify-email';
-  const isLoginOrSignup = router.pathname.startsWith('/auth/login')
-    || router.pathname.startsWith('/auth/signup');
+  const ownsWordmark = ROUTES_WITH_OWN_WORDMARK.includes(router.pathname);
 
   const target = loading ? '/'
     : account?.onboarding_stage === 'complete' ? '/demo/marketplace'
@@ -34,6 +46,8 @@ function HomeButton() {
   // G1: no wordmark pill anywhere. The black oval/background/border is removed —
   // brand presence in nav is the plain VALUESKINS wordmark as text, no container.
   // Uses currentColor so each page's own text colour keeps it visible in light/dark.
+  if (ownsWordmark) return null;
+
   return (
     <a
       href={target}
@@ -44,7 +58,7 @@ function HomeButton() {
         top: '20px',
         left: '20px',
         zIndex: 9999,
-        display: isLoginOrSignup ? 'none' : 'inline-flex',
+        display: 'inline-flex',
         alignItems: 'center',
         color: 'currentColor',
         mixBlendMode: 'difference',
