@@ -1,18 +1,25 @@
 type Level = 1 | 2 | 3 | 4 | 5;
 
+// Tier names come from the Raw -> Icon scale. The phase-2 Profile spec pins
+// Signal = level 3 and Aura = level 4 at 35 deals, which matches the thresholds
+// below exactly. Level 2's canonical name is still unconfirmed — Project.md,
+// the authority for §4, is not in this repo (see phase-2/flagged.md P2-F6).
+//
+// G3: sand only. These previously carried green / purple / amber, which the
+// brand rules forbid outright.
 const LEVEL_THRESHOLDS: { level: Level; minDeals: number; label: string; color: string }[] = [
-  { level: 1, minDeals: 0, label: 'Newcomer', color: '#B8B4AC' },
-  { level: 2, minDeals: 5, label: 'Emerging', color: '#22c55e' },
-  { level: 3, minDeals: 15, label: 'Experienced', color: '#A08A5E' },
-  { level: 4, minDeals: 35, label: 'Expert', color: '#a855f7' },
-  { level: 5, minDeals: 75, label: 'Elite', color: '#f59e0b' },
+  { level: 1, minDeals: 0, label: 'Raw', color: '#8A867E' },
+  { level: 2, minDeals: 5, label: 'Emerging', color: '#B8B4AC' },
+  { level: 3, minDeals: 15, label: 'Signal', color: '#A08A5E' },
+  { level: 4, minDeals: 35, label: 'Aura', color: '#A08A5E' },
+  { level: 5, minDeals: 75, label: 'Icon', color: '#C8B89A' },
 ];
 
 const NEXT_LEVEL_INFO: Record<Level, { minDeals: number; label: string } | null> = {
   1: { minDeals: 5, label: 'Emerging' },
-  2: { minDeals: 15, label: 'Experienced' },
-  3: { minDeals: 35, label: 'Expert' },
-  4: { minDeals: 75, label: 'Elite' },
+  2: { minDeals: 15, label: 'Signal' },
+  3: { minDeals: 35, label: 'Aura' },
+  4: { minDeals: 75, label: 'Icon' },
   5: null,
 };
 

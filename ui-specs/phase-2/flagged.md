@@ -5,13 +5,16 @@
 
 ---
 
-## P2-F1 — Session ends & loses progress (investigate; likely cookie/token)
+## P2-F1 — Session ends & loses progress — **ROOT CAUSE FOUND & FIXED (part 1)**
 - **Symptom:** session expires → forced re-login → **unsaved progress lost** (draft campaigns, in-flight deal negotiations, profile edits).
-- **To confirm:** is it a **cookie/session-token** problem? (short-lived access token, no refresh token, session not persisted, wrong `SameSite`/`Secure`/expiry, or in-memory session dying on reload.)
-- **If confirmed as a big issue:** log the root cause + fix here and implement per `GP2`:
-  - persistent, refreshable session (httpOnly · Secure · SameSite=Lax · expiry + silent refresh), and
-  - **server-side autosave of drafts** so no work is lost even across a re-login.
-- **Status:** open — diagnose first, then fix + update this entry.
+- **Root cause (diagnosed 2026-07-21):** it *was* a cookie problem. Both OAuth callbacks set the session cookie **with no `Max-Age` and no `Expires`**:
+  ```
+  valueskins_session=<id>; HttpOnly; Secure; SameSite=Lax; Path=/
+  ```
+  That is a **browser-session cookie** — it is discarded when the browser closes. A comment in `google/callback.ts` called this deliberate ("server-side expiry is the source of truth"), but the effect was that closing the browser silently signed the user out. Every cookie-*clearing* call correctly set `Max-Age=0`; the cookie-*setting* calls set no lifetime at all.
+- **Fix applied (part 1 — persistence):** both callbacks now send `Max-Age = SESSION_ABSOLUTE_TIMEOUT_MS` (24h). Server-side expiry is still authoritative: 30-min sliding idle renewed by `touchSession`, capped at 24h absolute. The session now survives a browser restart.
+- **Still open (part 2 — autosave):** GP2 also requires **server-side autosave of drafts** so nothing is lost even when a session legitimately ends. Not built. `/api/auth/onboarding-draft` exists and is the obvious pattern to extend to draft campaigns, in-flight deals and profile edits.
+- **Status:** persistence ✅ fixed · draft autosave ⬜ open.
 
 ---
 
@@ -64,6 +67,47 @@ Removed on `develop`; each is recoverable from the commit's parent.
 - **~95 further orphaned components/libs** (`DealCard`, `TopNav`, `Navigation`, `GlobalSearch`, `ShareableProfileCard`, `creatorMatching`, `community`, …). Many are pre-redesign screens; each needs checking against its spec before removal.
 
 - **Status:** open — the four groups above await a decision.
+
+---
+
+## P2-F6 — `Project.md` is missing from the repo (blocks three data decisions)
+
+Every spec cites `Project.md` as the authority, but the file is not in the repo and not in git history on any branch. Three things could not be verified against it:
+
+1. **Tier names (`§4`).** The phase-2 Profile spec pins **Signal = level 3** and **Aura = level 4 at 35 deals**, and describes the scale as **"Raw→Icon"**. `lib/levels.ts` thresholds already matched exactly (15–34, 35+), so levels 1/3/4/5 were renamed **Raw / Signal / Aura / Icon**. **Level 2's canonical name is unconfirmed** — it still reads `Emerging` from the old scale. Needs confirming.
+2. **ValueSkin Type (`§28`).** The Type pill (Passion / Professional / Hobby) currently falls back to `Professional`. The rule that assigns it is in `Project.md`.
+3. **Stat computation (`§11`).** The six Track Record stats are specified as computed server-side from completed deals. `/api/profile/me` does not return `repeat_rate`, `on_time_rate`, `avg_response_hours` or `trust_score`, so those tiles render 0 until the endpoint provides them. **The UI is built and correct; the data is not wired.**
+
+**Also fixed in passing:** `lib/levels.ts` carried **green `#22c55e`**, purple `#a855f7` and amber `#f59e0b` as tier colours — a flat G3 violation ("sand only, no green"). All five are now sand.
+
+- **Status:** open — needs `Project.md` in the repo, then confirm level 2's name and wire the four missing stats.
+
+---
+
+## P2-F7 — Store layout differs from `store-page-mock.svg`
+
+- **Built:** a single-column list of category tiles.
+- **Mock:** a **two-pane master/detail** — left is a searchable, numbered profession list with per-category skin counts; right is a white detail pane with a 2×2 grid of skin cards, an `Acquire` button per card, and an `EQUIPPED` state on the owned one.
+- **Not rebuilt here** because it is a structural change, not a repaint, and the phase-2 folder has no written store spec to pin exact values against — only the mock. Needs either a `phase-2/Store.md` with numbers, or explicit approval to build straight from the mock.
+- **Fixed now regardless:** the hardcoded `₹950` is gone (GP3 / F1 — the mock deliberately shows no price). The buy button reads `Acquire`, matching the mock.
+- **Status:** open — awaiting a decision on the two-pane rebuild.
+
+---
+
+## P2-F8 — Slap-to-profile animation not built
+
+`slap-animation-storyboard.svg` specifies a three-beat equip animation with exact timings:
+
+| Beat | Motion | Timing |
+|---|---|---|
+| 1 · Rises in | 220px clone at screen centre, `scale .3→1.15`, `rotate −8→3` | ~320ms ease-**out** |
+| 2 · Slams | FLIP to the ValueSkin frame, translate + `scale(≈.53)` | ~340ms ease-**IN** (accelerating = impact) |
+| 3 · Lands | sand ring pulse + card shake, `Equipped` toast | 500ms / 400ms / ~3.2s |
+
+Transform and opacity only; reduced-motion skips the flight entirely.
+
+- **Not built** — it spans two surfaces (equip happens in the store, the frame lives on the profile), so it needs a decision on where equip is triggered from before the FLIP source/target can be wired. The profile-side landing target (the 160px frame) now exists.
+- **Status:** open.
 
 ---
 

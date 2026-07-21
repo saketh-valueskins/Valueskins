@@ -1,11 +1,31 @@
 'use client';
 import { useEffect, useState } from 'react';
 import ValueSkinsLogo from '@/components/ValueSkinsLogo';
+import { useAuth } from '@/context/AuthContext';
 
-// Role Selection (Front Door) — per ui-specs/Role Selection.md.
-// Dark premium surface, hero wordmark, split-spotlight role cards, proof
-// counters. UI-only restyle — the onboarding-complete flow is UNCHANGED.
+// Role Selection (Front Door) — per ui-specs/Role Selection.md, with the single
+// phase-2 change from ui-specs/phase-2/Welcome screen.md (GP1): the role cards
+// are entry points into auth, not direct role routers. Visuals are unchanged.
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
+
+// GP1: a role picked before OAuth is held transiently and applied after login.
+// It is a convenience pre-selection, never the commit.
+const PENDING_ROLE_COOKIE = 'vs_pending_role';
+const PENDING_ROLE_MAX_AGE = 15 * 60; // 15 min — long enough to finish OAuth
+
+function readPendingRole(): 'creator' | 'brand' | null {
+  if (typeof document === 'undefined') return null;
+  const m = document.cookie.match(/(?:^|;\s*)vs_pending_role=(creator|brand)(?:;|$)/);
+  return m ? (m[1] as 'creator' | 'brand') : null;
+}
+
+function writePendingRole(role: 'creator' | 'brand') {
+  document.cookie = `${PENDING_ROLE_COOKIE}=${role}; Max-Age=${PENDING_ROLE_MAX_AGE}; Path=/; SameSite=Lax`;
+}
+
+function clearPendingRole() {
+  document.cookie = `${PENDING_ROLE_COOKIE}=; Max-Age=0; Path=/; SameSite=Lax`;
+}
 
 function useReduced() {
   const [r, setR] = useState(false);
@@ -48,14 +68,38 @@ function Counter({ to, prefix = '', reduced }: { to: number; prefix?: string; re
 
 export default function Onboarding() {
   const reduced = useReduced();
+  const { account, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [hovered, setHovered] = useState<'creator' | 'brand' | null>(null);
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
-  // FLOW UNCHANGED — same onboarding-complete call as before.
+  useEffect(() => {
+    setMounted(true);
+    // GP1: if a role was picked at the welcome screen before OAuth, pre-select it
+    // here so the user only has to confirm.
+    const pending = readPendingRole();
+    if (pending) setHovered(pending);
+  }, []);
+
+  // GP1 step 2: a returning user who already committed a role skips the prompt.
+  useEffect(() => {
+    if (!authLoading && account?.onboarding_stage === 'complete') {
+      clearPendingRole();
+      window.location.replace('/demo/marketplace');
+    }
+  }, [authLoading, account?.onboarding_stage]);
+
+  // GP1: clicking a card means two different things depending on auth state.
+  //   signed out -> this is an ENTRY POINT: hold the choice, go to login/OAuth.
+  //   signed in  -> this IS the commit; the post-OAuth prompt is the source of truth.
   const handleSelect = async (role: 'brand' | 'creator') => {
+    if (!authLoading && !account) {
+      writePendingRole(role);
+      window.location.href = '/auth/login';
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -69,7 +113,8 @@ export default function Onboarding() {
         const d = await res.json();
         throw new Error(d.error || 'Failed');
       }
-      window.location.href = '/';
+      clearPendingRole();
+      window.location.href = '/demo/marketplace';
     } catch (err: any) {
       setError(err.message);
       setLoading(false);

@@ -6,10 +6,13 @@ import { useAuth } from '@/context/AuthContext';
 import { C } from '@/theme/colors';
 
 // ValueSkins Closet (Store) — per ui-specs/store.md. Airy hairline category
-// tiles, one active skin (0/1), ₹950 one-time. UI restyle — the purchase flow
+// tiles, one active skin (0/1). UI restyle — the purchase flow
 // (route to /payment/checkout) is UNCHANGED.
+//
+// GP3 / flagged.md F1: currency stays UNSET. Do not reintroduce a hardcoded
+// symbol or amount here — the price is confirmed at checkout. store-page-mock.svg
+// shows the acquire button with no price for exactly this reason.
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
-const SKIN_PRICE = '₹950';
 
 // System 3: Creator professions — same list as PROFESSION_BADGES used in onboarding and campaign targeting
 const PROFESSIONS: Record<string, string[]> = {
@@ -79,7 +82,7 @@ export default function ValueSkinsStore() {
             One profession identity, worn everywhere. One active skin at a time.
           </p>
           <p style={{ fontSize: '0.875rem', color: C.accent, marginBottom: '24px' }}>
-            {ownedSkins.length > 0 ? 'You own a ValueSkin · 1/1' : `One-time ${SKIN_PRICE} · 0/1`}
+            {ownedSkins.length > 0 ? 'You own a ValueSkin · 1/1' : 'One-time purchase · 0/1'}
           </p>
 
           <input
@@ -170,7 +173,7 @@ export default function ValueSkinsStore() {
                     fontFamily: FONT,
                   }}
                 >
-                  {isLoading ? 'Redirecting…' : isOwned ? 'Owned' : !canPurchase ? 'Max skins (1/1)' : `Buy · ${SKIN_PRICE}`}
+                  {isLoading ? 'Redirecting…' : isOwned ? 'Owned' : !canPurchase ? 'Max skins (1/1)' : 'Acquire'}
                 </button>
               </div>
             );

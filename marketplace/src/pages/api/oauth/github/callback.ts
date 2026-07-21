@@ -4,7 +4,7 @@ import { exchangeGitHubCode, getGitHubUserInfo, parseOAuthState } from '@/lib/oa
 import { hashSessionToken } from '@/lib/auth';
 import { query } from '@/lib/db';
 
-import { SESSION_IDLE_TIMEOUT_MS } from '@/config/constants';
+import { SESSION_IDLE_TIMEOUT_MS, SESSION_ABSOLUTE_TIMEOUT_MS } from '@/config/constants';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -100,7 +100,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
 
     const isSecure = req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';
-    const cookieStr = `valueskins_session=${sessionId}; HttpOnly; ${isSecure ? 'Secure; ' : ''}SameSite=Lax; Path=/`;
+    // GP2 / P2-F1: Max-Age so the session survives a browser restart (see google/callback.ts)
+    const cookieMaxAgeSec = Math.floor(SESSION_ABSOLUTE_TIMEOUT_MS / 1000);
+    const cookieStr = `valueskins_session=${sessionId}; HttpOnly; ${isSecure ? 'Secure; ' : ''}SameSite=Lax; Path=/; Max-Age=${cookieMaxAgeSec}`;
     res.setHeader('Set-Cookie', cookieStr);
 
     const redirectUrl = isNewUser
