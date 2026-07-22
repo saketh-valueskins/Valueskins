@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import Head from 'next/head';
 import ProfileView, { type ProfileData } from '@/features/profiles/ProfileView';
 
@@ -29,13 +30,35 @@ const MOCK_PROFILE: ProfileData = {
 };
 
 export default function DemoProfilePage() {
+  // Replay the slap-to-profile equip animation on demand so it can be reviewed
+  // without going through a real purchase.
+  const [equipRun, setEquipRun] = useState(0);
+
   return (
     <>
       <Head>
         <title>Profile preview · ValueSkins</title>
         <meta name="robots" content="noindex" />
       </Head>
-      <ProfileView profile={MOCK_PROFILE} />
+
+      <button
+        onClick={() => setEquipRun(n => n + 1)}
+        style={{
+          position: 'fixed', right: 20, bottom: 20, zIndex: 50,
+          minHeight: 44, padding: '0 20px', borderRadius: 10,
+          background: '#C8B89A', color: '#0A0A0A', border: 'none',
+          fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+          fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
+        }}
+      >
+        Play equip animation
+      </button>
+
+      <ProfileView
+        key={equipRun}
+        profile={MOCK_PROFILE}
+        justEquipped={equipRun > 0}
+      />
     </>
   );
 }

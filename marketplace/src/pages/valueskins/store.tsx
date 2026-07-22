@@ -1,18 +1,21 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { C } from '@/theme/colors';
+import { ValueSkinSprite } from '@/features/profiles/ProfileView';
 
-// ValueSkins Closet (Store) — per ui-specs/store.md. Airy hairline category
-// tiles, one active skin (0/1). UI restyle — the purchase flow
-// (route to /payment/checkout) is UNCHANGED.
+// ValueSkins Closet (Store) — two-pane master/detail, per
+// ui-specs/phase-2/store-page-mock.svg and ui-specs/store.md.
+// Left: searchable, numbered profession list with per-category skin counts.
+// Right: detail pane with a grid of skin cards, one Acquire per card.
 //
 // Price: V1 is a single flat ₹950 one-time skin. Project.md §7 describes a
 // Type-priced activation fee (Hobby/Passion/Professional) — that Type layer is
-// DROPPED for V1, so do not reintroduce tiered pricing here. This supersedes
-// the "currency stays unset" carry-over in flagged.md F1 / GP3.
+// DROPPED for V1, so do not reintroduce tiered pricing here.
+//
+// PURCHASE FLOW UNCHANGED — same guards, same route to /payment/checkout.
+
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 const SKIN_PRICE = '₹950';
 
@@ -32,13 +35,25 @@ const PROFESSIONS: Record<string, string[]> = {
   'Media & Journalism': ['Journalist', 'Reporter', 'Editor', 'Photojournalist'],
 };
 
-export default function ValueSkinsStore() {
+const HAIR = 'rgba(160,138,94,0.22)';
+const SAND = '#C8B89A';
+const DEEP_SAND = '#A08A5E';
+
+export default function StorePage() {
   const router = useRouter();
   const { account } = useAuth();
   const [ownedSkins, setOwnedSkins] = useState<string[]>([]);
   const [filter, setFilter] = useState('');
-  const [loadingProfession, setLoadingProfession] = useState<string | null>(null);
-  const [hovered, setHovered] = useState<string | null>(null);
+  const [loadingSkin, setLoadingSkin] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string>(Object.keys(PROFESSIONS)[0]);
+  const [isNarrow, setIsNarrow] = useState(false);
+
+  useEffect(() => {
+    const on = () => setIsNarrow(window.innerWidth <= 880);
+    on();
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
 
   useEffect(() => {
     if (!account?.id) return;
@@ -49,15 +64,15 @@ export default function ValueSkinsStore() {
           const data = await res.json();
           setOwnedSkins(data.skins?.map((s: any) => s.value_skin) || []);
         }
-      } catch (err) {
-        console.error('Failed to fetch skins:', err);
+      } catch {
+        // owned list stays empty; the store still renders
       }
     };
     fetchOwnedSkins();
   }, [account?.id]);
 
   // FLOW UNCHANGED — same guards + route to checkout.
-  const handlePurchase = async (profession: string) => {
+  const handlePurchase = async (skin: string) => {
     if (!account?.id) {
       alert('Please log in first');
       return;
@@ -66,137 +81,202 @@ export default function ValueSkinsStore() {
       alert('You can only own 1 ValueSkin. Remove your current skin to purchase another.');
       return;
     }
-    setLoadingProfession(profession);
-    router.push(`/payment/checkout?profession=${profession}`);
+    setLoadingSkin(skin);
+    router.push(`/payment/checkout?profession=${encodeURIComponent(skin)}`);
   };
 
-  const filteredSkins = Object.entries(PROFESSIONS).filter(([name]) =>
-    name.toLowerCase().includes(filter.toLowerCase()),
-  );
+  const categories = Object.entries(PROFESSIONS).filter(([name, subs]) => {
+    const q = filter.toLowerCase();
+    return !q || name.toLowerCase().includes(q) || subs.some(s => s.toLowerCase().includes(q));
+  });
+
   const canPurchase = ownedSkins.length < 1;
+  const activeSkins = PROFESSIONS[selected] || [];
+  const isEquipped = (skin: string) => ownedSkins.includes(skin.toLowerCase());
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, padding: '40px 20px', fontFamily: FONT }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: C.text, marginBottom: '8px' }}>ValueSkins Closet</h1>
-          <p style={{ fontSize: '1rem', color: C.textSecondary, marginBottom: '4px' }}>
-            One profession identity, worn everywhere. One active skin at a time.
+    <div style={{ minHeight: '100dvh', background: C.bg, fontFamily: FONT, overflowX: 'hidden' }}>
+      <div style={{
+        maxWidth: 1280, margin: '0 auto', padding: isNarrow ? '28px 20px 80px' : '40px 32px 80px',
+        display: 'grid',
+        gridTemplateColumns: isNarrow ? '1fr' : '380px 1fr',
+        gap: isNarrow ? 24 : 32,
+        alignItems: 'start',
+      }}>
+
+        {/* ───────── LEFT: category list ───────── */}
+        <div>
+          <h1 style={{ fontSize: '1.375rem', fontWeight: 700, color: C.text, letterSpacing: '-0.02em', margin: 0 }}>
+            ValueSkins Closet
+          </h1>
+          <p style={{ fontSize: '0.8125rem', color: C.textSecondary, marginTop: 6, marginBottom: 16 }}>
+            Pick a profession to see its skins.
           </p>
-          <p style={{ fontSize: '0.875rem', color: C.accent, marginBottom: '24px' }}>
-            {ownedSkins.length > 0 ? 'You own a ValueSkin · 1/1' : `One-time ${SKIN_PRICE} · 0/1`}
-          </p>
 
-          <input
-            type="text"
-            placeholder="Search professions…"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            style={{
-              maxWidth: '400px',
-              padding: '12px 16px',
-              border: `1px solid rgba(160,138,94,0.28)`,
-              borderRadius: '6px',
-              background: C.surface,
-              color: C.text,
-              fontSize: '1rem',
-              width: '100%',
-              fontFamily: FONT,
-            }}
-          />
-        </div>
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              placeholder="Search professions…"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              aria-label="Search professions"
+              style={{
+                width: '100%', height: 44, padding: '0 14px 0 40px',
+                border: `1px solid rgba(160,138,94,0.28)`, borderRadius: 10,
+                background: C.surface, color: C.text,
+                fontSize: '0.875rem', fontFamily: FONT,
+              }}
+            />
+            <svg
+              width="15" height="15" viewBox="0 0 15 15" aria-hidden="true"
+              style={{ position: 'absolute', left: 14, top: 15, pointerEvents: 'none' }}
+            >
+              <circle cx="6" cy="6" r="5" fill="none" stroke={DEEP_SAND} strokeWidth="1.6" />
+              <line x1="10" y1="10" x2="14" y2="14" stroke={DEEP_SAND} strokeWidth="1.6" />
+            </svg>
+          </div>
 
-        {/* Airy category tiles — hairline, not filled boxes (spec §1) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px', marginBottom: '40px' }}>
-          {filteredSkins.map(([name, subProfessions]) => {
-            const isOwned = ownedSkins.includes(name.toLowerCase());
-            const isLoading = loadingProfession === name;
-            const isHovered = hovered === name;
-            const disabled = isOwned || !canPurchase || isLoading;
+          <div style={{
+            fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.14em',
+            textTransform: 'uppercase', color: C.textSecondary, margin: '22px 0 4px',
+          }}>
+            Browse professions
+          </div>
 
-            return (
-              <div
-                key={name}
-                onMouseEnter={() => setHovered(name)}
-                onMouseLeave={() => setHovered(null)}
-                style={{
-                  background: isHovered ? 'rgba(200,184,154,0.05)' : 'transparent',
-                  border: `1px solid ${isHovered ? 'rgba(200,184,154,0.5)' : 'rgba(160,138,94,0.22)'}`,
-                  borderRadius: '10px',
-                  padding: '24px',
-                  transition: 'background 0.2s, border-color 0.2s, transform 0.2s',
-                  transform: isHovered ? 'translateY(-2px)' : 'none',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '14px' }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: C.text, margin: 0 }}>{name}</h3>
-                  <span style={{ fontSize: '0.75rem', color: C.textSecondary }}>{subProfessions.length} skins</span>
-                </div>
-
-                <div style={{ marginBottom: '18px' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {subProfessions.slice(0, 6).map((sub) => (
-                      <span
-                        key={sub}
-                        style={{
-                          fontSize: '0.75rem',
-                          color: C.textSecondary,
-                          border: `1px solid rgba(160,138,94,0.2)`,
-                          padding: '3px 8px',
-                          borderRadius: '4px',
-                        }}
-                      >
-                        {sub}
-                      </span>
-                    ))}
-                    {subProfessions.length > 6 && (
-                      <span style={{ fontSize: '0.75rem', color: C.textSecondary, padding: '3px 4px' }}>
-                        +{subProfessions.length - 6} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-
+          <div role="tablist" aria-label="Professions">
+            {categories.map(([name, subs], i) => {
+              const active = name === selected;
+              return (
                 <button
-                  onClick={() => handlePurchase(name)}
-                  disabled={disabled}
+                  key={name}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setSelected(name)}
                   style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    // Near-black on sand for the active buy; quiet when unavailable (spec §6)
-                    background: isOwned ? 'transparent' : canPurchase ? C.accent : 'transparent',
-                    color: isOwned ? C.textSecondary : canPurchase ? '#0A0A0A' : C.textSecondary,
-                    border: isOwned || !canPurchase ? `1px solid rgba(160,138,94,0.28)` : 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    cursor: disabled ? 'not-allowed' : 'pointer',
-                    opacity: !canPurchase && !isOwned ? 0.6 : 1,
-                    fontFamily: FONT,
+                    position: 'relative', width: '100%', minHeight: 46,
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '0 12px', border: 'none',
+                    borderBottom: `1px solid ${C.border}`,
+                    background: active ? 'rgba(200,184,154,0.14)' : 'transparent',
+                    borderRadius: active ? 6 : 0,
+                    cursor: 'pointer', textAlign: 'left', fontFamily: FONT,
+                    transition: 'background 0.15s ease',
                   }}
                 >
-                  {isLoading ? 'Redirecting…' : isOwned ? 'Owned' : !canPurchase ? 'Max skins (1/1)' : `Acquire · ${SKIN_PRICE}`}
+                  {active && (
+                    <span aria-hidden="true" style={{
+                      position: 'absolute', left: 0, top: 0, bottom: 0, width: 2, background: SAND,
+                    }} />
+                  )}
+                  <span style={{ fontSize: '0.6875rem', color: C.textMuted, minWidth: 18 }}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span style={{ flex: 1, fontSize: '0.9375rem', fontWeight: 600, color: C.text }}>
+                    {name}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: C.textSecondary }}>
+                    {subs.length} skins
+                  </span>
+                  <span aria-hidden="true" style={{ color: active ? DEEP_SAND : C.textMuted, fontSize: '0.9375rem' }}>›</span>
                 </button>
-              </div>
-            );
-          })}
+              );
+            })}
+            {categories.length === 0 && (
+              <p style={{ fontSize: '0.8125rem', color: C.textSecondary, padding: '18px 2px' }}>
+                No professions match “{filter}”.
+              </p>
+            )}
+          </div>
         </div>
 
-        <button
-          onClick={() => router.push('/demo/marketplace')}
-          style={{
-            padding: '12px 24px',
-            border: `1px solid rgba(160,138,94,0.28)`,
-            background: 'transparent',
-            color: C.text,
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontFamily: FONT,
-          }}
-        >
-          Back to Marketplace
-        </button>
+        {/* ───────── RIGHT: detail pane ───────── */}
+        <div style={{
+          background: C.surface, border: `1px solid rgba(160,138,94,0.28)`,
+          borderRadius: 18, padding: isNarrow ? '22px 20px' : '30px 32px',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: C.text, margin: 0 }}>{selected}</h2>
+            <span style={{
+              fontSize: '0.6875rem', color: C.textSecondary,
+              border: `1px solid ${C.border}`, borderRadius: 13, padding: '5px 14px',
+            }}>
+              {activeSkins.length} skins · {ownedSkins.length}/1 owned
+            </span>
+          </div>
+
+          <div style={{ height: 1, background: C.border, margin: '18px 0 16px' }} />
+
+          <p style={{ fontSize: '0.8125rem', color: C.textSecondary, margin: '0 0 22px' }}>
+            Tap a badge to purchase and instantly apply it as your ValueSkin. One active skin at a time.
+          </p>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isNarrow ? '1fr' : 'repeat(2, 1fr)',
+            gap: 16,
+          }}>
+            {activeSkins.map((skin) => {
+              const equipped = isEquipped(skin);
+              const loading = loadingSkin === skin;
+              const disabled = equipped || !canPurchase || loading;
+
+              return (
+                <div
+                  key={skin}
+                  style={{
+                    background: C.bg,
+                    border: `1px solid ${equipped ? 'rgba(200,184,154,0.5)' : C.border}`,
+                    borderRadius: 12, padding: '22px 18px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+                  }}
+                >
+                  <ValueSkinSprite size={56} />
+
+                  <div style={{ fontSize: '0.875rem', fontWeight: 600, color: C.text, textAlign: 'center' }}>
+                    {skin}
+                  </div>
+
+                  {equipped ? (
+                    <span style={{
+                      fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.06em',
+                      color: DEEP_SAND, textTransform: 'uppercase',
+                    }}>
+                      Equipped
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handlePurchase(skin)}
+                      disabled={disabled}
+                      style={{
+                        minWidth: 130, minHeight: 34, padding: '0 16px', borderRadius: 7,
+                        background: canPurchase ? '#0A0A0A' : 'transparent',
+                        color: canPurchase ? '#F5F5F0' : C.textSecondary,
+                        border: canPurchase ? 'none' : `1px solid ${HAIR}`,
+                        fontSize: '0.75rem', fontWeight: 600, fontFamily: FONT,
+                        cursor: disabled ? 'not-allowed' : 'pointer',
+                        opacity: !canPurchase ? 0.6 : 1,
+                      }}
+                    >
+                      {loading ? 'Redirecting…' : !canPurchase ? 'Max skins (1/1)' : `Acquire · ${SKIN_PRICE}`}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => router.push('/demo/marketplace')}
+            style={{
+              marginTop: 28, minHeight: 44, padding: '0 22px',
+              border: `1px solid ${HAIR}`, background: 'transparent',
+              color: C.text, borderRadius: 8, cursor: 'pointer',
+              fontWeight: 600, fontSize: '0.875rem', fontFamily: FONT,
+            }}
+          >
+            Back to Marketplace
+          </button>
+        </div>
       </div>
     </div>
   );

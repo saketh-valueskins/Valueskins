@@ -1,6 +1,10 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { getLevel, getLevelInfo, getNextLevelInfo, getProgressToNext, LEVEL_THRESHOLDS } from '@/lib/levels';
+
+// Loaded lazily so the equip animation costs nothing on a normal profile view.
+const SlapToProfile = dynamic(() => import('@/features/valueskins/SlapToProfile'), { ssr: false });
 
 // Presentational profile page — built to ui-specs/phase-2/Profile page.md.
 // Every value here comes from that spec; visual reference profile-page-mock.svg.
@@ -112,7 +116,7 @@ const SKIN_GRID: (string | null)[][] = [
   [_, _, _, _, _, A, A, _, _, _, _, _],
 ];
 
-function ValueSkinSprite({ size }: { size: number }) {
+export function ValueSkinSprite({ size }: { size: number }) {
   return (
     <svg
       width={size} height={size} viewBox="0 0 12 12"
@@ -137,6 +141,8 @@ export default function ProfileView({
   onEditProfile,
   embedded = false,
   containerWidth,
+  justEquipped = false,
+  onEquipAnimationDone,
 }: {
   profile: ProfileData | null;
   onSettings?: () => void;
@@ -147,6 +153,9 @@ export default function ProfileView({
   /** Width to resolve §7 breakpoints against. Defaults to the viewport; pass the
    *  column width when embedded so the layout responds to its container. */
   containerWidth?: number;
+  /** Play the slap-to-profile equip animation into the ValueSkin frame. */
+  justEquipped?: boolean;
+  onEquipAnimationDone?: () => void;
 }) {
   const reduced = useReducedMotion();
   const viewportWidth = useViewportWidth();
@@ -154,6 +163,7 @@ export default function ProfileView({
   const [theme, setTheme] = useState<Theme>('dark');
   const [mounted, setMounted] = useState(false);
   const [barWidth, setBarWidth] = useState(0);
+  const frameRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -311,16 +321,27 @@ export default function ProfileView({
               </div>
             </div>
 
-            {/* ValueSkin frame — no caption (§2) */}
-            <div style={{
-              position: 'relative', flex: 'none', width: 160, height: 160, borderRadius: 18,
-              background: 'rgba(245,245,240,0.04)',
-              border: '1px solid rgba(200,184,154,0.30)',
-              boxShadow: 'inset 0 1px 0 rgba(245,245,240,0.08)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              animation: reduced ? 'none' : `vsFloat 5s ${EASE} infinite`,
-            }}>
-              <ValueSkinSprite size={126} />
+            {/* ValueSkin frame — no caption (§2). Also the landing target for
+                the slap-to-profile equip animation. */}
+            <div
+              ref={frameRef}
+              style={{
+                position: 'relative', flex: 'none', width: 160, height: 160, borderRadius: 18,
+                background: 'rgba(245,245,240,0.04)',
+                border: '1px solid rgba(200,184,154,0.30)',
+                boxShadow: 'inset 0 1px 0 rgba(245,245,240,0.08)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                animation: reduced
+                  ? 'none'
+                  : justEquipped
+                    ? `vsShake 400ms ${EASE}, vsFloat 5s ${EASE} infinite 400ms`
+                    : `vsFloat 5s ${EASE} infinite`,
+              }}
+            >
+              {/* hidden while the flying clone is mid-air, so it appears to land */}
+              <span style={{ opacity: justEquipped ? 0 : 1, transition: 'opacity 120ms linear 620ms' }}>
+                <ValueSkinSprite size={126} />
+              </span>
             </div>
           </section>
 
@@ -388,6 +409,10 @@ export default function ProfileView({
           @keyframes vsFloat { 0%, 100% { transform: none; } }
         }
       `}</style>
+
+      {justEquipped && (
+        <SlapToProfile active targetRef={frameRef} onDone={onEquipAnimationDone} />
+      )}
     </>
   );
 

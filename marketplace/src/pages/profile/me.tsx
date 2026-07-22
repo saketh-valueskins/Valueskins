@@ -14,6 +14,13 @@ export default function ProfileMePage() {
   const router = useRouter();
   const { account, loading } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  // ?equipped=1 — set when returning from a skin purchase, plays the
+  // slap-to-profile animation into the ValueSkin frame once.
+  const [justEquipped, setJustEquipped] = useState(false);
+
+  useEffect(() => {
+    if (router.isReady && router.query.equipped) setJustEquipped(true);
+  }, [router.isReady, router.query.equipped]);
 
   const isBrand = account?.modules?.some((m: any) => m.code === 'brand' && m.is_active);
 
@@ -50,6 +57,11 @@ export default function ProfileMePage() {
       <Head><title>{profile?.display_name || 'Profile'} · ValueSkins</title></Head>
       <ProfileView
         profile={profile}
+        justEquipped={justEquipped}
+        onEquipAnimationDone={() => {
+          setJustEquipped(false);
+          router.replace('/profile/me', undefined, { shallow: true });
+        }}
         onSettings={() => router.push('/account/settings')}
         onEditProfile={() => router.push('/account/settings')}
       />
