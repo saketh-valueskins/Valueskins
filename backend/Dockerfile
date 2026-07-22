@@ -1,7 +1,9 @@
 # ==================================
 # Build Stage — compiles entire Rust workspace
 # ==================================
-FROM rust:1.82.0-slim-bookworm AS builder
+# 1.82 could not parse the manifest of time-macros 0.2.26 (a transitive dep),
+# which failed every build. Pinned, not floating, per the dependency rules.
+FROM rust:1.97.1-slim-bookworm AS builder
 
 WORKDIR /app
 

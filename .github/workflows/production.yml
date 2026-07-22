@@ -58,41 +58,6 @@ jobs:
             echo "✅ Code verified against develop branch" >> $GITHUB_STEP_SUMMARY
           fi
 
-  deploy-frontend:
-    name: Deploy Frontend → Production
-    needs: [staging-promotion-check]
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://valueskins.com
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: frontend
-
-      - name: Build Production
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: frontend
-
-      - name: Deploy to Production
-        run: |
-          URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-          echo "Deployed frontend to production: $URL"
-          echo "url=$URL" >> $GITHUB_OUTPUT
-          echo "## Frontend Production Deployed" >> $GITHUB_STEP_SUMMARY
-          echo "[$URL]($URL)" >> $GITHUB_STEP_SUMMARY
-        working-directory: frontend
-        id: deploy
-        env:
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_FRONTEND }}
 
   deploy-marketplace:
     name: Deploy Marketplace → Production
@@ -159,20 +124,20 @@ jobs:
 
   smoke-test:
     name: Smoke Test Production
-    needs: [deploy-frontend, deploy-marketplace, deploy-backend]
+    needs: [deploy-marketplace, deploy-backend]
     runs-on: ubuntu-latest
     steps:
       - name: Wait for rollout
         run: sleep 60
 
-      - name: Test frontend
+      - name: Test marketplace (valueskins.com)
         run: |
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://valueskins.com)
           if [ "$HTTP_CODE" -ne 200 ]; then
-            echo "Frontend returned $HTTP_CODE — possible rollback needed"
+            echo "Marketplace returned $HTTP_CODE — possible rollback needed"
             exit 1
           fi
-          echo "Frontend: ✅ ($HTTP_CODE)"
+          echo "Marketplace: ✅ ($HTTP_CODE)"
 
       - name: Test marketplace
         run: |
@@ -198,7 +163,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Service | URL | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend | https://valueskins.com | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Marketplace | https://valueskins.com | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| Marketplace | https://marketplace.valueskins.com | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| Backend | https://api.valueskins.com/health | ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
