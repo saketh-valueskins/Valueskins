@@ -1,21 +1,81 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Head from 'next/head';
 import { getGoogleAuthUrl } from '@/lib/oauth';
-import { C } from '@/theme/colors';
-import ValueSkinsLogo from '@/components/ValueSkinsLogo';
+import { ValueSkinSprite } from '@/features/profiles/ProfileView';
 
-// Login Page — per ui-specs/login page.md.
-// Light theme (off-white surface). Single brand moment: the centered hero
-// wordmark IS the logo (no pill, no nav logo). Sub-headline removed.
-// Sand appears ONLY on the tagline dots + hairlines (BRANDING §4).
+// Login Page — per "login page.md" v2 (dark premium).
+// Dark is the default surface; a light toggle stays for parity (§0b).
+// One brand moment: the centered hero wordmark IS the logo — no pill, no nav
+// logo, top-left stays empty (§1). No black divider band (§4).
+// Single viewport, no scroll (§3) — the global footer is suppressed for this
+// route in _app.tsx and a slim footer is pinned here instead (§0b.6).
+//
+// AUTH IS UNTOUCHED: handleGoogleAuth below is byte-for-byte the previous
+// implementation. This change is UI only.
+
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
+const EASE = 'cubic-bezier(0.16,1,0.3,1)';
+const WARM_SAND = '#C8B89A';
+const DEEP_SAND = '#A08A5E';
+
+type Theme = 'dark' | 'light';
+
+const T = {
+  dark: {
+    surface:
+      'radial-gradient(60% 45% at 84% -8%, rgba(160,138,94,0.18), transparent 60%), linear-gradient(155deg,#0A0A0A,#161512 58%,#20201A)',
+    head: '#F5F5F0',
+    body: '#C9C5BC',
+    muted: '#8A867E',
+    hair: 'rgba(245,245,240,0.10)',
+    btnBg: '#F5F5F0',
+    btnLabel: '#0A0A0A',
+    btnShadow: '0 10px 30px -12px rgba(200,184,154,0.45)',
+    toggleBorder: 'rgba(245,245,240,0.16)',
+  },
+  light: {
+    surface:
+      'radial-gradient(60% 45% at 84% -8%, rgba(160,138,94,0.16), transparent 60%), linear-gradient(155deg,#F4F3EE,#EEE9DE 58%,#E6E0D2)',
+    head: '#0A0A0A',
+    body: '#2D2D2D',
+    muted: '#6E6A60',
+    hair: 'rgba(160,138,94,0.22)',
+    btnBg: '#0A0A0A',
+    btnLabel: '#F5F5F0',
+    btnShadow: '0 10px 30px -12px rgba(45,45,45,0.35)',
+    toggleBorder: 'rgba(45,45,45,0.16)',
+  },
+} as const;
+
+// §0b.2 — drifting ValueSkin pixel identities, faint, slow float.
+const DRIFTERS = [
+  { left: '8%', top: '18%', size: 96, dur: 17, delay: 0 },
+  { left: '82%', top: '24%', size: 74, dur: 21, delay: 2.5 },
+  { left: '16%', top: '68%', size: 68, dur: 19, delay: 1.2 },
+  { left: '74%', top: '72%', size: 104, dur: 23, delay: 3.4 },
+  { left: '46%', top: '12%', size: 58, dur: 25, delay: 4.1 },
+];
 
 export default function Login() {
   const [error, setError] = useState('');
   const [hover, setHover] = useState(false);
   const [pressed, setPressed] = useState(false);
+  const [theme, setTheme] = useState<Theme>('dark'); // dark default (§0b)
+  const [mounted, setMounted] = useState(false);
+  const [reduced, setReduced] = useState(false);
 
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(mq.matches);
+    const on = () => setReduced(mq.matches);
+    mq.addEventListener('change', on);
+    setMounted(true);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+
+  // ─── AUTH — UNCHANGED ───────────────────────────────────────────────
   const handleGoogleAuth = async () => {
     try {
       const url = await getGoogleAuthUrl();
@@ -24,141 +84,237 @@ export default function Login() {
       setError('Failed to start login');
     }
   };
+  // ────────────────────────────────────────────────────────────────────
+
+  const t = T[theme];
+  const shown = mounted || reduced;
+
+  // §0b.2 — staggered entrance: wordmark → tagline → line → button → sign-up → trust → footer
+  const enter = useMemo(
+    () => (delay: number) => ({
+      opacity: shown ? 1 : 0,
+      transform: shown ? 'translateY(0)' : 'translateY(10px)',
+      transition: reduced ? 'none' : `opacity 0.6s ${EASE} ${delay}s, transform 0.6s ${EASE} ${delay}s`,
+    }),
+    [shown, reduced],
+  );
 
   return (
-    // No-scroll construction (spec §3): min-height:100vh column, auth block
-    // flex-grows and centers, footer-esque legal sits at the natural flow.
-    // The global <Footer/> (rendered in _app.tsx) continues on this same
-    // off-white surface below — no colour break, no black divider band (§4).
-    <div
-      style={{
-        minHeight: '100vh',
-        background: C.bg,
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: FONT,
-      }}
-    >
-      {/* Auth zone — grows to fill and optically centers the wordmark + button */}
+    <>
+      <Head><title>Sign in · ValueSkins</title></Head>
+
       <div
+        className="vs-login"
         style={{
-          flex: '1 1 auto',
+          position: 'relative',
+          minHeight: '100dvh',
+          background: t.surface,
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px 20px',
+          fontFamily: FONT,
+          overflow: 'hidden', // §3: one viewport, never scrolls
         }}
       >
-        <div style={{ width: '100%', maxWidth: '460px', textAlign: 'center' }}>
-          {/* Hero wordmark — ~40px, calm and centered (spec §2). Tagline shown. */}
-          <div style={{ marginBottom: '32px' }}>
-            <ValueSkinsLogo
-              theme="light"
-              size={40}
-              style={{ fontSize: 'clamp(30px, 5vw, 40px)' } as React.CSSProperties}
-            />
-          </div>
-
-          {error && (
-            <div
-              role="alert"
+        {/* §0b.2 — drifting ValueSkin identities, opacity ~0.09 */}
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: 0.09 }}>
+          {DRIFTERS.map((d, i) => (
+            <span
+              key={i}
               style={{
-                padding: '10px 14px',
-                background: 'rgba(176,65,62,0.08)',
-                color: C.error,
-                borderRadius: '6px',
-                fontSize: '0.8125rem',
-                marginBottom: '16px',
-                border: `1px solid rgba(176,65,62,0.35)`,
+                position: 'absolute',
+                left: d.left,
+                top: d.top,
+                animation: reduced ? 'none' : `vsDrift ${d.dur}s ${EASE} ${d.delay}s infinite`,
               }}
             >
-              {error}
-            </div>
-          )}
-
-          {/* Google button — quiet outlined, deep-sand hairline, 6px radius (spec §6) */}
-          <button
-            onClick={handleGoogleAuth}
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => {
-              setHover(false);
-              setPressed(false);
-            }}
-            onMouseDown={() => setPressed(true)}
-            onMouseUp={() => setPressed(false)}
-            style={{
-              width: '100%',
-              maxWidth: '460px',
-              padding: '16px',
-              background: C.bg,
-              color: C.text,
-              border: `1px solid ${hover ? 'rgba(160,138,94,0.5)' : 'rgba(160,138,94,0.28)'}`,
-              borderRadius: '6px',
-              fontSize: '1rem',
-              fontWeight: 600,
-              fontFamily: FONT,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '10px',
-              transform: pressed ? 'translateY(1px)' : 'translateY(0)',
-              transition: 'border-color 0.15s ease, transform 0.1s ease',
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-            </svg>
-            Continue with Google
-          </button>
-
-          {/* Sign-up line — 'Sign up' near-black weight 600, rest charcoal (spec §7) */}
-          <p style={{ fontSize: '0.875rem', color: C.textSecondary, textAlign: 'center', marginTop: '22px' }}>
-            Don&apos;t have an account?{' '}
-            <Link href="/auth/signup" style={{ color: C.text, textDecoration: 'none', fontWeight: 600 }}>
-              Sign up
-            </Link>
-          </p>
-
-          <p
-            style={{
-              fontSize: '0.75rem',
-              color: C.textSecondary,
-              textAlign: 'center',
-              marginTop: '16px',
-              lineHeight: 1.5,
-            }}
-          >
-            By continuing, you agree to our{' '}
-            <Link href="/legal/terms" style={{ color: C.textSecondary, textDecoration: 'underline', textUnderlineOffset: '2px' }}>
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/legal/privacy" style={{ color: C.textSecondary, textDecoration: 'underline', textUnderlineOffset: '2px' }}>
-              Privacy Policy
-            </Link>
-            .
-          </p>
+              <ValueSkinSprite size={d.size} />
+            </span>
+          ))}
         </div>
+
+        {/* Theme toggle — top-right (§0b.7). Top-LEFT stays empty (§1). */}
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'flex-end', padding: '18px 24px' }}>
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              minHeight: 34, padding: '6px 12px', borderRadius: 20,
+              border: `1px solid ${t.toggleBorder}`, background: 'transparent',
+              fontFamily: FONT, cursor: 'pointer', color: t.muted, fontSize: '0.75rem',
+            }}
+          >
+            {theme === 'dark' ? 'Dark' : 'Light'}
+            <span style={{ position: 'relative', width: 26, height: 14, borderRadius: 8, background: t.hair, display: 'inline-block' }}>
+              <span
+                style={{
+                  position: 'absolute', top: 1, left: 1, width: 12, height: 12, borderRadius: 8,
+                  background: WARM_SAND,
+                  transform: theme === 'dark' ? 'translateX(12px)' : 'translateX(0)',
+                  transition: reduced ? 'none' : `transform 0.3s ${EASE}`,
+                }}
+              />
+            </span>
+          </button>
+        </div>
+
+        {/* Auth zone — grows and optically centers (§2) */}
+        <div
+          style={{
+            position: 'relative',
+            flex: '1 1 auto',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            padding: '8px 20px 24px',
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: 460, textAlign: 'center' }}>
+
+            {/* Hero wordmark — the only logo on this page (§1, §2) */}
+            <div style={enter(0.05)}>
+              <div
+                style={{
+                  color: t.head, fontWeight: 700,
+                  fontSize: 'clamp(30px, 5vw, 40px)',
+                  letterSpacing: '0.18em', lineHeight: 1,
+                }}
+              >
+                VALUESKINS
+              </div>
+              {/* Tagline ~25% of wordmark, dots in Deep Sand (§2) */}
+              <div
+                style={{
+                  marginTop: 12, color: t.body, fontWeight: 500,
+                  fontSize: 'clamp(9px, 1.4vw, 11px)', letterSpacing: '0.34em',
+                  ...enter(0.13),
+                }}
+              >
+                TRUST <span style={{ color: DEEP_SAND }}>·</span> EARNED{' '}
+                <span style={{ color: DEEP_SAND }}>·</span> SERIOUS
+              </div>
+            </div>
+
+            {/* §0b.3 — one confident line (replaces the cut sub-headline) */}
+            <p
+              style={{
+                margin: '26px 0 0', color: t.body,
+                fontSize: 'clamp(15px, 1.8vw, 19px)', lineHeight: 1.5,
+                ...enter(0.21),
+              }}
+            >
+              Where creators and brands close deals on{' '}
+              <span style={{ color: DEEP_SAND, fontWeight: 600 }}>earned trust</span>.
+            </p>
+
+            {error && (
+              <div
+                role="alert"
+                style={{
+                  marginTop: 20, padding: '10px 14px',
+                  background: 'rgba(176,65,62,0.10)', color: '#D98682',
+                  border: '1px solid rgba(176,65,62,0.35)', borderRadius: 8,
+                  fontSize: '0.8125rem',
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            {/* §0b.4 — solid single action, 10px radius, soft tinted shadow, hover lift */}
+            <button
+              onClick={handleGoogleAuth}
+              onMouseEnter={() => setHover(true)}
+              onMouseLeave={() => { setHover(false); setPressed(false); }}
+              onMouseDown={() => setPressed(true)}
+              onMouseUp={() => setPressed(false)}
+              style={{
+                width: '100%', maxWidth: 420, marginTop: 32,
+                minHeight: 52, padding: '15px 20px',
+                background: t.btnBg, color: t.btnLabel, border: 'none',
+                borderRadius: 10,
+                fontSize: '1rem', fontWeight: 600, fontFamily: FONT,
+                cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                boxShadow: hover && !reduced ? t.btnShadow : '0 6px 18px -12px rgba(10,10,10,0.5)',
+                transform: reduced ? 'none' : pressed ? 'translateY(1px)' : hover ? 'translateY(-1px)' : 'translateY(0)',
+                transition: reduced ? 'none' : 'transform 0.15s ease, box-shadow 0.2s ease',
+                ...enter(0.29),
+              }}
+            >
+              {/* Official Google G glyph (§6) */}
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+              </svg>
+              Continue with Google
+            </button>
+
+            {/* Sign-up line (§7) */}
+            <p style={{ margin: '22px 0 0', fontSize: '0.875rem', color: t.muted, ...enter(0.37) }}>
+              Don&apos;t have an account?{' '}
+              <Link href="/auth/signup" style={{ color: t.head, textDecoration: 'none', fontWeight: 600 }}>
+                Sign up
+              </Link>
+            </p>
+
+            {/* §0b.5 — trust whisper */}
+            <p style={{ margin: '18px 0 0', fontSize: '0.75rem', color: t.muted, letterSpacing: '0.01em', ...enter(0.45) }}>
+              Escrow-backed <span style={{ color: DEEP_SAND }}>·</span> Verified identities{' '}
+              <span style={{ color: DEEP_SAND }}>·</span> Earned reputation
+            </p>
+
+            <p style={{ margin: '16px 0 0', fontSize: '0.6875rem', color: t.muted, lineHeight: 1.5, ...enter(0.5) }}>
+              By continuing, you agree to our{' '}
+              <Link href="/legal/terms" style={{ color: t.muted, textDecoration: 'underline', textUnderlineOffset: 2 }}>
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/legal/privacy" style={{ color: t.muted, textDecoration: 'underline', textUnderlineOffset: 2 }}>
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
+
+        {/* §0b.6 — slim footer pinned to the bottom, hairline top, no black band */}
+        <footer
+          style={{
+            position: 'relative',
+            borderTop: `1px solid ${t.hair}`,
+            padding: '14px 24px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            gap: 12, flexWrap: 'wrap',
+            fontSize: '0.75rem', color: t.muted,
+            ...enter(0.57),
+          }}
+        >
+          <span>© 2026 ValueSkins</span>
+          <span style={{ display: 'flex', gap: 14 }}>
+            <Link href="/legal/terms" style={{ color: t.muted, textDecoration: 'none' }}>Terms</Link>
+            <Link href="/legal/privacy" style={{ color: t.muted, textDecoration: 'none' }}>Privacy</Link>
+            <Link href="/legal/cookies" style={{ color: t.muted, textDecoration: 'none' }}>Cookies</Link>
+          </span>
+        </footer>
       </div>
 
-      {/* Quiet sand hairline — the separation is the whitespace, the line just
-          confirms the boundary (spec §4). The global Footer follows below on
-          the same off-white surface. */}
-      <div
-        style={{
-          maxWidth: '1120px',
-          margin: '0 auto',
-          width: '100%',
-          padding: '0 48px',
-        }}
-      >
-        <div style={{ borderTop: '1px solid rgba(160,138,94,0.22)' }} />
-      </div>
-    </div>
+      <style jsx global>{`
+        @keyframes vsDrift {
+          0%, 100% { transform: translate3d(0, 0, 0); }
+          50%      { transform: translate3d(0, -22px, 0); }
+        }
+        /* §6 — sand focus ring, never removed without replacement */
+        .vs-login a:focus-visible,
+        .vs-login button:focus-visible {
+          outline: 2px solid ${DEEP_SAND};
+          outline-offset: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          @keyframes vsDrift { 0%, 100% { transform: none; } }
+        }
+      `}</style>
+    </>
   );
 }

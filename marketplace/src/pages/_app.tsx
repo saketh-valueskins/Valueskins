@@ -76,14 +76,21 @@ function HomeButton() {
   );
 }
 
+// The login page ships its own slim footer (login page.md §0b.6) and has to fit
+// in a single viewport with no scroll (§3) — the tall global footer breaks that.
+const ROUTES_WITHOUT_GLOBAL_FOOTER = ['/auth/login'];
+
 export default function App({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+  const hideFooter = ROUTES_WITHOUT_GLOBAL_FOOTER.includes(router.pathname);
+
   return (
     <ErrorBoundary>
       <AuthProvider>
       <SplashIntro />
       <HomeButton />
       <Component {...pageProps} />
-      <Footer />
+      {!hideFooter && <Footer />}
       <CookieConsent />
     </AuthProvider>
     </ErrorBoundary>
