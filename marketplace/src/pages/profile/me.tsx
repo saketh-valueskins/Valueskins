@@ -62,8 +62,8 @@ export default function ProfileMePage() {
           setJustEquipped(false);
           router.replace('/profile/me', undefined, { shallow: true });
         }}
-        onSettings={() => router.push('/account/settings')}
-        onEditProfile={() => router.push('/account/settings')}
+        onSettings={() => router.push('/demo/marketplace?view=settings')}
+        onEditProfile={() => router.push('/demo/marketplace?view=settings')}
       />
     </>
   );

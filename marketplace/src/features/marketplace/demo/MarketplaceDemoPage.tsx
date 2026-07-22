@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { getLevel, getProgressToNext } from '@/lib/levels';
 import ProfileView from '@/features/profiles/ProfileView';
+import SettingsHub from '@/features/settings/SettingsHub';
 import { useReputationConfig } from '@/lib/useConfigStorage';
 import { useDealSync, type DealState, type DealRoomPhase, type SharedApplication, type Campaign, type ChatMessage } from '@/features/valueskins/core/deals/useDealSync';
 import { useFirebaseRoom } from '@/features/valueskins/core/realtime/useFirebaseRoom';
@@ -487,6 +488,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [storeSearch, setStoreSearch] = useState('');
   // Set right after a skin is applied, so the profile plays the slap animation.
   const [justEquipped, setJustEquipped] = useState(false);
+  // Settings tab: the hub, or the older preferences panel opened from it.
+  const [settingsPane, setSettingsPane] = useState<'hub' | 'preferences'>('hub');
 
   // ValueSkin edit modal state
   const [showEditValueSkinModal, setShowEditValueSkinModal] = useState(false);
@@ -2475,9 +2478,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
           <Link href="/profile/me" style={{ padding: '8px 16px', color: C.text, textDecoration: 'none', fontSize: '14px', fontWeight: 500, cursor: 'pointer', display: 'block' }}>
             Profile
           </Link>
-          <Link href="/account/settings" style={{ padding: '8px 16px', color: C.text, textDecoration: 'none', fontSize: '14px', fontWeight: 500, cursor: 'pointer', display: 'block' }}>
-            Settings
-          </Link>
+          {/* Settings moved to the bottom tab — one entry point, same as the Store. */}
           <button
             onClick={async () => {
               try {
@@ -6780,7 +6781,25 @@ export default function MarketplaceDemoPage(initialDealData?: {
           {/* ── EXPLORE VIEW ──────────────────────────────────── */}
           {activeView === 'explore' && <ExploreView />}
           {/* ── SETTINGS VIEW ────────────────────────────────── */}
-          {activeView === 'settings' && (
+          {/* Settings tab. The hub is what used to live at /account/settings;
+              the older preferences panel is now a pane inside it rather than a
+              separate route, so nothing leaves the app shell. */}
+          {activeView === 'settings' && settingsPane === 'hub' && (
+            <SettingsHub embedded onOpenPreferences={() => setSettingsPane('preferences')} />
+          )}
+
+          {activeView === 'settings' && settingsPane === 'preferences' && (
+            <>
+              <button
+                onClick={() => setSettingsPane('hub')}
+                style={{
+                  margin: '12px 16px 0', minHeight: '44px', padding: '0 14px',
+                  background: 'none', border: `1px solid ${C.border}`, borderRadius: '8px',
+                  color: C.text, fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                ← Settings
+              </button>
             <SettingsView
               role={marketplaceRole as 'brand' | 'creator' | 'viewer'}
               brandValueSkins={brandValueSkins}
@@ -6809,6 +6828,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
               profileName={profileName}
               profileBio={profileBio}
             />
+            </>
           )}
         </div>
       </div>
