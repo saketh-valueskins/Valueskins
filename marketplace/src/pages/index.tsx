@@ -185,20 +185,19 @@ export default function HomePage() {
           ValueSkins connects content creators with brands for paid campaigns. Every deal is backed by escrow. Creators get guaranteed payment, brands only pay for work they approve.
         </p>
 
-        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/auth/signup" style={{
+        {/* ONE call to action. Sign-in is Google OAuth only and the callback
+            creates the account on first use, so "Get Started" and "Sign In" were
+            the same journey wearing two labels — and the third CTA at the bottom
+            of the page was a third door to it. All routed to /auth/login now.
+            The login page itself carries the "Don't have an account? Sign up"
+            line if that distinction is ever needed. */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Link href="/auth/login" style={{
             display: 'inline-block', padding: '14px 32px', background: C.text, color: C.bg,
             borderRadius: '8px', fontSize: '0.9375rem', fontWeight: 700, textDecoration: 'none',
             transition: 'transform 0.15s',
           }}>
             Get Started
-          </Link>
-          <Link href="/auth/login" style={{
-            display: 'inline-block', padding: '14px 32px', background: 'transparent', color: C.text,
-            borderRadius: '8px', fontSize: '0.9375rem', fontWeight: 700, textDecoration: 'none',
-            border: `1px solid ${C.border}`, transition: 'border-color 0.15s',
-          }}>
-            Sign In
           </Link>
         </div>
 
@@ -320,21 +319,9 @@ export default function HomePage() {
         </Reveal>
       </div>
 
-      {/* CTA */}
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 24px 80px', textAlign: 'center' }}>
-        <Reveal reduced={reduced}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: C.text, margin: '0 0 16px' }}>Ready to get started?</h2>
-          <p style={{ fontSize: '1rem', color: C.textSecondary, margin: '0 0 32px' }}>
-            Join ValueSkins and start building real partnerships.
-          </p>
-          <Link href="/auth/signup" style={{
-            display: 'inline-block', padding: '16px 40px', background: C.text, color: C.bg,
-            borderRadius: '8px', fontSize: '1rem', fontWeight: 700, textDecoration: 'none',
-          }}>
-            Create Your Account
-          </Link>
-        </Reveal>
-      </div>
+      {/* The closing "Ready to get started?" block existed only to host a third
+          CTA to the same destination. With one call to action in the hero, the
+          section had nothing left to do, so it goes with the button. */}
 
       <style>{`
         @keyframes vsBob {
