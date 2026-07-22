@@ -9,6 +9,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { getLevel, getProgressToNext } from '@/lib/levels';
+import ProfileView from '@/features/profiles/ProfileView';
 import { useReputationConfig } from '@/lib/useConfigStorage';
 import { useDealSync, type DealState, type DealRoomPhase, type SharedApplication, type Campaign, type ChatMessage } from '@/features/valueskins/core/deals/useDealSync';
 import { useFirebaseRoom } from '@/features/valueskins/core/realtime/useFirebaseRoom';
@@ -2840,7 +2841,26 @@ export default function MarketplaceDemoPage(initialDealData?: {
               {/* ── PROFILE VIEW ── */}
               <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
 
-                {/* Top card: avatar + name + role */}
+                {/* Identity anchor — ui-specs/phase-2/Profile page.md.
+                    The old top card below is kept as the edit form, so editing a
+                    name/bio still works exactly as before. */}
+                {!editingProfile ? (
+                  <ProfileView
+                    embedded
+                    containerWidth={600}
+                    onEditProfile={() => setEditingProfile(true)}
+                    profile={{
+                      display_name: account?.display_name || profileName || 'Your Name',
+                      username: (account?.email || '').split('@')[0] || 'you',
+                      profession: isBrand ? 'Brand' : 'Creator',
+                      languages: ['English'],
+                      open_for_work: true,
+                      valueskin_type: 'Professional',
+                      deals_completed: completedDeals.length,
+                      deals_this_month: 0,
+                    }}
+                  />
+                ) : (
                 <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '16px', padding: '24px', marginBottom: '16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
                     {/* Avatar */}
@@ -2944,6 +2964,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     </div>
                   </div>
                 </div>
+                )}
 
                 {/* ValueSkins */}
                 {!isBrand && (

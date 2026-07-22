@@ -136,13 +136,22 @@ export default function ProfileView({
   profile,
   onSettings,
   onEditProfile,
+  embedded = false,
+  containerWidth,
 }: {
   profile: ProfileData | null;
   onSettings?: () => void;
   onEditProfile?: () => void;
+  /** Inside the app shell: drop the sticky header and page background, since the
+   *  app already provides its own chrome and bottom tab spine. */
+  embedded?: boolean;
+  /** Width to resolve §7 breakpoints against. Defaults to the viewport; pass the
+   *  column width when embedded so the layout responds to its container. */
+  containerWidth?: number;
 }) {
   const reduced = useReducedMotion();
-  const vw = useViewportWidth();
+  const viewportWidth = useViewportWidth();
+  const vw = containerWidth ?? viewportWidth;
   const [theme, setTheme] = useState<Theme>('dark');
   const [mounted, setMounted] = useState(false);
   const [barWidth, setBarWidth] = useState(0);
@@ -193,17 +202,12 @@ export default function ProfileView({
     transition: reduced ? 'none' : `opacity 0.7s ${EASE} ${delay}s, transform 0.7s ${EASE} ${delay}s`,
   });
 
-  return (
+  const body = (
     <>
-      {/* §0 — full-bleed fixed background, vertical scroll only */}
-      <div style={{
-        minHeight: '100dvh',
-        background: `linear-gradient(150deg, ${t.bgA} 0%, ${t.bgB} 60%, ${t.bgC} 100%)`,
-        backgroundAttachment: 'fixed',
-        fontFamily: FONT,
-        overflowX: 'hidden',
-      }}>
-        {/* §1 — sticky header */}
+        {/* §1 — sticky header. Standalone only: inside the app shell the page
+            already has a header and a bottom tab spine, and a second wordmark
+            here would duplicate it (see P2-F2). */}
+        {!embedded && (
         <header style={{
           position: 'sticky', top: 0, zIndex: 20,
           padding: isNarrow ? '16px 20px' : '16px 40px',
@@ -240,9 +244,15 @@ export default function ProfileView({
             </button>
           </div>
         </header>
+        )}
 
         {/* §0 — 900px content column */}
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: isTiny ? '34px 20px 80px' : '34px 28px 80px' }}>
+        <div style={{
+          maxWidth: 900, margin: '0 auto',
+          padding: embedded
+            ? (isTiny ? '16px 16px 24px' : '20px 20px 28px')
+            : (isTiny ? '34px 20px 80px' : '34px 28px 80px'),
+        }}>
 
           {/* §2 — identity hero. Dark gradient in BOTH themes. */}
           <section style={{
@@ -368,7 +378,6 @@ export default function ProfileView({
             Stats are earned automatically from completed deals — they can&apos;t be edited or bought.
           </p>
         </div>
-      </div>
 
       <style jsx global>{`
         @keyframes vsFloat {
@@ -380,6 +389,22 @@ export default function ProfileView({
         }
       `}</style>
     </>
+  );
+
+  // Embedded: the app shell owns the background and chrome, so return the
+  // content as-is. Standalone: wrap it in the §0 full-bleed fixed background.
+  if (embedded) return body;
+
+  return (
+    <div style={{
+      minHeight: '100dvh',
+      background: `linear-gradient(150deg, ${t.bgA} 0%, ${t.bgB} 60%, ${t.bgC} 100%)`,
+      backgroundAttachment: 'fixed',
+      fontFamily: FONT,
+      overflowX: 'hidden',
+    }}>
+      {body}
+    </div>
   );
 }
 
