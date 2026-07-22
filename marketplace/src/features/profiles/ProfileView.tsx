@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { getLevel, getLevelInfo, getNextLevelInfo, getProgressToNext, LEVEL_THRESHOLDS } from '@/lib/levels';
+import { useTheme } from '@/theme/ThemeContext';
 
 // Loaded lazily so the equip animation costs nothing on a normal profile view.
 const SlapToProfile = dynamic(() => import('@/features/valueskins/SlapToProfile'), { ssr: false });
@@ -160,7 +161,10 @@ export default function ProfileView({
   const reduced = useReducedMotion();
   const viewportWidth = useViewportWidth();
   const vw = containerWidth ?? viewportWidth;
-  const [theme, setTheme] = useState<Theme>('dark');
+  // Follows the global theme (Settings > Appearance). This used to be private
+  // state defaulting to 'dark', which is why the profile rendered dark cards
+  // inside a light app shell.
+  const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [barWidth, setBarWidth] = useState(0);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -236,20 +240,7 @@ export default function ProfileView({
               Settings
             </button>
 
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 20, border: `1px solid ${t.divider}`, background: 'transparent', fontFamily: FONT, cursor: 'pointer' }}
-            >
-              <span style={{ fontSize: '0.75rem', color: t.muted2 }}>{theme === 'dark' ? 'Dark' : 'Light'}</span>
-              <span style={{ position: 'relative', width: 26, height: 14, borderRadius: 8, background: t.divider, display: 'inline-block' }}>
-                <span style={{
-                  position: 'absolute', top: 1, left: 1, width: 12, height: 12, borderRadius: 8, background: WARM_SAND,
-                  transform: theme === 'dark' ? 'translateX(12px)' : 'translateX(0)',
-                  transition: reduced ? 'none' : `transform 0.3s ${EASE}`,
-                }} />
-              </span>
-            </button>
+            {/* Theme lives in Settings > Appearance — one control, not one per page. */}
           </div>
         </header>
         )}

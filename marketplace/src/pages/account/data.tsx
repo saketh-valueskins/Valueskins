@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
@@ -140,7 +141,7 @@ export default function MyData() {
             ) : (
               <div style={{ background: C.surface, border: `1px solid ${C.danger}`, borderRadius: '12px', padding: '24px' }}>
                 <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '16px', color: C.danger }}>Danger Zone</h2>
-                <button onClick={requestDeletion} disabled={isDeleting} style={{ width: '100%', padding: '12px', background: isDeleting ? `${C.danger}60` : C.danger, color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: isDeleting ? 'default' : 'pointer', marginBottom: '12px' }}>
+                <button onClick={requestDeletion} disabled={isDeleting} style={{ width: '100%', padding: '12px', background: isDeleting ? `${withAlpha(C.danger, 0x60)}` : C.danger, color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600, cursor: isDeleting ? 'default' : 'pointer', marginBottom: '12px' }}>
                   {isDeleting ? 'Downloading PDF...' : '🗑️ Delete Account'}
                 </button>
                 {deleteError && (

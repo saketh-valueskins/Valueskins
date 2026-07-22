@@ -1,10 +1,12 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 
 import React, { useState } from 'react';
 import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
 
 const C = {
+  onPrimary: 'var(--c-on-primary)', // correct foreground on C.primary in BOTH themes
   primary: '#0A0A0A',
   primaryGradient: 'linear-gradient(135deg, #0A0A0A, #2D2D2D)',
   bg: '#ffffff',
@@ -226,7 +228,7 @@ export default function MessagesView({
                     <div style={{ textAlign: 'center', padding: '40px 20px', color: C.textMuted }}>
                       <div style={{ fontSize: '13px', marginBottom: '6px' }}>Get a ValueSkin to join communities</div>
                       <div style={{ fontSize: '11px', marginBottom: '12px' }}>Communities are DMs with a ValueSkin as the entry barrier</div>
-                      <button onClick={() => setActiveView()} style={{ background: C.primary, border: 'none', borderRadius: '8px', color: '#fff', padding: '8px 20px', fontWeight: 600, fontSize: '12px', cursor: 'pointer' }}>Go to Store</button>
+                      <button onClick={() => setActiveView()} style={{ background: C.primary, border: 'none', borderRadius: '8px', color: C.onPrimary, padding: '8px 20px', fontWeight: 600, fontSize: '12px', cursor: 'pointer' }}>Go to Store</button>
                     </div>
                   );
                   if (matchedChannels.length === 0) return (
@@ -248,7 +250,7 @@ export default function MessagesView({
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
                             <span style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{ch.name}</span>
-                            <span style={{ fontSize: '9px', fontWeight: 600, color: C.primary, background: `${C.primary}12`, padding: '1px 5px', borderRadius: '4px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: 600, color: C.primary, background: `${withAlpha(C.primary, 0x12)}`, padding: '1px 5px', borderRadius: '4px' }}>
                               {ch.requiredSkin || 'Any Skin'}
                             </span>
                           </div>
@@ -260,7 +262,7 @@ export default function MessagesView({
                           <span style={{ fontSize: '11px', color: C.textMuted }}>{ch.lastMessage.time}</span>
                           {!joined && (
                             <button onClick={e => { e.stopPropagation(); setJoinedCommunities([...joinedCommunities, ch.id]); }}
-                              style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', background: C.primary, color: '#fff', fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
+                              style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', background: C.primary, color: C.onPrimary, fontSize: '11px', fontWeight: 600, cursor: 'pointer' }}>
                               Join
                             </button>
                           )}
@@ -297,7 +299,7 @@ export default function MessagesView({
                       <button onClick={() => setNewCommGateType('any_valueskin')}
                         style={{ padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                           border: `1px solid ${newCommGateType === 'any_valueskin' ? C.primary : C.border}`,
-                          background: newCommGateType === 'any_valueskin' ? `${C.primary}12` : C.surface,
+                          background: newCommGateType === 'any_valueskin' ? `${withAlpha(C.primary, 0x12)}` : C.surface,
                           color: newCommGateType === 'any_valueskin' ? C.primary : C.textMuted }}>
                         Any ValueSkin
                       </button>
@@ -305,7 +307,7 @@ export default function MessagesView({
                         <button key={profession} onClick={() => { setNewCommGateType('specific'); setNewCommProfessions([profession]); }}
                           style={{ padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                             border: `1px solid ${newCommGateType === 'specific' && newCommProfessions.includes(profession) ? C.primary : C.border}`,
-                            background: newCommGateType === 'specific' && newCommProfessions.includes(profession) ? `${C.primary}12` : C.surface,
+                            background: newCommGateType === 'specific' && newCommProfessions.includes(profession) ? `${withAlpha(C.primary, 0x12)}` : C.surface,
                             color: newCommGateType === 'specific' && newCommProfessions.includes(profession) ? C.primary : C.textMuted }}>
                           {profession}
                         </button>
@@ -318,7 +320,7 @@ export default function MessagesView({
                       <button key={v} onClick={() => setNewCommVisibility(v)}
                         style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                           border: `1px solid ${newCommVisibility === v ? C.primary : C.border}`,
-                          background: newCommVisibility === v ? `${C.primary}10` : C.surface,
+                          background: newCommVisibility === v ? `${withAlpha(C.primary, 0x10)}` : C.surface,
                           color: newCommVisibility === v ? C.primary : C.text }}>
                         {v === 'public' ? 'Public' : 'Private'}
                       </button>
@@ -332,7 +334,7 @@ export default function MessagesView({
                       setPurchaseToast('Community created');
                       setTimeout(() => setPurchaseToast(null), 3000);
                     }
-                  }} style={{ width: '100%', padding: '11px', borderRadius: '8px', border: 'none', background: C.primary, color: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                  }} style={{ width: '100%', padding: '11px', borderRadius: '8px', border: 'none', background: C.primary, color: C.onPrimary, fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
                     Create Community
                   </button>
                 </div>
@@ -427,7 +429,7 @@ export default function MessagesView({
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{channel.name}</span>
-                      <span style={{ fontSize: '9px', fontWeight: 600, color: C.primary, background: `${C.primary}12`, padding: '1px 5px', borderRadius: '4px' }}>{channel.requiredSkin || 'Any Skin'}</span>
+                      <span style={{ fontSize: '9px', fontWeight: 600, color: C.primary, background: `${withAlpha(C.primary, 0x12)}`, padding: '1px 5px', borderRadius: '4px' }}>{channel.requiredSkin || 'Any Skin'}</span>
                     </div>
                     <div style={{ fontSize: '11px', color: C.textSecondary }}>{channel.memberCount.toLocaleString()} members</div>
                   </div>

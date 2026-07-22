@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 
 import React, { useState } from 'react';
 import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
@@ -7,6 +8,7 @@ import { getLevel, getProgressToNext } from '@/lib/levels';
 
 // ValueSkins Unified Brand Colors - Trust · Earned · Serious
 const C = {
+  onPrimary: 'var(--c-on-primary)', // correct foreground on C.primary in BOTH themes
   primary: '#0A0A0A',           // Dark charcoal
   primaryGradient: 'linear-gradient(135deg, #0A0A0A, #2D2D2D)',
   bg: '#F5F5F0',                // Cream
@@ -354,7 +356,7 @@ export default function SettingsView({
                                     }}
                                     style={{
                                       padding: '5px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: selected ? 600 : 400,
-                                      background: selected ? `${C.primary}15` : C.bg,
+                                      background: selected ? `${withAlpha(C.primary, 0x15)}` : C.bg,
                                       border: `1px solid ${selected ? C.primary : C.border}`,
                                       color: selected ? C.primary : C.textSecondary,
                                       cursor: 'pointer', transition: 'all 0.15s',
@@ -521,7 +523,7 @@ export default function SettingsView({
                           return (
                             <span key={l} onClick={() => setActiveSelectedLanguages(prev => active ? prev.filter(x => x !== l) : [...prev, l])}
                               style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px',
-                                background: active ? `${C.primary}20` : C.bg,
+                                background: active ? `${withAlpha(C.primary, 0x20)}` : C.bg,
                                 border: `1px solid ${active ? C.primary : C.border}`,
                                 color: active ? C.primary : C.textSecondary,
                                 cursor: 'pointer', fontWeight: active ? 600 : 400,
@@ -554,7 +556,7 @@ export default function SettingsView({
                           return (
                             <span key={d} onClick={() => setActiveProfileDealTypes(prev => active ? prev.filter(x => x !== d) : [...prev, d])}
                               style={{ padding: '4px 10px', borderRadius: '10px', fontSize: '11px',
-                                background: active ? `${C.primary}20` : C.bg,
+                                background: active ? `${withAlpha(C.primary, 0x20)}` : C.bg,
                                 border: `1px solid ${active ? C.primary : C.border}`,
                                 color: active ? C.primary : C.textSecondary,
                                 cursor: 'pointer', fontWeight: active ? 600 : 400,
@@ -660,7 +662,7 @@ export default function SettingsView({
                       return (
                         <button key={n} onClick={() => setCreatorAllowedNiches(prev => active ? prev.filter(x => x !== n) : [...prev, n])}
                           style={{ padding: '3px 9px', borderRadius: '12px', fontSize: '11px', cursor: 'pointer', fontWeight: 600,
-                            background: active ? `${C.primary}20` : C.bg,
+                            background: active ? `${withAlpha(C.primary, 0x20)}` : C.bg,
                             color: active ? C.primary : C.textSecondary,
                             border: `1px solid ${active ? C.primary : C.border}`,
                           }}>{n}</button>
@@ -727,7 +729,7 @@ export default function SettingsView({
                         <div style={{ display: 'flex', gap: '4px' }}>
                           {(['one-off', 'long-term', 'both'] as const).map(m => (
                             <button key={m} onClick={() => setContractMode(m)} style={{ flex: 1, padding: '5px 3px', borderRadius: '6px', fontSize: '10px', fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize',
-                              background: contractMode === m ? `${C.primary}20` : C.bg, color: contractMode === m ? C.primary : C.textSecondary, border: `1px solid ${contractMode === m ? C.primary : C.border}` }}>{m}</button>
+                              background: contractMode === m ? `${withAlpha(C.primary, 0x20)}` : C.bg, color: contractMode === m ? C.primary : C.textSecondary, border: `1px solid ${contractMode === m ? C.primary : C.border}` }}>{m}</button>
                           ))}
                         </div>
                       </div>
@@ -802,7 +804,7 @@ export default function SettingsView({
                         <div style={{ display: 'flex', gap: '4px' }}>
                           {[30, 60, 90, 180].map(d => (
                             <button key={d} onClick={() => setUsageRightsDays(d)} style={{ flex: 1, padding: '5px 2px', borderRadius: '5px', fontSize: '10px', fontWeight: 600, cursor: 'pointer',
-                              background: usageRightsDays === d ? `${C.primary}20` : C.bg, color: usageRightsDays === d ? C.primary : C.textMuted, border: `1px solid ${usageRightsDays === d ? C.primary : C.border}` }}>{d}</button>
+                              background: usageRightsDays === d ? `${withAlpha(C.primary, 0x20)}` : C.bg, color: usageRightsDays === d ? C.primary : C.textMuted, border: `1px solid ${usageRightsDays === d ? C.primary : C.border}` }}>{d}</button>
                           ))}
                         </div>
                       </div>
@@ -921,7 +923,7 @@ export default function SettingsView({
                   </button>
                   <button
                     onClick={() => setActivePortfolioImage(null)}
-                    style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: `${C.danger}15`, border: `1px solid ${C.danger}40`, color: C.danger }}
+                    style={{ flex: 1, padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: `${withAlpha(C.danger, 0x15)}`, border: `1px solid ${withAlpha(C.danger, 0x40)}`, color: C.danger }}
                   >
                     Remove
                   </button>
@@ -947,7 +949,7 @@ export default function SettingsView({
                     };
                     input.click();
                   }}
-                  style={{ padding: '10px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', background: C.primary, border: 'none', color: '#fff' }}
+                  style={{ padding: '10px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', background: C.primary, border: 'none', color: C.onPrimary }}
                 >
                   Upload Photo
                 </button>
@@ -1078,7 +1080,7 @@ export default function SettingsView({
                   <div style={{ fontSize: '10px', color: C.textMuted, marginTop: '4px' }}>Optional — upload to Vimeo/YouTube and paste the link</div>
                 )}
               </div>
-              <button onClick={() => { setShowSkinShowcaseModal(null); setPurchaseToast(creatorSkinMode === 'showcase' ? 'Showcase saved — brands will see your pitch' : 'Skin set to static'); setTimeout(() => setPurchaseToast(null), 3000); }} style={{ width: '100%', background: C.primary, border: 'none', borderRadius: 8, padding: '12px', color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer', marginTop: 8 }}>
+              <button onClick={() => { setShowSkinShowcaseModal(null); setPurchaseToast(creatorSkinMode === 'showcase' ? 'Showcase saved — brands will see your pitch' : 'Skin set to static'); setTimeout(() => setPurchaseToast(null), 3000); }} style={{ width: '100%', background: C.primary, border: 'none', borderRadius: 8, padding: '12px', color: C.onPrimary, fontWeight: 700, fontSize: 14, cursor: 'pointer', marginTop: 8 }}>
                 Save Skin Showcase
               </button>
             </>

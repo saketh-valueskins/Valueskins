@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 
 interface BrandReview {
@@ -86,7 +87,7 @@ export default function BrandReviewList({ creatorId, showTitle = true, maxItems 
             fontSize: '12px',
             fontWeight: 600,
             color: C.primary,
-            background: `${C.primary}15`,
+            background: `${withAlpha(C.primary, 0x15)}`,
             padding: '2px 10px',
             borderRadius: '12px',
           }}>
@@ -108,7 +109,7 @@ export default function BrandReviewList({ creatorId, showTitle = true, maxItems 
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                background: `${C.primary}20`,
+                background: `${withAlpha(C.primary, 0x20)}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -138,7 +139,7 @@ export default function BrandReviewList({ creatorId, showTitle = true, maxItems 
               color: C.textSecondary,
               lineHeight: '1.6',
               fontStyle: 'italic',
-              borderLeft: `2px solid ${C.primary}40`,
+              borderLeft: `2px solid ${withAlpha(C.primary, 0x40)}`,
               paddingLeft: '12px',
             }}>
               "{review.text.replace(/<[^>]*>/g, '').replace(/[<>"'&]/g, '')}"

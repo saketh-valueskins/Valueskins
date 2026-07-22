@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
+import { useTheme } from '@/theme/ThemeContext';
 import Link from 'next/link';
 
 // Merged Settings hub — the single final settings page.
@@ -61,7 +62,10 @@ export default function SettingsHub({
   const [prefs, setPrefs] = useState<any>(null);
   const [notifMsg, setNotifMsg] = useState('');
 
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('dark');
+  // Theme is global — ThemeProvider owns the value and the persistence.
+  // This section used to hold its own state and write vs_theme to localStorage
+  // without anything ever reading it, which is why Appearance did nothing.
+  const { preference: theme, setPreference: changeTheme } = useTheme();
   const [active, setActive] = useState<string>('account');
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -88,11 +92,6 @@ export default function SettingsHub({
       .then((r) => r.json())
       .then((d) => setPrefs(d.preferences || {}))
       .catch(() => setPrefs({}));
-    // Theme persisted locally
-    try {
-      const saved = localStorage.getItem('vs_theme') as any;
-      if (saved) setTheme(saved);
-    } catch {}
   }, []);
 
   // ---- Scrollspy (spec §1 orientation win) ----
@@ -161,13 +160,6 @@ export default function SettingsHub({
     } catch {
       setPrefs({ ...prefs, [key]: !updated[key] });
     }
-  };
-
-  const changeTheme = (t: 'light' | 'dark' | 'system') => {
-    setTheme(t);
-    try {
-      localStorage.setItem('vs_theme', t);
-    } catch {}
   };
 
   const handleLogout = async () => {

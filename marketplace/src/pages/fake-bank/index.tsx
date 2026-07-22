@@ -1,3 +1,4 @@
+import { withAlpha } from '@/theme/colors';
 import { useEffect, useMemo, useState } from 'react';
 
 const C = {
@@ -138,7 +139,7 @@ export default function FakeBankPage() {
             <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0' }}>Payment Simulation Dashboard — all amounts are test/simulated</p>
           </div>
           <button onClick={clear} style={{
-            padding: '8px 16px', background: 'rgba(248,113,113,0.1)', border: `1px solid ${C.error}30`,
+            padding: '8px 16px', background: 'rgba(248,113,113,0.1)', border: `1px solid ${withAlpha(C.error, 0x30)}`,
             borderRadius: 8, color: C.error, fontSize: 12, fontWeight: 600, cursor: 'pointer',
           }}>
             Clear All Records
@@ -222,7 +223,7 @@ export default function FakeBankPage() {
                 </thead>
                 <tbody>
                   {filtered.map((entry) => (
-                    <tr key={entry.id} style={{ borderBottom: `1px solid ${C.border}20` }}>
+                    <tr key={entry.id} style={{ borderBottom: `1px solid ${withAlpha(C.border, 0x20)}` }}>
                       <td style={{ padding: '10px 14px', whiteSpace: 'nowrap', color: C.muted }}>
                         {new Date(entry.timestamp).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </td>
@@ -236,7 +237,7 @@ export default function FakeBankPage() {
                       <td style={{ padding: '10px 14px' }}>
                         <span style={{
                           display: 'inline-block', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700,
-                          background: entry.status === 'completed' ? `${C.success}15` : entry.status === 'pending' ? `${C.warning}15` : `${C.error}15`,
+                          background: entry.status === 'completed' ? `${withAlpha(C.success, 0x15)}` : entry.status === 'pending' ? `${withAlpha(C.warning, 0x15)}` : `${withAlpha(C.error, 0x15)}`,
                           color: entry.status === 'completed' ? C.success : entry.status === 'pending' ? C.warning : C.error,
                         }}>
                           {entry.status.charAt(0).toUpperCase() + entry.status.slice(1)}

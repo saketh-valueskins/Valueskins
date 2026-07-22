@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import CreatorLevelBadge from './CreatorLevelBadge';
 import { getLevel, getLevelInfo } from '@/lib/levels';
 
@@ -70,7 +71,7 @@ function SocialIcon({ platform, handle }: { platform: string; handle?: string })
         alignItems: 'center',
         gap: '4px',
         padding: '4px 10px',
-        background: `${C.primary}10`,
+        background: `${withAlpha(C.primary, 0x10)}`,
         border: `1px solid ${C.border}`,
         borderRadius: '6px',
         color: C.textSecondary,
@@ -78,8 +79,8 @@ function SocialIcon({ platform, handle }: { platform: string; handle?: string })
         fontWeight: 600,
         textDecoration: 'none',
       }}
-      onMouseEnter={e => { e.currentTarget.style.background = `${C.primary}20`; e.currentTarget.style.borderColor = C.primary; }}
-      onMouseLeave={e => { e.currentTarget.style.background = `${C.primary}10`; e.currentTarget.style.borderColor = C.border; }}
+      onMouseEnter={e => { e.currentTarget.style.background = `${withAlpha(C.primary, 0x20)}`; e.currentTarget.style.borderColor = C.primary; }}
+      onMouseLeave={e => { e.currentTarget.style.background = `${withAlpha(C.primary, 0x10)}`; e.currentTarget.style.borderColor = C.border; }}
     >
       {platform === 'instagram' && <span style={{ fontSize: '12px' }}>IG</span>}
       {platform === 'tiktok' && <span style={{ fontSize: '12px' }}>TT</span>}

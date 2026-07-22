@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
@@ -194,7 +195,7 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
 
       {message && (
         <div style={{ padding: '10px 16px', borderRadius: '6px', marginBottom: '16px', fontSize: '13px', fontWeight: 600,
-          background: message.includes('error') || message.includes('Failed') ? `${C.danger}20` : `${C.success}20`,
+          background: message.includes('error') || message.includes('Failed') ? `${withAlpha(C.danger, 0x20)}` : `${withAlpha(C.success, 0x20)}`,
           color: message.includes('error') || message.includes('Failed') ? C.danger : C.success }}>
           {message}
         </div>
@@ -240,7 +241,7 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
           </h3>
 
           {isDeadlinePassed && bids.length === 0 ? (
-            <div style={{ padding: '12px', background: `${C.danger}15`, borderRadius: '6px', color: C.danger, fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>
+            <div style={{ padding: '12px', background: `${withAlpha(C.danger, 0x15)}`, borderRadius: '6px', color: C.danger, fontSize: '13px', fontWeight: 600, textAlign: 'center' }}>
               This campaign's deadline has passed. Bidding is closed.
             </div>
           ) : bids.length > 0 ? (
@@ -250,7 +251,7 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                     <span style={{ fontWeight: 600 }}>${Number(bid.bid_amount).toFixed(2)}</span>
                     <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', textTransform: 'capitalize', fontWeight: 600,
-                      background: bid.status === 'accepted' ? `${C.success}20` : bid.status === 'rejected' ? `${C.danger}20` : `${C.warning}20`,
+                      background: bid.status === 'accepted' ? `${withAlpha(C.success, 0x20)}` : bid.status === 'rejected' ? `${withAlpha(C.danger, 0x20)}` : `${withAlpha(C.warning, 0x20)}`,
                       color: bid.status === 'accepted' ? C.success : bid.status === 'rejected' ? C.danger : C.warning }}>
                       {bid.status}
                     </span>
@@ -302,7 +303,7 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontWeight: 700, fontSize: '15px', color: C.primary }}>${Number(bid.bid_amount).toFixed(2)}</span>
                     <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', textTransform: 'capitalize', fontWeight: 600,
-                      background: bid.status === 'accepted' ? `${C.success}20` : bid.status === 'rejected' ? `${C.danger}20` : `${C.warning}20`,
+                      background: bid.status === 'accepted' ? `${withAlpha(C.success, 0x20)}` : bid.status === 'rejected' ? `${withAlpha(C.danger, 0x20)}` : `${withAlpha(C.warning, 0x20)}`,
                       color: bid.status === 'accepted' ? C.success : bid.status === 'rejected' ? C.danger : C.warning }}>
                       {bid.status}
                     </span>
@@ -381,7 +382,7 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
                   </div>
                 </div>
                 <div style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '4px', textTransform: 'capitalize', fontWeight: 600,
-                  background: inv.status === 'accepted' ? `${C.success}20` : inv.status === 'declined' ? `${C.danger}20` : `${C.warning}20`,
+                  background: inv.status === 'accepted' ? `${withAlpha(C.success, 0x20)}` : inv.status === 'declined' ? `${withAlpha(C.danger, 0x20)}` : `${withAlpha(C.warning, 0x20)}`,
                   color: inv.status === 'accepted' ? C.success : inv.status === 'declined' ? C.danger : C.warning }}>{inv.status}</div>
               </div>
             ))}

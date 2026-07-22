@@ -5,6 +5,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Footer from '@/components/Footer';
 import CookieConsent from '@/components/CookieConsent';
 import SplashIntro from '@/components/SplashIntro';
+import { ThemeProvider } from '@/theme/ThemeContext';
 import '@/styles/globals.css';
 
 // P2-F2: pages that draw their own VALUESKINS wordmark. The global fixed
@@ -86,6 +87,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <ErrorBoundary>
+      <ThemeProvider>
       <AuthProvider>
       <SplashIntro />
       <HomeButton />
@@ -93,6 +95,7 @@ export default function App({ Component, pageProps }: AppProps) {
       {!hideFooter && <Footer />}
       <CookieConsent />
     </AuthProvider>
+    </ThemeProvider>
     </ErrorBoundary>
   );
 }

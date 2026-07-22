@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -150,7 +151,7 @@ export default function AnalyticsPage() {
         </div>
 
         {error && (
-          <div style={{ background: `${C.danger}15`, border: `1px solid ${C.danger}30`, borderRadius: '8px', padding: '12px 16px', color: C.danger, fontSize: '13px', marginBottom: '24px' }}>
+          <div style={{ background: `${withAlpha(C.danger, 0x15)}`, border: `1px solid ${withAlpha(C.danger, 0x30)}`, borderRadius: '8px', padding: '12px 16px', color: C.danger, fontSize: '13px', marginBottom: '24px' }}>
             {error}
           </div>
         )}

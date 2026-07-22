@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useState } from 'react';
 
 interface Props {
@@ -75,7 +76,7 @@ export default function BrandReviewForm({ dealId, creatorId, creatorName, onSubm
     return (
       <div style={{
         background: C.surface,
-        border: `1px solid ${C.success}40`,
+        border: `1px solid ${withAlpha(C.success, 0x40)}`,
         borderRadius: '12px',
         padding: '20px',
         textAlign: 'center',

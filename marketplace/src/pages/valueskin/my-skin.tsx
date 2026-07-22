@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
@@ -246,8 +247,8 @@ export default function MyValueSkinPage() {
         {/* Info Section */}
         <div style={{
           padding: '20px',
-          background: `${C.primary}15`,
-          border: `1px solid ${C.primary}40`,
+          background: `${withAlpha(C.primary, 0x15)}`,
+          border: `1px solid ${withAlpha(C.primary, 0x40)}`,
           borderRadius: '8px',
         }}>
           <div style={{ fontSize: '14px', fontWeight: 600, color: C.text, marginBottom: '8px' }}>

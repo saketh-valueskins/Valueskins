@@ -1,4 +1,100 @@
 
+/* ── THEME PALETTES ──────────────────────────────────────────────────────
+   theme/colors.ts resolves every token to one of these vars, so flipping
+   data-theme on <html> re-skins the whole app — including the thousands of
+   inline style={{}} surfaces a stylesheet could never reach.
+   Light is the default so a no-JS / pre-hydration render is never a black page. */
+
+:root,
+:root[data-theme="light"] {
+  --c-primary: #0A0A0A;
+  --c-primary-container: #F0F0EA;
+  --c-on-primary: #F5F5F0;
+  --c-on-primary-container: #2D2D2D;
+  --c-secondary: #2D2D2D;
+
+  --c-bg: #F5F5F0;
+  --c-surface: #F5F5F0;
+  --c-surface-bright: #FFFFFF;
+  --c-surface-dim: #E8E8E2;
+  --c-surface-lowest: #FFFFFF;
+  --c-surface-low: #FAFAF7;
+  --c-surface-container: #F0F0EA;
+  --c-surface-high: #EAEAE4;
+  --c-surface-highest: #E0E0DA;
+
+  --c-text: #0A0A0A;
+  --c-text-muted: #2D2D2D;
+  --c-text-variant: #8B8B85;
+
+  --c-outline: #8B8B85;
+  --c-outline-variant: #E0E0DA;
+  --c-border: #E0E0DA;
+  --c-border-light: #F0F0EA;
+
+  --c-inverse-surface: #0A0A0A;
+  --c-inverse-on-surface: #F5F5F0;
+
+  --c-error: #B0413E;
+  --c-error-container: #F3E3E1;
+  --c-on-error: #FFFFFF;
+  --c-on-error-container: #7A2B29;
+
+  /* sand is the brand accent and stays sand in both themes (BRANDING §4) */
+  --c-accent: #A08A5E;
+  --c-accent-bright: #C8B89A;
+  --c-tertiary-container: #F0EBE0;
+  --c-on-tertiary-container: #6B5C3E;
+  --c-warning: #8A7A56;
+}
+
+:root[data-theme="dark"] {
+  /* primary inverts: the strong action surface is off-white on near-black */
+  --c-primary: #F5F5F0;
+  --c-primary-container: #1F1E1A;
+  --c-on-primary: #0A0A0A;
+  --c-on-primary-container: #C9C5BC;
+  --c-secondary: #C9C5BC;
+
+  --c-bg: #0A0A0A;
+  --c-surface: #121110;
+  --c-surface-bright: #1C1B17;
+  --c-surface-dim: #0A0A0A;
+  --c-surface-lowest: #141310;
+  --c-surface-low: #121110;
+  --c-surface-container: #171613;
+  --c-surface-high: #1C1B17;
+  --c-surface-highest: #232219;
+
+  --c-text: #F5F5F0;
+  --c-text-muted: #C9C5BC;
+  --c-text-variant: #8A867E;
+
+  --c-outline: #8A867E;
+  --c-outline-variant: #2A2925;
+  --c-border: #2A2925;
+  --c-border-light: #1F1E1A;
+
+  --c-inverse-surface: #F5F5F0;
+  --c-inverse-on-surface: #0A0A0A;
+
+  --c-error: #D98682;
+  --c-error-container: #2A1614;
+  --c-on-error: #0A0A0A;
+  --c-on-error-container: #F3E3E1;
+
+  --c-accent: #C8B89A;
+  --c-accent-bright: #C8B89A;
+  --c-tertiary-container: #221F18;
+  --c-on-tertiary-container: #C8B89A;
+  --c-warning: #C0AE84;
+}
+
+/* The page surface follows the theme rather than being pinned near-black. */
+:root[data-theme="light"] body { background: var(--c-bg); color: var(--c-text); }
+:root[data-theme="dark"]  body { background: var(--c-bg); color: var(--c-text); }
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -1,4 +1,4 @@
-import { C } from '@/theme/colors';
+import { C, withAlpha} from '@/theme/colors';
 
 interface Props {
   count?: number;
@@ -14,7 +14,7 @@ export default function LoadingSkeleton({ count = 3, height = 80, style }: Props
           key={i}
           style={{
             height: `${height}px`,
-            background: `linear-gradient(90deg, ${C.border}33 25%, ${C.border}66 50%, ${C.border}33 75%)`,
+            background: `linear-gradient(90deg, ${withAlpha(C.border, 0x33)} 25%, ${withAlpha(C.border, 0x66)} 50%, ${withAlpha(C.border, 0x33)} 75%)`,
             backgroundSize: '200% 100%',
             borderRadius: '8px',
             animation: 'shimmer 1.5s infinite',

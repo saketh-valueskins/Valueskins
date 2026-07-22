@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 
 import { useState } from 'react';
 
@@ -178,7 +179,7 @@ export function AccountDeletionSection() {
       <div style={{
         padding: '20px',
         background: C.successBg,
-        border: `1px solid ${C.success}40`,
+        border: `1px solid ${withAlpha(C.success, 0x40)}`,
         borderRadius: '8px',
       }}>
         <div style={{ color: C.success, fontWeight: 700, fontSize: '15px', marginBottom: '8px' }}>
@@ -202,7 +203,7 @@ export function AccountDeletionSection() {
   const warningBox = (title: string, children: React.ReactNode) => (
     <div style={{
       background: C.errorBg,
-      border: `1px solid ${C.error}40`,
+      border: `1px solid ${withAlpha(C.error, 0x40)}`,
       borderRadius: '8px',
       padding: '12px',
       marginBottom: '12px',
@@ -306,7 +307,7 @@ export function AccountDeletionSection() {
                   padding: '10px',
                   background: 'transparent',
                   color: C.info,
-                  border: `1px solid ${C.info}40`,
+                  border: `1px solid ${withAlpha(C.info, 0x40)}`,
                   borderRadius: '6px',
                   fontSize: '12px',
                   fontWeight: 600,
@@ -389,7 +390,7 @@ export function AccountDeletionSection() {
               <div style={{
                 padding: '8px 12px',
                 background: C.errorBg,
-                border: `1px solid ${C.error}40`,
+                border: `1px solid ${withAlpha(C.error, 0x40)}`,
                 borderRadius: '6px',
                 color: C.error,
                 fontSize: '12px',

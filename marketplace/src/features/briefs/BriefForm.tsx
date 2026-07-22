@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 import PROFESSIONS from '@/lib/professions';
 import type { ProfessionCount } from '@/pages/api/creators/count-by-profession';
@@ -94,7 +95,7 @@ export default function BriefForm({ onSaved }: { onSaved: () => void }) {
       <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px' }}>Create a Brief</h2>
       <p style={{ fontSize: '13px', color: C.textMuted, marginBottom: '16px' }}>Describe what you're looking for. We'll match you with relevant creators.</p>
 
-      {message && <div style={{ padding: '8px 12px', background: `${C.success}20`, borderRadius: '6px', fontSize: '12px', color: C.success, marginBottom: '12px' }}>{message}</div>}
+      {message && <div style={{ padding: '8px 12px', background: `${withAlpha(C.success, 0x20)}`, borderRadius: '6px', fontSize: '12px', color: C.success, marginBottom: '12px' }}>{message}</div>}
 
       <div style={{ display: 'grid', gap: '12px' }}>
         <input placeholder="Brief title *" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
@@ -119,7 +120,7 @@ export default function BriefForm({ onSaved }: { onSaved: () => void }) {
           </label>
 
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
-            {form.required_niches.map(n => <span key={n} style={{ padding: '4px 8px', background: `${C.primary}20`, borderRadius: '4px', fontSize: '12px', color: C.primary }}>{n} <span onClick={() => toggleNiche(n)} style={{ cursor: 'pointer', marginLeft: '4px' }}>x</span></span>)}
+            {form.required_niches.map(n => <span key={n} style={{ padding: '4px 8px', background: `${withAlpha(C.primary, 0x20)}`, borderRadius: '4px', fontSize: '12px', color: C.primary }}>{n} <span onClick={() => toggleNiche(n)} style={{ cursor: 'pointer', marginLeft: '4px' }}>x</span></span>)}
           </div>
 
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
@@ -127,7 +128,7 @@ export default function BriefForm({ onSaved }: { onSaved: () => void }) {
               <button key={cat} onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
                 style={{
                   padding: '5px 10px', borderRadius: '5px', border: `1px solid ${selectedCategory === cat ? C.primary : C.border}`,
-                  background: selectedCategory === cat ? `${C.primary}20` : 'transparent',
+                  background: selectedCategory === cat ? `${withAlpha(C.primary, 0x20)}` : 'transparent',
                   color: selectedCategory === cat ? C.primary : C.textMuted, cursor: 'pointer', fontSize: '11px', fontWeight: 600,
                   textTransform: 'uppercase',
                 }}>
@@ -156,7 +157,7 @@ export default function BriefForm({ onSaved }: { onSaved: () => void }) {
                         style={{
                           padding: '5px 8px', borderRadius: '5px',
                           border: `1px solid ${isSelected ? C.primary : C.border}`,
-                          background: isSelected ? `${C.primary}20` : 'transparent',
+                          background: isSelected ? `${withAlpha(C.primary, 0x20)}` : 'transparent',
                           color: isSelected ? C.primary : C.text,
                           cursor: 'pointer', fontSize: '11px',
                           display: 'flex', alignItems: 'center', gap: '4px',
@@ -191,7 +192,7 @@ export default function BriefForm({ onSaved }: { onSaved: () => void }) {
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {PLATFORMS.map(p => (
               <button key={p.id} onClick={() => togglePlatform(p.id)}
-                style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${form.required_platforms.includes(p.id) ? C.primary : C.border}`, background: form.required_platforms.includes(p.id) ? `${C.primary}20` : 'transparent', color: form.required_platforms.includes(p.id) ? C.primary : C.textMuted, cursor: 'pointer', fontSize: '13px' }}>{p.label}</button>
+                style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${form.required_platforms.includes(p.id) ? C.primary : C.border}`, background: form.required_platforms.includes(p.id) ? `${withAlpha(C.primary, 0x20)}` : 'transparent', color: form.required_platforms.includes(p.id) ? C.primary : C.textMuted, cursor: 'pointer', fontSize: '13px' }}>{p.label}</button>
             ))}
           </div>
         </div>
@@ -201,7 +202,7 @@ export default function BriefForm({ onSaved }: { onSaved: () => void }) {
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {CONTENT_TYPES.map(ct => (
               <button key={ct} onClick={() => toggleContent(ct)}
-                style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${form.required_content_types.includes(ct) ? C.primary : C.border}`, background: form.required_content_types.includes(ct) ? `${C.primary}20` : 'transparent', color: form.required_content_types.includes(ct) ? C.primary : C.textMuted, cursor: 'pointer', fontSize: '13px', textTransform: 'capitalize' }}>{ct}</button>
+                style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${form.required_content_types.includes(ct) ? C.primary : C.border}`, background: form.required_content_types.includes(ct) ? `${withAlpha(C.primary, 0x20)}` : 'transparent', color: form.required_content_types.includes(ct) ? C.primary : C.textMuted, cursor: 'pointer', fontSize: '13px', textTransform: 'capitalize' }}>{ct}</button>
             ))}
           </div>
         </div>

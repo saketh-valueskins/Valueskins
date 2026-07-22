@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 
 const C = {
@@ -76,7 +77,7 @@ export default function MilestoneManager({ dealId, isCreator }: { dealId: number
         )}
       </div>
 
-      {error && <div style={{ padding: '8px', background: `${C.danger}20`, borderRadius: '4px', fontSize: '12px', color: C.danger, marginBottom: '10px' }}>{error}</div>}
+      {error && <div style={{ padding: '8px', background: `${withAlpha(C.danger, 0x20)}`, borderRadius: '4px', fontSize: '12px', color: C.danger, marginBottom: '10px' }}>{error}</div>}
 
       {milestones.length === 0 ? (
         <div style={{ padding: '16px', textAlign: 'center', color: C.textMuted, fontSize: '13px' }}>No milestones yet.</div>

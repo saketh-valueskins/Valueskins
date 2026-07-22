@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import ErrorBanner from '@/components/ErrorBanner';
@@ -133,7 +134,7 @@ export default function CampaignList({ initialCampaigns = [], initialPagination 
                   <label key={dt} onClick={() => setForm({ ...form, delivery_type: dt })}
                     style={{
                       display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '10px', cursor: 'pointer',
-                      background: form.delivery_type === dt ? `${C.primary}15` : C.bg,
+                      background: form.delivery_type === dt ? `${withAlpha(C.primary, 0x15)}` : C.bg,
                       border: `1px solid ${form.delivery_type === dt ? C.primary : C.border}`,
                       borderRadius: '6px', transition: 'all 0.15s',
                     }}>

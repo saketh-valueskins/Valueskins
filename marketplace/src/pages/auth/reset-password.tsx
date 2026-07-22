@@ -83,7 +83,7 @@ export default function ResetPassword() {
             <button
               type="submit"
               disabled={loading || !token}
-              style={{ width: '100%', padding: '12px', background: C.primary, color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600, cursor: loading || !token ? 'not-allowed' : 'pointer', opacity: loading || !token ? 0.6 : 1 }}
+              style={{ width: '100%', padding: '12px', background: C.primary, color: C.onPrimary, border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600, cursor: loading || !token ? 'not-allowed' : 'pointer', opacity: loading || !token ? 0.6 : 1 }}
             >
               {loading ? 'Resetting...' : 'Reset password'}
             </button>

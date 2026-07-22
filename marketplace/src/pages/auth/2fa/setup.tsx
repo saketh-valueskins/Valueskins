@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 const C = {
+  onPrimary: 'var(--c-on-primary)', // correct foreground on C.primary in BOTH themes
   primary: '#0A0A0A',
   bg: '#ffffff',
   text: '#1f2937',
@@ -111,7 +112,7 @@ export default function TwoFactorSetup() {
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>✅</div>
             <h1 style={{ fontSize: '24px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>2FA enabled</h1>
             <p style={{ fontSize: '15px', color: C.textSecondary, marginBottom: '24px' }}>Your account is now protected with two-factor authentication.</p>
-            <button onClick={() => router.push('/account/settings')} style={{ padding: '12px 24px', background: C.primary, color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600, cursor: 'pointer' }}>
+            <button onClick={() => router.push('/account/settings')} style={{ padding: '12px 24px', background: C.primary, color: C.onPrimary, border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600, cursor: 'pointer' }}>
               Back to settings
             </button>
           </div>

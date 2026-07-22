@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
@@ -208,7 +209,7 @@ export default function PublicProfilePage() {
                 color: C.primary,
                 fontSize: '13px',
                 fontWeight: 600,
-                border: `1px solid ${C.primary}30`,
+                border: `1px solid ${withAlpha(C.primary, 0x30)}`,
               }}>
                 {skin}
               </span>

@@ -59,7 +59,7 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading}
-              style={{ width: '100%', padding: '12px', background: C.primary, color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}
+              style={{ width: '100%', padding: '12px', background: C.primary, color: C.onPrimary, border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}
             >
               {loading ? 'Sending...' : 'Send reset link'}
             </button>

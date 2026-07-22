@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import CreatorLevelBadge from './CreatorLevelBadge';
 import { getLevel, getLevelInfo } from '@/lib/levels';
 
@@ -116,11 +117,11 @@ export default function ValueSkinHoverCard({ data, style, onViewFullProfile }: P
               <span style={{
                 padding: '3px 10px',
                 borderRadius: '12px',
-                background: `${C.primary}15`,
+                background: `${withAlpha(C.primary, 0x15)}`,
                 color: C.primary,
                 fontSize: '11px',
                 fontWeight: 600,
-                border: `1px solid ${C.primary}30`,
+                border: `1px solid ${withAlpha(C.primary, 0x30)}`,
               }}>
                 {data.niche}
               </span>
@@ -153,9 +154,9 @@ export default function ValueSkinHoverCard({ data, style, onViewFullProfile }: P
         {/* Worked with badge */}
         {data.workedWith && (
           <div style={{
-            marginBottom: '12px', padding: '8px 12px', background: `${C.success}15`,
+            marginBottom: '12px', padding: '8px 12px', background: `${withAlpha(C.success, 0x15)}`,
             borderRadius: '8px', fontSize: '12px', color: C.success, fontWeight: 600,
-            border: `1px solid ${C.success}30`,
+            border: `1px solid ${withAlpha(C.success, 0x30)}`,
           }}>
              Worked together before
           </div>
@@ -213,7 +214,7 @@ export default function ValueSkinHoverCard({ data, style, onViewFullProfile }: P
               fontWeight: 600,
               cursor: 'pointer',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = `${C.primary}10`; }}
+            onMouseEnter={e => { e.currentTarget.style.background = `${withAlpha(C.primary, 0x10)}`; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
           >
             View Full Profile

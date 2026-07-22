@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import type { GetServerSidePropsContext } from 'next';
@@ -118,7 +119,7 @@ export default function BrowseCampaigns({ initialCampaigns = [], initialPaginati
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                     <span style={{ fontSize: '15px', fontWeight: 600 }}>{c.title}</span>
-                    <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: `${C.success}20`, color: C.success }}>{c.status}</span>
+                    <span style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: `${withAlpha(C.success, 0x20)}`, color: C.success }}>{c.status}</span>
                   </div>
                   <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px' }}>{c.description?.slice(0, 120) || 'No description'}</div>
                   <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: C.textMuted }}>

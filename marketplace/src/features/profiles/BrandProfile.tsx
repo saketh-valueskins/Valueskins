@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
@@ -157,7 +158,7 @@ export default function BrandProfile() {
     <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${C.bg} 0%, #161512 100%)`, color: C.text, fontFamily: FONT, padding: '20px' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         {message && (
-          <div style={{ padding: '12px 16px', background: message.includes('success') ? `${C.success}20` : `${C.danger}20`, border: `1px solid ${message.includes('success') ? C.success : C.danger}`, borderRadius: '8px', color: message.includes('success') ? C.success : C.danger, marginBottom: '20px', fontSize: '14px' }}>
+          <div style={{ padding: '12px 16px', background: message.includes('success') ? `${withAlpha(C.success, 0x20)}` : `${withAlpha(C.danger, 0x20)}`, border: `1px solid ${message.includes('success') ? C.success : C.danger}`, borderRadius: '8px', color: message.includes('success') ? C.success : C.danger, marginBottom: '20px', fontSize: '14px' }}>
             {message}
           </div>
         )}
@@ -173,14 +174,14 @@ export default function BrandProfile() {
             </button>
           </div>
 
-          {profile.verified && <div style={{ padding: '10px 16px', background: `${C.success}20`, border: `1px solid ${C.success}`, borderRadius: '8px', color: C.success, fontSize: '13px', fontWeight: 600, display: 'inline-block', marginBottom: '16px' }}>Verified</div>}
+          {profile.verified && <div style={{ padding: '10px 16px', background: `${withAlpha(C.success, 0x20)}`, border: `1px solid ${C.success}`, borderRadius: '8px', color: C.success, fontSize: '13px', fontWeight: 600, display: 'inline-block', marginBottom: '16px' }}>Verified</div>}
 
           {/* Essential fields missing - blocks access */}
           {essentialMissing.length > 0 && (
-            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${C.danger}20`, border: `1px solid ${C.danger}`, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${withAlpha(C.danger, 0x20)}`, border: `1px solid ${C.danger}`, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '13px', color: C.danger, fontWeight: 600 }}>Complete these to get started:</span>
               {essentialMissing.map((label) => (
-                <span key={label} style={{ fontSize: '12px', color: C.danger, background: `${C.danger}22`, border: `1px solid ${C.danger}55`, borderRadius: '20px', padding: '3px 10px', fontWeight: 500 }}>
+                <span key={label} style={{ fontSize: '12px', color: C.danger, background: `${withAlpha(C.danger, 0x22)}`, border: `1px solid ${withAlpha(C.danger, 0x55)}`, borderRadius: '20px', padding: '3px 10px', fontWeight: 500 }}>
                   {label}
                 </span>
               ))}
@@ -189,10 +190,10 @@ export default function BrandProfile() {
 
           {/* Optional fields missing - just a warning */}
           {essentialMissing.length === 0 && optionalMissing.length > 0 && (
-            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${C.warning}14`, border: `1px solid ${C.warning}`, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${withAlpha(C.warning, 0x14)}`, border: `1px solid ${C.warning}`, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '13px', color: C.warning, fontWeight: 600 }}>Optional - helps attract creators:</span>
               {optionalMissing.map((label) => (
-                <span key={label} style={{ fontSize: '12px', color: C.warning, background: `${C.warning}22`, border: `1px solid ${C.warning}55`, borderRadius: '20px', padding: '3px 10px', fontWeight: 500 }}>
+                <span key={label} style={{ fontSize: '12px', color: C.warning, background: `${withAlpha(C.warning, 0x22)}`, border: `1px solid ${withAlpha(C.warning, 0x55)}`, borderRadius: '20px', padding: '3px 10px', fontWeight: 500 }}>
                   {label}
                 </span>
               ))}
@@ -201,7 +202,7 @@ export default function BrandProfile() {
 
           {/* All done */}
           {essentialMissing.length === 0 && optionalMissing.length === 0 && (
-            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${C.success}14`, border: `1px solid ${C.success}`, borderRadius: '8px', fontSize: '13px', color: C.success, fontWeight: 600 }}>
+            <div style={{ marginTop: '16px', padding: '12px 16px', background: `${withAlpha(C.success, 0x14)}`, border: `1px solid ${C.success}`, borderRadius: '8px', fontSize: '13px', color: C.success, fontWeight: 600 }}>
               Your profile is complete!
             </div>
           )}

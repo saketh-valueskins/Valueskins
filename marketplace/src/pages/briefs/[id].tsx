@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import MarketplaceLayout from '@/components/MarketplaceLayout';
@@ -56,7 +57,7 @@ export default function BriefDetailPage() {
           {brief.required_niches?.length > 0 && (
             <div style={{ marginTop: '12px' }}>
               <span style={{ fontSize: '12px', color: C.textMuted }}>Niches: </span>
-              {brief.required_niches.map((n: string) => <span key={n} style={{ padding: '2px 8px', background: `${C.primary}20`, borderRadius: '4px', fontSize: '11px', color: C.primary, marginRight: '4px' }}>{n}</span>)}
+              {brief.required_niches.map((n: string) => <span key={n} style={{ padding: '2px 8px', background: `${withAlpha(C.primary, 0x20)}`, borderRadius: '4px', fontSize: '11px', color: C.primary, marginRight: '4px' }}>{n}</span>)}
             </div>
           )}
         </div>

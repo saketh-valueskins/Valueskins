@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 
 import React, { useState } from 'react';
 import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
@@ -78,7 +79,7 @@ export default function ExploreView() {
                   <span style={{ fontSize: '10px', color: C.textMuted, flexShrink: 0 }}>{item.views} views</span>
                 </div>
                 <div style={{ fontSize: '12px', color: C.textSecondary, lineHeight: 1.4, marginBottom: '8px' }}>{item.desc}</div>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: C.primary, background: `${C.primary}10`, padding: '2px 8px', borderRadius: '4px' }}>{item.tag}</span>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: C.primary, background: `${withAlpha(C.primary, 0x10)}`, padding: '2px 8px', borderRadius: '4px' }}>{item.tag}</span>
               </div>
             ))}
           </div>

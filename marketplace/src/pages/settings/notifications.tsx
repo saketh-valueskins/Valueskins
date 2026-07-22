@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 import MarketplaceLayout from '@/components/MarketplaceLayout';
 
@@ -42,7 +43,7 @@ export default function NotificationSettingsPage() {
         <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Notification Preferences</h1>
         <p style={{ fontSize: '13px', color: C.textMuted, marginBottom: '20px' }}>Choose how you receive updates from ValueSkins.</p>
 
-        {msg && <div style={{ padding: '8px 12px', background: `${C.success}20`, borderRadius: '6px', fontSize: '12px', color: C.success, marginBottom: '12px' }}>{msg}</div>}
+        {msg && <div style={{ padding: '8px 12px', background: `${withAlpha(C.success, 0x20)}`, borderRadius: '6px', fontSize: '12px', color: C.success, marginBottom: '12px' }}>{msg}</div>}
 
         <div style={{ display: 'grid', gap: '2px', background: C.surface, borderRadius: '8px', border: `1px solid ${C.border}`, overflow: 'hidden' }}>
           {[

@@ -1,4 +1,5 @@
 'use client';
+import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 import MarketplaceLayout from '@/components/MarketplaceLayout';
 import ErrorBanner from '@/components/ErrorBanner';
@@ -74,7 +75,7 @@ export default function PaymentHistoryPage() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '16px', fontWeight: 700, color: item.type === 'escrow' ? C.primary : C.success }}>${Number(item.amount || 0).toLocaleString()}</div>
-                  <div style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', textTransform: 'capitalize', background: item.status === 'completed' || item.status === 'released' ? `${C.success}20` : `${C.warning}20`, color: item.status === 'completed' || item.status === 'released' ? C.success : C.warning }}>{item.status || 'pending'}</div>
+                  <div style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', textTransform: 'capitalize', background: item.status === 'completed' || item.status === 'released' ? `${withAlpha(C.success, 0x20)}` : `${withAlpha(C.warning, 0x20)}`, color: item.status === 'completed' || item.status === 'released' ? C.success : C.warning }}>{item.status || 'pending'}</div>
                 </div>
               </div>
             ))}
