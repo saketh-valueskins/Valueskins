@@ -37,6 +37,20 @@ COPY pricing_service ./pricing_service
 COPY credit_service ./credit_service
 COPY contract_service ./contract_service
 COPY reputation_service ./reputation_service
+# These 11 are declared in Cargo.toml [workspace].members but were never copied,
+# so `cargo build --workspace` failed on the first one it reached
+# (account_service). Every deploy of this image has been broken.
+COPY account_service ./account_service
+COPY payment_service ./payment_service
+COPY storage_service ./storage_service
+COPY tax_service ./tax_service
+COPY identity_service ./identity_service
+COPY guardian_service ./guardian_service
+COPY trust_service ./trust_service
+COPY risk_engine ./risk_engine
+COPY verification_service ./verification_service
+COPY moderation_service ./moderation_service
+COPY events_service ./events_service
 COPY indexer ./indexer
 COPY shared ./shared
 COPY migrations ./migrations

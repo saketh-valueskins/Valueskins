@@ -1,22 +1,23 @@
 type Level = 1 | 2 | 3 | 4 | 5;
 
-// Tier names come from the Raw -> Icon scale. The phase-2 Profile spec pins
-// Signal = level 3 and Aura = level 4 at 35 deals, which matches the thresholds
-// below exactly. Level 2's canonical name is still unconfirmed — Project.md,
-// the authority for §4, is not in this repo (see phase-2/flagged.md P2-F6).
+// Earned Tier ladder — Project.md §4 Layer 2 / §11.
+//   1 Raw    0–4     2 Seed   5–14    3 Signal 15–34
+//   4 Aura   35–74   5 Icon   75+
+// Tier rises ONLY on completed, paid deals, and never decays in V1 (§11).
 //
-// G3: sand only. These previously carried green / purple / amber, which the
-// brand rules forbid outright.
+// G3: sand only. Project.md §4 describes green/blue/purple/gold frames per tier,
+// but BRANDING and the phase-2 specs are sand-only and forbid green outright —
+// sand wins here (see phase-2/flagged.md P2-F6).
 const LEVEL_THRESHOLDS: { level: Level; minDeals: number; label: string; color: string }[] = [
   { level: 1, minDeals: 0, label: 'Raw', color: '#8A867E' },
-  { level: 2, minDeals: 5, label: 'Emerging', color: '#B8B4AC' },
+  { level: 2, minDeals: 5, label: 'Seed', color: '#B8B4AC' },
   { level: 3, minDeals: 15, label: 'Signal', color: '#A08A5E' },
   { level: 4, minDeals: 35, label: 'Aura', color: '#A08A5E' },
   { level: 5, minDeals: 75, label: 'Icon', color: '#C8B89A' },
 ];
 
 const NEXT_LEVEL_INFO: Record<Level, { minDeals: number; label: string } | null> = {
-  1: { minDeals: 5, label: 'Emerging' },
+  1: { minDeals: 5, label: 'Seed' },
   2: { minDeals: 15, label: 'Signal' },
   3: { minDeals: 35, label: 'Aura' },
   4: { minDeals: 75, label: 'Icon' },

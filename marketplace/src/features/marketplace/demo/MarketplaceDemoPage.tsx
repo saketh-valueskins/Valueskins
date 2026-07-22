@@ -2859,7 +2859,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       profession: isBrand ? 'Brand' : 'Creator',
                       languages: ['English'],
                       open_for_work: true,
-                      valueskin_type: 'Professional',
                       // computed server-side from completed deals — never editable
                       deals_completed: trackRecord?.deals_completed ?? completedDeals.length,
                       deals_this_month: trackRecord?.deals_this_month ?? 0,
@@ -3005,30 +3004,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
 
 
-                {/* Account actions */}
-                <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '16px', padding: '20px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: C.textMuted, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Account</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${C.border}` }}>
-                      <span style={{ fontSize: '13px', color: C.textSecondary }}>Email</span>
-                      <span style={{ fontSize: '13px', color: C.text, fontWeight: 500 }}>{account?.email || '—'}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${C.border}` }}>
-                      <span style={{ fontSize: '13px', color: C.textSecondary }}>Role</span>
-                      <span style={{ fontSize: '13px', color: C.text, fontWeight: 500, textTransform: 'capitalize' }}>{isBrand ? 'Brand' : 'Creator'}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0' }}>
-                      <span style={{ fontSize: '13px', color: C.textSecondary }}>Member since</span>
-                      <span style={{ fontSize: '13px', color: C.text, fontWeight: 500 }}>{account?.created_at ? new Date(account.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '—'}</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    style={{ marginTop: '16px', width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ef444430', background: '#ef444408', color: '#ef4444', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
-                  >
-                    Delete Account
-                  </button>
-                </div>
+                {/* Account block removed: role is already on the identity hero,
+                    and Delete Account lives in Settings. */}
 
               </div>
             </>

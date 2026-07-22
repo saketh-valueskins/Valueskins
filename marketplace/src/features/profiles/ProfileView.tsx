@@ -42,7 +42,6 @@ export interface ProfileData {
   country?: string;
   languages?: string[];
   open_for_work?: boolean;
-  valueskin_type?: string;
   is_verified?: boolean;
   deals_completed?: number;
   deals_this_month?: number;
@@ -192,7 +191,6 @@ export default function ProfileView({
   const profession = profile?.profession || 'Creator';
   const place = [profile?.location, profile?.country].filter(Boolean).join(', ');
   const languages: string[] = profile?.languages?.length ? profile.languages : ['English'];
-  const skinType = profile?.valueskin_type || 'Professional';
 
   const pill: React.CSSProperties = { fontSize: '0.75rem', fontWeight: 600, padding: '6px 13px', borderRadius: 20, fontFamily: FONT, whiteSpace: 'nowrap' };
   const action: React.CSSProperties = { fontSize: '0.875rem', fontWeight: 600, padding: '11px 20px', borderRadius: 10, fontFamily: FONT, cursor: 'pointer' };
@@ -286,9 +284,11 @@ export default function ProfileView({
                 {profile?.open_for_work !== false && ' · Open for work'}
               </p>
 
+              {/* V1: the ValueSkin Type layer (Passion / Professional / Hobby,
+                  Project.md §28) is DROPPED, so no Type pill here — only the
+                  earned Tier and verification. */}
               <div style={{ marginTop: 16, display: 'flex', gap: 9, flexWrap: 'wrap', justifyContent: isNarrow ? 'center' : 'flex-start' }}>
-                <span style={{ ...pill, background: WARM_SAND, color: '#0A0A0A' }}>{skinType}</span>
-                <span style={{ ...pill, border: '1px solid rgba(200,184,154,0.35)', color: WARM_SAND }}>
+                <span style={{ ...pill, background: WARM_SAND, color: '#0A0A0A' }}>
                   {levelInfo.label} · Level {level}
                 </span>
                 {profile?.is_verified && (

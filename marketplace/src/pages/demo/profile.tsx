@@ -18,7 +18,6 @@ const MOCK_PROFILE: ProfileData = {
   country: 'India',
   languages: ['English', 'Hindi'],
   open_for_work: true,
-  valueskin_type: 'Professional',
   is_verified: true,
   deals_completed: 18,      // -> Signal, Level 3, 17 more deals to Aura
   deals_this_month: 3,
