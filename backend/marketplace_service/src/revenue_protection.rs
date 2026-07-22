@@ -186,15 +186,20 @@ impl RevenueProtectionService {
             .fetch_one(pool)
             .await?;
 
-            // Check for active penalty
+            // Check for active penalty.
+            // fetch_optional already means "a row, or no row", so it returns the
+            // Option on its own. A row type must be the tuple of columns —
+            // Option is not a row — so declaring the row as Option<..> and then
+            // .flatten()-ing the double wrapper never compiled.
+            // The WHERE clause guarantees penalty_until is non-null on any row
+            // returned, so the column type is DateTime, not Option<DateTime>.
             let penalty: Option<(DateTime<Utc>,)> = sqlx::query_as(
                 "SELECT penalty_until FROM rate_limit_penalties WHERE user_id = $1 AND endpoint = $2 AND penalty_until > NOW()"
             )
             .bind(uid)
             .bind(endpoint)
             .fetch_optional(pool)
-            .await?
-            .flatten();
+            .await?;
 
             if penalty.is_some() {
                 return Ok(false);

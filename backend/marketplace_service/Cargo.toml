@@ -13,6 +13,10 @@ log = "0.4"
 uuid = { version = "1.0", features = ["v4", "serde"] }
 tracing = "0.1"
 async-trait = "0.1"
+# Used by revenue_protection.rs (contact masking + message fingerprinting) but
+# never declared, so this crate could not compile at all.
+regex = "1.11.1"
+md5 = "0.7.0"
 shared = { path = "../shared" }
 auth_service = { path = "../auth_service" }
 
