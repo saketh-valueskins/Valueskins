@@ -6,7 +6,9 @@ import { getGoogleAuthUrl } from '@/lib/oauth';
 import { ValueSkinSprite } from '@/features/profiles/ProfileView';
 
 // Login Page — per "login page.md" v2 (dark premium).
-// Dark is the default surface; a light toggle stays for parity (§0b).
+// Fixed dark. The spec's light toggle (§0b) is deliberately NOT shipped here —
+// the auth screen is a single brand moment and should not offer a theme choice.
+// The light tokens are kept below so the surface can be flipped if that changes.
 // One brand moment: the centered hero wordmark IS the logo — no pill, no nav
 // logo, top-left stays empty (§1). No black divider band (§4).
 // Single viewport, no scroll (§3) — the global footer is suppressed for this
@@ -17,7 +19,6 @@ import { ValueSkinSprite } from '@/features/profiles/ProfileView';
 
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 const EASE = 'cubic-bezier(0.16,1,0.3,1)';
-const WARM_SAND = '#C8B89A';
 const DEEP_SAND = '#A08A5E';
 
 type Theme = 'dark' | 'light';
@@ -33,7 +34,6 @@ const T = {
     btnBg: '#F5F5F0',
     btnLabel: '#0A0A0A',
     btnShadow: '0 10px 30px -12px rgba(200,184,154,0.45)',
-    toggleBorder: 'rgba(245,245,240,0.16)',
   },
   light: {
     surface:
@@ -45,7 +45,6 @@ const T = {
     btnBg: '#0A0A0A',
     btnLabel: '#F5F5F0',
     btnShadow: '0 10px 30px -12px rgba(45,45,45,0.35)',
-    toggleBorder: 'rgba(45,45,45,0.16)',
   },
 } as const;
 
@@ -62,7 +61,8 @@ export default function Login() {
   const [error, setError] = useState('');
   const [hover, setHover] = useState(false);
   const [pressed, setPressed] = useState(false);
-  const [theme, setTheme] = useState<Theme>('dark'); // dark default (§0b)
+  // Fixed dark — the auth screen has no theme toggle.
+  const theme: Theme = 'dark';
   const [mounted, setMounted] = useState(false);
   const [reduced, setReduced] = useState(false);
 
@@ -132,31 +132,9 @@ export default function Login() {
           ))}
         </div>
 
-        {/* Theme toggle — top-right (§0b.7). Top-LEFT stays empty (§1). */}
-        <div style={{ position: 'relative', display: 'flex', justifyContent: 'flex-end', padding: '18px 24px' }}>
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              minHeight: 34, padding: '6px 12px', borderRadius: 20,
-              border: `1px solid ${t.toggleBorder}`, background: 'transparent',
-              fontFamily: FONT, cursor: 'pointer', color: t.muted, fontSize: '0.75rem',
-            }}
-          >
-            {theme === 'dark' ? 'Dark' : 'Light'}
-            <span style={{ position: 'relative', width: 26, height: 14, borderRadius: 8, background: t.hair, display: 'inline-block' }}>
-              <span
-                style={{
-                  position: 'absolute', top: 1, left: 1, width: 12, height: 12, borderRadius: 8,
-                  background: WARM_SAND,
-                  transform: theme === 'dark' ? 'translateX(12px)' : 'translateX(0)',
-                  transition: reduced ? 'none' : `transform 0.3s ${EASE}`,
-                }}
-              />
-            </span>
-          </button>
-        </div>
+        {/* No theme toggle on the auth screen — this is a fixed dark brand
+            moment. Top-left stays empty (§1); top-right is now empty too. */}
+        <div style={{ position: 'relative', height: 24 }} />
 
         {/* Auth zone — grows and optically centers (§2) */}
         <div
