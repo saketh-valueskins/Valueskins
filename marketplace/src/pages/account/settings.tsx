@@ -257,7 +257,8 @@ export default function SettingsHub() {
           <Section id="profile" title="Profile & Skins">
             <LinkRow href="/profile/me" label="Creator Profile Preferences" sub="Bio, social links, pitch, marketplace settings" />
             <LinkRow href="/settings" label="Profile & brand details" sub="Rate card, audience, deal preferences, skin showcase, availability" />
-            <LinkRow href="/valueskins/store" label="Manage ValueSkins" sub="Switch or acquire your profession skin in the Store" />
+            {/* One store: this opens the same Store tab the bottom nav does. */}
+            <LinkRow href="/demo/marketplace?view=store" label="Manage ValueSkins" sub="Switch or acquire your profession skin in the Store" />
             <LinkRow href="/account/modules" label="Modules" sub="Manage which ValueSkins modules are active" />
           </Section>
 

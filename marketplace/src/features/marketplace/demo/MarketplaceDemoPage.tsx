@@ -302,6 +302,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
     if (typeof window !== 'undefined') {
       const p = window.location.pathname;
+      // ?view=store deep-links to the Store tab, so Settings -> Manage ValueSkins
+      // lands on the same store the bottom tab opens. One store, two doors.
+      const v = new URLSearchParams(window.location.search).get('view');
+      if (v === 'store' || v === 'profile' || v === 'settings' || v === 'mim') {
+        return v as 'store' | 'profile' | 'settings' | 'mim';
+      }
       if (p === '/feed' || p === '/demo/marketplace' || p === '/') return 'mim';
       if (p === '/explore') return 'explore';
       if (p === '/store') return 'store';
@@ -476,8 +482,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
   const [showMetricsModal, setShowMetricsModal] = useState(false);
   const [showReputationModal, setShowReputationModal] = useState(false);
-  const [showStoreModal, setShowStoreModal] = useState(false);
+  // Store is a two-pane master/detail now — the old category modal is gone.
   const [storeCategory, setStoreCategory] = useState<string | null>(null);
+  const [storeSearch, setStoreSearch] = useState('');
+  // Set right after a skin is applied, so the profile plays the slap animation.
+  const [justEquipped, setJustEquipped] = useState(false);
 
   // ValueSkin edit modal state
   const [showEditValueSkinModal, setShowEditValueSkinModal] = useState(false);
@@ -2024,7 +2033,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
     if (marketplaceRole === 'brand') {
       setBrandValueSkins(prev => [...prev, profession]);
       if (!activeBrandSkin) setActiveBrandSkin(profession);
-      setShowStoreModal(false);
       setActiveView('mim');
       setPurchaseToast(`${profession} added to your ValueSkins`);
       setTimeout(() => setPurchaseToast(null), 3000);
@@ -2038,10 +2046,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
       ['profession']: { profession, aboutMe: defaultAboutMe(profession) },
     }));
     setSelectedMarketplaceSkin(profession);
-    setShowStoreModal(false);
     setActiveView('profile');
-    setPurchaseToast(`${label} applied as your ValueSkin`);
-    setTimeout(() => setPurchaseToast(null), 3000);
+    // Slap-to-profile: the skin flies into the ValueSkin frame on the profile.
+    // The animation carries its own "Equipped" toast, so no duplicate toast here.
+    setJustEquipped(true);
   };
 
   const downloadReceipt = async (profession: string, orderId: string, paymentId: string) => {
@@ -2852,6 +2860,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <ProfileView
                     embedded
                     containerWidth={600}
+                    justEquipped={justEquipped}
+                    onEquipAnimationDone={() => setJustEquipped(false)}
                     onEditProfile={() => setEditingProfile(true)}
                     profile={{
                       display_name: account?.display_name || profileName || 'Your Name',
@@ -6625,12 +6635,27 @@ export default function MarketplaceDemoPage(initialDealData?: {
           )}
 
           {/* ── STORE VIEW ────────────────────────────────────── */}
-          {activeView === 'store' && (
+          {activeView === 'store' && (() => {
+            // ONE store. Two-pane master/detail per ui-specs/phase-2/store-page-mock.svg.
+            // This replaces the old category-grid + modal: the right pane now shows the
+            // skins directly, so buying is one click instead of two.
+            // Purchase flow unchanged — same purchaseProfession(), same guards.
+            const catMap = marketplaceRole === 'brand' ? PROFESSIONS : CREATOR_PROFESSIONS;
+            const allCats = Object.values(catMap) as { name: string; subProfessions: string[] }[];
+            const q = storeSearch.trim().toLowerCase();
+            const cats = allCats.filter(c =>
+              !q || c.name.toLowerCase().includes(q) || c.subProfessions.some(sp => sp.toLowerCase().includes(q))
+            );
+            const selectedName = (storeCategory && catMap[storeCategory]) ? storeCategory : (cats[0]?.name ?? allCats[0]?.name);
+            const selected = selectedName ? catMap[selectedName] : undefined;
+            const isBrandRole = marketplaceRole === 'brand';
+            const ownedCount = isBrandRole ? brandValueSkins.length : ownedSkins.length;
+
+            return (
             <>
-              {/* Store header */}
               <div style={{ padding: '12px 16px 0', position: 'sticky', top: 0, background: C.bg, zIndex: 10 }}>
-                <span style={{ fontSize: '22px', fontWeight: 700, color: C.text, display: 'block', marginBottom: '14px' }}>ValueSkins Closet</span>
-                {/* Search bar */}
+                <span style={{ fontSize: '22px', fontWeight: 700, color: C.text, display: 'block', marginBottom: '4px' }}>ValueSkins Closet</span>
+                <span style={{ fontSize: '13px', color: C.textSecondary, display: 'block', marginBottom: '14px' }}>Pick a profession to see its skins.</span>
                 <div style={{ position: 'relative', marginBottom: '14px' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -6638,57 +6663,116 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <input
                     type="text"
                     placeholder="Search professions..."
-                    style={{ width: '100%', background: C.card, border: 'none', borderRadius: '12px', padding: '12px 12px 12px 40px', color: C.text, fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+                    value={storeSearch}
+                    onChange={(e) => setStoreSearch(e.target.value)}
+                    aria-label="Search professions"
+                    style={{ width: '100%', background: C.card, border: 'none', borderRadius: '12px', padding: '12px 12px 12px 40px', color: C.text, fontSize: '16px', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
 
-              <div style={{ padding: '0 16px 16px' }}>
-                {/* Brand: owned skins summary */}
-                {marketplaceRole === 'brand' && (
-                  <div style={{ marginBottom: '16px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: C.textSecondary, marginBottom: '8px' }}>Your ValueSkins</div>
-                    {brandValueSkins.length > 0 && (
-                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                        {brandValueSkins.map(skin => (
-                          <span key={skin} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: C.primary, background: `${C.primary}15`, padding: '6px 14px', borderRadius: '20px' }}>
-                            {skin}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+              <div style={{ padding: '0 16px 24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: '20px', alignItems: 'start' }}>
 
-                {/* 2-column category grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                  {Object.values(marketplaceRole === 'brand' ? PROFESSIONS : CREATOR_PROFESSIONS).map((prof) => {
-                    const isBrand = marketplaceRole === 'brand';
-                    const brandOwns = isBrand && prof.subProfessions.some(sp => brandValueSkins.includes(sp));
-                    const isCurrentSlotActive = !isBrand && ownedSkins.some(s => prof.subProfessions.includes(s.profession));
-                    const canClick = isBrand ? brandValueSkins.length < 1 : ownedSkins.length < 1;
+                {/* LEFT — numbered profession list */}
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.textSecondary, margin: '4px 0 6px' }}>Browse professions</div>
+                  {cats.map((prof, i) => {
+                    const active = prof.name === selectedName;
+                    const owns = isBrandRole
+                      ? prof.subProfessions.some(sp => brandValueSkins.includes(sp))
+                      : ownedSkins.some(s => prof.subProfessions.includes(s.profession));
                     return (
                       <button
                         key={prof.name}
-                        onClick={() => { if (canClick) { setStoreCategory(prof.name); setShowStoreModal(true); } }}
+                        onClick={() => setStoreCategory(prof.name)}
                         style={{
-                          padding: '16px 14px', textAlign: 'left',
-                          background: (isCurrentSlotActive || brandOwns) ? `${C.primary}12` : C.card,
-                          border: 'none', borderRadius: '14px', cursor: canClick ? 'pointer' : 'default',
-                          transition: 'all 0.15s', opacity: canClick ? 1 : 0.5,
+                          position: 'relative', width: '100%', minHeight: '46px', display: 'flex', alignItems: 'center', gap: '10px',
+                          padding: '0 12px', border: 'none', borderBottom: `1px solid ${C.border}`,
+                          background: active ? 'rgba(200,184,154,0.14)' : 'transparent',
+                          borderRadius: active ? '6px' : 0, cursor: 'pointer', textAlign: 'left',
                         }}
                       >
-                        <div style={{ fontSize: '15px', fontWeight: 600, color: C.text, marginBottom: '4px' }}>{prof.name}</div>
-                        <div style={{ fontSize: '12px', color: (isCurrentSlotActive || brandOwns) ? C.primary : C.textMuted, fontWeight: 600 }}>
-                          {brandOwns ? 'Owned' : isCurrentSlotActive ? 'Active' : canClick ? `${prof.subProfessions.length} skins` : '\u2014'}
-                        </div>
+                        {active && <span aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '2px', background: C.primary }} />}
+                        <span style={{ fontSize: '11px', color: C.textMuted, minWidth: '18px' }}>{String(i + 1).padStart(2, '0')}</span>
+                        <span style={{ flex: 1, fontSize: '15px', fontWeight: 600, color: C.text }}>{prof.name}</span>
+                        <span style={{ fontSize: '12px', color: owns ? C.primary : C.textSecondary, fontWeight: owns ? 600 : 400 }}>
+                          {owns ? 'Owned' : `${prof.subProfessions.length} skins`}
+                        </span>
+                        <span aria-hidden="true" style={{ color: active ? C.primary : C.textMuted }}>›</span>
                       </button>
                     );
                   })}
+                  {cats.length === 0 && (
+                    <p style={{ fontSize: '13px', color: C.textSecondary, padding: '18px 2px' }}>No professions match “{storeSearch}”.</p>
+                  )}
                 </div>
+
+                {/* RIGHT — skins in the selected profession */}
+                {selected && (
+                  <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '18px', padding: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                      <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, margin: 0 }}>{selected.name}</h2>
+                      <span style={{ fontSize: '11px', color: C.textSecondary, border: `1px solid ${C.border}`, borderRadius: '13px', padding: '5px 14px' }}>
+                        {selected.subProfessions.length} skins · {ownedCount}/1 owned
+                      </span>
+                    </div>
+
+                    <div style={{ height: '1px', background: C.border, margin: '16px 0 14px' }} />
+
+                    <p style={{ fontSize: '13px', color: C.textSecondary, margin: '0 0 18px' }}>
+                      {isBrandRole
+                        ? `Tap any profession to add it to your brand ValueSkins (₹${SKIN_PRICE_RUPEES}).`
+                        : `Tap a badge to purchase (₹${SKIN_PRICE_RUPEES}) and instantly apply it as your ValueSkin. One active skin at a time.`}
+                    </p>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: '10px' }}>
+                      {selected.subProfessions.map((sub: string) => {
+                        const defined = PROFESSION_BADGES[sub];
+                        const abbr = defined?.abbreviation ?? sub.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 3);
+                        const badgeColor = defined?.color ?? C.primary;
+                        const stickerSrc = defined?.stickerImage || STICKER_MANIFEST[sub];
+                        const isOwned = isBrandRole && brandValueSkins.includes(sub);
+                        const isActiveHere = !isBrandRole && assignedProfessions.has(sub);
+                        const isFull = (isBrandRole ? brandValueSkins.length >= 1 : ownedSkins.length >= 1) && !isOwned && !isActiveHere;
+                        return (
+                          <button
+                            key={sub}
+                            onClick={() => !isFull && purchaseProfession(sub)}
+                            disabled={!!isFull}
+                            style={{
+                              background: (isActiveHere || isOwned) ? `${C.primary}12` : C.card,
+                              border: `1px solid ${(isActiveHere || isOwned) ? C.primary : C.border}`,
+                              borderRadius: '12px', color: isFull ? C.textMuted : C.text,
+                              padding: '14px 12px', cursor: isFull ? 'default' : 'pointer',
+                              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                              opacity: isFull ? 0.45 : 1, position: 'relative', minHeight: '44px',
+                            }}
+                          >
+                            {stickerSrc ? (
+                              <img src={stickerSrc} alt="" style={{ width: '56px', height: '56px', objectFit: 'contain', borderRadius: '8px' }} />
+                            ) : (
+                              <div style={{ width: '56px', height: '56px', borderRadius: '8px', background: `${badgeColor}20`, border: `1px solid ${badgeColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: badgeColor, fontSize: '16px', fontWeight: 800 }}>
+                                {abbr}
+                              </div>
+                            )}
+                            <span style={{ fontSize: '13px', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>{sub}</span>
+                            {(isActiveHere || isOwned) ? (
+                              <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.primary }}>Equipped</span>
+                            ) : isFull ? (
+                              <span style={{ fontSize: '11px', color: C.textMuted }}>Max skins (1/1)</span>
+                            ) : (
+                              <span style={{ fontSize: '11px', fontWeight: 600, color: C.textSecondary }}>Acquire · ₹{SKIN_PRICE_RUPEES}</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
-          )}
+            );
+          })()}
 
           {/* ── NOTIFICATIONS VIEW ────────────────────────────── */}
           {activeView === 'notifications' && <NotificationsView hasAnySkin={hasAnySkin} />}
@@ -6840,80 +6924,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       })()}
 
       {/* Store Modal — shows brand types for brands, creator professions for creators */}
-      {showStoreModal && storeCategory && (() => {
-        const catMap = marketplaceRole === 'brand' ? PROFESSIONS : CREATOR_PROFESSIONS;
-        const cat = (catMap as Record<string, { name: string; subProfessions: string[] }>)[storeCategory];
-        if (!cat) return null;
-        const subs = cat.subProfessions;
-        return (
-        <Modal onClose={() => { setShowStoreModal(false); setStoreCategory(null); }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-            <h2 style={{ fontSize: '22px', fontWeight: 'bold', color: C.text, margin: 0 }}>{storeCategory}</h2>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: C.textSecondary, background: C.surfaceAlt, padding: '3px 8px', borderRadius: '6px' }}>
-              {marketplaceRole === 'brand' ? brandValueSkins.length : ownedSkins.length}/1 max
-            </span>
-          </div>
-          <p style={{ fontSize: '13px', color: C.textSecondary, marginBottom: '16px' }}>
-            {marketplaceRole === 'brand'
-              ? `Tap any profession to add it to your brand ValueSkins (₹${SKIN_PRICE_RUPEES}).`
-              : `Tap any badge to purchase (₹${SKIN_PRICE_RUPEES}) and instantly apply it as your ValueSkin.`}
-          </p>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            {subs.map((sub: string) => {
-              const defined = PROFESSION_BADGES[sub];
-              const isBrand = marketplaceRole === 'brand';
-              const abbr = defined?.abbreviation ?? sub.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 3);
-              const badgeColor = defined?.color ?? C.primary;
-              const stickerSrc = defined?.stickerImage || STICKER_MANIFEST[sub];
-              const isOwned = isBrand && brandValueSkins.includes(sub);
-              const isActiveHere = !isBrand && assignedProfessions.has(sub);
-              const isFull = (isBrand ? brandValueSkins.length >= 1 : ownedSkins.length >= 1) && !isOwned && !isActiveHere;
-              const disabled = isFull;
-              return (
-                <button
-                  key={sub}
-                  onClick={() => !disabled && purchaseProfession(sub)}
-                  disabled={!!disabled}
-                  style={{
-                    background: (isActiveHere || isOwned) ? 'rgba(0,102,204,0.08)' : C.card,
-                    border: `1px solid ${(isActiveHere || isOwned) ? C.primary : C.border}`,
-                    borderRadius: '12px', color: disabled ? C.textMuted : C.text,
-                    padding: '12px', fontSize: '13px',
-                    cursor: disabled ? 'default' : 'pointer',
-                    transition: 'all 0.15s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                    opacity: disabled ? 0.45 : 1, position: 'relative',
-                  }}
-                  onMouseEnter={(e) => { if (!disabled && !isActiveHere && !isOwned) { e.currentTarget.style.borderColor = C.primary; e.currentTarget.style.background = C.surfaceAlt; } }}
-                  onMouseLeave={(e) => { if (!isActiveHere && !isOwned) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.card; } }}
-                >
-                  {/* Skin sticker from auto-generated manifest, abbreviation fallback */}
-                  {stickerSrc ? (
-                    <img src={stickerSrc} alt={sub} style={{ width: '56px', height: '56px', objectFit: 'contain', borderRadius: '8px' }} />
-                  ) : (
-                    <div style={{ width: '56px', height: '56px', borderRadius: '8px', background: `${badgeColor}20`, border: `1px solid ${badgeColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: badgeColor, fontSize: '16px', fontWeight: 800 }}>
-                      {abbr}
-                    </div>
-                  )}
-                  <span style={{ fontSize: '12px', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>{sub}</span>
-                  {(isActiveHere || isOwned) && (
-                    <div style={{ position: 'absolute', top: '6px', right: '6px' }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill={C.primary} stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="16 9 10.5 15 8 12.5" />
-                      </svg>
-                    </div>
-                  )}
-                  {isFull && (
-                    <span style={{ fontSize: '10px', color: C.textMuted, position: 'absolute', top: '6px', right: '6px' }}>full</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </Modal>
-      );
-    })()}
+      {/* Store category modal removed — the two-pane store shows skins inline. */}
 
       {/* Brand Store Modal */}
       {/* Brand Store Modal — this is now unused since brands buy skins from the main store like creators */}
@@ -6965,10 +6976,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
           ]).map(({ label, view }) => (
             <button
               key={view}
-              onClick={() => {
-                if (view === 'bank') { window.location.href = '/fake-bank'; return; }
-                setActiveView(view);
-              }}
+              onClick={() => setActiveView(view)}
               style={{
                 flex: 1, minHeight: '44px', background: 'none', border: 'none',
                 color: activeView === view ? C.primary : C.textMuted,
