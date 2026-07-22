@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db';
+import { getProfileStats } from '@/lib/profile-stats';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionToken = req.cookies.valueskins_session;
@@ -24,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'GET') {
       const result = await query(
         `SELECT
-          u.display_name, u.bio, u.location, u.country, u.followers_count,
+          u.display_name, u.username, u.bio, u.location, u.country, u.followers_count,
           u.main_platform, u.instagram_handle, u.tiktok_handle, u.youtube_handle
          FROM users u
          WHERE u.id = $1`,
@@ -35,7 +36,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404).json({ error: 'User not found' });
       }
 
-      return res.json(result.rows[0]);
+      // Track Record stats — computed from completed deals, never stored or
+      // editable (Profile page.md §5). See lib/profile-stats.ts.
+      const stats = await getProfileStats(String(userId));
+
+      return res.json({ ...result.rows[0], ...stats });
     }
 
     if (req.method === 'PUT') {

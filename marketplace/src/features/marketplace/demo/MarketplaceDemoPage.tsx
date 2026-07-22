@@ -1941,24 +1941,28 @@ export default function MarketplaceDemoPage(initialDealData?: {
     };
   }, [valueSkins, profileBio, metrics, rateCard, creatorAvailableFrom, selectedCountry, dealStates]);
 
-  // Fetch profile stats from API instead of using hardcoded values
+  // Track Record stats, computed server-side from completed deals.
+  // /api/profile/stats previously did not exist, so this fetch 404'd and the UI
+  // silently kept its hardcoded defaults.
+  const [trackRecord, setTrackRecord] = useState<Record<string, number> | null>(null);
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const response = await fetch("/api/profile/stats", { credentials: "include" });
-        if (response.ok) {
-          const statsData = await response.json();
-          setMetrics(prev => ({
-            followers: statsData.followers || prev.followers,
-            engagement: statsData.engagement || prev.engagement,
-            dealsCompleted: statsData.dealsCompleted || prev.dealsCompleted,
-            avgDealValue: statsData.avgDealValue || prev.avgDealValue,
-            onTimeRate: statsData.onTimeRate || prev.onTimeRate,
-            brandRating: statsData.avgRating || prev.brandRating,
-          }));
-        }
-      } catch (err) {
-        console.error("Failed to fetch profile stats:", err);
+        if (!response.ok) return;
+        const statsData = await response.json();
+        setTrackRecord(statsData);
+        setMetrics(prev => ({
+          followers: statsData.followers || prev.followers,
+          engagement: statsData.engagement || prev.engagement,
+          dealsCompleted: statsData.dealsCompleted || prev.dealsCompleted,
+          avgDealValue: statsData.avgDealValue || prev.avgDealValue,
+          onTimeRate: statsData.onTimeRate || prev.onTimeRate,
+          brandRating: statsData.avgRating || prev.brandRating,
+        }));
+      } catch {
+        // stats stay null; the profile renders its zero state
       }
     };
     fetchStats();
@@ -2856,8 +2860,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       languages: ['English'],
                       open_for_work: true,
                       valueskin_type: 'Professional',
-                      deals_completed: completedDeals.length,
-                      deals_this_month: 0,
+                      // computed server-side from completed deals — never editable
+                      deals_completed: trackRecord?.deals_completed ?? completedDeals.length,
+                      deals_this_month: trackRecord?.deals_this_month ?? 0,
+                      avg_rating: trackRecord?.avg_rating ?? 0,
+                      repeat_rate: trackRecord?.repeat_rate ?? 0,
+                      on_time_rate: trackRecord?.on_time_rate ?? 0,
+                      avg_response_hours: trackRecord?.avg_response_hours ?? 0,
+                      trust_score: trackRecord?.trust_score ?? 0,
                     }}
                   />
                 ) : (
