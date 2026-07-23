@@ -19,6 +19,7 @@ const ROUTES_WITH_OWN_WORDMARK = [
   '/auth/forgot-password',
   '/auth/reset-password',
   '/demo/marketplace',
+  '/preview',
 ];
 
 function HomeButton() {

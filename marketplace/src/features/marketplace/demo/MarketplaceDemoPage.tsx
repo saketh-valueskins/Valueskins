@@ -8,7 +8,6 @@ import { C as THEME, withAlpha } from '@/theme/colors';
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import Link from 'next/link';
 import { getLevel, getProgressToNext } from '@/lib/levels';
 import ProfileView from '@/features/profiles/ProfileView';
 import SettingsHub from '@/features/settings/SettingsHub';
@@ -2480,35 +2479,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
   return (
     <div style={{ background: C.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', overflowX: 'hidden' }}>
 
-      {/* ── HEADER ──────────────────────────── */}
-      <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: '16px', fontWeight: 700, color: C.text }}>ValueSkins</div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <Link href="/profile/me" style={{ padding: '8px 16px', color: C.text, textDecoration: 'none', fontSize: '14px', fontWeight: 500, cursor: 'pointer', display: 'block' }}>
-            Profile
-          </Link>
-          {/* Settings moved to the bottom tab — one entry point, same as the Store. */}
-          <button
-            onClick={async () => {
-              try {
-                await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-                window.location.href = '/auth/login';
-              } catch (err) {
-                console.error('Logout failed:', err);
-              }
-            }}
-            style={{ padding: '8px 16px', background: C.primary, color: C.onPrimary, border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}
-          >
-            Logout
-          </button>
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            style={{ padding: '8px 16px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '14px', fontWeight: 500, cursor: 'pointer' }}
-          >
-            Delete Account
-          </button>
-        </div>
-      </div>
+      {/* Top header removed. The bottom tab spine (Profile · Market · Store ·
+          Settings) is the only nav, and Log out + Delete account live in
+          Settings > Danger Zone — so nothing here is orphaned. Removing it also
+          kills the wordmark that was colliding with the global one top-left. */}
 
       {/* ── MAIN CONTENT ──────────────────────────── */}
       <div style={{ flex: 1, overflow: 'auto' }}>
