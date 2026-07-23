@@ -47,8 +47,15 @@ jobs:
           echo "org=$(node -p "require('./marketplace/.vercel/project.json').orgId")" >> $GITHUB_OUTPUT
           echo "project=$(node -p "require('./marketplace/.vercel/project.json').projectId")" >> $GITHUB_OUTPUT
 
+      # This job deploys --prod (it feeds valueskins.com), so it MUST pull the
+      # Production environment. It used to pull --environment=preview, which
+      # baked Preview's OAuth values into a production build — and Preview's
+      # GOOGLE_CLIENT_SECRET is wrong/unset, so Google's token exchange failed
+      # with invalid_client ("Google token exchange failed"). Auth broke on every
+      # develop push even though no auth code changed. Production Vercel env has
+      # the correct client_id + secret + redirect (per the .env.production fix).
       - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ steps.vlink.outputs.org }}
           VERCEL_PROJECT_ID: ${{ steps.vlink.outputs.project }}

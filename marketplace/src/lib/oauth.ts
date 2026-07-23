@@ -78,7 +78,23 @@ export async function exchangeGoogleCode(code: string): Promise<any> {
     body: params.toString(),
   });
 
-  if (!response.ok) throw new Error('Google token exchange failed');
+  if (!response.ok) {
+    // Surface Google's actual reason instead of a blank "failed". Google returns
+    // e.g. { error: "invalid_client" } (bad/missing secret),
+    // "invalid_grant" (code reused/expired), or "redirect_uri_mismatch".
+    // Logged server-side only; never returned to the browser (it can carry
+    // sensitive detail). This changes only the failure path — a successful
+    // exchange still returns response.json() unchanged.
+    const detail = await response.text().catch(() => '');
+    console.error('[oauth] Google token exchange failed', {
+      status: response.status,
+      // don't log the secret, only whether it was present
+      hasClientSecret: Boolean(GOOGLE_CLIENT_SECRET),
+      redirectUri: GOOGLE_REDIRECT_URI,
+      google: detail.slice(0, 500),
+    });
+    throw new Error('Google token exchange failed');
+  }
   return response.json();
 }
 
