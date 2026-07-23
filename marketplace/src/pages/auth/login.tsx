@@ -67,6 +67,10 @@ export default function Login() {
   const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
+    // Starting a real login always exits preview mode, so a lingering preview
+    // flag (from a /preview visit in this tab) can never shadow a real session.
+    try { window.sessionStorage.removeItem('vs_preview'); } catch {}
+
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     setReduced(mq.matches);
     const on = () => setReduced(mq.matches);

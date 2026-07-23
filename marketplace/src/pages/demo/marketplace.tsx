@@ -17,11 +17,14 @@ const C = {
 };
 
 export async function getServerSideProps(ctx: GetServerSidePropsContext) {
-  const cookie = ctx.req.headers.cookie || '';
-  const userId = await getSessionUserId(cookie);
-  if (!userId) return { props: { initialCampaigns: [], initialDealStates: null, initialApplications: [] } };
-
+  const empty = { props: { initialCampaigns: [], initialDealStates: null, initialApplications: [] } };
   try {
+    const cookie = ctx.req.headers.cookie || '';
+    // getSessionUserId hits the DB. It used to run OUTSIDE the try/catch, so a DB
+    // outage threw here and 500'd the whole page instead of rendering logged-out.
+    const userId = await getSessionUserId(cookie);
+    if (!userId) return empty;
+
     const campResult = await query(
       `SELECT c.*, COUNT(ci.id) as invite_count,
         COUNT(ci.id) FILTER (WHERE ci.status = 'accepted') as accepted_count
@@ -40,7 +43,7 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
       },
     };
   } catch {
-    return { props: { initialCampaigns: [], initialDealStates: null, initialApplications: [] } };
+    return empty;
   }
 }
 

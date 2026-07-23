@@ -40,6 +40,45 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+// ── PREVIEW MODE (TEMPORARY) ────────────────────────────────────────────────
+// The database is down (Render subscription lapsed), so login cannot complete.
+// Preview mode lets the UI be reviewed on the live URL WITHOUT the DB and
+// WITHOUT touching OAuth: a mock account is supplied so every screen renders.
+//
+// It can ONLY activate on the /preview path (or once that path set the flag),
+// so no normal visitor — /, /auth/login, /demo/marketplace — is ever affected,
+// and real Google login is completely unchanged. Remove this block + the
+// /preview page in one commit once the database is back.
+const PREVIEW_ACCOUNT: Account = {
+  id: 999999,
+  email: 'preview@valueskins.com',
+  phone: null,
+  email_verified: true,
+  phone_verified: false,
+  display_name: 'Preview User',
+  avatar_url: null,
+  onboarding_stage: 'complete',
+  preferences: [],
+  // both modules active so creator AND brand UI are reachable in preview
+  modules: [
+    { code: 'valueskin', is_active: true },
+    { code: 'brand', is_active: true },
+  ],
+  totp_enabled: false,
+  created_at: new Date().toISOString(),
+  last_login_at: null,
+};
+
+function isPreviewActive(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (window.location.pathname.startsWith('/preview')) return true;
+  try {
+    return window.sessionStorage.getItem('vs_preview') === '1';
+  } catch {
+    return false;
+  }
+}
+
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
@@ -72,6 +111,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    // Preview mode: skip the DB-backed fetch entirely, supply a mock account.
+    // Only reachable via /preview, so real auth on every other route is untouched.
+    if (isPreviewActive()) {
+      try { window.sessionStorage.setItem('vs_preview', '1'); } catch {}
+      setAccount(PREVIEW_ACCOUNT);
+      setLoading(false);
+      return;
+    }
     fetchAccount().finally(() => setLoading(false));
   }, [fetchAccount]);
 
