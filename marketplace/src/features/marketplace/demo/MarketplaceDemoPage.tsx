@@ -5882,7 +5882,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             Active Campaigns ({activeCampaigns.length})
                           </div>
                           {activeCampaigns.map((c, i) => {
-                            const preferenceMatch = campaignMatchesCreatorPreferences(c, creatorData);
+                            const preferenceMatch = campaignMatchesCreatorPreferences(c);
                             return (
                               <div key={i} style={{ padding:'12px 0', borderTop:i>0?`1px solid ${C.border}`:'none' }}>
                                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'6px', flexWrap:'wrap', gap:'4px' }}>
