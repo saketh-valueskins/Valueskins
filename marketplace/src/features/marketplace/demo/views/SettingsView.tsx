@@ -2,7 +2,7 @@
 import { withAlpha } from '@/theme/colors';
 
 import React, { useState } from 'react';
-import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
+import { PROFESSION_BADGES, BRAND_CATEGORY_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
 import { getLevel, getProgressToNext } from '@/lib/levels';
 
@@ -39,7 +39,7 @@ const BRAND_CATEGORIES: Record<string, { name: string; subCategories: string[] }
 };
 
 function getStickerForProfession(profession: string): string | undefined {
-  return PROFESSION_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
+  return PROFESSION_BADGES[profession]?.stickerImage || BRAND_CATEGORY_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
 }
 
 function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
@@ -616,7 +616,7 @@ export default function SettingsView({
                           <div style={{ fontSize: '12px', color: C.textMuted, textAlign: 'center', padding: '16px' }}>Get a ValueSkin to add your pitch</div>
                         ) : ownedSkinsList.map(skinName => {
                           const hasPitch = activeSkinPitchTexts[skinName] || activeSkinPitchVideos[skinName]?.url;
-                          const badge = PROFESSION_BADGES[skinName];
+                          const badge = role === 'brand' ? (BRAND_CATEGORY_BADGES[skinName] ?? PROFESSION_BADGES[skinName]) : PROFESSION_BADGES[skinName];
                           return (
                             <div key={skinName} onClick={() => setShowSkinShowcaseModal(skinName)}
                               style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, cursor: 'pointer', transition: 'border-color 0.15s' }}
@@ -1000,7 +1000,7 @@ export default function SettingsView({
       {showSkinShowcaseModal && (
         <Modal onClose={() => setShowSkinShowcaseModal(null)}>
           {(() => {
-            const skinBadge = PROFESSION_BADGES[showSkinShowcaseModal];
+            const skinBadge = role === 'brand' ? (BRAND_CATEGORY_BADGES[showSkinShowcaseModal] ?? PROFESSION_BADGES[showSkinShowcaseModal]) : PROFESSION_BADGES[showSkinShowcaseModal];
             const skinColor = skinBadge?.color ?? C.primary;
             const skinLevel = getLevel(metrics.dealsCompleted);
             const skinProgress = getProgressToNext(metrics.dealsCompleted);

@@ -27,6 +27,7 @@ import {
   ValueskinAvatarToggle,
   ProfilePhotoWithLongPress,
   PROFESSION_BADGES,
+  BRAND_CATEGORY_BADGES,
   defaultAboutMe,
 } from '@/features/valueskins/core/identity/AvatarOptions';
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
@@ -39,9 +40,14 @@ import SettingsView from '@/features/marketplace/demo/views/SettingsView';
 import MessagesView from '@/features/marketplace/demo/views/MessagesView';
 import { HoverCard, type HoverProfile } from '@/features/marketplace/demo/components/ProfileHoverCard';
 
-/** Get sticker image path for any profession — checks PROFESSION_BADGES first, then auto-generated manifest */
+/** Resolve badge from either map — brand categories OR creator professions */
+function getBadge(name: string) {
+  return BRAND_CATEGORY_BADGES[name] ?? PROFESSION_BADGES[name];
+}
+
+/** Get sticker image path for any profession — checks PROFESSION_BADGES, BRAND_CATEGORY_BADGES, then manifest */
 function getStickerForProfession(profession: string): string | undefined {
-  return PROFESSION_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
+  return PROFESSION_BADGES[profession]?.stickerImage || BRAND_CATEGORY_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
 }
 
 // App shell palette. This used to be a hardcoded light-only object with its own
@@ -2541,7 +2547,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
             <button onClick={() => setShowSkinShowcaseModal(null)} style={{ position:'absolute', top:'14px', right:'16px', background:'none', border:'none', color:C.textMuted, fontSize:'22px', cursor:'pointer', lineHeight:1 }}>x</button>
 
             {(() => {
-              const skinBadge = PROFESSION_BADGES[showSkinShowcaseModal];
+              const skinBadge = getBadge(showSkinShowcaseModal);
               const skinColor = skinBadge?.color ?? C.primary;
               const skinLevel = getLevel(metrics.dealsCompleted);
               const skinProgress = getProgressToNext(metrics.dealsCompleted);
@@ -5830,7 +5836,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ display:'flex', gap:'8px', marginBottom:'10px' }}>
                             {brandValueSkins.map(skin => {
                               const isActive = activeBrandSkin === skin;
-                              const badge = PROFESSION_BADGES[skin];
+                              const badge = BRAND_CATEGORY_BADGES[skin] ?? PROFESSION_BADGES[skin];
                               return (
                                 <button
                                   key={skin}
@@ -6757,7 +6763,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: '10px' }}>
                       {selected.subProfessions.map((sub: string) => {
-                        const defined = PROFESSION_BADGES[sub];
+                        const defined = getBadge(sub);
                         const abbr = defined?.abbreviation ?? sub.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 3);
                         const badgeColor = defined?.color ?? C.primary;
                         const stickerSrc = defined?.stickerImage || STICKER_MANIFEST[sub];
