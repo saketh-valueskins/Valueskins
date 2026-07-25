@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
 import { apiFetch } from '@/lib/backend';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 const C = {
   onPrimary: 'var(--c-on-primary)',
@@ -85,6 +86,7 @@ export default function MessagesView({
   const [newCommProfessions, setNewCommProfessions] = useState<string[]>([]);
   const [dmInput, setDmInput] = useState('');
   const [toast, setToast] = useState<string | null>(null);
+  const { connected: wsConnected, subscribe: wsSubscribe } = useWebSocket();
 
   // Backend state
   const [communities, setCommunities] = useState<BackendCommunity[]>([]);
@@ -141,6 +143,21 @@ export default function MessagesView({
     loadPosts();
     return () => { cancelled = true; };
   }, [activeCommunityId]);
+
+  // Real-time community posts via WebSocket
+  useEffect(() => {
+    if (!wsConnected || activeCommunityId === null) return;
+    const unsub = wsSubscribe('community_post', (msg) => {
+      const post = msg.post as BackendPost | undefined;
+      if (post && post.community_id === activeCommunityId) {
+        setPosts(prev => {
+          if (prev.some(p => p.id === post.id)) return prev;
+          return [post, ...prev];
+        });
+      }
+    });
+    return unsub;
+  }, [wsConnected, wsSubscribe, activeCommunityId]);
 
   // Create community
   const createCommunity = useCallback(async () => {

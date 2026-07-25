@@ -16,6 +16,8 @@ import { useDealSync, type DealState, type DealRoomPhase, type SharedApplication
 import { useFirebaseRoom } from '@/features/valueskins/core/realtime/useFirebaseRoom';
 import { autoMatchCreators, type AutoMatchResult } from '@/lib/autoMatch';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { apiFetch, backendUrl } from '@/lib/backend';
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 import { sendAutoMatchNotifications } from '@/lib/autoMatchNotifications';
 import {
@@ -230,17 +232,6 @@ type Opportunity = {
 // Channels — skin-gated group DMs. These appear alongside regular DMs with a ValueSkin badge.
 const CHANNELS: any[] = [];
 
-const MOCK_REPUTATION = {
-  score: 78,
-  onTimeRate: 0.85,
-  avgRating: 4.2,
-  responseScore: 0.90,
-  revisionEfficiency: 0.75,
-  repeatBrandRate: 0.60,
-  riskTier: 'B',
-  maxDealSize: 2000,
-};
-
 let razorpayLoadPromise: Promise<void> | null = null;
 
 function ensureRazorpayLoaded(): Promise<void> {
@@ -263,6 +254,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   initialApplications?: any[];
 }) {
   const { account, loading } = useAuth();
+  const { connected: wsConnected, send: wsSend, subscribe: wsSubscribe } = useWebSocket();
 
   const userRole = account?.role;
   const isBrand = userRole === 'brand';
@@ -1267,6 +1259,49 @@ export default function MarketplaceDemoPage(initialDealData?: {
   // Campaigns + applications — from deal sync hook (API-backed with localStorage fallback)
   const { applications: sharedApplications, setApplications: setSharedApplications, campaigns, setCampaigns } = dealSync;
 
+  // ── Real-time WebSocket subscription: live deal + campaign updates ──
+  useEffect(() => {
+    if (!wsConnected) return;
+
+    const unsubs = [
+      wsSubscribe('deal_updated', (msg) => {
+        const deal = msg.deal as Partial<DealState> | undefined;
+        const key = msg.deal_key as string | undefined;
+        if (deal && key) {
+          setDealStates(prev => ({ ...prev, [key]: { ...prev[key], ...deal } as DealState }));
+        }
+      }),
+      wsSubscribe('campaign_updated', (msg) => {
+        const campaign = msg.campaign as Campaign | undefined;
+        if (campaign) {
+          setCampaigns(prev => {
+            const idx = prev.findIndex(c => c.id === campaign.id);
+            if (idx >= 0) { const next = [...prev]; next[idx] = campaign; return next; }
+            return [...prev, campaign];
+          });
+        }
+      }),
+      wsSubscribe('application_updated', (msg) => {
+        const app = msg.application as SharedApplication | undefined;
+        if (app) {
+          setSharedApplications(prev => {
+            const idx = prev.findIndex((a: any) => a.id === app.id);
+            if (idx >= 0) { const next = [...prev]; next[idx] = app as any; return next; }
+            return [...prev, app as any];
+          });
+        }
+      }),
+      wsSubscribe('notification', (msg) => {
+        const notif = msg.notification as { title: string; message: string } | undefined;
+        if (notif) {
+          setNotifications(prev => [notif as any, ...prev]);
+        }
+      }),
+    ];
+
+    return () => unsubs.forEach(u => u());
+  }, [wsConnected, wsSubscribe, setDealStates, setCampaigns, setSharedApplications, setNotifications]);
+
   const forceRefreshCampaigns = useCallback(async () => {
     try {
       // 1. Push local campaigns to shared DB (so old localStorage-only campaigns appear)
@@ -1659,7 +1694,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
     a.click();
     URL.revokeObjectURL(url);
 
-    // Log report for admin panel (auto-sync to Google Drive later)
+    // Log report for admin panel
     const reportLog = {
       dealKey,
       filename,
@@ -1671,11 +1706,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
         amount: deal.agreementAmount || deal.offerAmount || '0',
       }
     };
-    const existingReports = JSON.parse(typeof window !== 'undefined' ? localStorage.getItem('vs_demo_deal_reports') || '[]' : '[]');
-    existingReports.push(reportLog);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('vs_demo_deal_reports', JSON.stringify(existingReports));
-    }
+    console.log('[DealReport]', reportLog);
   }, [dealStates]);
 
   const forceFetchApplications = useCallback(async () => {
@@ -3087,8 +3118,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
               {/* Layer 3a: Creator Marketplace */}
               {hasValueSkin && marketplaceRole === 'creator' && (() => {
-                const myProfile = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('vs_demo_my_profile') || '{}') : {};
-                const isProfileComplete = myProfile.fullName && myProfile.ageRange && myProfile.gender && myProfile.country && myProfile.city;
+                const isProfileComplete = profileName || account?.display_name;
 
                 if (!isProfileComplete) {
                   return (
@@ -3126,7 +3156,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             {tab === 'opportunities' ? 'Opportunities' : 'My Pipeline'}
                           </button>
                         ))}
-                        <button onClick={handleRefresh} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 6px', display:'flex', alignItems:'center', color:C.textMuted, fontSize:'11px', fontWeight:600, opacity: refreshing ? 0.5 : 1 }}>{refreshing ? '↻' : '⟳'}</button>
+                        <button onClick={handleRefresh} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 6px', display:'flex', alignItems:'center', gap:'4px', color:C.textMuted, fontSize:'11px', fontWeight:600, opacity: refreshing ? 0.5 : 1 }}>
+                          <span style={{ width:6, height:6, borderRadius:'50%', background: wsConnected ? '#00D46A' : '#9ca3af', flexShrink:0 }} title={wsConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
+                          {refreshing ? '↻' : '⟳'}
+                        </button>
                       </div>
                     </div>
 
