@@ -40,45 +40,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-// ── PREVIEW MODE (TEMPORARY) ────────────────────────────────────────────────
-// The database is down (Render subscription lapsed), so login cannot complete.
-// Preview mode lets the UI be reviewed on the live URL WITHOUT the DB and
-// WITHOUT touching OAuth: a mock account is supplied so every screen renders.
-//
-// It can ONLY activate on the /preview path (or once that path set the flag),
-// so no normal visitor — /, /auth/login, /demo/marketplace — is ever affected,
-// and real Google login is completely unchanged. Remove this block + the
-// /preview page in one commit once the database is back.
-const PREVIEW_ACCOUNT: Account = {
-  id: 999999,
-  email: 'preview@valueskins.com',
-  phone: null,
-  email_verified: true,
-  phone_verified: false,
-  display_name: 'Preview User',
-  avatar_url: null,
-  onboarding_stage: 'complete',
-  preferences: [],
-  // both modules active so creator AND brand UI are reachable in preview
-  modules: [
-    { code: 'valueskin', is_active: true },
-    { code: 'brand', is_active: true },
-  ],
-  totp_enabled: false,
-  created_at: new Date().toISOString(),
-  last_login_at: null,
-};
-
-function isPreviewActive(): boolean {
-  if (typeof window === 'undefined') return false;
-  if (window.location.pathname.startsWith('/preview')) return true;
-  try {
-    return window.sessionStorage.getItem('vs_preview') === '1';
-  } catch {
-    return false;
-  }
-}
-
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
@@ -92,7 +53,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchAccount = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      // Try real backend first, fall back to Next.js API route
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const url = backendUrl
+        ? `${backendUrl}/auth/unified/login` // We use /me below
+        : '/api/auth/me';
+      
+      // Use the backend /me endpoint to get current user
+      const meUrl = backendUrl ? `${backendUrl}/auth/me` : '/api/auth/me';
+      const res = await fetch(meUrl, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
         setAccount(data);
@@ -105,20 +74,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return null;
     } catch {
+      // Backend unreachable — try Next.js API fallback
+      try {
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setAccount(data);
+          setError(null);
+          return data;
+        }
+      } catch {}
       setAccount(null);
       return null;
     }
   }, []);
 
   useEffect(() => {
-    // Preview mode: skip the DB-backed fetch entirely, supply a mock account.
-    // Only reachable via /preview, so real auth on every other route is untouched.
-    if (isPreviewActive()) {
-      try { window.sessionStorage.setItem('vs_preview', '1'); } catch {}
-      setAccount(PREVIEW_ACCOUNT);
-      setLoading(false);
-      return;
-    }
     fetchAccount().finally(() => setLoading(false));
   }, [fetchAccount]);
 
@@ -126,9 +97,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/auth/login', {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const loginUrl = backendUrl
+        ? `${backendUrl}/auth/unified/login`
+        : '/api/auth/login';
+
+      const res = await fetch(loginUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
@@ -144,7 +121,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const logoutUrl = backendUrl
+        ? `${backendUrl}/auth/unified/logout`
+        : '/api/auth/logout';
+      await fetch(logoutUrl, { method: 'POST', credentials: 'include' });
     } catch {}
     setAccount(null);
     window.location.href = '/auth/login';
@@ -152,7 +133,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutAll = async () => {
     try {
-      await fetch('/api/auth/logout/all', { method: 'POST', credentials: 'include' });
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const logoutAllUrl = backendUrl
+        ? `${backendUrl}/auth/unified/logout` // Use same endpoint, backend handles "all"
+        : '/api/auth/logout/all';
+      await fetch(logoutAllUrl, { method: 'POST', credentials: 'include' });
     } catch {}
     setAccount(null);
     window.location.href = '/auth/login';
@@ -172,7 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const activateModule = async (code: string) => {
-    const res = await fetch('/api/account/modules/activate', {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const url = backendUrl
+      ? `${backendUrl}/auth/me/modules/activate`
+      : '/api/account/modules/activate';
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -186,7 +175,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const deactivateModule = async (code: string) => {
-    const res = await fetch('/api/account/modules/deactivate', {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    const url = backendUrl
+      ? `${backendUrl}/auth/me/modules/deactivate`
+      : '/api/account/modules/deactivate';
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

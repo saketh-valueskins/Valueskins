@@ -1,40 +1,57 @@
 'use client';
 import { withAlpha } from '@/theme/colors';
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
+import { apiFetch } from '@/lib/backend';
 
 function getStickerForProfession(profession: string): string | undefined {
   return PROFESSION_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
 }
 
 const C = {
-  primary: '#0A0A0A',
-  bg: '#ffffff',
-  surface: '#ffffff',
-  surfaceAlt: '#f9fafb',
-  card: '#f3f4f6',
-  text: '#1f2937',
-  textSecondary: '#6b7280',
-  textMuted: '#9ca3af',
-  border: '#e5e7eb',
-  success: '#10b981',
+  primary: 'var(--c-primary, #0A0A0A)',
+  bg: 'var(--c-bg, #ffffff)',
+  surface: 'var(--c-surface, #ffffff)',
+  surfaceAlt: 'var(--c-surface-alt, #f9fafb)',
+  card: 'var(--c-card, #f3f4f6)',
+  text: 'var(--c-text, #1f2937)',
+  textSecondary: 'var(--c-text-secondary, #6b7280)',
+  textMuted: 'var(--c-outline, #9ca3af)',
+  border: 'var(--c-border, #e5e7eb)',
+  success: 'var(--c-success, #10b981)',
 };
 
-const MOCK_CREATORS = [
-  { name: 'Alex Rivera', handle: '@alexriv', valueSkin: 'Photographer', followers: '12.4K', engagement: '4.2%', matchScore: '96%', rate: '$1,200/post', timezone: 'EST', responseTimeHrs: 4, minDealUsd: 500, audienceAgeRange: '18-34', audienceLocation: 'US, UK', audienceLang: 'English', availableFrom: 'Now', dealCompletionRate: 94, dealTypes: ['Sponsored Post', 'Brand Deal', 'UGC'], ndaOk: true, usageRightsOk: true, usageRightsDays: 90, rateCard: { photo: '$800', video: '$1,200', story: '$500' }, portfolio: ['Nike campaign (2025)', 'Adidas collab (2024)'] },
-  { name: 'Maya Chen', handle: '@mayac', valueSkin: 'Fitness Coach', followers: '28.1K', engagement: '5.8%', matchScore: '92%', rate: '$800/post', timezone: 'PST', responseTimeHrs: 2, minDealUsd: 300, audienceAgeRange: '22-40', audienceLocation: 'US, CA', audienceLang: 'English, Mandarin', availableFrom: 'Now', dealCompletionRate: 98, dealTypes: ['Sponsored Post', 'Ambassador'], ndaOk: true, usageRightsOk: true, usageRightsDays: 60, rateCard: { photo: '$600', video: '$800', story: '$350' }, portfolio: ['Under Armour ambassadorship', 'Lululemon campaign'] },
-  { name: 'Jordan Smith', handle: '@jordans', valueSkin: 'Graphic Designer', followers: '8.2K', engagement: '6.1%', matchScore: '89%', rate: '$1,500/post', timezone: 'CST', responseTimeHrs: 6, minDealUsd: 800, audienceAgeRange: '20-35', audienceLocation: 'US', audienceLang: 'English', availableFrom: '2 weeks', dealCompletionRate: 91, dealTypes: ['Sponsored Post', 'Design Collab', 'UGC'], ndaOk: false, usageRightsOk: true, usageRightsDays: 120, rateCard: { photo: '$1,000', video: '$1,500', story: '$700' }, portfolio: ['Spotify design system', 'Figma plugin launch'] },
-  { name: 'Priya Patel', handle: '@priyap', valueSkin: 'Makeup Artist', followers: '45.3K', engagement: '3.9%', matchScore: '95%', rate: '$2,000/post', timezone: 'GMT', responseTimeHrs: 3, minDealUsd: 1_000, audienceAgeRange: '16-30', audienceLocation: 'UK, EU', audienceLang: 'English, Hindi', availableFrom: 'Now', dealCompletionRate: 97, dealTypes: ['Sponsored Post', 'Brand Deal', 'Tutorial'], ndaOk: true, usageRightsOk: true, usageRightsDays: 90, rateCard: { photo: '$1,500', video: '$2,000', story: '$800' }, portfolio: ['Sephora campaign', 'Fenty Beauty launch'] },
-  { name: 'Marcus Williams', handle: '@marcusw', valueSkin: 'Musician', followers: '18.7K', engagement: '7.2%', matchScore: '87%', rate: '$1,000/post', timezone: 'EST', responseTimeHrs: 8, minDealUsd: 400, audienceAgeRange: '18-28', audienceLocation: 'US', audienceLang: 'English', availableFrom: '1 month', dealCompletionRate: 88, dealTypes: ['Sponsored Post', 'Song Feature', 'Event'], ndaOk: false, usageRightsOk: false, usageRightsDays: 30, rateCard: { audio: '$1,000', video: '$1,500', story: '$400' }, portfolio: ['SoundCloud top 50', 'Live Nation showcase'] },
-];
+interface BackendCreator {
+  id: number;
+  platform: string;
+  username: string;
+  display_name: string;
+  followers_count: number;
+  engagement_rate: number;
+  bio: string | null;
+  profile_image_url: string | null;
+  verified: boolean;
+  value_skin: string | null;
+  profession: string | null;
+  estimated_rate_usd: number | null;
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
 
 function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: C.bg, borderRadius: '14px', padding: '24px', maxWidth: '420px', width: '90%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: '12px', right: '12px', background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: C.textMuted, lineHeight: 1 }}>×</button>
+        <button onClick={onClose} style={{ position: 'absolute', top: '12px', right: '12px', background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: C.textMuted, lineHeight: 1 }}>x</button>
         {children}
       </div>
     </div>
@@ -43,7 +60,44 @@ function Modal({ onClose, children }: { onClose: () => void; children: React.Rea
 
 export default function ExploreView() {
   const [exploreTab, setExploreTab] = useState<'trending' | 'skins' | 'creators'>('trending');
-  const [previewCreator, setPreviewCreator] = useState<typeof MOCK_CREATORS[0] | null>(null);
+  const [previewCreator, setPreviewCreator] = useState<BackendCreator | null>(null);
+
+  const [creators, setCreators] = useState<BackendCreator[]>([]);
+  const [loadingCreators, setLoadingCreators] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch creators when switching to creators tab
+  useEffect(() => {
+    if (exploreTab !== 'creators') return;
+    let cancelled = false;
+
+    async function load() {
+      setLoadingCreators(true);
+      try {
+        const q = searchQuery ? `?q=${encodeURIComponent(searchQuery)}&limit=20` : '?limit=20';
+        const res = await apiFetch<{ creators: BackendCreator[] }>(`/creators/search${q}`);
+        if (!cancelled && res.data?.creators) {
+          setCreators(res.data.creators);
+        }
+      } catch {
+        // Creators not available
+      } finally {
+        if (!cancelled) setLoadingCreators(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [exploreTab, searchQuery]);
+
+  // Debounced search
+  useEffect(() => {
+    if (exploreTab !== 'creators') return;
+    const timer = setTimeout(() => {
+      // trigger re-fetch by updating a dependency
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, exploreTab]);
 
   return (
     <>
@@ -66,6 +120,7 @@ export default function ExploreView() {
       <div style={{ padding: '16px' }}>
         {exploreTab === 'trending' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ fontSize: '12px', color: C.textMuted }}>Trending on ValueSkins</div>
             {[
               { title: 'AI-Powered Content Creation', desc: 'Creators using AI tools are seeing 3x engagement growth', tag: 'Technology', views: '24K' },
               { title: 'Fitness Creators Dominating Reels', desc: 'Short-form workout content up 180% this quarter', tag: 'Sports', views: '18K' },
@@ -87,7 +142,7 @@ export default function ExploreView() {
 
         {exploreTab === 'skins' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px' }}>Popular ValueSkins this week</div>
+            <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px' }}>Available ValueSkins</div>
             {Object.entries(PROFESSION_BADGES).slice(0, 12).map(([name, badge]) => (
               <div key={name} onClick={() => window.location.href = '/demo/library'}
                 style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', background: C.card, borderRadius: '8px', border: `1px solid ${C.border}`, cursor: 'pointer', transition: 'border-color 0.15s' }}
@@ -110,23 +165,55 @@ export default function ExploreView() {
 
         {exploreTab === 'creators' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px' }}>Top creators by engagement</div>
-            {MOCK_CREATORS.map((c, i) => (
-              <div key={i} onClick={() => setPreviewCreator(c)}
-                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: C.card, borderRadius: '10px', border: `1px solid ${C.border}`, cursor: 'pointer', transition: 'border-color 0.15s' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = C.primary; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; }}>
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name.replace(/\s/g, '')}`} alt={c.name} style={{ width: '44px', height: '44px', borderRadius: '50%', background: C.surfaceAlt }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{c.name}</div>
-                  <div style={{ fontSize: '11px', color: C.textSecondary }}>{c.handle} · {c.valueSkin}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>{c.followers}</div>
-                  <div style={{ fontSize: '10px', color: C.success }}>{c.engagement} eng</div>
-                </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search creators by name, skill, or profession..."
+              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: '13px', boxSizing: 'border-box' as const, outline: 'none' }}
+            />
+
+            {loadingCreators ? (
+              <div style={{ textAlign: 'center', padding: '20px', color: C.textMuted }}>Loading creators...</div>
+            ) : creators.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: C.textMuted }}>
+                <div style={{ fontSize: '13px', marginBottom: '4px' }}>No creators found</div>
+                <div style={{ fontSize: '11px' }}>Try a different search or check back later</div>
               </div>
-            ))}
+            ) : (
+              creators.map(c => (
+                <div key={c.id} onClick={() => setPreviewCreator(c)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: C.card, borderRadius: '10px', border: `1px solid ${C.border}`, cursor: 'pointer', transition: 'border-color 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = C.primary; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; }}>
+                  {c.profile_image_url ? (
+                    <img src={c.profile_image_url} alt={c.display_name || c.username}
+                      style={{ width: '44px', height: '44px', borderRadius: '50%', background: C.surfaceAlt }} />
+                  ) : (
+                    <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700, color: C.textMuted, border: `1px solid ${C.border}` }}>
+                      {(c.display_name || c.username || '??').slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>
+                      {c.display_name || c.username}
+                      {c.verified && <span style={{ marginLeft: '4px', fontSize: '11px', color: '#0095F6' }}>&#10003;</span>}
+                    </div>
+                    <div style={{ fontSize: '11px', color: C.textSecondary }}>
+                      @{c.username} {c.profession ? `· ${c.profession}` : c.value_skin ? `· ${c.value_skin}` : ''}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>
+                      {c.followers_count >= 1000 ? `${(c.followers_count / 1000).toFixed(1)}K` : c.followers_count}
+                    </div>
+                    {c.engagement_rate > 0 && (
+                      <div style={{ fontSize: '10px', color: C.success }}>{c.engagement_rate.toFixed(1)}% eng</div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>
@@ -135,31 +222,43 @@ export default function ExploreView() {
         <Modal onClose={() => setPreviewCreator(null)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${previewCreator.name.replace(/\s/g, '')}`} alt={previewCreator.name}
-                style={{ width: '56px', height: '56px', borderRadius: '50%', background: C.surfaceAlt }} />
-              <div>
-                <div style={{ fontSize: '16px', fontWeight: 700, color: C.text }}>{previewCreator.name}</div>
-                <div style={{ fontSize: '13px', color: C.textSecondary }}>{previewCreator.handle}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                  {(() => {
-                    const badge = PROFESSION_BADGES[previewCreator.valueSkin];
-                    const sticker = getStickerForProfession(previewCreator.valueSkin);
-                    return sticker ? (
-                      <img src={sticker} alt={previewCreator.valueSkin} style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-                    ) : (
-                      <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: (badge?.color ?? C.primary), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '7px', fontWeight: 700, color: '#fff' }}>{badge?.abbreviation ?? '?'}</div>
-                    );
-                  })()}
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: C.primary }}>{previewCreator.valueSkin}</span>
+              {previewCreator.profile_image_url ? (
+                <img src={previewCreator.profile_image_url} alt={previewCreator.display_name || previewCreator.username}
+                  style={{ width: '56px', height: '56px', borderRadius: '50%', background: C.surfaceAlt }} />
+              ) : (
+                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: 700, color: C.textMuted, border: `1px solid ${C.border}` }}>
+                  {(previewCreator.display_name || previewCreator.username || '??').slice(0, 2).toUpperCase()}
                 </div>
+              )}
+              <div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: C.text }}>
+                  {previewCreator.display_name || previewCreator.username}
+                  {previewCreator.verified && <span style={{ marginLeft: '4px', fontSize: '12px', color: '#0095F6' }}>&#10003;</span>}
+                </div>
+                <div style={{ fontSize: '13px', color: C.textSecondary }}>@{previewCreator.username}</div>
+                {(previewCreator.profession || previewCreator.value_skin) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                    {(() => {
+                      const profession = previewCreator.profession || previewCreator.value_skin || '';
+                      const badge = PROFESSION_BADGES[profession];
+                      const sticker = getStickerForProfession(profession);
+                      return sticker ? (
+                        <img src={sticker} alt={profession} style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+                      ) : badge ? (
+                        <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: badge.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '7px', fontWeight: 700, color: '#fff' }}>{badge.abbreviation}</div>
+                      ) : null;
+                    })()}
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: C.primary }}>{previewCreator.profession || previewCreator.value_skin}</span>
+                  </div>
+                )}
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
               {[
-                { label: 'Followers', value: previewCreator.followers },
-                { label: 'Engagement', value: previewCreator.engagement },
-                { label: 'Match', value: previewCreator.matchScore },
+                { label: 'Followers', value: previewCreator.followers_count >= 1000 ? `${(previewCreator.followers_count / 1000).toFixed(1)}K` : String(previewCreator.followers_count) },
+                { label: 'Engagement', value: previewCreator.engagement_rate > 0 ? `${previewCreator.engagement_rate.toFixed(1)}%` : '--' },
+                { label: 'Platform', value: previewCreator.platform || '--' },
               ].map(s => (
                 <div key={s.label} style={{ textAlign: 'center', padding: '10px', background: C.surfaceAlt, borderRadius: '8px' }}>
                   <div style={{ fontSize: '16px', fontWeight: 700, color: C.text }}>{s.value}</div>
@@ -168,49 +267,17 @@ export default function ExploreView() {
               ))}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Details</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', fontSize: '12px' }}>
-                <div style={{ color: C.textMuted }}>Rate</div><div style={{ color: C.text, fontWeight: 600 }}>{previewCreator.rate}</div>
-                <div style={{ color: C.textMuted }}>Timezone</div><div style={{ color: C.text }}>{previewCreator.timezone}</div>
-                <div style={{ color: C.textMuted }}>Response</div><div style={{ color: C.text }}>Within {previewCreator.responseTimeHrs}h</div>
-                <div style={{ color: C.textMuted }}>Min Deal</div><div style={{ color: C.text }}>${previewCreator.minDealUsd.toLocaleString()}</div>
-                <div style={{ color: C.textMuted }}>Audience</div><div style={{ color: C.text }}>{previewCreator.audienceAgeRange}, {previewCreator.audienceLocation}</div>
-                <div style={{ color: C.textMuted }}>Language</div><div style={{ color: C.text }}>{previewCreator.audienceLang}</div>
-                <div style={{ color: C.textMuted }}>Available</div><div style={{ color: previewCreator.availableFrom === 'Now' ? C.success : C.text, fontWeight: 600 }}>{previewCreator.availableFrom}</div>
-                <div style={{ color: C.textMuted }}>Completion</div><div style={{ color: C.text }}>{previewCreator.dealCompletionRate}%</div>
-              </div>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Accepts</div>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                {previewCreator.dealTypes.map(dt => (
-                  <span key={dt} style={{ fontSize: '11px', fontWeight: 600, padding: '4px 10px', borderRadius: '6px', background: C.surfaceAlt, color: C.textSecondary, border: `1px solid ${C.border}` }}>{dt}</span>
-                ))}
-                {previewCreator.ndaOk && <span style={{ fontSize: '11px', fontWeight: 600, padding: '4px 10px', borderRadius: '6px', background: 'rgba(139,92,246,0.08)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.2)' }}>NDA</span>}
-                {previewCreator.usageRightsOk && <span style={{ fontSize: '11px', fontWeight: 600, padding: '4px 10px', borderRadius: '6px', background: 'rgba(139,92,246,0.08)', color: '#8B5CF6', border: '1px solid rgba(139,92,246,0.2)' }}>Usage Rights ({previewCreator.usageRightsDays}d)</span>}
-              </div>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Rate Card</div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {Object.entries(previewCreator.rateCard).map(([fmt, price]) => (
-                  <div key={fmt} style={{ flex: 1, textAlign: 'center', padding: '8px', background: C.surfaceAlt, borderRadius: '8px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>{price as string}</div>
-                    <div style={{ fontSize: '10px', color: C.textMuted, textTransform: 'capitalize' }}>{fmt}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {previewCreator.portfolio.length > 0 && (
+            {previewCreator.bio && (
               <div>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Portfolio</div>
-                {previewCreator.portfolio.map((p, i) => (
-                  <div key={i} style={{ fontSize: '12px', color: C.textSecondary, padding: '6px 0', borderTop: i > 0 ? `1px solid ${C.border}` : 'none' }}>{p}</div>
-                ))}
+                <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Bio</div>
+                <div style={{ fontSize: '13px', color: C.textSecondary, lineHeight: 1.5 }}>{previewCreator.bio}</div>
+              </div>
+            )}
+
+            {previewCreator.estimated_rate_usd != null && previewCreator.estimated_rate_usd > 0 && (
+              <div>
+                <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Estimated Rate</div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>${previewCreator.estimated_rate_usd.toLocaleString()}</div>
               </div>
             )}
           </div>

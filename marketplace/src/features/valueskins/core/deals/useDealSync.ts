@@ -224,21 +224,18 @@ if (typeof window !== 'undefined') {
 }
 
 // ---- Backend connectivity check ----
+import { backendUrl, apiFetch, isBackendReachable } from '@/lib/backend';
+
 let pgBackendOnline: boolean | null = null;
 let lastCheck = 0;
 const CHECK_INTERVAL = 30_000;
 
-async function isBackendOnline(pingPath = '/api/campaigns/list'): Promise<boolean> {
+async function isBackendOnline(): Promise<boolean> {
   const now = Date.now();
   if (pgBackendOnline !== null && now - lastCheck < CHECK_INTERVAL) {
     return pgBackendOnline;
   }
-  try {
-    const res = await fetch(pingPath, { method: 'HEAD', credentials: 'include' });
-    pgBackendOnline = res.ok || res.status < 500;
-  } catch {
-    pgBackendOnline = false;
-  }
+  pgBackendOnline = await isBackendReachable();
   lastCheck = now;
   return pgBackendOnline ?? false;
 }
@@ -340,100 +337,91 @@ export function useDealSync(userId?: number, initialData?: {
       setOnline(backendUp);
       if (!backendUp) return;
 
-      // ── Try PostgreSQL API endpoints (Next.js API routes → DB) ──
+      // ── Try Render backend API endpoints ──
 
-      // 1. Load campaigns from PostgreSQL
+      // 1. Load campaigns from backend
       try {
-        const campRes = await fetch('/api/campaigns/list', { credentials: 'include' });
-        if (!cancelled && campRes.ok) {
-          const campData = await campRes.json();
-          if (campData.campaigns) {
-            const dbCampaigns: Campaign[] = campData.campaigns.map((c: any) => ({
-              id: c.id,
-              brandName: '',
-              brandProfession: '',
-              title: c.title || '',
-              description: c.description || '',
-              requiredProfessions: [],
-              minLevel: 0,
-              maxLevel: 0,
-              budget: String(c.budget_per_creator || '0'),
-              deadline: c.deadline || '',
-              location: '',
-              nonNegotiables: [],
-              deliverables: '',
-              status: c.status === 'active' ? 'open' : 'closed',
-              applicants: Number(c.invite_count || 0),
-            }));
-            setCampaigns(prev => {
-              const prevIds = new Set(prev.map(c => c.id));
-              const newOnes = dbCampaigns.filter(c => !prevIds.has(c.id));
-              if (newOnes.length === 0) return prev;
-              return [...prev, ...newOnes];
-            });
-          }
+        const campRes = await apiFetch<{ campaigns: any[] }>('/marketplace/opportunities');
+        if (!cancelled && campRes.data?.campaigns) {
+          const dbCampaigns: Campaign[] = campRes.data.campaigns.map((c: any) => ({
+            id: c.id,
+            brandName: c.brand_name || '',
+            brandProfession: '',
+            title: c.title || '',
+            description: c.description || '',
+            requiredProfessions: c.required_profession_name ? [c.required_profession_name] : [],
+            minLevel: c.required_level || 0,
+            maxLevel: c.required_level || 0,
+            budget: String(c.reward_amount || '0'),
+            deadline: c.deadline || '',
+            location: '',
+            nonNegotiables: [],
+            deliverables: '',
+            status: c.status === 'open' ? 'open' : 'closed',
+            applicants: Number(c.application_count || 0),
+          }));
+          setCampaigns(prev => {
+            const prevIds = new Set(prev.map(c => c.id));
+            const newOnes = dbCampaigns.filter(c => !prevIds.has(c.id));
+            if (newOnes.length === 0) return prev;
+            return [...prev, ...newOnes];
+          });
         }
       } catch { /* fall through */ }
 
-      // 2. Load deals from PostgreSQL
+      // 2. Load deals from backend
       try {
-        const dealRes = await fetch('/api/deals/my-deals', { credentials: 'include' });
-        if (!cancelled && dealRes.ok) {
-          const dealData = await dealRes.json();
-          if (dealData.deals) {
-            const dbDeals: Record<string, DealState> = {};
-            for (const d of dealData.deals) {
-              const key = `${d.title || 'Deal'}:${d.id}`;
-              dbDeals[key] = {
-                phase: mapDbDealPhase(d.status),
-                intent: 'campaign',
-                briefFilled: true,
-                briefTitle: d.title || '',
-                offerAmount: String(d.offerAmount || ''),
-                counterAmount: '',
-                brandResponseAmount: '',
-                chatMessages: [],
-                chatInput: '',
-                performanceClause: false,
-                advancePercent: 50,
-                approvalPercent: 50,
-                backendDealRoomId: typeof d.id === 'number' ? d.id : undefined,
-                creatorName: d.partnerName,
-              };
+        const dealRes = await apiFetch<{ deals: any[] }>('/marketplace/deals/mine');
+        if (!cancelled && dealRes.data?.deals) {
+          const dbDeals: Record<string, DealState> = {};
+          for (const d of dealRes.data.deals) {
+            const key = `${d.title || 'Deal'}:${d.id}`;
+            dbDeals[key] = {
+              phase: mapDbDealPhase(d.status),
+              intent: 'campaign',
+              briefFilled: true,
+              briefTitle: d.title || '',
+              offerAmount: String(d.offerAmount || ''),
+              counterAmount: '',
+              brandResponseAmount: '',
+              chatMessages: [],
+              chatInput: '',
+              performanceClause: false,
+              advancePercent: 50,
+              approvalPercent: 50,
+              backendDealRoomId: typeof d.id === 'number' ? d.id : undefined,
+              creatorName: d.partnerName,
+            };
+          }
+          setDealStates(prev => {
+            const merged = { ...prev };
+            for (const [k, v] of Object.entries(dbDeals)) {
+              if (!merged[k]) merged[k] = v;
             }
-            setDealStates(prev => {
-              const merged = { ...prev };
-              for (const [k, v] of Object.entries(dbDeals)) {
-                if (!merged[k]) merged[k] = v;
-              }
-              return merged;
-            });
-          }
+            return merged;
+          });
         }
       } catch { /* fall through */ }
 
-      // 3. Load bids (applications) from PostgreSQL
+      // 3. Load applications from backend
       try {
-        const bidRes = await fetch('/api/bids/', { credentials: 'include' });
-        if (!cancelled && bidRes.ok) {
-          const bidData = await bidRes.json();
-          if (bidData.bids) {
-            const dbApps: SharedApplication[] = bidData.bids.map((b: any) => ({
-              id: b.id,
-              campaignId: b.campaign_id,
-              campaignTitle: b.campaign_title || '',
-              creatorProfession: '',
-              creatorHandle: '',
-              status: mapBidStatus(b.status),
-              appliedAt: b.created_at || new Date().toISOString(),
-            }));
-            setApplications(prev => {
-              const prevIds = new Set(prev.map(a => a.id));
-              const newOnes = dbApps.filter(a => !prevIds.has(a.id));
-              if (newOnes.length === 0) return prev;
-              return [...prev, ...newOnes];
-            });
-          }
+        const appRes = await apiFetch<{ applications: any[] }>('/marketplace/applications/mine');
+        if (!cancelled && appRes.data?.applications) {
+          const dbApps: SharedApplication[] = appRes.data.applications.map((b: any) => ({
+            id: b.id,
+            campaignId: b.opportunity_id,
+            campaignTitle: b.opportunity_title || '',
+            creatorProfession: '',
+            creatorHandle: b.username || '',
+            status: mapBidStatus(b.status),
+            appliedAt: b.created_at || new Date().toISOString(),
+          }));
+          setApplications(prev => {
+            const prevIds = new Set(prev.map(a => a.id));
+            const newOnes = dbApps.filter(a => !prevIds.has(a.id));
+            if (newOnes.length === 0) return prev;
+            return [...prev, ...newOnes];
+          });
         }
       } catch { /* fall through */ }
     }
@@ -732,7 +720,7 @@ export function useDealSync(userId?: number, initialData?: {
 
   // ---- API-backed mutations ----
 
-  /** Open a deal room — tries PostgreSQL API first, then Rust backend, falls back to localStorage-only */
+  /** Open a deal room — tries Render backend first, falls back to local state */
   const openDealRoom = useCallback(async (
     key: string,
     creatorPersonaId: number,
@@ -745,34 +733,31 @@ export function useDealSync(userId?: number, initialData?: {
       compensationType?: string;
     }
   ) => {
-    // Try PostgreSQL deals API first
     try {
-      const skinParts = key.split(':');
-      const valueSkin = skinParts.length > 1 ? skinParts[skinParts.length - 1] : '';
-      const res = await fetch('/api/deals/create-with-skin', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      const res = await apiFetch<{ deal_room_id: number }>('/deal-rooms', {
+        method: 'POST',
         body: JSON.stringify({
-          title: briefData.title,
-          description: briefData.description,
-          budget: Number(briefData.compensationType) || 0,
-          valueSkin,
-          creatorId: creatorPersonaId,
+          creator_persona_id: creatorPersonaId,
+          intent: briefData.intent,
+          brief_title: briefData.title,
+          brief_description: briefData.description,
+          brief_deliverables: briefData.deliverables,
+          brief_campaign_type: briefData.campaignType,
+          compensation_type: briefData.compensationType,
         }),
       });
-      const data = await res.json();
-      if (res.ok && data.dealId) {
+      if (res.data?.deal_room_id) {
         updateDeal(key, {
           phase: 'offer',
           intent: briefData.intent as DealState['intent'],
           briefFilled: true,
           briefTitle: briefData.title,
-          backendDealRoomId: typeof data.dealId === 'number' ? data.dealId : parseInt(String(data.dealId)) || undefined,
+          backendDealRoomId: res.data.deal_room_id,
         });
-        return data.dealId;
+        return res.data.deal_room_id;
       }
     } catch { /* fall through */ }
 
-    // Offline fallback
     updateDeal(key, {
       phase: 'offer',
       intent: briefData.intent as DealState['intent'],
@@ -782,7 +767,7 @@ export function useDealSync(userId?: number, initialData?: {
     return null;
   }, [updateDeal]);
 
-  /** Send a chat message — persists to PostgreSQL via /api/deals/message */
+  /** Send a chat message — persists to Render backend */
   const sendMessage = useCallback(async (
     key: string,
     text: string,
@@ -799,7 +784,7 @@ export function useDealSync(userId?: number, initialData?: {
       seen: false,
     };
 
-    // Update locally immediately (optimistic)
+    // Optimistic local update
     setDealStates(prev => {
       const existing = prev[key];
       if (!existing) return prev;
@@ -813,18 +798,18 @@ export function useDealSync(userId?: number, initialData?: {
       };
     });
 
-    // Persist to PostgreSQL
+    // Persist to Render backend
     if (dealId) {
       try {
-        await fetch('/api/deals/message', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-          body: JSON.stringify({ dealId, message: text }),
+        await apiFetch(`/deal-rooms/${dealId}/messages`, {
+          method: 'POST',
+          body: JSON.stringify({ content: text }),
         });
       } catch { /* message saved locally */ }
     }
   }, [dealStates]);
 
-  /** Make an offer — persists offer message to PostgreSQL */
+  /** Make an offer — persists offer message to Render backend */
   const makeOffer = useCallback(async (
     key: string,
     amountCents: number,
@@ -836,9 +821,9 @@ export function useDealSync(userId?: number, initialData?: {
 
     if (dealId) {
       try {
-        await fetch('/api/deals/message', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-          body: JSON.stringify({ dealId, message: offerText }),
+        await apiFetch(`/deal-rooms/${dealId}/messages`, {
+          method: 'POST',
+          body: JSON.stringify({ content: offerText }),
         });
       } catch { /* local fallback */ }
     }
@@ -846,7 +831,7 @@ export function useDealSync(userId?: number, initialData?: {
     updateDeal(key, { phase: 'counter', offerAmount: String(amountCents / 100) });
   }, [dealStates, updateDeal]);
 
-  /** Submit application — writes to PostgreSQL via bids API */
+  /** Submit application — writes to Render backend */
   const submitApplication = useCallback(async (
     opportunityId: number,
     personaId: number,
@@ -856,17 +841,16 @@ export function useDealSync(userId?: number, initialData?: {
     let appId = Date.now();
 
     try {
-      const res = await fetch('/api/bids/', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      const res = await apiFetch<{ application_id: number }>('/marketplace/applications', {
+        method: 'POST',
         body: JSON.stringify({
-          campaign_id: opportunityId,
-          bid_amount: 0,
-          proposal: pitch,
+          opportunity_id: opportunityId,
+          persona_id: personaId,
+          pitch,
         }),
       });
-      const data = await res.json();
-      if (res.ok && data.bid) {
-        appId = data.bid.id;
+      if (res.data?.application_id) {
+        appId = res.data.application_id;
       }
     } catch { /* fall through to local fallback */ }
 
@@ -874,16 +858,16 @@ export function useDealSync(userId?: number, initialData?: {
     setApplications(prev => [...prev, newApp]);
   }, []);
 
-  /** Accept application (brand side) — upserts to PostgreSQL via bids API */
+  /** Accept application (brand side) — updates Render backend */
   const acceptApplication = useCallback(async (
     applicationId: number,
     opportunityId: number,
     personaId: number
   ) => {
     try {
-      await fetch('/api/bids/', {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ bid_id: applicationId, action: 'accept' }),
+      await apiFetch('/brands/applications/accept', {
+        method: 'POST',
+        body: JSON.stringify({ opportunity_id: opportunityId, persona_id: personaId }),
       });
     } catch { /* local update still applies */ }
 
@@ -892,24 +876,25 @@ export function useDealSync(userId?: number, initialData?: {
     );
   }, []);
 
-  /** Create campaign (brand side) — writes to PostgreSQL via campaigns API */
+  /** Create campaign (brand side) — writes to Render backend */
   const createCampaign = useCallback(async (campaign: Omit<Campaign, 'id'>) => {
     let campId = Date.now();
 
     try {
-      const res = await fetch('/api/campaigns/list', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+      const res = await apiFetch<{ opportunity_id: number }>('/marketplace/opportunities', {
+        method: 'POST',
         body: JSON.stringify({
           title: campaign.title,
           description: campaign.description,
-          budget_per_creator: Number(campaign.budget) || 0,
-          total_budget: Number(campaign.budget) || 0,
-          delivery_type: campaign.deliverables?.includes('digital') ? 'digital_access' : 'no_delivery',
+          category: campaign.brandProfession || 'General',
+          required_profession_id: 1,
+          required_level: campaign.minLevel || 1,
+          reward_amount: campaign.budget || '0',
+          duration_days: 30,
         }),
       });
-      const data = await res.json();
-      if (res.ok && data.campaign) {
-        campId = data.campaign.id;
+      if (res.data?.opportunity_id) {
+        campId = res.data.opportunity_id;
       }
     } catch { /* fall through to local fallback */ }
 
@@ -917,16 +902,16 @@ export function useDealSync(userId?: number, initialData?: {
     setCampaigns(prev => [...prev, newCampaign]);
   }, []);
 
-  /** Finalize deal — updates local state (PostgreSQL completion handled by escrow/release flow) */
+  /** Finalize deal — updates Render backend */
   const finalizeDeal = useCallback(async (key: string) => {
     const deal = dealStates[key];
     const dealId = deal?.backendDealRoomId;
 
     if (dealId) {
       try {
-        await fetch('/api/deals/complete-with-release', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-          body: JSON.stringify({ dealId }),
+        await apiFetch(`/deal-rooms/${dealId}/finalize`, {
+          method: 'POST',
+          body: JSON.stringify({}),
         });
       } catch { /* local update still applies */ }
     }
@@ -934,7 +919,7 @@ export function useDealSync(userId?: number, initialData?: {
     updateDeal(key, { phase: 'accepted' });
   }, [dealStates, updateDeal]);
 
-  /** Background sync — creates PostgreSQL records for local-only deals */
+  /** Background sync — creates Render backend records for local-only deals */
   const syncToBackend = useCallback(async () => {
     if (syncInProgress.current) return;
     syncInProgress.current = true;
@@ -947,24 +932,21 @@ export function useDealSync(userId?: number, initialData?: {
       for (const [key, deal] of Object.entries(dealStates)) {
         if (deal.backendDealRoomId || deal.phase === 'brief') continue;
 
-        const skinParts = key.split(':');
-        const valueSkin = skinParts.length > 1 ? skinParts[skinParts.length - 1] : '';
-
         try {
-          const res = await fetch('/api/deals/create-with-skin', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          const res = await apiFetch<{ deal_room_id: number }>('/deal-rooms', {
+            method: 'POST',
             body: JSON.stringify({
-              title: deal.briefTitle || key.split(':')[0],
-              description: 'Synced from local state',
-              budget: Number(deal.offerAmount) || 0,
-              valueSkin,
-              creatorId: 1,
+              creator_persona_id: 1,
+              intent: deal.intent || 'campaign',
+              brief_title: deal.briefTitle || key.split(':')[0],
+              brief_description: 'Synced from local state',
+              brief_deliverables: '',
+              brief_campaign_type: 'paid',
             }),
           });
-          const data = await res.json();
-          if (res.ok && data.dealId) {
+          if (res.data?.deal_room_id) {
             updateDeal(key, {
-              backendDealRoomId: typeof data.dealId === 'number' ? data.dealId : parseInt(String(data.dealId)) || undefined,
+              backendDealRoomId: res.data.deal_room_id,
             });
           }
         } catch { /* skip this deal */ }

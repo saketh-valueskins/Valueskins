@@ -1,66 +1,73 @@
+# Render Blueprint — Valueskins Backend
+# Deploy: render blueprint apply
+# Docs: https://render.com/docs/blueprint-spec
+
 services:
-  # ── Production Backend ───────────────────────────────────────────────
+  # ── API Gateway (Docker) ──────────────────────────────────────────────
   - type: web
     name: valueskins-api
-    runtime: rust
-    plan: free
-    buildCommand: "cd backend && cargo build --release -p api_gateway"
-    startCommand: "./target/release/api_gateway"
+    runtime: image
+    image:
+      url: # set after first push to Render registry, or use Docker Hub
     envVars:
+      - key: RUST_ENV
+        value: production
+      - key: APP_ENV
+        value: production
       - key: RUST_LOG
         value: info
+      - key: PORT
+        value: 8080
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: valueskins-db
+          property: connectionString
       - key: JWT_SECRET
-        sync: false
+        generateValue: true
       - key: API_KEY_HMAC_SALT
-        value: api_key_hmac_salt_development_key_change_in_production_12345
+        generateValue: true
       - key: VERIFICATION_HMAC_SECRET
-        value: verification_hmac_secret_development_key_change_in_production_12345
+        generateValue: true
       - key: PLATFORM_SIGNING_KEY_ED25519
-        value: Ui+8R4YRtehZkUYV6TXVbE/gypplxbT/W9/VXagbVnQ=
+        generateValue: true
+      - key: REDIS_URL
+        fromService:
+          name: valueskins-redis
+          property: connectionString
       - key: ALLOWED_ORIGINS
-        value: https://valueskins-final.vercel.app
+        value: https://valueskins.com,https://www.valueskins.com
       - key: SMTP_HOST
-        value: smtp.example.com
+        sync: false
       - key: SMTP_USER
-        value: user
+        sync: false
       - key: SMTP_PASS
         sync: false
       - key: SMTP_FROM
         value: noreply@valueskins.io
-    autoDeploy: false
+    healthCheckPath: /health/live
+    autoDeploy: true
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    # Scale up when CPU > 70%
+    autoScaling:
+      minInstances: 1
+      maxInstances: 3
+    disk:
+      name: uploads
+      mountPath: /app/uploads
+      sizeGB: 10
 
-  # ── Staging Backend ──────────────────────────────────────────────────
-  - type: web
-    name: valueskins-api-staging
-    runtime: rust
-    plan: free
-    buildCommand: "cd backend && cargo build --release -p api_gateway"
-    startCommand: "./target/release/api_gateway"
-    envVars:
-      - key: RUST_LOG
-        value: debug
-      - key: DATABASE_URL
-        sync: false
-      - key: JWT_SECRET
-        sync: false
-      - key: API_KEY_HMAC_SALT
-        value: api_key_hmac_salt_staging_key_change_in_production_12345
-      - key: VERIFICATION_HMAC_SECRET
-        value: verification_hmac_secret_staging_key_32_chars
-      - key: PLATFORM_SIGNING_KEY_ED25519
-        sync: false
-      - key: ALLOWED_ORIGINS
-        value: https://staging.valueskins.com,https://staging-marketplace.valueskins.com
-      - key: SMTP_HOST
-        value: smtp.example.com
-      - key: SMTP_USER
-        value: user
-      - key: SMTP_PASS
-        sync: false
-      - key: SMTP_FROM
-        value: noreply@valueskins.io
-      - key: RENDER_ENV
-        value: staging
-    autoDeploy: false
+  # ── PostgreSQL ────────────────────────────────────────────────────────
+  - type: pgsql
+    name: valueskins-db
+    plan: starter
+    database: valueskins
+    ipAllowList: []   # internal Render services only
+
+  # ── Redis (sessions + cache + pub/sub) ────────────────────────────────
+  - type: redis
+    name: valueskins-redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []   # internal Render services only
