@@ -5502,6 +5502,28 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               };
                               persistCampaigns([...campaigns, newC]);
                               firebaseCreateCampaign(newC);
+                              // Force immediate persistence to realtime API for cross-device sync
+                              const persistPromise = fetch('/api/realtime/state', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  value: {
+                                    deals: firebaseState.deals,
+                                    campaigns: [...(firebaseState.campaigns || []), newC],
+                                    messages: firebaseState.messages,
+                                    applications: firebaseState.applications,
+                                    notifications: firebaseState.notifications,
+                                  }
+                                })
+                              }).catch(() => {});
+                              // After persistence, trigger immediate refetch on all other sessions
+                              persistPromise.then(() => {
+                                setTimeout(() => {
+                                  fetch('/api/realtime/state').then(r => r.json()).then(data => {
+                                    // Campaigns are now in DB, ready for other users to fetch
+                                  }).catch(() => {});
+                                }, 50);
+                              });
                               // Also save to PostgreSQL so it's visible across devices
                               const demoUuid = localStorage.getItem('vs_demo_user_id') || (() => {
                                 const u = crypto.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
