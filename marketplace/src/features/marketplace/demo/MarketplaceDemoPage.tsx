@@ -1355,6 +1355,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
   // Merge Firebase campaigns into local state (cross-device sync)
   // Updates existing campaigns and adds new ones for real-time visibility
+  // Also persist to localStorage for cross-session persistence
   useEffect(() => {
     if (firebaseState.campaigns.length > 0) {
       setCampaigns(prev => {
@@ -1372,10 +1373,28 @@ export default function MarketplaceDemoPage(initialDealData?: {
         });
 
         if (!hasChanges) return prev;
-        return Array.from(localMap.values());
+        const updated = Array.from(localMap.values());
+        // Persist to localStorage
+        localStorage.setItem('valueskins_campaigns', JSON.stringify(updated));
+        return updated;
       });
     }
   }, [firebaseState.campaigns, setCampaigns]);
+
+  // On mount, load campaigns from localStorage for persistence across sessions
+  useEffect(() => {
+    const stored = localStorage.getItem('valueskins_campaigns');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCampaigns(parsed);
+        }
+      } catch (e) {
+        // Invalid JSON, ignore
+      }
+    }
+  }, []);
 
   // Auto-refresh campaigns from shared DB every 10s (cross-device sync)
   useEffect(() => {
@@ -5500,7 +5519,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   phone: newCampaignPocPhone.trim() || undefined,
                                 } : undefined,
                               };
-                              persistCampaigns([...campaigns, newC]);
+                              const updated = [...campaigns, newC];
+                              persistCampaigns(updated);
+                              setCampaigns(updated);
+                              // Save to localStorage for persistence
+                              localStorage.setItem('valueskins_campaigns', JSON.stringify(updated));
                               firebaseCreateCampaign(newC);
                               // Force immediate persistence to realtime API for cross-device sync
                               const persistPromise = fetch('/api/realtime/state', {
