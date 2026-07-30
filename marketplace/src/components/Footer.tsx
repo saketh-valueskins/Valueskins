@@ -165,7 +165,7 @@ export default function Footer() {
               }}>
                 founder@valueskins.com
               </a>
-              <a href="tel:+919665820468" style={{
+              <a href="tel:+918805695324" style={{
                 fontSize: '13px',
                 color: C.textSecondary,
                 textDecoration: 'none',

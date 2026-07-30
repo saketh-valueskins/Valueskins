@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import { PROFESSION_BADGES, defaultAboutMe } from '@/features/valueskins/core/identity/AvatarOptions';
+import { PROFESSION_BADGES, BRAND_CATEGORY_BADGES, defaultAboutMe } from '@/features/valueskins/core/identity/AvatarOptions';
 import { getLevel, getLevelInfo, getProgressToNext } from '@/lib/levels';
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
 
 function getStickerForProfession(profession: string): string | undefined {
-  return PROFESSION_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
+  return PROFESSION_BADGES[profession]?.stickerImage || BRAND_CATEGORY_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
 }
 
 type HoverProfile = {
@@ -63,7 +63,7 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
     }
   }, [x, y]);
 
-  const skinBadge = profile.skin ? PROFESSION_BADGES[profile.skin] : undefined;
+  const skinBadge = profile.skin ? (profile.role === 'brand' ? (BRAND_CATEGORY_BADGES[profile.skin] ?? PROFESSION_BADGES[profile.skin]) : PROFESSION_BADGES[profile.skin]) : undefined;
   const isDefaultAbout = profile.aboutMe && defaultAboutMe(profile.skin || '') === profile.aboutMe;
   const level = profile.role === 'creator'
     ? getLevel(profile.metrics?.dealsCompleted ?? 0)

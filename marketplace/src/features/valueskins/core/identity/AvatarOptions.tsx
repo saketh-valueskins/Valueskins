@@ -106,6 +106,26 @@ export const PROFESSION_BADGES: Record<string, ProfessionBadge> = {
   'Culinary Student':       { id: 'cust', label: 'Culinary Student',       abbreviation: 'CUS', color: '#E65100', emoji: '' },
 };
 
+// Brand-category badges (Type 1 ValueSkins) — mirrors PROFESSIONS keys in MarketplaceDemoPage.tsx
+export const BRAND_CATEGORY_BADGES: Record<string, ProfessionBadge> = {
+  'Food & Beverage':       { id: 'fnb',   label: 'Food & Beverage',       abbreviation: 'F&B', color: '#E65100' },
+  'Retail & Shopping':     { id: 'ret',   label: 'Retail & Shopping',     abbreviation: 'R&S', color: '#AD1457' },
+  'Technology':            { id: 'tch',   label: 'Technology',            abbreviation: 'TEC', color: '#1A237E' },
+  'Health & Fitness':      { id: 'hf',    label: 'Health & Fitness',      abbreviation: 'H&F', color: '#2E7D32' },
+  'Beauty & Personal Care':{ id: 'bpc',   label: 'Beauty & Personal Care',abbreviation: 'BPC', color: '#880E4F' },
+  'Travel & Hospitality':  { id: 'th',    label: 'Travel & Hospitality',  abbreviation: 'T&H', color: '#01579B' },
+  'Fashion & Apparel':     { id: 'fa',    label: 'Fashion & Apparel',     abbreviation: 'F&A', color: '#6A1B9A' },
+  'Entertainment & Media': { id: 'em',    label: 'Entertainment & Media', abbreviation: 'E&M', color: '#FF6F00' },
+  'Sports & Recreation':   { id: 'sr',    label: 'Sports & Recreation',   abbreviation: 'S&R', color: '#1B5E20' },
+  'Education':             { id: 'edu',   label: 'Education',             abbreviation: 'EDU', color: '#1565C0' },
+  'Finance & Insurance':   { id: 'fi',    label: 'Finance & Insurance',   abbreviation: 'F&I', color: '#006064' },
+  'Real Estate':           { id: 're',    label: 'Real Estate',           abbreviation: 'RE',  color: '#4E342E' },
+  'Professional Services': { id: 'ps',    label: 'Professional Services', abbreviation: 'PS',  color: '#37474F' },
+  'Automotive':            { id: 'auto',  label: 'Automotive',            abbreviation: 'AUT', color: '#263238' },
+  'Home & Garden':         { id: 'hg',    label: 'Home & Garden',         abbreviation: 'H&G', color: '#558B2F' },
+  'Non-Profit & Community':{ id: 'npc',   label: 'Non-Profit & Community',abbreviation: 'NPC', color: '#00838F' },
+};
+
 //  Default About Me text per profession 
 
 export function defaultAboutMe(profession: string): string {
@@ -143,7 +163,7 @@ export function ProfessionSticker({
   level?: number;
   hideSlotLabel?: boolean;
 }) {
-  const defined = PROFESSION_BADGES[profession];
+  const defined = PROFESSION_BADGES[profession] ?? BRAND_CATEGORY_BADGES[profession];
   const badge: ProfessionBadge = defined ?? {
     id: profession.toLowerCase().replace(/\s+/g, '_'),
     label: profession,
@@ -240,7 +260,7 @@ function AboutMePanel({
 
   const s: ValueSkinSlot = 'profession';
   const entry = valueSkins[s];
-  const slotBadge = entry ? PROFESSION_BADGES[entry.profession] : undefined;
+  const slotBadge = entry ? (PROFESSION_BADGES[entry.profession] ?? BRAND_CATEGORY_BADGES[entry.profession]) : undefined;
 
   const startEdit = () => {
     setDraft(entry?.aboutMe ?? defaultAboutMe(entry?.profession ?? ''));
@@ -771,7 +791,7 @@ export function ValueskinAvatarOverlay({
   size?: number;
 }) {
   const professionEntry = valueSkins?.profession;
-  const badge = professionEntry ? PROFESSION_BADGES[professionEntry.profession] : null;
+  const badge = professionEntry ? (PROFESSION_BADGES[professionEntry.profession] ?? BRAND_CATEGORY_BADGES[professionEntry.profession]) : null;
 
   return (
     <div style={{

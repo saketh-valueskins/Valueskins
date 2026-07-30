@@ -2,7 +2,7 @@
 import { withAlpha } from '@/theme/colors';
 
 import React, { useState } from 'react';
-import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
+import { PROFESSION_BADGES, BRAND_CATEGORY_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
 import { getLevel, getProgressToNext } from '@/lib/levels';
 
@@ -39,7 +39,7 @@ const BRAND_CATEGORIES: Record<string, { name: string; subCategories: string[] }
 };
 
 function getStickerForProfession(profession: string): string | undefined {
-  return PROFESSION_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
+  return PROFESSION_BADGES[profession]?.stickerImage || BRAND_CATEGORY_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
 }
 
 function Modal({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
@@ -616,7 +616,7 @@ export default function SettingsView({
                           <div style={{ fontSize: '12px', color: C.textMuted, textAlign: 'center', padding: '16px' }}>Get a ValueSkin to add your pitch</div>
                         ) : ownedSkinsList.map(skinName => {
                           const hasPitch = activeSkinPitchTexts[skinName] || activeSkinPitchVideos[skinName]?.url;
-                          const badge = PROFESSION_BADGES[skinName];
+                          const badge = role === 'brand' ? (BRAND_CATEGORY_BADGES[skinName] ?? PROFESSION_BADGES[skinName]) : PROFESSION_BADGES[skinName];
                           return (
                             <div key={skinName} onClick={() => setShowSkinShowcaseModal(skinName)}
                               style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, cursor: 'pointer', transition: 'border-color 0.15s' }}
@@ -1000,7 +1000,7 @@ export default function SettingsView({
       {showSkinShowcaseModal && (
         <Modal onClose={() => setShowSkinShowcaseModal(null)}>
           {(() => {
-            const skinBadge = PROFESSION_BADGES[showSkinShowcaseModal];
+            const skinBadge = role === 'brand' ? (BRAND_CATEGORY_BADGES[showSkinShowcaseModal] ?? PROFESSION_BADGES[showSkinShowcaseModal]) : PROFESSION_BADGES[showSkinShowcaseModal];
             const skinColor = skinBadge?.color ?? C.primary;
             const skinLevel = getLevel(metrics.dealsCompleted);
             const skinProgress = getProgressToNext(metrics.dealsCompleted);
@@ -1059,26 +1059,6 @@ export default function SettingsView({
                   rows={3}
                   style={{ width: '100%', padding: '10px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, fontSize: '12px', fontFamily: 'inherit', outline: 'none', resize: 'vertical', boxSizing: 'border-box' as const }}
                 />
-              </div>
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>Pitch Video (URL)</div>
-                <input
-                  value={creatorPitchVideoUrl}
-                  onChange={e => setCreatorPitchVideoUrl(e.target.value)}
-                  placeholder="Paste Vimeo / YouTube / Loom link"
-                  style={{ width: '100%', padding: '9px 10px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, fontSize: '12px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' as const }}
-                />
-                {creatorPitchVideoUrl && (
-                  <input
-                    value={creatorPitchVideoName}
-                    onChange={e => setCreatorPitchVideoName(e.target.value)}
-                    placeholder="Video label (e.g. My Best Work)"
-                    style={{ width: '100%', padding: '9px 10px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', color: C.text, fontSize: '12px', fontFamily: 'inherit', outline: 'none', marginTop: '6px', boxSizing: 'border-box' as const }}
-                  />
-                )}
-                {!creatorPitchVideoUrl && (
-                  <div style={{ fontSize: '10px', color: C.textMuted, marginTop: '4px' }}>Optional — upload to Vimeo/YouTube and paste the link</div>
-                )}
               </div>
               <button onClick={() => { setShowSkinShowcaseModal(null); setPurchaseToast(creatorSkinMode === 'showcase' ? 'Showcase saved — brands will see your pitch' : 'Skin set to static'); setTimeout(() => setPurchaseToast(null), 3000); }} style={{ width: '100%', background: C.primary, border: 'none', borderRadius: 8, padding: '12px', color: C.onPrimary, fontWeight: 700, fontSize: 14, cursor: 'pointer', marginTop: 8 }}>
                 Save Skin Showcase

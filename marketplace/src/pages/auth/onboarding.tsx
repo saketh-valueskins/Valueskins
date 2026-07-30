@@ -73,6 +73,7 @@ export default function Onboarding() {
   const [error, setError] = useState('');
   const [hovered, setHovered] = useState<'creator' | 'brand' | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [stats, setStats] = useState({ creators: 0, deals: 0, paidOut: 0 });
 
   useEffect(() => {
     setMounted(true);
@@ -80,6 +81,14 @@ export default function Onboarding() {
     // here so the user only has to confirm.
     const pending = readPendingRole();
     if (pending) setHovered(pending);
+
+    // Fetch real stats from the database
+    fetch('/api/admin/dashboard')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d) setStats({ creators: d.totalUsers ?? 0, deals: d.totalDeals ?? 0, paidOut: d.totalPaidOut ?? 0 });
+      })
+      .catch(() => {});
   }, []);
 
   // GP1 step 2: a returning user who already committed a role skips the prompt.
@@ -173,12 +182,12 @@ export default function Onboarding() {
           </p>
         </div>
 
-        {/* Proof counters (spec §1/§4 — illustrative pre-launch) */}
+        {/* Proof counters — real DB counts with pre-launch fallback */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', flexWrap: 'wrap', marginBottom: '40px', ...entrance(1) }}>
           {[
-            { label: 'Creators verified', node: <Counter to={1200} reduced={reduced} /> },
-            { label: 'Deals completed', node: <Counter to={3400} reduced={reduced} /> },
-            { label: 'Paid to creators', node: <Counter to={9800000} prefix="₹" reduced={reduced} /> },
+            { label: 'Creators verified', node: <Counter to={stats.creators || 0} reduced={reduced} /> },
+            { label: 'Deals completed', node: <Counter to={stats.deals || 0} reduced={reduced} /> },
+            { label: 'Paid to creators', node: <Counter to={stats.paidOut || 0} prefix="₹" reduced={reduced} /> },
           ].map((s) => (
             <div key={s.label} style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#F5F5F0' }}>{s.node}</div>

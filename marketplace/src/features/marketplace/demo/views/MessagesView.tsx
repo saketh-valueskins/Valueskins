@@ -1,7 +1,7 @@
 'use client';
 import { withAlpha } from '@/theme/colors';
 import React, { useState, useEffect, useCallback } from 'react';
-import { PROFESSION_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
+import { PROFESSION_BADGES, BRAND_CATEGORY_BADGES } from '@/features/valueskins/core/identity/AvatarOptions';
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
 import { apiFetch } from '@/lib/backend';
 import { useWebSocket } from '@/hooks/useWebSocket';
@@ -62,7 +62,7 @@ function timeAgo(iso: string): string {
 }
 
 function getStickerForProfession(profession: string): string | undefined {
-  return PROFESSION_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
+  return PROFESSION_BADGES[profession]?.stickerImage || BRAND_CATEGORY_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
 }
 
 interface MessagesViewProps {

@@ -27,6 +27,7 @@ import {
   ValueskinAvatarToggle,
   ProfilePhotoWithLongPress,
   PROFESSION_BADGES,
+  BRAND_CATEGORY_BADGES,
   defaultAboutMe,
 } from '@/features/valueskins/core/identity/AvatarOptions';
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
@@ -39,9 +40,14 @@ import SettingsView from '@/features/marketplace/demo/views/SettingsView';
 import MessagesView from '@/features/marketplace/demo/views/MessagesView';
 import { HoverCard, type HoverProfile } from '@/features/marketplace/demo/components/ProfileHoverCard';
 
-/** Get sticker image path for any profession — checks PROFESSION_BADGES first, then auto-generated manifest */
+/** Resolve badge from either map — brand categories OR creator professions */
+function getBadge(name: string) {
+  return BRAND_CATEGORY_BADGES[name] ?? PROFESSION_BADGES[name];
+}
+
+/** Get sticker image path for any profession — checks PROFESSION_BADGES, BRAND_CATEGORY_BADGES, then manifest */
 function getStickerForProfession(profession: string): string | undefined {
-  return PROFESSION_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
+  return PROFESSION_BADGES[profession]?.stickerImage || BRAND_CATEGORY_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
 }
 
 // App shell palette. This used to be a hardcoded light-only object with its own
@@ -1461,6 +1467,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [newCampaignCompensation, setNewCampaignCompensation] = useState('Paid');
   const [newCampaignExclusivity, setNewCampaignExclusivity] = useState('None');
   const [newCampaignUsageRights, setNewCampaignUsageRights] = useState('30 days, social only');
+  const [newCampaignHasDigitalRights, setNewCampaignHasDigitalRights] = useState(false);
+  const [newCampaignDigitalRightsAmount, setNewCampaignDigitalRightsAmount] = useState('');
+  const [newCampaignDigitalRightsReels, setNewCampaignDigitalRightsReels] = useState(0);
+  const [newCampaignDigitalRightsStories, setNewCampaignDigitalRightsStories] = useState(0);
+  const [newCampaignDigitalRightsDays, setNewCampaignDigitalRightsDays] = useState('30');
   const [newCampaignAudienceTarget, setNewCampaignAudienceTarget] = useState('');
   const [newCampaignRequirements, setNewCampaignRequirements] = useState<string[]>([]);
   const [newCampaignReqInput, setNewCampaignReqInput] = useState('');
@@ -2073,6 +2084,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
     });
 
     if (marketplaceRole === 'brand') {
+      const isValidBrandCategory = Object.values(PROFESSIONS).some(cat => cat.subProfessions.includes(profession));
+      if (!isValidBrandCategory) return;
       setBrandValueSkins(prev => [...prev, profession]);
       if (!activeBrandSkin) setActiveBrandSkin(profession);
       setActiveView('mim');
@@ -2541,7 +2554,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
             <button onClick={() => setShowSkinShowcaseModal(null)} style={{ position:'absolute', top:'14px', right:'16px', background:'none', border:'none', color:C.textMuted, fontSize:'22px', cursor:'pointer', lineHeight:1 }}>x</button>
 
             {(() => {
-              const skinBadge = PROFESSION_BADGES[showSkinShowcaseModal];
+              const skinBadge = getBadge(showSkinShowcaseModal);
               const skinColor = skinBadge?.color ?? C.primary;
               const skinLevel = getLevel(metrics.dealsCompleted);
               const skinProgress = getProgressToNext(metrics.dealsCompleted);
@@ -5228,20 +5241,20 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ fontSize:'16px', fontWeight:700, color:C.text, marginBottom:'16px' }}>Create Campaign</div>
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Brand name *</div>
-                            <input type="text" value={profileName} onChange={e=>setProfileName(e.target.value)} placeholder="Your brand name" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
+                            <input type="text" value={profileName} onChange={e=>setProfileName(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
                           </div>
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Campaign title *</div>
-                            <input type="text" value={newCampaignTitle} onChange={e=>setNewCampaignTitle(e.target.value)} placeholder="e.g. Spring Product Launch" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
+                            <input type="text" value={newCampaignTitle} onChange={e=>setNewCampaignTitle(e.target.value)}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
                           </div>
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>About your product / campaign *</div>
                             <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Creators need to understand what they are promoting. Be specific — what is the product, who is it for, and what makes it worth their audience's trust.</div>
-                            <textarea value={newCampaignAbout} onChange={e=>setNewCampaignAbout(e.target.value)} rows={4} placeholder="e.g. We build CI/CD tooling for startups. 50K+ teams use our pipeline automation. Looking for authentic dev voices to demo our v3 launch features." style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', resize:'none', boxSizing:'border-box' as const }} />
+                            <textarea value={newCampaignAbout} onChange={e=>setNewCampaignAbout(e.target.value)} rows={4}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', resize:'none', boxSizing:'border-box' as const }} />
                           </div>
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Campaign description *</div>
-                            <textarea value={newCampaignDesc} onChange={e=>setNewCampaignDesc(e.target.value)} rows={2} placeholder="Briefly describe the type of content and goal of this campaign" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', resize:'none', boxSizing:'border-box' as const }} />
+                            <textarea value={newCampaignDesc} onChange={e=>setNewCampaignDesc(e.target.value)} rows={2}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', resize:'none', boxSizing:'border-box' as const }} />
                           </div>
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Target profession/niche *</div>
@@ -5305,7 +5318,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ display:'flex', gap:'10px', marginBottom:'12px' }}>
                             <div style={{ flex:1 }}>
                               <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Budget per creator ({c.symbol}) *</div>
-                              <input type="text" value={newCampaignBudget} onChange={e=>setNewCampaignBudget(e.target.value.replace(/[^0-9]/g,''))} placeholder="5000" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
+                              <input type="text" value={newCampaignBudget} onChange={e=>setNewCampaignBudget(e.target.value.replace(/[^0-9]/g,''))}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
                             </div>
                             <div style={{ flex:1 }}>
                               <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Creators to hire *</div>
@@ -5328,7 +5341,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           </>)})()}
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Deliverables</div>
-                            <input type="text" value={newCampaignDeliverables} onChange={e=>setNewCampaignDeliverables(e.target.value)} placeholder="e.g. 2x Reels, 3x Stories" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
+                            <input type="text" value={newCampaignDeliverables} onChange={e=>setNewCampaignDeliverables(e.target.value)}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
                           </div>
                           {/* Compensation type */}
                           <div style={{ marginBottom:'12px' }}>
@@ -5414,6 +5427,51 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               </select>
                             </div>
                           </div>
+
+                          {/* Digital Rights */}
+                          <div style={{ marginBottom:'12px', padding:'12px', background:`${withAlpha(C.primary, 0x06)}`, borderRadius:'8px', border:`1px solid ${withAlpha(C.primary, 0x15)}` }}>
+                            <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'8px' }}>
+                              <input type="checkbox" checked={newCampaignHasDigitalRights} onChange={e=>setNewCampaignHasDigitalRights(e.target.checked)} style={{ cursor:'pointer' }} />
+                              <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600 }}>Offer separate digital & ad rights</div>
+                            </div>
+                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'8px' }}>Creator charges extra for content repurposing rights. Amount below is IN ADDITION to content fees.</div>
+                            {newCampaignHasDigitalRights && (
+                              <>
+                                <div style={{ display:'flex', gap:'8px', marginBottom:'8px' }}>
+                                  <div style={{ flex:1 }}>
+                                    <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, marginBottom:'3px' }}>Digital rights amount ({currencyForCountry(brandCountry).symbol})</div>
+                                    <input type="text" value={newCampaignDigitalRightsAmount} onChange={e=>setNewCampaignDigitalRightsAmount(e.target.value.replace(/[^0-9]/g,''))}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'6px', color:C.text, padding:'6px 8px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
+                                  </div>
+                                  <div style={{ flex:1 }}>
+                                    <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, marginBottom:'3px' }}>Duration (days)</div>
+                                    <select value={newCampaignDigitalRightsDays} onChange={e=>setNewCampaignDigitalRightsDays(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'6px', color:C.text, padding:'6px 8px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}>
+                                      {['30','60','90','120','180','Perpetual'].map(d => <option key={d} value={d}>{d}</option>)}
+                                    </select>
+                                  </div>
+                                </div>
+                                <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, marginBottom:'6px' }}>Which content pieces get digital rights?</div>
+                                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
+                                  <div>
+                                    <label style={{ fontSize:'10px', color:C.text, display:'block', marginBottom:'3px' }}>Reels with rights:</label>
+                                    <div style={{ display:'flex', alignItems:'center', gap:'4px' }}>
+                                      <button onClick={()=>setNewCampaignDigitalRightsReels(Math.max(0,newCampaignDigitalRightsReels-1))} style={{ width:24, height:24, borderRadius:'4px', border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:'12px', cursor:'pointer', fontWeight:600 }}>−</button>
+                                      <div style={{ flex:1, background:C.bg, border:`1px solid ${C.border}`, borderRadius:'6px', color:C.text, padding:'4px', fontSize:'12px', fontWeight:600, textAlign:'center' }}>{newCampaignDigitalRightsReels}</div>
+                                      <button onClick={()=>setNewCampaignDigitalRightsReels(newCampaignDigitalRightsReels+1)} style={{ width:24, height:24, borderRadius:'4px', border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:'12px', cursor:'pointer', fontWeight:600 }}>+</button>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label style={{ fontSize:'10px', color:C.text, display:'block', marginBottom:'3px' }}>Stories with rights:</label>
+                                    <div style={{ display:'flex', alignItems:'center', gap:'4px' }}>
+                                      <button onClick={()=>setNewCampaignDigitalRightsStories(Math.max(0,newCampaignDigitalRightsStories-1))} style={{ width:24, height:24, borderRadius:'4px', border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:'12px', cursor:'pointer', fontWeight:600 }}>−</button>
+                                      <div style={{ flex:1, background:C.bg, border:`1px solid ${C.border}`, borderRadius:'6px', color:C.text, padding:'4px', fontSize:'12px', fontWeight:600, textAlign:'center' }}>{newCampaignDigitalRightsStories}</div>
+                                      <button onClick={()=>setNewCampaignDigitalRightsStories(newCampaignDigitalRightsStories+1)} style={{ width:24, height:24, borderRadius:'4px', border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:'12px', cursor:'pointer', fontWeight:600 }}>+</button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+
                           <div style={{ marginBottom:'16px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Application deadline</div>
                             <input type="date" value={newCampaignDeadline} onChange={e=>setNewCampaignDeadline(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
@@ -5445,7 +5503,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               if (missing.length > 0) { setPurchaseToast(`Missing: ${missing.join(', ')}`); setTimeout(()=>setPurchaseToast(null),4000); return; }
                               const escrowPool = parseInt(newCampaignBudget||'0') * newCampaignCreatorCount;
                               const newC: Campaign = {
-                                id:Date.now(), brandName:profileName, brandProfession:newCampaignSelectedProfession, title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[newCampaignSelectedProfession], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, deliveryDeadline:newCampaignDeliveryDeadline, location:newCampaignLocation, country:brandCountry, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, contentReview:newCampaignContentReview, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0,
+                                id:Date.now(), brandName:profileName, brandProfession:newCampaignSelectedProfession, title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[newCampaignSelectedProfession], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, deliveryDeadline:newCampaignDeliveryDeadline, location:newCampaignLocation, country:brandCountry, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, contentReview:newCampaignContentReview, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0, hasDigitalRights:newCampaignHasDigitalRights, digitalRightsAmount:newCampaignDigitalRightsAmount, digitalRightsDays:newCampaignDigitalRightsDays, digitalRightsReels:newCampaignDigitalRightsReels, digitalRightsStories:newCampaignDigitalRightsStories,
                                 poc: newCampaignPocName.trim() ? {
                                   name: newCampaignPocName.trim(),
                                   workEmail: newCampaignPocEmail.trim(),
@@ -5482,7 +5540,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               setShowEscrowFundingModal(true);
                               setEscrowFundingInProgress2(false);
                               setBatchSendCreatorIds(new Set());
-                              setNewCampaignTitle(''); setNewCampaignDesc(''); setNewCampaignAbout(''); setNewCampaignBudget(''); setNewCampaignDeadline(''); setNewCampaignDeliveryDeadline(''); setNewCampaignProfessions([]); setNewCampaignSelectedProfession(''); setNewCampaignMinLevel(1); setNewCampaignMaxLevel(5); setNewCampaignLocation(''); setNewCampaignDeliverables(''); setNewCampaignNonNeg([]); setNewCampaignCompensation('Paid'); setNewCampaignExclusivity('None'); setNewCampaignUsageRights('30 days, social only'); setNewCampaignAudienceTarget(''); setNewCampaignRequirements([]); setNewCampaignReqInput(''); setNewCampaignCreatorCount(1); setNewCampaignPocName(''); setNewCampaignPocEmail(''); setNewCampaignPocPhone(''); setNewCampaignPocRole(''); setNewCampaignScriptMode('creator_freedom'); setNewCampaignScriptText('');
+                              setNewCampaignTitle(''); setNewCampaignDesc(''); setNewCampaignAbout(''); setNewCampaignBudget(''); setNewCampaignDeadline(''); setNewCampaignDeliveryDeadline(''); setNewCampaignProfessions([]); setNewCampaignSelectedProfession(''); setNewCampaignMinLevel(1); setNewCampaignMaxLevel(5); setNewCampaignLocation(''); setNewCampaignDeliverables(''); setNewCampaignNonNeg([]); setNewCampaignCompensation('Paid'); setNewCampaignExclusivity('None'); setNewCampaignUsageRights('30 days, social only'); setNewCampaignHasDigitalRights(false); setNewCampaignDigitalRightsAmount(''); setNewCampaignDigitalRightsReels(0); setNewCampaignDigitalRightsStories(0); setNewCampaignDigitalRightsDays('30'); setNewCampaignAudienceTarget(''); setNewCampaignRequirements([]); setNewCampaignReqInput(''); setNewCampaignCreatorCount(1); setNewCampaignPocName(''); setNewCampaignPocEmail(''); setNewCampaignPocPhone(''); setNewCampaignPocRole(''); setNewCampaignScriptMode('creator_freedom'); setNewCampaignScriptText('');
                             }}
                             style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'14px', cursor:'pointer' }}
                           >
@@ -5830,7 +5888,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ display:'flex', gap:'8px', marginBottom:'10px' }}>
                             {brandValueSkins.map(skin => {
                               const isActive = activeBrandSkin === skin;
-                              const badge = PROFESSION_BADGES[skin];
+                              const badge = BRAND_CATEGORY_BADGES[skin] ?? PROFESSION_BADGES[skin];
                               return (
                                 <button
                                   key={skin}
@@ -5876,7 +5934,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             Active Campaigns ({activeCampaigns.length})
                           </div>
                           {activeCampaigns.map((c, i) => {
-                            const preferenceMatch = campaignMatchesCreatorPreferences(c, creatorData);
+                            const preferenceMatch = campaignMatchesCreatorPreferences(c);
                             return (
                               <div key={i} style={{ padding:'12px 0', borderTop:i>0?`1px solid ${C.border}`:'none' }}>
                                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'6px', flexWrap:'wrap', gap:'4px' }}>
@@ -6757,7 +6815,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: '10px' }}>
                       {selected.subProfessions.map((sub: string) => {
-                        const defined = PROFESSION_BADGES[sub];
+                        const defined = getBadge(sub);
                         const abbr = defined?.abbreviation ?? sub.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 3);
                         const badgeColor = defined?.color ?? C.primary;
                         const stickerSrc = defined?.stickerImage || STICKER_MANIFEST[sub];
@@ -6791,7 +6849,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             ) : isFull ? (
                               <span style={{ fontSize: '11px', color: C.textMuted }}>Max skins (1/1)</span>
                             ) : (
-                              <span style={{ fontSize: '11px', fontWeight: 600, color: C.textSecondary }}>Acquire · ₹{SKIN_PRICE_RUPEES}</span>
+                              <span style={{ fontSize: '11px', fontWeight: 600, color: C.textSecondary }}>₹{SKIN_PRICE_RUPEES}</span>
                             )}
                           </button>
                         );
