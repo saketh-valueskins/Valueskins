@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 const API_URL = '/api/realtime/state';
-const POLL_INTERVAL = 3000;
+const POLL_INTERVAL = 1000;
+const IMMEDIATE_POLL_WAIT = 100;
 
 function normalizeCollection<T>(value: unknown): T[] {
   if (Array.isArray(value)) return value as T[];
@@ -95,6 +96,11 @@ export const useFirebaseRoom = (userId: string | null, roomId: string | null, us
         campaigns: [...campaigns.filter((entry: any) => entry?.id !== campaign.id), campaign],
       };
     });
+    setTimeout(() => {
+      fetchState().then(data => {
+        if (data) setState(normalizeState(data));
+      });
+    }, IMMEDIATE_POLL_WAIT);
   }, []);
 
   const updateDeal = useCallback((dealId: string, updates: any) => {

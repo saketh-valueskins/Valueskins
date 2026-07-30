@@ -202,6 +202,11 @@ export type Campaign = {
   escrowAllocated?: number;
   country?: string;
   poc?: { name: string; workEmail: string; role: string; phone?: string };
+  hasDigitalRights?: boolean;
+  digitalRightsAmount?: string;
+  digitalRightsDays?: string;
+  digitalRightsReels?: number;
+  digitalRightsStories?: number;
 };
 
 // ---- Storage keys ----
