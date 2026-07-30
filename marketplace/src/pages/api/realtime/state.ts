@@ -1,17 +1,37 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { query } from '@/lib/db';
 
-const ROOM_KEY = 'default';
+const FIREBASE_DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || '';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await ensureTable();
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
   if (req.method === 'GET') {
-    const result = await query(
-      'SELECT value FROM shared_state WHERE key = $1',
-      [ROOM_KEY]
-    );
-    if (result.rows.length === 0) {
+    try {
+      const firebaseRes = await fetch(`${FIREBASE_DB_URL}/realtime-state.json`);
+      if (!firebaseRes.ok) {
+        return res.status(200).json({
+          deals: {},
+          campaigns: [],
+          messages: {},
+          applications: [],
+          notifications: [],
+        });
+      }
+      const data = await firebaseRes.json();
+      return res.status(200).json(data || {
+        deals: {},
+        campaigns: [],
+        messages: {},
+        applications: [],
+        notifications: [],
+      });
+    } catch (error) {
       return res.status(200).json({
         deals: {},
         campaigns: [],
@@ -20,61 +40,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         notifications: [],
       });
     }
-    return res.status(200).json(result.rows[0].value);
   }
 
   if (req.method === 'POST') {
     const { value } = req.body;
     if (!value) return res.status(400).json({ error: 'value is required' });
 
-    // Merge incoming fields with existing state to prevent data loss
-    const existing = await query(
-      'SELECT value FROM shared_state WHERE key = $1',
-      [ROOM_KEY]
-    );
+    try {
+      // Write directly to Firebase Realtime Database
+      const firebaseRes = await fetch(`${FIREBASE_DB_URL}/realtime-state.json`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(value),
+      });
 
-    let merged = value;
-    if (existing.rows.length > 0) {
-      const current = existing.rows[0].value || {};
-      merged = {
-        deals: Object.fromEntries(
-          Object.entries({ ...(current.deals || {}), ...(value.deals || {}) }).map(([k]) => [
-            k, { ...((current.deals || {})[k] || {}), ...((value.deals || {})[k] || {}) }
-          ])
-        ),
-        campaigns: value.campaigns !== undefined
-          ? (value.campaigns.length > 0 || !current.campaigns?.length ? value.campaigns : current.campaigns)
-          : (current.campaigns ?? []),
-        messages: { ...(current.messages || {}), ...(value.messages || {}) },
-        applications: value.applications !== undefined
-          ? (value.applications.length > 0 || !current.applications?.length ? value.applications : current.applications)
-          : (current.applications ?? []),
-        notifications: value.notifications !== undefined
-          ? (value.notifications.length > 0 || !current.notifications?.length ? value.notifications : current.notifications)
-          : (current.notifications ?? []),
-      };
+      if (firebaseRes.ok) {
+        return res.status(200).json({ success: true });
+      }
+      return res.status(500).json({ error: 'Failed to write to database' });
+    } catch (error) {
+      return res.status(500).json({ error: 'Database error' });
     }
-
-    await query(
-      `INSERT INTO shared_state (key, value, updated_at)
-       VALUES ($1, $2, NOW())
-       ON CONFLICT (key)
-       DO UPDATE SET value = $2, updated_at = NOW()`,
-      [ROOM_KEY, JSON.stringify(merged)]
-    );
-
-    return res.status(200).json({ success: true });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
-}
-
-async function ensureTable() {
-  await query(`
-    CREATE TABLE IF NOT EXISTS shared_state (
-      key TEXT PRIMARY KEY,
-      value JSONB NOT NULL,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `);
 }
