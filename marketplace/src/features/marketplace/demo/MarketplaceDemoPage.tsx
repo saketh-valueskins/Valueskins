@@ -5255,6 +5255,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Campaign description *</div>
                             <textarea value={newCampaignDesc} onChange={e=>setNewCampaignDesc(e.target.value)} rows={2}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', resize:'none', boxSizing:'border-box' as const }} />
+                            <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'6px' }}>Note: Any kind of exclusivity or non-compete clauses must be mentioned here.</div>
                           </div>
                           <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Target profession/niche *</div>
@@ -5403,29 +5404,17 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             </div>
                           </div>
 
-                          {/* Exclusivity & Usage Rights */}
-                          <div style={{ display:'flex', gap:'10px', marginBottom:'12px' }}>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Exclusivity</div>
-                              <select value={newCampaignExclusivity} onChange={e=>setNewCampaignExclusivity(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}>
-                                <option value="None">None</option>
-                                <option value="14 days">14 days</option>
-                                <option value="30 days">30 days</option>
-                                <option value="60 days">60 days</option>
-                                <option value="90 days">90 days</option>
-                              </select>
-                            </div>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Usage rights</div>
-                              <select value={newCampaignUsageRights} onChange={e=>setNewCampaignUsageRights(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}>
-                                <option value="30 days, social only">30 days, social only</option>
-                                <option value="60 days, social only">60 days, social only</option>
-                                <option value="90 days, all platforms">90 days, all platforms</option>
-                                <option value="120 days, all platforms">120 days, all platforms</option>
-                                <option value="180 days, all platforms">180 days, all platforms</option>
-                                <option value="Perpetual">Perpetual</option>
-                              </select>
-                            </div>
+                          {/* Usage Rights */}
+                          <div style={{ marginBottom:'12px' }}>
+                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Usage rights duration</div>
+                            <select value={newCampaignUsageRights} onChange={e=>setNewCampaignUsageRights(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}>
+                              <option value="30 days, social only">30 days, social only</option>
+                              <option value="60 days, social only">60 days, social only</option>
+                              <option value="90 days, all platforms">90 days, all platforms</option>
+                              <option value="120 days, all platforms">120 days, all platforms</option>
+                              <option value="180 days, all platforms">180 days, all platforms</option>
+                              <option value="Perpetual">Perpetual</option>
+                            </select>
                           </div>
 
                           {/* Digital Rights */}
