@@ -6,7 +6,12 @@ import Footer from '@/components/Footer';
 import CookieConsent from '@/components/CookieConsent';
 import SplashIntro from '@/components/SplashIntro';
 import { ThemeProvider } from '@/theme/ThemeContext';
-import '@/styles/globals.css';
+import { setupEventSystem } from '@/lib/events/setup';
+
+// Initialize event system once at app startup
+if (typeof window !== 'undefined') {
+  setupEventSystem();
+}
 
 // P2-F2: pages that draw their own VALUESKINS wordmark. The global fixed
 // wordmark below must not render on these or the two overlap (the reported

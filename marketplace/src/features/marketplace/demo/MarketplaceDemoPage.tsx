@@ -1312,16 +1312,19 @@ export default function MarketplaceDemoPage(initialDealData?: {
     try {
       // 1. Push local campaigns to shared DB (so old localStorage-only campaigns appear)
       if (campaigns.length > 0) {
-        await fetch('/api/realtime/state', {
+        const postRes = await fetch('/api/realtime/state', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ value: { campaigns } }),
+          body: JSON.stringify({ value: { campaigns, deals: {}, messages: {}, applications: [], notifications: [] } }),
         });
+        console.log('Push to Firebase:', postRes.status, postRes.statusText);
       }
       // 2. Pull latest from shared DB (update in-place, don't append-only)
       const res = await fetch('/api/realtime/state');
+      console.log('Fetch from Firebase:', res.status, res.statusText);
       if (res.ok) {
         const data = await res.json();
+        console.log('Firebase data:', data);
         if (Array.isArray(data.campaigns)) {
           setCampaigns(prev => {
             const dbCampaigns = data.campaigns as Campaign[];
@@ -1338,6 +1341,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
             });
 
             if (!hasChanges) return prev;
+            console.log('Updated campaigns from Firebase:', Array.from(localMap.values()).length);
             return Array.from(localMap.values());
           });
         }
