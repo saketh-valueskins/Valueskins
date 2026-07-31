@@ -16,6 +16,7 @@ import { handleCreateCampaignCommand, CreateCampaignCommand } from '@/lib/comman
 import { verifyAndGetUser } from '@/lib/auth/verify-token';
 import { checkRateLimit, getRateLimitKey } from '@/middleware/rate-limit';
 import { ValidationError, AuthenticationError, RateLimitError } from '@/lib/errors/handler';
+import { initializeEventSystemOnce } from '@/lib/events/server-init';
 
 interface RequestBody {
   title: string;
@@ -44,6 +45,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<SuccessResponse | ErrorResponse>
 ) {
+  // Initialize event system on first request
+  initializeEventSystemOnce();
+
   // Only POST allowed
   if (req.method !== 'POST') {
     return res.status(405).json({
