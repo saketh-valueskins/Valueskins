@@ -13,7 +13,9 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { handleCreateCampaignCommand, CreateCampaignCommand } from '@/lib/commands/campaign-commands';
-import { realtimeBridge } from '@/lib/realtime/subscription-manager';
+import { verifyAndGetUser } from '@/lib/auth/verify-token';
+import { checkRateLimit, getRateLimitKey } from '@/middleware/rate-limit';
+import { ValidationError, AuthenticationError, RateLimitError } from '@/lib/errors/handler';
 
 interface RequestBody {
   title: string;
@@ -35,6 +37,7 @@ interface ErrorResponse {
   success: false;
   error: string;
   code: string;
+  retryAfter?: number;
 }
 
 export default async function handler(
@@ -51,24 +54,21 @@ export default async function handler(
   }
 
   try {
-    // Get authenticated user
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-        code: 'MISSING_AUTH',
-      });
+    // Get user from token first to use user_id for rate limiting
+    let user_id: string;
+    try {
+      const authHeader = req.headers.authorization;
+      const payload = await verifyAndGetUser(authHeader);
+      user_id = payload.user_id;
+    } catch (error) {
+      throw new AuthenticationError('Invalid or missing authentication token');
     }
 
-    // Verify token and get user ID (would use supabase.auth.getUser(token))
-    const user_id = req.headers['x-user-id'] as string;
-    if (!user_id) {
-      return res.status(401).json({
-        success: false,
-        error: 'User ID not found in token',
-        code: 'INVALID_AUTH',
-      });
+    // Check rate limit by user
+    const rateLimitKey = getRateLimitKey(user_id);
+    const rateLimitCheck = checkRateLimit(rateLimitKey, 'api:user');
+    if (!rateLimitCheck.allowed) {
+      throw new RateLimitError(rateLimitCheck.retryAfter || 60, 'Too many requests');
     }
 
     // Parse request body
@@ -76,43 +76,37 @@ export default async function handler(
 
     // Validate input
     if (!body.title?.trim()) {
-      return res.status(400).json({
-        success: false,
-        error: 'Campaign title is required',
-        code: 'VALIDATION_ERROR',
-      });
+      throw new ValidationError('Campaign title is required');
+    }
+
+    if (body.title.length > 200) {
+      throw new ValidationError('Campaign title must be 200 characters or less');
     }
 
     if (!body.description?.trim()) {
-      return res.status(400).json({
-        success: false,
-        error: 'Campaign description is required',
-        code: 'VALIDATION_ERROR',
-      });
+      throw new ValidationError('Campaign description is required');
     }
 
-    if (body.budget <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Budget must be greater than 0',
-        code: 'VALIDATION_ERROR',
-      });
+    if (body.description.length > 2000) {
+      throw new ValidationError('Campaign description must be 2000 characters or less');
     }
 
-    if (!body.target_valueSkins || body.target_valueSkins.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'At least one target ValueSkin is required',
-        code: 'VALIDATION_ERROR',
-      });
+    if (typeof body.budget !== 'number' || body.budget <= 0) {
+      throw new ValidationError('Budget must be a positive number');
     }
 
-    if (new Date(body.deadline) <= new Date()) {
-      return res.status(400).json({
-        success: false,
-        error: 'Deadline must be in the future',
-        code: 'VALIDATION_ERROR',
-      });
+    if (!body.target_valueSkins || !Array.isArray(body.target_valueSkins) || body.target_valueSkins.length === 0) {
+      throw new ValidationError('At least one target ValueSkin is required');
+    }
+
+    const validSkins = ['Type1', 'Type2', 'Type3'];
+    if (!body.target_valueSkins.every((skin) => validSkins.includes(skin))) {
+      throw new ValidationError('Invalid ValueSkin type');
+    }
+
+    const deadline = new Date(body.deadline);
+    if (isNaN(deadline.getTime()) || deadline <= new Date()) {
+      throw new ValidationError('Deadline must be a valid future date');
     }
 
     // Create command
@@ -143,28 +137,7 @@ export default async function handler(
   } catch (error) {
     console.error('Campaign creation error:', error);
 
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-    if (errorMessage.includes('Authorization')) {
-      return res.status(403).json({
-        success: false,
-        error: errorMessage,
-        code: 'AUTHORIZATION_ERROR',
-      });
-    }
-
-    if (errorMessage.includes('Validation') || errorMessage.includes('required')) {
-      return res.status(400).json({
-        success: false,
-        error: errorMessage,
-        code: 'VALIDATION_ERROR',
-      });
-    }
-
-    return res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      code: 'INTERNAL_ERROR',
-    });
+    const { statusCode, body } = require('@/lib/errors/handler').errorToResponse(error);
+    return res.status(statusCode).json(body);
   }
 }
