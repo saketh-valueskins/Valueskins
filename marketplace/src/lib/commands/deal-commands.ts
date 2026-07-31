@@ -6,6 +6,7 @@
 import { v4 as uuid } from 'uuid';
 import { EventBuilder } from '../events/core';
 import { PostgresEventStore } from '../events/postgres-event-store';
+import { getDispatcher } from '../events/setup';
 import {
   NegotiationStartedEvent,
   OfferSubmittedEvent,
@@ -69,6 +70,7 @@ export async function handleSubmitOfferCommand(
     .build() as OfferSubmittedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
   return { offer_id };
 }
 
@@ -106,6 +108,7 @@ export async function handleSubmitCounterOfferCommand(
     .build() as CounterOfferSubmittedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
   return { counter_offer_id };
 }
 
@@ -157,6 +160,8 @@ export async function handleAcceptOfferCommand(
     .build() as ContractGeneratedEvent;
 
   await eventStore.append([event, contractEvent]);
+  await getDispatcher().dispatch(event);
+  await getDispatcher().dispatch(contractEvent);
   return { contract_id };
 }
 
@@ -192,6 +197,7 @@ export async function handleSignContractCommand(
     .build() as ContractSignedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }
 
 // ============================================================================
@@ -226,6 +232,7 @@ export async function handleCompleteDealCommand(
     .build() as DealCompletedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }
 
 // ============================================================================
@@ -260,4 +267,5 @@ export async function handleCancelDealCommand(
     .build() as DealCancelledEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }

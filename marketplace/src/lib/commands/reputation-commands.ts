@@ -6,6 +6,7 @@
 import { v4 as uuid } from 'uuid';
 import { EventBuilder } from '../events/core';
 import { PostgresEventStore } from '../events/postgres-event-store';
+import { getDispatcher } from '../events/setup';
 import {
   ReviewSubmittedEvent,
   RatingSubmittedEvent,
@@ -69,6 +70,7 @@ export async function handleSubmitReviewCommand(
     .build() as ReviewSubmittedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
   return { review_id: command.review_id };
 }
 
@@ -131,6 +133,7 @@ export async function handleSubmitRatingCommand(
     .build() as RatingSubmittedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
   return { rating_id: command.rating_id };
 }
 
@@ -170,6 +173,7 @@ export async function handleAwardBadgeCommand(
     .build() as BadgeAwardedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
   return { badge_id: command.badge_id };
 }
 
@@ -221,4 +225,5 @@ export async function handleUpdateReputationScoreCommand(
     .build() as ReputationScoreUpdatedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }

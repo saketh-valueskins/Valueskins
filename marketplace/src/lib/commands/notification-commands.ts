@@ -6,6 +6,7 @@
 import { v4 as uuid } from 'uuid';
 import { EventBuilder } from '../events/core';
 import { PostgresEventStore } from '../events/postgres-event-store';
+import { getDispatcher } from '../events/setup';
 import {
   NotificationCreatedEvent,
   NotificationSentEvent,
@@ -107,6 +108,7 @@ export async function handleSendNotificationCommand(
     .build() as NotificationSentEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }
 
 // ============================================================================
@@ -139,6 +141,7 @@ export async function handleMarkNotificationReadCommand(
     .build() as NotificationReadEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }
 
 // ============================================================================
@@ -182,4 +185,5 @@ export async function handleUpdateUserPreferencesCommand(
     .build() as UserPreferencesUpdatedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }

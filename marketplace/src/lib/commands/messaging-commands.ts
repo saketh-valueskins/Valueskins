@@ -6,6 +6,7 @@
 import { v4 as uuid } from 'uuid';
 import { EventBuilder } from '../events/core';
 import { PostgresEventStore } from '../events/postgres-event-store';
+import { getDispatcher } from '../events/setup';
 import {
   MessageSentEvent,
   MessageDeliveredEvent,
@@ -50,6 +51,7 @@ export async function handleStartConversationCommand(
     .build() as ConversationStartedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
   return { conversation_id: command.conversation_id };
 }
 
@@ -104,6 +106,7 @@ export async function handleSendMessageCommand(
     .build() as MessageSentEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
   return { message_id: command.message_id, sent_at };
 }
 
@@ -136,6 +139,7 @@ export async function handleMarkDeliveredCommand(
     .build() as MessageDeliveredEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }
 
 // ============================================================================
@@ -169,6 +173,7 @@ export async function handleMarkReadCommand(
     .build() as MessageReadEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }
 
 // ============================================================================
@@ -201,6 +206,7 @@ export async function handleSendTypingIndicatorCommand(
     .build() as TypingIndicatorEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }
 
 // ============================================================================
@@ -237,4 +243,5 @@ export async function handleCloseConversationCommand(
     .build() as ConversationClosedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }

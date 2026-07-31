@@ -6,6 +6,7 @@
 import { v4 as uuid } from 'uuid';
 import { EventBuilder } from '../events/core';
 import { PostgresEventStore } from '../events/postgres-event-store';
+import { getDispatcher } from '../events/setup';
 import {
   EscrowCreatedEvent,
   EscrowFundedEvent,
@@ -64,6 +65,7 @@ export async function handleCreateEscrowCommand(
     .build() as EscrowCreatedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
   return { escrow_id: command.escrow_id };
 }
 
@@ -116,6 +118,8 @@ export async function handleFundEscrowCommand(
     .build() as EscrowHeldEvent;
 
   await eventStore.append([fundedEvent, heldEvent]);
+  await getDispatcher().dispatch(fundedEvent);
+  await getDispatcher().dispatch(heldEvent);
 }
 
 // ============================================================================
@@ -152,6 +156,7 @@ export async function handleRequestReleaseCommand(
     .build() as EscrowReleaseRequestedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }
 
 // ============================================================================
@@ -190,6 +195,7 @@ export async function handleReleaseEscrowCommand(
     .build() as EscrowReleasedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }
 
 // ============================================================================
@@ -228,6 +234,7 @@ export async function handleRefundEscrowCommand(
     .build() as EscrowRefundedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }
 
 // ============================================================================
@@ -268,6 +275,7 @@ export async function handleOpenDisputeCommand(
     .build() as DisputeOpenedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
   return { dispute_id };
 }
 
@@ -313,4 +321,5 @@ export async function handleResolveDisputeCommand(
     .build() as DisputeResolvedEvent;
 
   await eventStore.append([event]);
+  await getDispatcher().dispatch(event);
 }

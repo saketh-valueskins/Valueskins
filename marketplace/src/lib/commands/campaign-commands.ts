@@ -5,8 +5,9 @@
  */
 
 import { v4 as uuid } from 'uuid';
-import { EventBuilder, EventDispatcher } from '../events/core';
+import { EventBuilder } from '../events/core';
 import { PostgresEventStore } from '../events/postgres-event-store';
+import { getDispatcher } from '../events/setup';
 import {
   CampaignCreatedEvent,
   CampaignPublishedEvent,
@@ -16,7 +17,6 @@ import {
 } from '../events/domain-events';
 
 const eventStore = new PostgresEventStore();
-const eventDispatcher = new EventDispatcher();
 
 // ============================================================================
 // CREATE CAMPAIGN COMMAND
@@ -107,8 +107,8 @@ export async function handleCreateCampaignCommand(
   // Persist event
   await eventStore.append([event]);
 
-  // Dispatch to subscribers
-  await eventDispatcher.dispatch(event);
+  // Dispatch to subscribers (projections, broadcaster, logging)
+  await getDispatcher().dispatch(event);
 
   return { campaign_id };
 }
@@ -176,7 +176,7 @@ export async function handlePublishCampaignCommand(
   await eventStore.append([event]);
 
   // Dispatch
-  await eventDispatcher.dispatch(event);
+  await getDispatcher().dispatch(event);
 
   // TODO: Queue background job to generate invitations
 
@@ -238,7 +238,7 @@ export async function handleAcceptInvitationCommand(
   await eventStore.append([event]);
 
   // Dispatch
-  await eventDispatcher.dispatch(event);
+  await getDispatcher().dispatch(event);
 
   // TODO: Create subscriptions for both brand and creator to deal channels
 
@@ -295,39 +295,5 @@ export async function handleCloseCampaignCommand(
   await eventStore.append([event]);
 
   // Dispatch
-  await eventDispatcher.dispatch(event);
+  await getDispatcher().dispatch(event);
 }
-
-// ============================================================================
-// Register handlers with dispatcher
-// ============================================================================
-
-eventDispatcher.subscribe(
-  'campaign_created',
-  {
-    onEvent: async (event: any) => {
-      // On campaign creation: update search index, update analytics
-      console.log('Campaign created, updating search index:', event.data.campaign_id);
-    },
-  }
-);
-
-eventDispatcher.subscribe(
-  'campaign_published',
-  {
-    onEvent: async (event: any) => {
-      // On publish: generate invitations, notify creators
-      console.log('Campaign published, generating invitations:', event.data.campaign_id);
-    },
-  }
-);
-
-eventDispatcher.subscribe(
-  'creator_accepted_invitation',
-  {
-    onEvent: async (event: any) => {
-      // On acceptance: create deal, setup subscriptions, notify brand
-      console.log('Invitation accepted, creating deal:', event.data.deal_id);
-    },
-  }
-);
