@@ -1,68 +1,57 @@
 /**
  * Event Broadcaster
- * Publish events to Supabase Realtime WebSocket
+ * Publish events to Firebase Realtime Database
+ * Frontend listens via useFirebaseRoom hook
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { initializeApp } from 'firebase/app';
+import { getDatabase, ref, set } from 'firebase/database';
 import { DomainEvent } from '@/lib/events/core';
-import { SubscriptionManager } from './subscription-manager';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-);
+const firebaseConfig = {
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.FIREBASE_DATABASE_URL,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID,
+};
 
-const subscriptionManager = new SubscriptionManager();
+let firebaseApp: any = null;
+let database: any = null;
+
+function initFirebase() {
+  if (!firebaseApp) {
+    firebaseApp = initializeApp(firebaseConfig);
+    database = getDatabase(firebaseApp);
+  }
+  return database;
+}
 
 export async function broadcastEvent(event: DomainEvent): Promise<void> {
   try {
-    // Broadcast to shared app-sync channel (all connected clients)
-    // Frontend listens to this channel via subscribeToAppEvents()
-    const appSyncChannel = supabase.channel('app-sync');
+    const db = initFirebase();
+    if (!db) {
+      console.warn('[Broadcaster] Firebase not configured');
+      return;
+    }
 
-    const broadcastMessage = {
-      type: 'broadcast' as const,
-      event: 'realtime_event',
-      payload: {
-        event_type: getEventTypeForFrontend(event),
-        user_id: event.actor_id,
-        data: event.data,
-        timestamp: event.occurred_at,
-      },
-    };
+    // Write event to Firebase realtime database
+    // Path: /realtime/{aggregate_type}/{aggregate_id}/events/{event_id}
+    const eventPath = `realtime/${event.aggregate_type}/${event.aggregate_id}/events/${event.event_id}`;
 
-    // @ts-ignore - Supabase channel.send() type definition is incomplete
-    await appSyncChannel.send(broadcastMessage);
+    await set(ref(db, eventPath), {
+      event_type: event.event_type,
+      actor_id: event.actor_id,
+      data: event.data,
+      occurred_at: event.occurred_at,
+      timestamp: Date.now(),
+    });
 
-    console.log('[Broadcaster] Sent to app-sync:', event.event_type);
+    console.log('[Broadcaster] Firebase event written:', event.event_type, event.aggregate_type, event.aggregate_id);
   } catch (error) {
-    console.error('[Broadcaster] Error:', error);
+    console.error('[Broadcaster] Firebase error:', error);
     // Don't throw - broadcasting is non-critical
-  }
-}
-
-function getEventTypeForFrontend(event: DomainEvent): string {
-  // Map domain event types to frontend event types
-  switch (event.event_type) {
-    case 'campaign_created':
-      return 'campaign_created';
-    case 'campaign_published':
-      return 'campaign_updated';
-    case 'campaign_closed':
-      return 'campaign_updated';
-    case 'creator_accepted_invitation':
-      return 'deal_created';
-    case 'negotiation_accepted':
-    case 'contract_signed':
-    case 'deal_completed':
-    case 'deal_cancelled':
-      return 'deal_updated';
-    case 'message_sent':
-      return 'message_sent';
-    case 'message_delivered':
-    case 'message_read':
-      return 'message_sent';
-    default:
-      return event.event_type;
   }
 }
