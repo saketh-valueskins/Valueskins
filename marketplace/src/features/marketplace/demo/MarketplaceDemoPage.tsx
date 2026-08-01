@@ -18,6 +18,7 @@ import { autoMatchCreators, type AutoMatchResult } from '@/lib/autoMatch';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { apiFetch, backendUrl } from '@/lib/backend';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { subscribeToAppEvents } from '@/lib/supabase-realtime';
 
 import { sendAutoMatchNotifications } from '@/lib/autoMatchNotifications';
 import {
@@ -1307,6 +1308,53 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
     return () => unsubs.forEach(u => u());
   }, [wsConnected, wsSubscribe, setDealStates, setCampaigns, setSharedApplications, setNotifications]);
+
+  // ── Supabase Realtime subscription: cross-device sync ──
+  useEffect(() => {
+    const unsubscribe = subscribeToAppEvents((event) => {
+      console.log('[Realtime] Supabase event:', event.event_type, event.data);
+
+      switch (event.event_type) {
+        case 'campaign_created':
+        case 'campaign_updated': {
+          const campaign = event.data as Campaign;
+          if (campaign && campaign.id) {
+            setCampaigns(prev => {
+              const idx = prev.findIndex(c => c.id === campaign.id);
+              if (idx >= 0) {
+                const next = [...prev];
+                next[idx] = { ...next[idx], ...campaign };
+                return next;
+              }
+              return [...prev, campaign];
+            });
+          }
+          break;
+        }
+        case 'deal_updated': {
+          const deal = event.data as Partial<DealState>;
+          const dealId = deal.id;
+          if (deal && dealId) {
+            setDealStates(prev => ({
+              ...prev,
+              [dealId]: { ...prev[dealId], ...deal } as DealState
+            }));
+          }
+          break;
+        }
+        case 'message_sent': {
+          const msg = event.data as ChatMessage;
+          if (msg && msg.id) {
+            // Message updates handled elsewhere
+            console.log('[Realtime] Message received:', msg);
+          }
+          break;
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [setCampaigns, setDealStates]);
 
   const forceRefreshCampaigns = useCallback(async () => {
     try {
