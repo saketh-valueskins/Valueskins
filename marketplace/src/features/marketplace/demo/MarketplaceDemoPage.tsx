@@ -9,6 +9,7 @@ import { C as THEME, withAlpha } from '@/theme/colors';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getLevel, getProgressToNext } from '@/lib/levels';
+import { supabase } from '@/lib/supabase';
 import ProfileView from '@/features/profiles/ProfileView';
 import SettingsHub from '@/features/settings/SettingsHub';
 import { useReputationConfig } from '@/lib/useConfigStorage';

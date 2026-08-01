@@ -1,3 +1,4 @@
 .next
 .vercel
 VITE_ENV_SETUP.md
+.env*.local
