@@ -16,90 +16,53 @@ const subscriptionManager = new SubscriptionManager();
 
 export async function broadcastEvent(event: DomainEvent): Promise<void> {
   try {
-    // Get subscribers for this event
-    const channel = getChannelForEvent(event);
-    const subscribers = await subscriptionManager.getChannelSubscribers(
-      channel.type,
-      channel.id
-    );
+    // Broadcast to shared app-sync channel (all connected clients)
+    // Frontend listens to this channel via subscribeToAppEvents()
+    const appSyncChannel = supabase.channel('app-sync');
 
-    // Broadcast to each subscriber
-    for (const subscriber of subscribers) {
-      // Check authorization
-      if (!isAuthorized(subscriber.user_id, event)) {
-        continue;
-      }
+    const broadcastMessage = {
+      type: 'broadcast' as const,
+      event: 'realtime_event',
+      payload: {
+        event_type: getEventTypeForFrontend(event),
+        user_id: event.actor_id,
+        data: event.data,
+        timestamp: event.occurred_at,
+      },
+    };
 
-      // Publish to Supabase realtime
-      await supabase
-        .from('realtime_events')
-        .insert({
-          user_id: subscriber.user_id,
-          event_type: event.event_type,
-          aggregate_id: event.aggregate_id,
-          aggregate_type: event.aggregate_type,
-          data: event.data,
-          timestamp: new Date().toISOString(),
-        });
+    // @ts-ignore - Supabase channel.send() type definition is incomplete
+    await appSyncChannel.send(broadcastMessage);
 
-      // Also broadcast via Supabase Realtime channel
-      const realtimeChannel = supabase.channel(
-        `${channel.type}:${channel.id}:${subscriber.user_id}`
-      );
-
-      realtimeChannel.send('broadcast', {
-        event: {
-          event_id: event.event_id,
-          event_type: event.event_type,
-          aggregate_id: event.aggregate_id,
-          occurred_at: event.occurred_at,
-          data: event.data,
-        },
-      });
-    }
+    console.log('[Broadcaster] Sent to app-sync:', event.event_type);
   } catch (error) {
-    console.error('Broadcast error:', error);
+    console.error('[Broadcaster] Error:', error);
     // Don't throw - broadcasting is non-critical
   }
 }
 
-function getChannelForEvent(event: DomainEvent): { type: string; id: string } {
-  switch (event.aggregate_type) {
-    case 'campaign':
-      return { type: 'campaigns', id: event.aggregate_id };
-    case 'deal':
-      return { type: 'deals', id: event.aggregate_id };
-    case 'conversation':
-      return { type: 'messages', id: event.aggregate_id };
-    case 'notification':
-      return { type: 'notifications', id: event.data.recipient_id };
-    case 'reputation':
-      return { type: 'reputation', id: event.aggregate_id };
+function getEventTypeForFrontend(event: DomainEvent): string {
+  // Map domain event types to frontend event types
+  switch (event.event_type) {
+    case 'campaign_created':
+      return 'campaign_created';
+    case 'campaign_published':
+      return 'campaign_updated';
+    case 'campaign_closed':
+      return 'campaign_updated';
+    case 'creator_accepted_invitation':
+      return 'deal_created';
+    case 'negotiation_accepted':
+    case 'contract_signed':
+    case 'deal_completed':
+    case 'deal_cancelled':
+      return 'deal_updated';
+    case 'message_sent':
+      return 'message_sent';
+    case 'message_delivered':
+    case 'message_read':
+      return 'message_sent';
     default:
-      return { type: 'events', id: event.aggregate_id };
+      return event.event_type;
   }
-}
-
-function isAuthorized(userId: string, event: DomainEvent): boolean {
-  // Creator can see campaigns
-  if (event.aggregate_type === 'campaign') {
-    return true; // Public visibility
-  }
-
-  // User can see their own deals
-  if (event.aggregate_type === 'deal') {
-    return event.data.brand_id === userId || event.data.creator_id === userId;
-  }
-
-  // User can see their conversations
-  if (event.aggregate_type === 'conversation') {
-    return event.data.participants.includes(userId);
-  }
-
-  // User can see their notifications
-  if (event.aggregate_type === 'notification') {
-    return event.data.recipient_id === userId;
-  }
-
-  return false;
 }
