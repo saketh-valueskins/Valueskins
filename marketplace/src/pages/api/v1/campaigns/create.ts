@@ -1,22 +1,25 @@
 /**
  * POST /api/v1/campaigns/create
- * Production API endpoint following event-driven architecture
+ * Create campaign and write to Supabase (realtime sync across devices)
  *
  * Request flow:
  * 1. Validate & authorize (backend)
- * 2. Emit event (source of truth)
- * 3. Publish to realtime (subscribers notified)
+ * 2. Insert into Supabase PostgreSQL
+ * 3. Supabase realtime automatically notifies all subscribed clients
  * 4. Return response
- *
- * No database writes - only events
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { handleCreateCampaignCommand, CreateCampaignCommand } from '@/lib/commands/campaign-commands';
+import { createClient } from '@supabase/supabase-js';
 import { verifyAndGetUser } from '@/lib/auth/verify-token';
 import { checkRateLimit, getRateLimitKey } from '@/middleware/rate-limit';
 import { ValidationError, AuthenticationError, RateLimitError } from '@/lib/errors/handler';
-import { initializeEventSystemOnce } from '@/lib/events/server-init';
+
+// Initialize Supabase client (server-side with service key for admin access)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+);
 
 interface RequestBody {
   title: string;
@@ -45,8 +48,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<SuccessResponse | ErrorResponse>
 ) {
-  // Initialize event system on first request
-  initializeEventSystemOnce();
 
   // Only POST allowed
   if (req.method !== 'POST') {
@@ -113,29 +114,35 @@ export default async function handler(
       throw new ValidationError('Deadline must be a valid future date');
     }
 
-    // Create command
-    const command: CreateCampaignCommand = {
-      brand_id: user_id,
-      user_id,
-      title: body.title,
-      description: body.description,
-      target_valueSkins: body.target_valueSkins,
-      budget: body.budget,
-      deadline: body.deadline,
-      location: body.location,
-      requirements: body.requirements,
-    };
+    // Insert into Supabase (realtime will automatically notify all subscribed clients)
+    const { data, error } = await supabase
+      .from('campaigns')
+      .insert([
+        {
+          brand_id: user_id,
+          title: body.title,
+          description: body.description,
+          target_valueSkins: body.target_valueSkins,
+          budget: body.budget,
+          deadline: body.deadline,
+          location: body.location,
+          requirements: body.requirements,
+          status: 'open',
+        },
+      ])
+      .select();
 
-    // Handle command (emits event)
-    const result = await handleCreateCampaignCommand(command);
+    if (error) {
+      throw new ValidationError(`Failed to create campaign: ${error.message}`);
+    }
 
-    // Publish to realtime subscribers
-    // (Subscribers have already been notified via event dispatcher)
-    // This is just confirmation to client
+    if (!data || data.length === 0) {
+      throw new ValidationError('Campaign creation returned no data');
+    }
 
     return res.status(201).json({
       success: true,
-      campaign_id: result.campaign_id,
+      campaign_id: data[0].id,
       message: 'Campaign created successfully',
     });
   } catch (error) {
