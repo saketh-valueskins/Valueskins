@@ -1265,24 +1265,35 @@ export default function MarketplaceDemoPage(initialDealData?: {
   // Campaigns + applications — from deal sync hook (API-backed with localStorage fallback)
   const { applications: sharedApplications, setApplications: setSharedApplications, campaigns, setCampaigns } = dealSync;
 
-  // ── Poll Firebase for campaign changes (simplest cross-device sync) ──
+  // ── Supabase Realtime subscription for campaigns (cross-device sync) ──
   useEffect(() => {
-    const pollInterval = setInterval(async () => {
-      try {
-        const res = await fetch('/api/realtime/state');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.campaigns && Array.isArray(data.campaigns)) {
-            setCampaigns(data.campaigns);
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('realtime:campaigns')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'campaigns' },
+        (payload) => {
+          console.log('[Supabase Realtime] Campaign change:', payload.eventType, payload.new);
+
+          if (payload.eventType === 'INSERT') {
+            setCampaigns((prev) => [...prev, payload.new]);
+          } else if (payload.eventType === 'UPDATE') {
+            setCampaigns((prev) =>
+              prev.map((c) => (c.id === payload.new.id ? payload.new : c))
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setCampaigns((prev) => prev.filter((c) => c.id !== payload.old.id));
           }
         }
-      } catch (err) {
-        console.log('[Poll] Firebase fetch error (non-critical):', err);
-      }
-    }, 2000); // Poll every 2 seconds for live updates
+      )
+      .subscribe();
 
-    return () => clearInterval(pollInterval);
-  }, [setCampaigns]);
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [supabase]);
 
   // ── Real-time WebSocket subscription: live deal + campaign updates ──
   useEffect(() => {
