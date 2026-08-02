@@ -16,8 +16,6 @@
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
     "dompurify": "^3.0.0",
-    "firebase": "^12.15.0",
-    "firebase-admin": "^14.0.0",
     "formidable": "^3.5.4",
     "html2pdf.js": "^0.14.0",
     "ioredis": "^5.11.1",

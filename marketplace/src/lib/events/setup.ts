@@ -6,9 +6,10 @@
 import { EventDispatcher, DomainEvent } from './core';
 import { projectEvent } from '@/lib/projections';
 import { broadcastEvent } from '@/lib/realtime/broadcaster';
+import { getSupabase } from '@/lib/supabase';
 import { logger } from '@/lib/logging/logger';
 
-// In-memory denormalized state (syncs to Firebase)
+// In-memory denormalized state (synced to Supabase shared_state)
 let currentState = {
   campaigns: [] as any[],
   deals: {} as any,
@@ -18,30 +19,34 @@ let currentState = {
 };
 
 /**
- * Sync denormalized state to Firebase
+ * Sync denormalized state to the Supabase shared_state row.
+ * Granular per-key writes so concurrent device writes are never clobbered.
  */
-export async function syncStateToFirebase() {
+export async function syncStateToSupabase() {
   try {
-    const firebaseUrl = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL;
-    if (!firebaseUrl) {
-      logger.warn('Firebase URL not configured');
-      return;
+    const supabase = getSupabase();
+    const ops: Promise<unknown>[] = [];
+
+    for (const campaign of currentState.campaigns) {
+      if (campaign?.id !== undefined) {
+        ops.push(Promise.resolve(supabase.rpc('upsert_shared_state_path', { path: 'campaigns', key: String(campaign.id), value: campaign })));
+      }
+    }
+    for (const [dealKey, deal] of Object.entries(currentState.deals)) {
+      if (deal) {
+        ops.push(Promise.resolve(supabase.rpc('upsert_shared_state_path', { path: 'deals', key: dealKey, value: deal })));
+      }
+    }
+    for (const [conversationId, msgs] of Object.entries(currentState.messages)) {
+      if (Array.isArray(msgs)) {
+        ops.push(Promise.resolve(supabase.rpc('set_shared_messages', { deal_key: conversationId, value: msgs })));
+      }
     }
 
-    const url = `${firebaseUrl}/marketplace/realtime-state.json`;
-    const res = await fetch(url, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(currentState),
-    });
-
-    if (res.ok) {
-      logger.debug('State synced to Firebase');
-    } else {
-      logger.warn('Firebase sync failed', { status: res.status });
-    }
+    await Promise.all(ops);
+    logger.debug('State synced to Supabase');
   } catch (error) {
-    logger.error('Firebase sync error', error as Error);
+    logger.error('Supabase sync error', error as Error);
   }
 }
 
@@ -130,8 +135,8 @@ export function setupEventSystem(): void {
         }
       }
 
-      // Sync to Firebase after state changes
-      await syncStateToFirebase();
+      // Sync to Supabase after state changes
+      await syncStateToSupabase();
     })
   );
 

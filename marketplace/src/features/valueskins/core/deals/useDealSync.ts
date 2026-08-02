@@ -5,7 +5,7 @@
  * WHAT IT DOES:
  *   - Manages deal state using React hooks
  *   - Syncs with localStorage (offline support)
- *   - Syncs with Firebase (real-time notifications)
+ *   - Syncs with Supabase (real-time notifications)
  *   - Syncs across browser tabs via BroadcastChannel
  * CONSUMED BY: instagram/page.tsx, tiktok/page.tsx, youtube/page.tsx, linkedin/page.tsx
  *
@@ -20,7 +20,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { subscribeToAppEvents, broadcastEvent, type RealtimeEvent } from '@/lib/supabase-realtime';
+import { loadSharedState, subscribeSharedState } from '@/lib/shared-state';
 
 // ---- Types matching the demo page's DealState ----
 
@@ -271,9 +271,6 @@ function broadcastSync(): void {
 
 // ---- Main hook ----
 
-const SYNC_API = '/api/realtime/state';
-const POLL_INTERVAL_MS = 3000;
-
 export function useDealSync(userId?: number, initialData?: {
   campaigns?: Campaign[];
   dealStates?: Record<string, DealState>;
@@ -286,19 +283,8 @@ export function useDealSync(userId?: number, initialData?: {
   const [online, setOnline] = useState(false);
   const syncInProgress = useRef(false);
 
-  // Cross-device sync refs — prevent echo loops between persist and poll
+  // Cross-device sync ref — prevent echo loops when merging remote updates
   const externalUpdateRef = useRef(false);
-  const lastPersistRef = useRef('');
-  const dealStatesRef = useRef(dealStates);
-  const campaignsRef = useRef(campaigns);
-  const applicationsRef = useRef(applications);
-  const userIdRef = useRef(userId);
-  userIdRef.current = userId;
-
-  // Keep refs in sync
-  dealStatesRef.current = dealStates;
-  campaignsRef.current = campaigns;
-  applicationsRef.current = applications;
 
   // Initial load — merge SSR data with localStorage, then try backend
   useEffect(() => {
@@ -483,19 +469,17 @@ export function useDealSync(userId?: number, initialData?: {
     };
   }, []);
 
-  // ── Cross-device sync ────────────────────────────────────────────────
+  // ── Cross-device sync (Supabase shared state) ─────────────────────────
 
-  // 1. Load from shared database on mount
+  // 1. Load shared state from Supabase on mount
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
 
     async function loadShared() {
       try {
-        const res = await fetch(SYNC_API);
-        if (!res.ok || cancelled) return;
-        const data = await res.json();
-        if (!data) return;
+        const data = await loadSharedState();
+        if (cancelled || !data) return;
         externalUpdateRef.current = true;
         if (data.deals && typeof data.deals === 'object') {
           setDealStates(prev => {
@@ -506,17 +490,19 @@ export function useDealSync(userId?: number, initialData?: {
               if (local) {
                 merged[k] = { ...remote, ...local, chatMessages: local.chatMessages.length > 0 ? local.chatMessages : (remote.chatMessages || []) };
               } else {
-                merged[k] = local ?? (remote as DealState);
+                merged[k] = remote as DealState;
               }
             }
             return merged;
           });
         }
-        if (Array.isArray(data.applications)) setApplications(data.applications);
-        if (Array.isArray(data.campaigns)) {
+        const sharedApps = Object.values(data.applications || {}) as SharedApplication[];
+        if (sharedApps.length > 0) setApplications(sharedApps);
+        const sharedCampaigns = Object.values(data.campaigns || {}) as Campaign[];
+        if (sharedCampaigns.length > 0) {
           setCampaigns(prev => {
             const localIds = new Set(prev.map(c => c.id));
-            const newOnes = (data.campaigns as Campaign[]).filter(c => !localIds.has(c.id));
+            const newOnes = sharedCampaigns.filter(c => !localIds.has(c.id));
             if (newOnes.length === 0) return prev;
             return [...prev, ...newOnes];
           });
@@ -529,136 +515,51 @@ export function useDealSync(userId?: number, initialData?: {
     return () => { cancelled = true; };
   }, [userId]);
 
-  // 2. Debounced persist to shared database after local mutations
-  //    Skipped when the update originated from external sync (prevents echo)
-  useEffect(() => {
-    if (!userIdRef.current || !loaded || externalUpdateRef.current) return;
-    const payload = { deals: dealStates, campaigns, applications };
-    const str = JSON.stringify(payload);
-    if (str === lastPersistRef.current) return;
-    lastPersistRef.current = str;
-    const timer = setTimeout(() => {
-      const uid = userIdRef.current!;
-      fetch(SYNC_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ value: payload }) })
-        .then(() => {
-          broadcastEvent({
-            event_type: 'state_updated',
-            user_id: uid,
-            data: payload,
-            timestamp: new Date().toISOString(),
-          }).catch(() => {});
-        })
-        .catch(() => {});
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [dealStates, campaigns, applications, loaded]);
-
-  // 3. Poll for external changes
+  // 2. Subscribe to shared-state changes from other devices (Supabase Realtime).
+  //    The demo page writes to shared state through useSupabaseRoom; this hook
+  //    only mirrors those changes back into local state.
   useEffect(() => {
     if (!userId) return;
-    let cancelled = false;
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(SYNC_API);
-        if (!res.ok || cancelled) return;
-        const data = await res.json();
-        if (!data) return;
-        const localStr = JSON.stringify({ deals: dealStatesRef.current, campaigns: campaignsRef.current, applications: applicationsRef.current });
-        const remoteStr = JSON.stringify({ deals: data.deals || {}, campaigns: data.campaigns || [], applications: data.applications || [] });
-        if (localStr === remoteStr) return;
-        externalUpdateRef.current = true;
-        if (data.deals && typeof data.deals === 'object') {
-          setDealStates(prev => {
-            const merged = { ...prev };
-            for (const [k, v] of Object.entries(data.deals)) {
-              const remote = v as Partial<DealState>;
-              const local = merged[k];
-              if (local) {
-                merged[k] = { ...remote, ...local, chatMessages: local.chatMessages.length > 0 ? local.chatMessages : (remote.chatMessages || []) };
-              } else {
-                merged[k] = local ?? (remote as DealState);
-              }
-            }
-            return merged;
-          });
-        }
-        if (Array.isArray(data.applications)) setApplications(data.applications);
-        if (Array.isArray(data.campaigns)) {
-          setCampaigns(prev => {
-            const localIds = new Set(prev.map(c => c.id));
-            const newOnes = (data.campaigns as Campaign[]).filter(c => !localIds.has(c.id));
-            if (newOnes.length === 0) return prev;
-            return [...prev, ...newOnes];
-          });
-        }
-        setTimeout(() => { externalUpdateRef.current = false; }, 200);
-      } catch { /* no-op */ }
-    }, POLL_INTERVAL_MS);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, [userId]);
-
-  // 4. Subscribe to real-time events from other users (shared app channel)
-  useEffect(() => {
-    if (!userId) return;
-    const unsubscribe = subscribeToAppEvents((event: RealtimeEvent) => {
-      if (event.user_id === userIdRef.current) return; // skip own events
-      const data = event.data;
-      if (!data) return;
+    const unsubscribe = subscribeSharedState((data) => {
       externalUpdateRef.current = true;
-      if (event.event_type === 'state_updated' || event.event_type === 'deal_created' || event.event_type === 'deal_updated') {
-        if (data.dealKey) {
-          setDealStates(prev => {
-            const local = prev[data.dealKey];
-            const remoteUpdates = data.updates as Record<string, any> || {};
-            const merged = { ...(local || {} as DealState), ...remoteUpdates };
-            if (local && local.chatMessages.length > 0) {
-              merged.chatMessages = local.chatMessages;
-            }
-            return { ...prev, [data.dealKey]: merged };
-          });
-        } else if (data.deals) {
-          setDealStates(prev => {
-            const merged = { ...prev };
-            for (const [k, v] of Object.entries(data.deals)) {
-              const remote = v as Partial<DealState>;
-              const local = merged[k];
-              if (local) {
-                merged[k] = { ...remote, ...local, chatMessages: local.chatMessages.length > 0 ? local.chatMessages : (remote.chatMessages || []) };
-              } else {
-                merged[k] = local ?? (remote as DealState);
-              }
-            }
-            return merged;
-          });
-        }
-        if (data.campaigns && Array.isArray(data.campaigns)) {
-          setCampaigns(prev => {
-            const prevIds = new Set(prev.map(c => c.id));
-            const newOnes = (data.campaigns as Campaign[]).filter(c => !prevIds.has(c.id));
-            if (newOnes.length === 0) return prev;
-            return [...prev, ...newOnes];
-          });
-        }
-        if (data.applications && Array.isArray(data.applications)) {
-          setApplications(prev => {
-            const prevIds = new Set(prev.map(a => a.id));
-            const newOnes = (data.applications as SharedApplication[]).filter(a => !prevIds.has(a.id));
-            if (newOnes.length === 0) return prev;
-            return [...prev, ...newOnes];
-          });
-        }
-      }
-      if (event.event_type === 'campaign_created' && data.campaign) {
-        setCampaigns(prev => [...prev, data.campaign]);
-      }
-      if (event.event_type === 'application_received' && data.application) {
-        setApplications(prev => [...prev, data.application]);
-      }
-      if (event.event_type === 'message_sent' && data.dealKey && data.message) {
+      if (data.deals && typeof data.deals === 'object') {
         setDealStates(prev => {
-          const deal = prev[data.dealKey];
-          if (!deal) return prev;
-          return { ...prev, [data.dealKey]: { ...deal, chatMessages: [...deal.chatMessages, data.message] } };
+          const merged = { ...prev };
+          for (const [k, v] of Object.entries(data.deals)) {
+            const remote = v as Partial<DealState>;
+            const local = merged[k];
+            if (local) {
+              merged[k] = { ...remote, ...local, chatMessages: local.chatMessages.length > 0 ? local.chatMessages : (remote.chatMessages || []) };
+            } else {
+              merged[k] = remote as DealState;
+            }
+          }
+          return merged;
+        });
+      }
+      const sharedApps = Object.values(data.applications || {}) as SharedApplication[];
+      if (sharedApps.length > 0) setApplications(sharedApps);
+      const sharedCampaigns = Object.values(data.campaigns || {}) as Campaign[];
+      if (sharedCampaigns.length > 0) {
+        setCampaigns(prev => {
+          const localIds = new Set(prev.map(c => c.id));
+          const newOnes = sharedCampaigns.filter(c => !localIds.has(c.id));
+          if (newOnes.length === 0) return prev;
+          return [...prev, ...newOnes];
+        });
+      }
+      if (data.messages && typeof data.messages === 'object') {
+        setDealStates(prev => {
+          let updated = prev;
+          for (const [dealKey, msgs] of Object.entries(data.messages)) {
+            const existing = updated[dealKey];
+            if (!existing || !Array.isArray(msgs) || msgs.length === 0) continue;
+            const localIds = new Set(existing.chatMessages.map(m => m.id));
+            const newMsgs = (msgs as ChatMessage[]).filter(m => !localIds.has(m.id));
+            if (newMsgs.length === 0) continue;
+            updated = { ...updated, [dealKey]: { ...existing, chatMessages: [...existing.chatMessages, ...newMsgs] } };
+          }
+          return updated;
         });
       }
       setTimeout(() => { externalUpdateRef.current = false; }, 200);
