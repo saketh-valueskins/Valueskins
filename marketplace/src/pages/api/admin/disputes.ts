@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db-pool';
 import { verifyAdminSession } from './login';
-import { getDealPDFVersions } from '@/lib/firebase-storage';
+import { getDealPDFVersions } from '@/lib/supabase-storage';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {

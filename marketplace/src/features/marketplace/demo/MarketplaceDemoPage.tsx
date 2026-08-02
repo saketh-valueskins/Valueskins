@@ -3,18 +3,17 @@ import { C as THEME, withAlpha } from '@/theme/colors';
 // ARCHITECTURE: See ARCHITECTURE_GUIDE.txt for codebase overview
 // FILE PURPOSE: Creator-Brand Marketplace demo page - shows creator & brand workflow
 // ROLE IN SYSTEM: Frontend UI component that displays marketplace, deals, chat, script negotiation
-// DATA SOURCE: useDealSync.ts (local state) + api.ts (backend calls) + Firebase (real-time)
+// DATA SOURCE: useDealSync.ts (local state) + api.ts (backend calls) + Supabase (real-time)
 // OUTPUT: Interactive UI where creators browse offers and negotiate with brands
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { getLevel, getProgressToNext } from '@/lib/levels';
-import { supabase } from '@/lib/supabase';
 import ProfileView from '@/features/profiles/ProfileView';
 import SettingsHub from '@/features/settings/SettingsHub';
 import { useReputationConfig } from '@/lib/useConfigStorage';
 import { useDealSync, type DealState, type DealRoomPhase, type SharedApplication, type Campaign, type ChatMessage } from '@/features/valueskins/core/deals/useDealSync';
-import { useFirebaseRoom } from '@/features/valueskins/core/realtime/useFirebaseRoom';
+import { useSupabaseRoom } from '@/features/valueskins/core/realtime/useSupabaseRoom';
 import { autoMatchCreators, type AutoMatchResult } from '@/lib/autoMatch';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { apiFetch, backendUrl } from '@/lib/backend';
@@ -233,7 +232,7 @@ type Opportunity = {
 };
 
 // Opportunities vary by profession — different brands want different skills
-// No hardcoded opportunities — only real brand-created campaigns from Firebase appear
+// No hardcoded opportunities — only real brand-created campaigns from shared state appear
 
 
 // Channels — skin-gated group DMs. These appear alongside regular DMs with a ValueSkin badge.
@@ -719,20 +718,20 @@ export default function MarketplaceDemoPage(initialDealData?: {
     dealStates: initialDealData.initialDealStates,
     applications: initialDealData.initialApplications,
   } : undefined);
-  // Firebase sync — all users share one global namespace
-  const { state: firebaseState, syncing: firebaseSyncing, createCampaign: firebaseCreateCampaign, updateDeal: firebaseUpdateDeal, addMessage: firebaseAddMessage, sendNotification: firebaseSendNotification, createApplication: firebaseCreateApplication } = useFirebaseRoom(null, null, '');
+  // Shared state — all users share one global namespace (Supabase realtime)
+  const { state: sharedState, syncing: sharedSyncing, createCampaign: sharedCreateCampaign, updateDeal: sharedUpdateDeal, addMessage: sharedAddMessage, sendNotification: sharedSendNotification, createApplication: sharedCreateApplication } = useSupabaseRoom(null, null, '');
   const { dealStates, setDealStates, getOrCreateDeal, updateDeal: localUpdateDeal } = dealSync;
 
   // Ref to bridge activeOpportunities declaration order (defined later at line ~2395)
   const activeOppsRef = useRef<any[]>([]);
 
-  // CRITICAL FIX: Sync Firebase state back to local state for real-time multi-device updates
+  // CRITICAL FIX: Sync shared state back to local state for real-time multi-device updates
   useEffect(() => {
-    if (firebaseState.deals && Object.keys(firebaseState.deals).length > 0) {
+    if (sharedState.deals && Object.keys(sharedState.deals).length > 0) {
       setDealStates(prev => {
         const updated: Record<string, DealState> = { ...prev };
-        for (const [key, fbDeal] of Object.entries(firebaseState.deals)) {
-          // Merge Firebase state with local state, Firebase takes precedence
+        for (const [key, fbDeal] of Object.entries(sharedState.deals)) {
+          // Merge shared state with local state, shared takes precedence
           updated[key] = {
             ...(prev[key] || ({} as DealState)),
             ...((fbDeal as Partial<DealState>) || {}),
@@ -741,7 +740,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
         return updated;
       });
     }
-  }, [firebaseState.deals, setDealStates]);
+  }, [sharedState.deals, setDealStates]);
 
   // Auto-scroll deal room into view when it opens
   useEffect(() => {
@@ -757,9 +756,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const brandChatEndRef = useRef<HTMLDivElement>(null);
   // Track previous brandDealKey to reset notifications when switching creators
 
-  // Sync Firebase messages back to local deal state — merge, don't replace
+  // Sync shared messages back to local deal state — merge, don't replace
   useEffect(() => {
-    if (!firebaseState.messages) return;
+    if (!sharedState.messages) return;
     let dealKey: string | null = null;
     if (marketplaceRole === 'creator' && selectedMarketplaceSkin && negotiatingOpp !== null) {
       const matchingCreator = backendCreators.find((c: any) => c.valueSkin === selectedMarketplaceSkin);
@@ -774,19 +773,19 @@ export default function MarketplaceDemoPage(initialDealData?: {
     }
 
     if (!dealKey) return;
-    const fbMessages = firebaseState.messages[dealKey] || [];
+    const fbMessages = sharedState.messages[dealKey] || [];
     if (fbMessages.length > 0) {
       setDealStates(prev => {
         const existing = prev[dealKey];
         if (!existing) return { ...prev, [dealKey]: { intent: 'campaign' as const, phase: 'chatroom' as const, briefFilled: true, briefTitle: '', offerAmount: '', counterAmount: '', brandResponseAmount: '', chatMessages: fbMessages as ChatMessage[], chatInput: '', performanceClause: false, advancePercent: 50, approvalPercent: 50 } };
-        // Merge: use local messages as base, append any from Firebase not already present
+        // Merge: use local messages as base, append any from shared state not already present
         const localMap = new Set(existing.chatMessages.map(m => m.id));
         const newFromFb = (fbMessages as ChatMessage[]).filter(m => !localMap.has(m.id));
         if (newFromFb.length === 0) return prev;
         return { ...prev, [dealKey]: { ...existing, chatMessages: [...existing.chatMessages, ...newFromFb] } };
       });
     }
-  }, [firebaseState.messages, selectedMarketplaceSkin, negotiatingOpp, marketplaceRole, negotiatingCreator, brandCurrentOppIndex, setDealStates, backendCreators]);
+  }, [sharedState.messages, selectedMarketplaceSkin, negotiatingOpp, marketplaceRole, negotiatingCreator, brandCurrentOppIndex, setDealStates, backendCreators]);
 
   // Sync payment milestones + creator deal lifecycle from dealStates to local UI state (real-time)
   useEffect(() => {
@@ -826,8 +825,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
   const updateDeal = useCallback((key: string, updates: Partial<DealState>) => {
     localUpdateDeal(key, updates);
-    firebaseUpdateDeal(key, updates);
-  }, [localUpdateDeal, firebaseUpdateDeal]);
+    sharedUpdateDeal(key, updates);
+  }, [localUpdateDeal, sharedUpdateDeal]);
   const dealsLoaded = dealSync.loaded;
 
   // Active deal key — STABLE across creator/brand for two-device sync
@@ -887,7 +886,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
         accepted: 'Deal accepted',
         softhold: 'Escrow hold',
       };
-      firebaseSendNotification(opp?.brand || 'Brand', 'application', `${phaseNames[p]} · ${opp?.brand} & you are now at: ${phaseNames[p]}`);
+      sharedSendNotification(opp?.brand || 'Brand', 'application', `${phaseNames[p]} · ${opp?.brand} & you are now at: ${phaseNames[p]}`);
       setPurchaseToast(`Deal moved to: ${phaseNames[p]}`);
       setTimeout(() => setPurchaseToast(null), 2500);
     }
@@ -1220,7 +1219,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [filterBarterOnly, setFilterBarterOnly] = useState(false);
   const [filterOppsBarterOnly, setFilterOppsBarterOnly] = useState(false);
 
-  const [firebaseNotifications, setFirebaseNotifications] = useState<Array<{id: string; type: 'campaign' | 'application' | 'message'; message: string; createdAt: number; read: boolean}>>([]);
+  const [sharedNotifications, setSharedNotifications] = useState<Array<{id: string; type: 'campaign' | 'application' | 'message'; message: string; createdAt: number; read: boolean}>>([]);
 
   // Brand field filter — which ValueSkin profession the brand wants to target
   const [brandSearchQuery, setBrandSearchQuery] = useState('');
@@ -1265,36 +1264,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
   // Campaigns + applications — from deal sync hook (API-backed with localStorage fallback)
   const { applications: sharedApplications, setApplications: setSharedApplications, campaigns, setCampaigns } = dealSync;
-
-  // ── Supabase Realtime subscription for campaigns (cross-device sync) ──
-  useEffect(() => {
-    if (!supabase) return;
-
-    const channel = supabase
-      .channel('realtime:campaigns')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'campaigns' },
-        (payload) => {
-          console.log('[Supabase Realtime] Campaign change:', payload.eventType, payload.new);
-
-          if (payload.eventType === 'INSERT') {
-            setCampaigns((prev) => [...prev, payload.new]);
-          } else if (payload.eventType === 'UPDATE') {
-            setCampaigns((prev) =>
-              prev.map((c) => (c.id === payload.new.id ? payload.new : c))
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setCampaigns((prev) => prev.filter((c) => c.id !== payload.old.id));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [supabase]);
 
   // ── Real-time WebSocket subscription: live deal + campaign updates ──
   useEffect(() => {
@@ -1341,21 +1310,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
   const forceRefreshCampaigns = useCallback(async () => {
     try {
-      // 1. Push local campaigns to shared DB (so old localStorage-only campaigns appear)
-      if (campaigns.length > 0) {
-        const postRes = await fetch('/api/realtime/state', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ value: { campaigns, deals: {}, messages: {}, applications: [], notifications: [] } }),
-        });
-        console.log('Push to Firebase:', postRes.status, postRes.statusText);
-      }
-      // 2. Pull latest from shared DB (update in-place, don't append-only)
+      // Pull latest from shared DB (update in-place, don't append-only).
+      // Writes to shared state go through useSupabaseRoom's granular upserts.
       const res = await fetch('/api/realtime/state');
-      console.log('Fetch from Firebase:', res.status, res.statusText);
       if (res.ok) {
         const data = await res.json();
-        console.log('Firebase data:', data);
         if (Array.isArray(data.campaigns)) {
           setCampaigns(prev => {
             const dbCampaigns = data.campaigns as Campaign[];
@@ -1372,7 +1331,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
             });
 
             if (!hasChanges) return prev;
-            console.log('Updated campaigns from Firebase:', Array.from(localMap.values()).length);
             return Array.from(localMap.values());
           });
         }
@@ -1380,7 +1338,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
     } catch (e) {
       console.error('Failed to refresh campaigns:', e);
     }
-  }, [campaigns, setCampaigns]);
+  }, [setCampaigns]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -1388,13 +1346,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
     setRefreshing(false);
   }, [fetchAllCreators, forceRefreshCampaigns]);
 
-  // Merge Firebase campaigns into local state (cross-device sync)
+  // Merge shared campaigns into local state (cross-device sync)
   // Updates existing campaigns and adds new ones for real-time visibility
   // Also persist to localStorage for cross-session persistence
   useEffect(() => {
-    if (firebaseState.campaigns.length > 0) {
+    if (sharedState.campaigns.length > 0) {
       setCampaigns(prev => {
-        const fbCampaigns = firebaseState.campaigns as Campaign[];
+        const fbCampaigns = sharedState.campaigns as Campaign[];
         const localMap = new Map(prev.map(c => [c.id, c]));
 
         // Update existing or add new campaigns
@@ -1414,7 +1372,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
         return updated;
       });
     }
-  }, [firebaseState.campaigns, setCampaigns]);
+  }, [sharedState.campaigns, setCampaigns]);
 
   // On mount, load campaigns from localStorage for persistence across sessions
   useEffect(() => {
@@ -1431,25 +1389,17 @@ export default function MarketplaceDemoPage(initialDealData?: {
     }
   }, []);
 
-  // Auto-refresh campaigns from shared DB every 10s (cross-device sync)
   useEffect(() => {
-    const interval = setInterval(() => {
-      forceRefreshCampaigns();
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [forceRefreshCampaigns]);
-
-  useEffect(() => {
-    // Firebase always active
-    if (firebaseState.applications.length > 0) {
-      setSharedApplications(firebaseState.applications as SharedApplication[]);
+    // Shared state always active
+    if (sharedState.applications.length > 0) {
+      setSharedApplications(sharedState.applications as SharedApplication[]);
     }
-  }, [firebaseState.applications, setSharedApplications]);
+  }, [sharedState.applications, setSharedApplications]);
 
-  // Sync deal states from Firebase (other device's deal updates appear here)
+  // Sync deal states from shared state (other device's deal updates appear here)
   useEffect(() => {
-    // Firebase always active
-    const fbDeals = firebaseState.deals;
+    // Shared state always active
+    const fbDeals = sharedState.deals;
     if (Object.keys(fbDeals).length > 0) {
       setDealStates(prev => {
         const merged = { ...prev };
@@ -1459,11 +1409,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
         return merged;
       });
     }
-  }, [firebaseState.deals]);
+  }, [sharedState.deals]);
 
-  // Sync Firebase messages into deal chatMessages
+  // Sync shared messages into deal chatMessages
   useEffect(() => {
-    const fbMessages = firebaseState.messages;
+    const fbMessages = sharedState.messages;
     if (Object.keys(fbMessages).length > 0) {
       setDealStates(prev => {
         const merged: Record<string, DealState> = { ...prev };
@@ -1477,14 +1427,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
         return merged;
       });
     }
-  }, [firebaseState.messages]);
+  }, [sharedState.messages]);
 
-  // Sync Firebase notifications
+  // Sync shared notifications
   useEffect(() => {
-    // Firebase always active
-    if (firebaseState.notifications.length > 0) {
-      setFirebaseNotifications(firebaseState.notifications);
-      const newNotifs = firebaseState.notifications.filter((n: any) => !n.read);
+    // Shared state always active
+    if (sharedState.notifications.length > 0) {
+      setSharedNotifications(sharedState.notifications);
+      const newNotifs = sharedState.notifications.filter((n: any) => !n.read);
       if (newNotifs.length > 0) {
         newNotifs.forEach((n: any) => {
           const msg = n.type === 'campaign' ? `New campaign: ${n.message}` : n.type === 'application' ? `New application: ${n.message}` : `Message: ${n.message}`;
@@ -1495,9 +1445,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
         });
       }
     }
-  }, [firebaseState.notifications]);
+  }, [sharedState.notifications]);
 
-  // No seeded campaigns or applications — only real data from Firebase
+  // No seeded campaigns or applications — only real data from shared state
 
   const [marketplaceTab, setMarketplaceTab] = useState<'creators' | 'campaigns' | 'applications' | 'sent'>('creators');
   // All creators across all professions — used for continuous live auto-matching
@@ -1603,7 +1553,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   };
   const persistApplications = (updated: SharedApplication[]) => {
     setSharedApplications(updated);
-    updated.forEach(a => firebaseCreateApplication(a));
+    updated.forEach(a => sharedCreateApplication(a));
   };
   const downloadDealReport = useCallback(async (dealKey: string) => {
     const deal = dealStates[dealKey];
@@ -2358,10 +2308,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
     if (bothApproved) {
       payload.scriptApprovedAt = new Date().toISOString();
       payload.scriptStatus = 'approved';
-      firebaseSendNotification(otherParty, 'application', 'Both parties approved the script! Ready to move to deliverables.');
+      sharedSendNotification(otherParty, 'application', 'Both parties approved the script! Ready to move to deliverables.');
       setPurchaseToast('Script approved by both parties');
     } else {
-      firebaseSendNotification(otherParty, 'application', `${isCreatorRole ? 'Creator' : 'Brand'} approved the script. Awaiting your approval to proceed.`);
+      sharedSendNotification(otherParty, 'application', `${isCreatorRole ? 'Creator' : 'Brand'} approved the script. Awaiting your approval to proceed.`);
       setPurchaseToast(`Script approved by ${isCreatorRole ? 'you' : 'brand'}`);
     }
     updateDeal(activeDealKey, payload);
@@ -2459,10 +2409,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
     if (newApps.length > 0) {
       const updated = [...sharedApplications, ...newApps];
       setSharedApplications(updated);
-      updated.forEach(a => firebaseCreateApplication(a));
+      updated.forEach(a => sharedCreateApplication(a));
     }
     hasBackfilledApps.current = true;
-  }, [dealStates, liveCampaigns, sharedApplications, setSharedApplications, firebaseCreateApplication]);
+  }, [dealStates, liveCampaigns, sharedApplications, setSharedApplications, sharedCreateApplication]);
 
   // Continuous live auto-matching: recomputes whenever campaigns or allCreators change
   const campaignMatches = useMemo(() => {
@@ -3619,7 +3569,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                               const rejectMsg = { id: Date.now(), sender: 'creator' as const, text: 'Creator declined the offer', time: timeStr, isoTime: now.toISOString(), seen: false };
                                               setChatMessages(prev => [...prev, rejectMsg]);
-                                              firebaseAddMessage(activeDealKey || '', rejectMsg);
+                                              sharedAddMessage(activeDealKey || '', rejectMsg);
                                               setDealRoomPhase('rejected');
                                               updateDeal(activeDealKey, { phase: 'rejected' });
                                             }
@@ -3656,7 +3606,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                             const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator confirmed agreement at $${parseInt(dealCounterAmount).toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                             setChatMessages(prev => [...prev, acceptMsg]);
-                                            firebaseAddMessage(activeDealKey || '', acceptMsg);
+                                            sharedAddMessage(activeDealKey || '', acceptMsg);
                                             updateDeal(activeDealKey!, { phase: 'accepted' });
                                             setDealRoomPhase('accepted');
                                           }}
@@ -4351,7 +4301,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             const msgSender: 'brand' | 'creator' = (marketplaceRole as 'brand' | 'creator') === 'brand' ? 'brand' : 'creator';
                                             const newMsg = { id: Date.now(), sender: msgSender, text: chatInput.trim(), time: timeStr, isoTime: isoNow, seen: false };
                                             setChatMessages(prev => [...prev, newMsg]);
-                                            firebaseAddMessage(activeDealKey ?? '', newMsg);
+                                            sharedAddMessage(activeDealKey ?? '', newMsg);
                                             setChatInput('');
                                           }} style={{ display: 'flex', gap: '4px', padding: '6px', borderTop: `1px solid ${C.border}` }}>
                                             <input
@@ -4512,7 +4462,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                                 const counterMsg = { id: Date.now(), sender: 'creator' as const, text: `Counter-offer: $${creatorAsk.toLocaleString()} (brand offered $${brandOffer.toLocaleString()})`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                                 setChatMessages(prev => [...prev, counterMsg]);
-                                                firebaseAddMessage(activeDealKey ?? '', counterMsg);
+                                                sharedAddMessage(activeDealKey ?? '', counterMsg);
                                                 // Write counter amount + phase + chat messages to shared deal state
                                                 // so brand sees the update in real-time under Sent Deals
                                                 if (activeDealKey) {
@@ -4521,7 +4471,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     counterAmount: String(creatorAsk),
                                                   });
                                                 }
-                                                firebaseSendNotification(opp?.brand || 'Brand', 'message', `Creator countered: $${creatorAsk.toLocaleString()} (you offered $${brandOffer.toLocaleString()})`);
+                                                sharedSendNotification(opp?.brand || 'Brand', 'message', `Creator countered: $${creatorAsk.toLocaleString()} (you offered $${brandOffer.toLocaleString()})`);
                                                 setPurchaseToast(`Counter sent: $${creatorAsk.toLocaleString()}`);
                                                 setTimeout(() => setPurchaseToast(null), 2000);
                                               }}
@@ -4608,7 +4558,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                               const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator accepted final offer: $${parseInt(dealOfferAmount || '0').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                               setChatMessages(prev => [...prev, acceptMsg]);
-                                              firebaseAddMessage(activeDealKey || '', acceptMsg);
+                                              sharedAddMessage(activeDealKey || '', acceptMsg);
                                               updateDeal(activeDealKey, { phase: 'accepted', offerAmount: dealOfferAmount });
                                             }
                                             setPurchaseToast('Deal accepted');
@@ -4625,7 +4575,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                               const declineMsg = { id: Date.now(), sender: 'creator' as const, text: 'Creator declined the final offer.', time: timeStr, isoTime: now.toISOString(), seen: false };
                                               setChatMessages(prev => [...prev, declineMsg]);
-                                              firebaseAddMessage(activeDealKey || '', declineMsg);
+                                              sharedAddMessage(activeDealKey || '', declineMsg);
                                               updateDeal(activeDealKey, { phase: 'rejected' });
                                             }
                                             setNegotiatingOpp(null);
@@ -4873,7 +4823,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                       deliverableStatuses: deliverableStatuses,
                                                       deliverableLinks: deliverableLinks,
                                                     });
-                                                    firebaseSendNotification(opp?.brand || 'Brand', 'application', `Deliverables submitted: ${agreedAmt.toLocaleString()} – Advance milestone released. Awaiting approval.`);
+                                                    sharedSendNotification(opp?.brand || 'Brand', 'application', `Deliverables submitted: ${agreedAmt.toLocaleString()} – Advance milestone released. Awaiting approval.`);
                                                   }
                                                   setPurchaseToast(`Submitted for review — $${Math.round(agreedAmt * advancePercent / 100).toLocaleString()} released, $${Math.round(agreedAmt * approvalPercent / 100).toLocaleString()} pending approval`);
                                                   setTimeout(() => setPurchaseToast(null), 4000);
@@ -5559,29 +5509,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               setCampaigns(updated);
                               // Save to localStorage for persistence
                               localStorage.setItem('valueskins_campaigns', JSON.stringify(updated));
-                              firebaseCreateCampaign(newC);
-                              // Force immediate persistence to realtime API for cross-device sync
-                              const persistPromise = fetch('/api/realtime/state', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  value: {
-                                    deals: firebaseState.deals,
-                                    campaigns: [...(firebaseState.campaigns || []), newC],
-                                    messages: firebaseState.messages,
-                                    applications: firebaseState.applications,
-                                    notifications: firebaseState.notifications,
-                                  }
-                                })
-                              }).catch(() => {});
-                              // After persistence, trigger immediate refetch on all other sessions
-                              persistPromise.then(() => {
-                                setTimeout(() => {
-                                  fetch('/api/realtime/state').then(r => r.json()).then(data => {
-                                    // Campaigns are now in DB, ready for other users to fetch
-                                  }).catch(() => {});
-                                }, 50);
-                              });
+                              sharedCreateCampaign(newC);
                               // Also save to PostgreSQL so it's visible across devices
                               const demoUuid = localStorage.getItem('vs_demo_user_id') || (() => {
                                 const u = crypto.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
@@ -5801,7 +5729,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                           <div style={{ display:'flex', gap:'8px' }}>
                             <button onClick={() => { setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'11px', color:C.text, fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
-                            <button onClick={() => { batchSendCreatorIds.forEach(idx => { const match = batchMatches[idx]; const campaign = campaigns.find(c => c.id === lastCreatedCampaignId); const oppIdx = activeOpportunities.findIndex(o => o.brand === campaign?.title); if (campaign) { const app: SharedApplication = { id:Date.now() + idx, campaignId:lastCreatedCampaignId ?? 0, campaignTitle:campaign.title || 'Campaign', creatorProfession:match.creatorProfession || '', creatorHandle:match.creatorHandle || '', creatorName:match.creatorName, status:'invited' as SharedApplication['status'], appliedAt:new Date().toISOString(), opportunityIndex: oppIdx >= 0 ? oppIdx : 0 }; firebaseCreateApplication(app); firebaseSendNotification(match.creatorHandle || '', 'campaign', `${profileName} invited you to: ${campaign.title || 'Campaign'}`); } }); setPurchaseToast(`Invitations sent to ${batchSendCreatorIds.size} creator${batchSendCreatorIds.size !== 1 ? 's' : ''}`); setTimeout(() => setPurchaseToast(null), 3000); setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:batchSendCreatorIds.size > 0 ? C.primary : C.border, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'13px', cursor: batchSendCreatorIds.size > 0 ? 'pointer' : 'not-allowed', opacity: batchSendCreatorIds.size > 0 ? 1 : 0.5 }}>Send to {batchSendCreatorIds.size} Creator{batchSendCreatorIds.size !== 1 ? 's' : ''}</button>
+                            <button onClick={() => { batchSendCreatorIds.forEach(idx => { const match = batchMatches[idx]; const campaign = campaigns.find(c => c.id === lastCreatedCampaignId); const oppIdx = activeOpportunities.findIndex(o => o.brand === campaign?.title); if (campaign) { const app: SharedApplication = { id:Date.now() + idx, campaignId:lastCreatedCampaignId ?? 0, campaignTitle:campaign.title || 'Campaign', creatorProfession:match.creatorProfession || '', creatorHandle:match.creatorHandle || '', creatorName:match.creatorName, status:'invited' as SharedApplication['status'], appliedAt:new Date().toISOString(), opportunityIndex: oppIdx >= 0 ? oppIdx : 0 }; sharedCreateApplication(app); sharedSendNotification(match.creatorHandle || '', 'campaign', `${profileName} invited you to: ${campaign.title || 'Campaign'}`); } }); setPurchaseToast(`Invitations sent to ${batchSendCreatorIds.size} creator${batchSendCreatorIds.size !== 1 ? 's' : ''}`); setTimeout(() => setPurchaseToast(null), 3000); setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:batchSendCreatorIds.size > 0 ? C.primary : C.border, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'13px', cursor: batchSendCreatorIds.size > 0 ? 'pointer' : 'not-allowed', opacity: batchSendCreatorIds.size > 0 ? 1 : 0.5 }}>Send to {batchSendCreatorIds.size} Creator{batchSendCreatorIds.size !== 1 ? 's' : ''}</button>
                           </div>
                         </div>
                       </div>

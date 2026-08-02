@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db-pool';
 import { generateDealPDF } from '@/lib/pdf-generator';
-import { uploadDealPDF, getDealPDFVersions } from '@/lib/firebase-storage';
+import { uploadDealPDF, getDealPDFVersions } from '@/lib/supabase-storage';
 import { getSessionUserId } from '@/lib/session';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -81,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Generate PDF
       const pdfBuffer = await generateDealPDF(deal, messages, deliverables);
 
-      // Upload to Firebase
+      // Upload to Supabase
       const filepath = await uploadDealPDF(dealId, pdfBuffer);
 
       // Get all versions
