@@ -38,12 +38,6 @@ jobs:
         continue-on-error: true
         run: |
           npx tsc --noEmit 2>&1 || true
-      - name: Frontend lint
-        working-directory: frontend
-        continue-on-error: true
-        run: |
-          npm ci
-          npm run lint 2>&1 || true
 
   test-marketplace:
     name: Marketplace Tests

@@ -1,4 +1,5 @@
 import { getSupabase } from './supabase';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export type SharedCollections = 'deals' | 'campaigns' | 'messages' | 'applications' | 'notifications' | 'events';
 
@@ -89,18 +90,45 @@ export async function deleteSharedKey(path: SharedCollections, key: string): Pro
   }
 }
 
+// Single refcounted channel for all shared-state subscribers. Supabase's
+// channel() returns a cached channel for an existing topic, so a second
+// subscriber calling .on() on the already-subscribed channel would throw
+// ("cannot add postgres_changes callbacks ... after subscribe()"). Reuse one
+// channel and fan out to every registered listener instead.
+let sharedChannel: RealtimeChannel | null = null;
+const sharedListeners = new Set<(state: SharedState) => void>();
+let sharedChannelRefCount = 0;
+
 export function subscribeSharedState(onChange: (state: SharedState) => void): () => void {
-  const channel = getSupabase()
-    .channel('shared-state-realtime')
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'shared_state' },
-      (payload: any) => {
-        onChange(emptyFallback(payload.new?.state));
-      }
-    )
-    .subscribe();
+  sharedListeners.add(onChange);
+  sharedChannelRefCount++;
+
+  if (!sharedChannel) {
+    sharedChannel = getSupabase()
+      .channel('shared-state-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'shared_state' },
+        (payload: any) => {
+          const state = emptyFallback(payload.new?.state);
+          sharedListeners.forEach((listener) => {
+            try {
+              listener(state);
+            } catch (error) {
+              console.error('[Realtime] shared-state listener error:', error);
+            }
+          });
+        }
+      )
+      .subscribe();
+  }
+
   return () => {
-    getSupabase().removeChannel(channel);
+    sharedListeners.delete(onChange);
+    sharedChannelRefCount--;
+    if (sharedChannelRefCount === 0 && sharedChannel) {
+      getSupabase().removeChannel(sharedChannel);
+      sharedChannel = null;
+    }
   };
 }
