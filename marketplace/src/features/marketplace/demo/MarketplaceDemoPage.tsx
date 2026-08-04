@@ -105,44 +105,7 @@ const DEAL_LABELS = {
   c2c_collab: { proposer: 'Initiator', receiver: 'Collaborator' },
 } as const;
 
-const COUNTRY_CURRENCY_MAP: Record<string, { code: string; symbol: string }> = {
-  'India': { code: 'INR', symbol: '₹' },
-  'United States': { code: 'USD', symbol: '$' },
-  'United Kingdom': { code: 'GBP', symbol: '£' },
-  'Canada': { code: 'CAD', symbol: 'CA$' },
-  'Australia': { code: 'AUD', symbol: 'A$' },
-  'Singapore': { code: 'SGD', symbol: 'S$' },
-  'Japan': { code: 'JPY', symbol: '¥' },
-  'South Korea': { code: 'KRW', symbol: '₩' },
-  'Germany': { code: 'EUR', symbol: '€' },
-  'France': { code: 'EUR', symbol: '€' },
-  'Italy': { code: 'EUR', symbol: '€' },
-  'Spain': { code: 'EUR', symbol: '€' },
-  'Netherlands': { code: 'EUR', symbol: '€' },
-  'Brazil': { code: 'BRL', symbol: 'R$' },
-  'Mexico': { code: 'MXN', symbol: 'MX$' },
-  'United Arab Emirates': { code: 'AED', symbol: 'د.إ' },
-  'Sweden': { code: 'SEK', symbol: 'kr' },
-  'Norway': { code: 'NOK', symbol: 'kr' },
-  'Denmark': { code: 'DKK', symbol: 'kr' },
-  'New Zealand': { code: 'NZD', symbol: 'NZ$' },
-  'Nigeria': { code: 'NGN', symbol: '₦' },
-  'Kenya': { code: 'KES', symbol: 'KSh' },
-  'South Africa': { code: 'ZAR', symbol: 'R' },
-  'Indonesia': { code: 'IDR', symbol: 'Rp' },
-  'Philippines': { code: 'PHP', symbol: '₱' },
-  'Vietnam': { code: 'VND', symbol: '₫' },
-  'Thailand': { code: 'THB', symbol: '฿' },
-  'Malaysia': { code: 'MYR', symbol: 'RM' },
-  'Pakistan': { code: 'PKR', symbol: '₨' },
-  'Bangladesh': { code: 'BDT', symbol: '৳' },
-  'Sri Lanka': { code: 'LKR', symbol: 'Rs' },
-  'Nepal': { code: 'NPR', symbol: 'Rs' },
-};
-
-function currencyForCountry(country: string): { code: string; symbol: string } {
-  return COUNTRY_CURRENCY_MAP[country] || { code: 'USD', symbol: '$' };
-}
+const INR_CURRENCY = { code: 'INR', symbol: '₹' };
 
 // System 1: Brand business types — what the brand IS (display-only, no matching logic)
 // These are concrete storefront/business types, NOT creator professions
@@ -1005,9 +968,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [brandCampaignDesc, setBrandCampaignDesc] = useState('Looking for authentic content creators to showcase our product');
   const [brandCampaignType, setBrandCampaignType] = useState('Product Review');
 
-  // Brand's country — used for campaign matching (must match creator country)
-  const [brandCountry, setBrandCountry] = useState('');
-
   // Brand-side deal room state — uses dealStates for real-time sync (was: localStorage-only)
   // Key format MUST match creator side: creatorName|creatorSkin
   const getBrandDealKey = useCallback(() => {
@@ -1121,7 +1081,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       `Creator Skin: ${deal.creatorSkin || selectedMarketplaceSkin || 'N/A'}`,
       '',
       'COMMERCIAL TERMS',
-      `Agreed Amount (USD): ${agreedAmount}`,
+      `Agreed Amount (INR): ${agreedAmount}`,
       `Deal Type: ${deal.dealType || 'paid'}`,
       `Offer Amount: ${deal.offerAmount || 'N/A'}`,
       `Counter Amount: ${deal.counterAmount || 'N/A'}`,
@@ -5276,20 +5236,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             </select>
                           </div>
                           <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Your country *</div>
-                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Only creators in the same country will be matched. Funds and payments stay within this country.</div>
-                            <select
-                              value={brandCountry}
-                              onChange={e => setBrandCountry(e.target.value)}
-                              style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}
-                            >
-                              <option value="">Select your country...</option>
-                              {['India','United States','United Kingdom','Canada','Australia','Singapore','Japan','South Korea','Germany','France','Brazil','Mexico','United Arab Emirates','Italy','Spain','Netherlands','Sweden','Norway','Denmark','New Zealand','Nigeria','Kenya','South Africa','Indonesia','Philippines','Vietnam','Thailand','Malaysia','Pakistan','Bangladesh','Sri Lanka','Nepal'].map(name => (
-                                <option key={name} value={name}>{name}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div style={{ marginBottom:'12px' }}>
                             <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Content language *</div>
                             <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Which language should the creator use in their content?</div>
                             <select
@@ -5319,7 +5265,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             </div>
                             <div style={{ fontSize:'10px', color:C.primary, marginTop:'4px', fontWeight:600 }}>Accepting Level {newCampaignMinLevel}{newCampaignMaxLevel !== newCampaignMinLevel ? ` to ${newCampaignMaxLevel}` : ' only'}</div>
                           </div>
-                          {(() => { const c = currencyForCountry(brandCountry); return (<>
+                          {(() => { const c = INR_CURRENCY; return (<>
                           <div style={{ display:'flex', gap:'10px', marginBottom:'12px' }}>
                             <div style={{ flex:1 }}>
                               <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Budget per creator ({c.symbol}) *</div>
@@ -5334,7 +5280,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               </div>
                             </div>
                           </div>
-                          {newCampaignBudget && (() => { const c = currencyForCountry(brandCountry); return (
+                          {newCampaignBudget && (() => { const c = INR_CURRENCY; return (
                             <div style={{ background:'rgba(0,212,106,0.06)', border:'1px solid rgba(0,212,106,0.2)', borderRadius:'8px', padding:'10px 12px', marginBottom:'12px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                               <div>
                                 <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.4px' }}>Total escrow required</div>
@@ -5432,7 +5378,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               <>
                                 <div style={{ display:'flex', gap:'8px', marginBottom:'8px' }}>
                                   <div style={{ flex:1 }}>
-                                    <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, marginBottom:'3px' }}>Digital rights amount ({currencyForCountry(brandCountry).symbol})</div>
+                                    <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, marginBottom:'3px' }}>Digital rights amount ({INR_CURRENCY.symbol})</div>
                                     <input type="text" value={newCampaignDigitalRightsAmount} onChange={e=>setNewCampaignDigitalRightsAmount(e.target.value.replace(/[^0-9]/g,''))}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'6px', color:C.text, padding:'6px 8px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
                                   </div>
                                   <div style={{ flex:1 }}>
@@ -5492,11 +5438,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               if (!newCampaignDesc.trim()) missing.push('Description');
                               if (!newCampaignBudget) missing.push('Budget');
                               if (!newCampaignSelectedProfession) missing.push('Target profession');
-                              if (!brandCountry) missing.push('Your country');
                               if (missing.length > 0) { setPurchaseToast(`Missing: ${missing.join(', ')}`); setTimeout(()=>setPurchaseToast(null),4000); return; }
                               const escrowPool = parseInt(newCampaignBudget||'0') * newCampaignCreatorCount;
                               const newC: Campaign = {
-                                id:Date.now(), brandName:profileName, brandProfession:newCampaignSelectedProfession, title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[newCampaignSelectedProfession], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, deliveryDeadline:newCampaignDeliveryDeadline, location:newCampaignLocation, country:brandCountry, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, contentReview:newCampaignContentReview, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0, hasDigitalRights:newCampaignHasDigitalRights, digitalRightsAmount:newCampaignDigitalRightsAmount, digitalRightsDays:newCampaignDigitalRightsDays, digitalRightsReels:newCampaignDigitalRightsReels, digitalRightsStories:newCampaignDigitalRightsStories,
+                                id:Date.now(), brandName:profileName, brandProfession:newCampaignSelectedProfession, title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[newCampaignSelectedProfession], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, deliveryDeadline:newCampaignDeliveryDeadline, location:newCampaignLocation, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, contentReview:newCampaignContentReview, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0, hasDigitalRights:newCampaignHasDigitalRights, digitalRightsAmount:newCampaignDigitalRightsAmount, digitalRightsDays:newCampaignDigitalRightsDays, digitalRightsReels:newCampaignDigitalRightsReels, digitalRightsStories:newCampaignDigitalRightsStories,
                                 poc: newCampaignPocName.trim() ? {
                                   name: newCampaignPocName.trim(),
                                   workEmail: newCampaignPocEmail.trim(),
@@ -5565,7 +5510,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'14px', marginBottom:'14px' }}>
                             <div style={{ fontSize:'12px', fontWeight:700, color:C.text, marginBottom:'10px' }}>{pendingCampaignForEscrow.title}</div>
                             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
-                              {(() => { const c = currencyForCountry(pendingCampaignForEscrow.country || brandCountry); return (<>
+                              {(() => { const c = INR_CURRENCY; return (<>
                               {[
                                 { label:'Per creator', value:`${c.symbol}${parseInt(pendingCampaignForEscrow.budget||'0').toLocaleString()}` },
                                 { label:'Creators hiring', value:`${pendingCampaignForEscrow.creatorCount || 1}` },
@@ -5577,7 +5522,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               ))}
                               </>)})()}
                             </div>
-                            {(() => { const c = currencyForCountry(pendingCampaignForEscrow.country || brandCountry); return (
+                            {(() => { const c = INR_CURRENCY; return (
                             <div style={{ marginTop:'10px', padding:'10px', background:'rgba(0,212,106,0.06)', border:'1px solid rgba(0,212,106,0.2)', borderRadius:'8px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                               <span style={{ fontSize:'12px', color:C.textSecondary, fontWeight:600 }}>Total escrow deposit</span>
                               <span style={{ fontSize:'20px', fontWeight:800, color:C.success }}>{c.symbol}{(pendingCampaignForEscrow.escrowPool||0).toLocaleString()}</span>
@@ -6156,7 +6101,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           }}
                         />
                         <span style={{ fontSize: '12px', color: C.textSecondary, minWidth: '80px' }}>
-                          ${(tier === 'community' ? communityTierCredits : marketplaceTierCredits) * 0.1}.00 USD
+                          ₹{(tier === 'community' ? communityTierCredits : marketplaceTierCredits) * 8}.00 INR
                         </span>
                       </div>
                     ))}

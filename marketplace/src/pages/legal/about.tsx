@@ -20,7 +20,7 @@ export default function About() {
           <p><strong style={{ color: C.text }}>For Brands:</strong> Browse creator profiles, post campaign briefs, and negotiate deal terms. Fund deals through secure escrow. Review deliverables and release payment only when you approve.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>Escrow-Based Payments</h2>
-          <p>Every deal on ValueSkins is protected by escrow. When a brand funds a deal, the payment is held securely by our payment partners (Razorpay for INR, Stripe for USD). Funds are only released to the creator once the brand approves the deliverables. This protects both sides — creators get guaranteed payment, and brands only pay for work they approve.</p>
+          <p>Every deal on ValueSkins is protected by escrow. When a brand funds a deal, the payment is held securely by our payment partner (Razorpay for INR). Funds are only released to the creator once the brand approves the deliverables. This protects both sides — creators get guaranteed payment, and brands only pay for work they approve.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>Our Platform Fee</h2>
           <p>ValueSkins charges a 2% platform fee on completed transactions. There are no upfront costs, no subscription fees, and no charges for cancelled deals. We only make money when you do.</p>

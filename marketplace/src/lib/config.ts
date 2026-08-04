@@ -47,7 +47,7 @@ export const PAYMENT_CONFIG = {
   STRIPE_PUBLIC_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || 'pk_test_PLACEHOLDER',
 
   // Currency & Amounts
-  CURRENCY: process.env.NEXT_PUBLIC_CURRENCY || 'USD',
+  CURRENCY: process.env.NEXT_PUBLIC_CURRENCY || 'INR',
   MIN_DEAL_VALUE: parseInt(process.env.NEXT_PUBLIC_MIN_DEAL_VALUE || '100', 10),
   MAX_DEAL_VALUE: parseInt(process.env.NEXT_PUBLIC_MAX_DEAL_VALUE || '1000000', 10),
 

@@ -88,7 +88,7 @@ export default function CreatorProfile() {
   const [tab, setTab] = useState<Tab>('identity');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [currencySymbol, setCurrencySymbol] = useState('$');
+  const [currencySymbol, setCurrencySymbol] = useState('₹');
 
   const hasValueSkins = account?.modules?.some((m) => m.code === 'valueskin' && m.is_active) || false;
   const isBrand = account?.modules?.some((m) => m.code === 'brand' && m.is_active) || false;

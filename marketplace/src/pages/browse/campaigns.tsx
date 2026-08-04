@@ -124,7 +124,7 @@ export default function BrowseCampaigns({ initialCampaigns = [], initialPaginati
                   <div style={{ fontSize: '12px', color: C.textMuted, marginBottom: '4px' }}>{c.description?.slice(0, 120) || 'No description'}</div>
                   <div style={{ display: 'flex', gap: '12px', fontSize: '11px', color: C.textMuted }}>
                     <span>by <strong style={{ color: C.text }}>{c.brand_name || 'Brand'}</strong></span>
-                    <span>Budget: <strong style={{ color: C.primary }}>${c.budget_per_creator}</strong></span>
+                    <span>Budget: <strong style={{ color: C.primary }}>₹{c.budget_per_creator}</strong></span>
                     {c.brand_rating > 0 && <span>Rating: <strong style={{ color: C.warning }}>{c.brand_rating}/5</strong></span>}
                   </div>
                 </div>

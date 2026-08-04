@@ -119,7 +119,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         totalPending: Math.round(totalPending * 100) / 100,
         totalPaid: Math.round(totalPaid * 100) / 100,
         platformFeePercent,
-        currency: 'USD',
+        currency: 'INR',
       },
       deals: {
         paid: paidDeals,
