@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
 import {
   loadSharedState,
   subscribeSharedState,
+  subscribeRealtimeStatus,
+  isRealtimeConnected,
   upsertSharedKey,
   mergeSharedDeal,
   appendSharedMessage,
@@ -34,6 +36,7 @@ export const useSupabaseRoom = (userId: string | null, roomId: string | null, us
   const [state, setState] = useState<any>({ deals: {}, campaigns: [], messages: {}, applications: [], notifications: [] });
   const [syncing, setSyncing] = useState(true);
   const mountedRef = useRef(true);
+  const realtimeConnected = useSyncExternalStore(subscribeRealtimeStatus, isRealtimeConnected, () => false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -114,6 +117,7 @@ export const useSupabaseRoom = (userId: string | null, roomId: string | null, us
   return {
     state,
     syncing,
+    realtimeConnected,
     createCampaign,
     updateDeal,
     addMessage,

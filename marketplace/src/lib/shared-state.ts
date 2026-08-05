@@ -110,6 +110,27 @@ let sharedChannel: RealtimeChannel | null = null;
 const sharedListeners = new Set<(state: SharedState) => void>();
 let sharedChannelRefCount = 0;
 
+type RealtimeStatusListener = () => void;
+let realtimeConnected = false;
+const realtimeStatusListeners = new Set<RealtimeStatusListener>();
+
+function setRealtimeConnected(next: boolean) {
+  if (realtimeConnected === next) return;
+  realtimeConnected = next;
+  realtimeStatusListeners.forEach((listener) => listener());
+}
+
+export function subscribeRealtimeStatus(listener: RealtimeStatusListener): () => void {
+  realtimeStatusListeners.add(listener);
+  return () => {
+    realtimeStatusListeners.delete(listener);
+  };
+}
+
+export function isRealtimeConnected(): boolean {
+  return realtimeConnected;
+}
+
 export function subscribeSharedState(onChange: (state: SharedState) => void): () => void {
   sharedListeners.add(onChange);
   sharedChannelRefCount++;
@@ -138,6 +159,7 @@ export function subscribeSharedState(onChange: (state: SharedState) => void): ()
         }
       )
       .subscribe((status, err) => {
+        setRealtimeConnected(status === 'SUBSCRIBED');
         logger.info('[realtime] channel status', { status, error: err?.message });
       });
   }
@@ -148,6 +170,7 @@ export function subscribeSharedState(onChange: (state: SharedState) => void): ()
     if (sharedChannelRefCount === 0 && sharedChannel) {
       getSupabase().removeChannel(sharedChannel);
       sharedChannel = null;
+      setRealtimeConnected(false);
     }
   };
 }
