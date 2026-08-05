@@ -1347,6 +1347,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
         // Invalid JSON, ignore
       }
     }
+    // Pull the latest campaigns from shared state on load so previously-created
+    // campaigns render immediately without having to create a new one first.
+    forceRefreshCampaigns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -2453,7 +2457,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       featured: true,
       willingToBarter: (c.compensationType || '').toLowerCase().includes('barter'),
       about: c.about || c.description,
-      budget: `$${parseInt(c.budget || '0').toLocaleString()}`,
+      budget: `₹${parseInt(c.budget || '0').toLocaleString()}`,
       deadline: c.deliveryDeadline && c.deliveryDeadline.trim() ? c.deliveryDeadline : undefined,
       applicationDeadline: c.deadline,
       deliverables: (c.deliverables || '').split(',').map(d => {
@@ -3133,9 +3137,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             {tab === 'opportunities' ? 'Opportunities' : 'My Pipeline'}
                           </button>
                         ))}
-                        <button onClick={handleRefresh} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 6px', display:'flex', alignItems:'center', gap:'4px', color:C.textMuted, fontSize:'11px', fontWeight:600, opacity: refreshing ? 0.5 : 1 }}>
+                        <button onClick={handleRefresh} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 10px', display:'flex', alignItems:'center', gap:'4px', color:C.textMuted, fontSize:'11px', fontWeight:600, opacity: refreshing ? 0.5 : 1 }}>
                           <span style={{ width:6, height:6, borderRadius:'50%', background: wsConnected ? '#00D46A' : '#9ca3af', flexShrink:0 }} title={wsConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
-                          {refreshing ? '↻' : '⟳'}
+                          {refreshing ? '↻' : '⟳'} Refresh
                         </button>
                       </div>
                     </div>
@@ -5173,6 +5177,19 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                       <span style={{ fontSize: '22px', fontWeight: 700, color: C.text }}>Brand Dashboard</span>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button
+                          onClick={handleRefresh}
+                          title="Refresh campaigns from shared state"
+                          style={{
+                            background: 'none', border: `1px solid ${C.border}`, borderRadius: '8px',
+                            padding: '8px 12px', fontSize: '13px', fontWeight: 600, color: C.textSecondary,
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                            opacity: refreshing ? 0.5 : 1,
+                          }}
+                        >
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: wsConnected ? '#00D46A' : '#9ca3af', flexShrink: 0 }} title={wsConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
+                          {refreshing ? '↻' : '⟳'} Refresh
+                        </button>
                         <button
                           onClick={() => setShowCampaignCreator(true)}
                           style={{

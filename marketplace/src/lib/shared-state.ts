@@ -1,4 +1,5 @@
 import { getSupabase } from './supabase';
+import { logger } from './logger';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export type SharedCollections = 'deals' | 'campaigns' | 'messages' | 'applications' | 'notifications' | 'events';
@@ -38,9 +39,19 @@ export async function loadSharedState(): Promise<SharedState> {
       .select('state')
       .eq('id', 'main')
       .maybeSingle();
-    if (error) return EMPTY_SHARED_STATE;
-    return emptyFallback(data?.state);
-  } catch {
+    if (error) {
+      logger.warn('[realtime] loadSharedState query error', { error: error.message });
+      return EMPTY_SHARED_STATE;
+    }
+    const state = emptyFallback(data?.state);
+    logger.info('[realtime] loadSharedState ok', {
+      campaigns: Object.keys(state.campaigns).length,
+      deals: Object.keys(state.deals).length,
+      applications: Object.keys(state.applications).length,
+    });
+    return state;
+  } catch (e) {
+    logger.warn('[realtime] loadSharedState threw', { error: e instanceof Error ? e.message : String(e) });
     return EMPTY_SHARED_STATE;
   }
 }
@@ -111,6 +122,12 @@ export function subscribeSharedState(onChange: (state: SharedState) => void): ()
         { event: '*', schema: 'public', table: 'shared_state' },
         (payload: any) => {
           const state = emptyFallback(payload.new?.state);
+          logger.info('[realtime] postgres_changes received', {
+            eventType: payload.eventType,
+            campaigns: Object.keys(state.campaigns).length,
+            deals: Object.keys(state.deals).length,
+            applications: Object.keys(state.applications).length,
+          });
           sharedListeners.forEach((listener) => {
             try {
               listener(state);
@@ -120,7 +137,9 @@ export function subscribeSharedState(onChange: (state: SharedState) => void): ()
           });
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        logger.info('[realtime] channel status', { status, error: err?.message });
+      });
   }
 
   return () => {
