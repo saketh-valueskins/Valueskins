@@ -442,7 +442,7 @@ export default function OnboardingBrand() {
             <>
               <h2 style={{ fontSize: '20px', fontWeight: 600, color: C.text, marginBottom: '16px' }}>Budget & Payment</h2>
               <label style={{ display: 'block', marginBottom: '16px' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: C.textSecondary, marginBottom: '6px' }}>Budget Per Deal (USD)</div>
+                <div style={{ fontSize: '12px', fontWeight: 600, color: C.textSecondary, marginBottom: '6px' }}>Budget Per Deal (₹)</div>
                 <input
                   type="number"
                   value={data.budgetPerDeal}

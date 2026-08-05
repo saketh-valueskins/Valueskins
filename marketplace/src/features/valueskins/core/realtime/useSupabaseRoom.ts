@@ -6,6 +6,7 @@ import {
   mergeSharedDeal,
   appendSharedMessage,
 } from '@/lib/shared-state';
+import { logger } from '@/lib/logger';
 
 function toArray<T>(value: unknown): T[] {
   if (Array.isArray(value)) return value as T[];
@@ -39,7 +40,14 @@ export const useSupabaseRoom = (userId: string | null, roomId: string | null, us
 
     function apply(raw: any) {
       if (!mountedRef.current) return;
-      setState(normalizeState(raw));
+      const next = normalizeState(raw);
+      logger.info('[realtime] useSupabaseRoom apply', {
+        campaigns: next.campaigns.length,
+        applications: next.applications.length,
+        deals: Object.keys(next.deals).length,
+        messages: Object.keys(next.messages).length,
+      });
+      setState(next);
       setSyncing(false);
     }
 

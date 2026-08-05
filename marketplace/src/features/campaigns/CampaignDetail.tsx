@@ -179,8 +179,8 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
         <h1 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 8px' }}>{campaign.title}</h1>
         <p style={{ color: C.textMuted, fontSize: '14px', marginBottom: '16px' }}>{campaign.description || 'No description'}</p>
         <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: C.textMuted, flexWrap: 'wrap' }}>
-          <span>Budget/creator: <strong style={{ color: C.text }}>${campaign.budget_per_creator}</strong></span>
-          <span>Total budget: <strong style={{ color: C.text }}>${campaign.total_budget}</strong></span>
+          <span>Budget/creator: <strong style={{ color: C.text }}>₹{campaign.budget_per_creator}</strong></span>
+          <span>Total budget: <strong style={{ color: C.text }}>₹{campaign.total_budget}</strong></span>
           <span>Status: <strong style={{ color: campaign.status === 'active' ? C.success : C.warning, textTransform: 'capitalize' }}>{campaign.status}</strong></span>
           <span>Delivery: <strong style={{ color: C.primary }}>
             {campaign.delivery_type === 'digital_access' ? 'Digital Access' : campaign.delivery_type === 'physical_product' ? 'Physical Product' : 'No Delivery'}
@@ -249,7 +249,7 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
               {bids.map((bid) => (
                 <div key={bid.id} style={{ padding: '10px', background: C.surfaceAlt, borderRadius: '6px', marginBottom: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                    <span style={{ fontWeight: 600 }}>${Number(bid.bid_amount).toFixed(2)}</span>
+                    <span style={{ fontWeight: 600 }}>₹{Number(bid.bid_amount).toFixed(2)}</span>
                     <span style={{ fontSize: '12px', padding: '2px 8px', borderRadius: '4px', textTransform: 'capitalize', fontWeight: 600,
                       background: bid.status === 'accepted' ? `${withAlpha(C.success, 0x20)}` : bid.status === 'rejected' ? `${withAlpha(C.danger, 0x20)}` : `${withAlpha(C.warning, 0x20)}`,
                       color: bid.status === 'accepted' ? C.success : bid.status === 'rejected' ? C.danger : C.warning }}>
@@ -275,7 +275,7 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
           ) : (
             <div>
               <div style={{ display: 'grid', gap: '8px' }}>
-                <input type="number" placeholder="Your bid amount ($)" value={bidAmount} onChange={e => setBidAmount(e.target.value)}
+                <input type="number" placeholder="Your bid amount (₹)" value={bidAmount} onChange={e => setBidAmount(e.target.value)}
                   style={{ padding: '10px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', color: C.text, fontSize: '13px' }} />
                 <textarea placeholder="Why should the brand pick you? (optional)" value={bidProposal} onChange={e => setBidProposal(e.target.value)}
                   style={{ padding: '10px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', color: C.text, fontSize: '13px', minHeight: '60px' }} />
@@ -301,7 +301,7 @@ export default function CampaignDetail({ campaignId }: { campaignId: number }) {
                     <span style={{ fontSize: '12px', color: C.textMuted, marginLeft: '8px' }}>@{bid.creator_username || ''}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '15px', color: C.primary }}>${Number(bid.bid_amount).toFixed(2)}</span>
+                    <span style={{ fontWeight: 700, fontSize: '15px', color: C.primary }}>₹{Number(bid.bid_amount).toFixed(2)}</span>
                     <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', textTransform: 'capitalize', fontWeight: 600,
                       background: bid.status === 'accepted' ? `${withAlpha(C.success, 0x20)}` : bid.status === 'rejected' ? `${withAlpha(C.danger, 0x20)}` : `${withAlpha(C.warning, 0x20)}`,
                       color: bid.status === 'accepted' ? C.success : bid.status === 'rejected' ? C.danger : C.warning }}>

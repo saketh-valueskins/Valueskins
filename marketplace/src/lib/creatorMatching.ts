@@ -23,7 +23,7 @@ export interface CampaignRequirements {
   skin: string;                    // Required ValueSkin (e.g., "Software Engineer")
   minLevel?: number;               // Minimum creator level (1-5)
   maxLevel?: number;               // Maximum creator level (1-5)
-  budgetPerCreator?: number;       // Budget in USD
+  budgetPerCreator?: number;       // Budget in INR
   location?: string;               // Target location (e.g., "USA", "India", "Global")
   audienceAgeRange?: string;       // e.g., "18-24", "25-34"
   audienceGender?: string;         // e.g., "any", "male", "female"

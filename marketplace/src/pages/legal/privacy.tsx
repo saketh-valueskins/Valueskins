@@ -18,7 +18,7 @@ export default function Privacy() {
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>2. Information We Collect</h2>
           <p><strong>Account Information:</strong> When you create an account, we collect your name, email address, phone number, password (stored as a bcrypt hash, never in plaintext), and profile information such as display name, avatar, and biography.</p>
           <p><strong>Profile & Listing Data:</strong> Creators may provide professional information including portfolio samples, pricing, profession categories, social media links, and credentials. Brands may provide company information, industry, and campaign preferences.</p>
-          <p><strong>Deal & Transaction Data:</strong> We collect information related to Deals you create or participate in, including deal terms, deliverables, messages, offers, counter-offers, reviews, ratings, and payment transaction records (note: full payment card details are handled by Razorpay/Stripe and are not stored by us).</p>
+          <p><strong>Deal & Transaction Data:</strong> We collect information related to Deals you create or participate in, including deal terms, deliverables, messages, offers, counter-offers, reviews, ratings, and payment transaction records (note: full payment card details are handled by Razorpay and are not stored by us).</p>
           <p><strong>Communication Data:</strong> Messages sent through the Platform, support inquiries, and communications with other Users are recorded and stored with tamper-evident protections.</p>
           <p><strong>Usage Data:</strong> We automatically collect information about how you interact with the Platform, including pages visited, features used, time spent, clickstream data, and referring URLs.</p>
           <p><strong>Device & Technical Data:</strong> IP address, browser type and version, operating system, device type, unique device identifiers, and other technical information.</p>
@@ -27,7 +27,7 @@ export default function Privacy() {
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>3. How We Collect Your Information</h2>
           <p><strong>Direct Collection:</strong> You provide information directly when you create an account, complete your profile, create Deals, send messages, submit support requests, or otherwise use the Platform.</p>
           <p><strong>Automatic Collection:</strong> We automatically collect usage and device data when you interact with the Platform through cookies, server logs, and analytics tools.</p>
-          <p><strong>Third-Party Sources:</strong> We may receive information from third-party authentication providers (Google, GitHub) when you choose to sign in using those services. We may also receive information from our payment processors (Razorpay, Stripe) limited to transaction status and identifiers (not full payment details).</p>
+          <p><strong>Third-Party Sources:</strong> We may receive information from third-party authentication providers (Google, GitHub) when you choose to sign in using those services. We may also receive information from our payment processor (Razorpay) limited to transaction status and identifiers (not full payment details).</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>4. How We Use Your Information</h2>
           <p>We use your information for the following purposes:</p>
@@ -47,7 +47,7 @@ export default function Privacy() {
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>6. Data Sharing & Disclosure</h2>
           <p><strong>Service Providers:</strong> We share data with trusted third-party service providers who help us operate the Platform, subject to contractual obligations to protect your data:</p>
-          <p>• <strong>Payment Processing:</strong> Razorpay (INR payments), Stripe (USD payments) — transaction data necessary to process payments</p>
+          <p>• <strong>Payment Processing:</strong> Razorpay (INR payments) — transaction data necessary to process payments</p>
           <p>• <strong>Hosting & Infrastructure:</strong> Vercel, Supabase (PostgreSQL), Render, AWS — data hosting and storage</p>
           <p>• <strong>Authentication:</strong> Google, GitHub — authentication data when you use OAuth</p>
           <p>• <strong>Analytics:</strong> Google Analytics, Mixpanel — aggregated, anonymized usage data (only with your consent where required by law)</p>

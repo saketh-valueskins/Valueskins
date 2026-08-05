@@ -119,9 +119,9 @@ export default function CampaignList({ initialCampaigns = [], initialPagination 
             <textarea placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
               style={{ padding: '10px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', color: C.text, fontSize: '14px', minHeight: '60px' }} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-              <input type="number" placeholder="Budget per creator ($)" value={form.budget_per_creator} onChange={e => setForm({ ...form, budget_per_creator: e.target.value })}
+              <input type="number" placeholder="Budget per creator (₹)" value={form.budget_per_creator} onChange={e => setForm({ ...form, budget_per_creator: e.target.value })}
                 style={{ padding: '10px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', color: C.text, fontSize: '14px' }} />
-              <input type="number" placeholder="Total budget ($)" value={form.total_budget} onChange={e => setForm({ ...form, total_budget: e.target.value })}
+              <input type="number" placeholder="Total budget (₹)" value={form.total_budget} onChange={e => setForm({ ...form, total_budget: e.target.value })}
                 style={{ padding: '10px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: '6px', color: C.text, fontSize: '14px' }} />
             </div>
             <input type="date" value={form.deadline} onChange={e => setForm({ ...form, deadline: e.target.value })}

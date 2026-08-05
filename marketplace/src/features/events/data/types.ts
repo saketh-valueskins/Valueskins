@@ -257,7 +257,7 @@ export function emptyFormState(): CreateEventFormState {
     inviteLimit: 0,
 
     ticketingModel: 'free',
-    currency: 'USD',
+    currency: 'INR',
     ticketTiers: [],
     refundAllowed: true,
     refundPolicy: 'full-24h',

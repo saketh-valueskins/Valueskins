@@ -18,7 +18,7 @@ export default function RefundPolicy() {
           <p>• <strong style={{ color: C.text }}>Platform fees.</strong> The 2% platform fee on completed transactions is non-refundable.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>Deal Funded = No Refund</h2>
-          <p>When a Brand funds a Deal, the payment is processed immediately and held in escrow by Razorpay (INR) or Stripe (USD). Once funded, the Brand waives the right to a refund. The funds will be released according to the Deal terms:</p>
+          <p>When a Brand funds a Deal, the payment is processed immediately and held in escrow by Razorpay (INR). Once funded, the Brand waives the right to a refund. The funds will be released according to the Deal terms:</p>
           <p>• If the Creator delivers and the Brand approves — funds release to the Creator.</p>
           <p>• If the Deal is cancelled by mutual agreement — funds release per the cancellation terms agreed between the parties.</p>
           <p>• If there is a dispute — funds remain frozen until resolution through the Platform's dispute process or arbitration.</p>
