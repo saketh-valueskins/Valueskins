@@ -682,7 +682,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
     applications: initialDealData.initialApplications,
   } : undefined);
   // Shared state — all users share one global namespace (Supabase realtime)
-  const { state: sharedState, syncing: sharedSyncing, createCampaign: sharedCreateCampaign, updateDeal: sharedUpdateDeal, addMessage: sharedAddMessage, sendNotification: sharedSendNotification, createApplication: sharedCreateApplication } = useSupabaseRoom(null, null, '');
+  const { state: sharedState, syncing: sharedSyncing, realtimeConnected, createCampaign: sharedCreateCampaign, updateDeal: sharedUpdateDeal, addMessage: sharedAddMessage, sendNotification: sharedSendNotification, createApplication: sharedCreateApplication } = useSupabaseRoom(null, null, '');
   const { dealStates, setDealStates, getOrCreateDeal, updateDeal: localUpdateDeal } = dealSync;
 
   // Ref to bridge activeOpportunities declaration order (defined later at line ~2395)
@@ -3138,7 +3138,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           </button>
                         ))}
                         <button onClick={handleRefresh} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 10px', display:'flex', alignItems:'center', gap:'4px', color:C.textMuted, fontSize:'11px', fontWeight:600, opacity: refreshing ? 0.5 : 1 }}>
-                          <span style={{ width:6, height:6, borderRadius:'50%', background: wsConnected ? '#00D46A' : '#9ca3af', flexShrink:0 }} title={wsConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
+                          <span style={{ width:6, height:6, borderRadius:'50%', background: realtimeConnected ? '#00D46A' : '#9ca3af', flexShrink:0 }} title={realtimeConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
                           {refreshing ? '↻' : '⟳'} Refresh
                         </button>
                       </div>
@@ -5187,7 +5187,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             opacity: refreshing ? 0.5 : 1,
                           }}
                         >
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: wsConnected ? '#00D46A' : '#9ca3af', flexShrink: 0 }} title={wsConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: realtimeConnected ? '#00D46A' : '#9ca3af', flexShrink: 0 }} title={realtimeConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
                           {refreshing ? '↻' : '⟳'} Refresh
                         </button>
                         <button
