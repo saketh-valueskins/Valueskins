@@ -44,6 +44,8 @@ const SECTIONS = [
 export default function SettingsHub({
   embedded = false,
   onOpenPreferences,
+  fallbackAccount = null,
+  onLogout,
 }: {
   /** Rendered inside the app shell: drop the page padding and the left rail,
    *  since the app supplies its own chrome and bottom tab spine. */
@@ -51,6 +53,12 @@ export default function SettingsHub({
   /** Embedded only — open the in-app preferences view instead of navigating
    *  away to /settings. */
   onOpenPreferences?: () => void;
+  /** Demo identity used when the real session API returns 401 — the marketplace
+   *  demo signs you in locally (role + profile), so Settings must not claim you
+   *  are logged out just because there is no auth cookie. */
+  fallbackAccount?: Account | null;
+  /** Demo logout — reset the local session instead of navigating to /auth/login. */
+  onLogout?: () => void;
 } = {}) {
   const router = useRouter();
   const [account, setAccount] = useState<Account | null>(null);
@@ -80,9 +88,17 @@ export default function SettingsHub({
             setAccount(json as Account);
             setDisplayName(json.display_name || '');
           }
+        } else if (fallbackAccount) {
+          setAccount(fallbackAccount);
+          setDisplayName(fallbackAccount.display_name || '');
         }
       } catch (e) {
-        console.error('Error loading account:', e);
+        if (fallbackAccount) {
+          setAccount(fallbackAccount);
+          setDisplayName(fallbackAccount.display_name || '');
+        } else {
+          console.error('Error loading account:', e);
+        }
       } finally {
         setLoading(false);
       }
@@ -166,7 +182,11 @@ export default function SettingsHub({
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } finally {
-      router.push('/auth/login');
+      if (onLogout) {
+        onLogout();
+      } else {
+        router.push('/auth/login');
+      }
     }
   };
 

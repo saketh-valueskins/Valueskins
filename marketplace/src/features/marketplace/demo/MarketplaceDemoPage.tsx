@@ -7,7 +7,7 @@ import { C as THEME, withAlpha } from '@/theme/colors';
 // OUTPUT: Interactive UI where creators browse offers and negotiate with brands
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, type Account } from '@/context/AuthContext';
 import { getLevel, getProgressToNext } from '@/lib/levels';
 import ProfileView from '@/features/profiles/ProfileView';
 import SettingsHub from '@/features/settings/SettingsHub';
@@ -374,7 +374,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
     ],
     2: [
       { id: 5, author: 'Sam K.', handle: '@samk_ceo', text: 'Lesson from year 3: hire for mindset, train for skill. Churn dropped 40%.', time: '5h ago' },
-      { id: 6, author: 'Lin M.', handle: '@lin_builds', text: 'We just crossed $1M ARR. Sharing the full breakdown next week. AMA.', time: '1h ago' },
+      { id: 6, author: 'Lin M.', handle: '@lin_builds', text: 'We just crossed ₹8 Cr ARR. Sharing the full breakdown next week. AMA.', time: '1h ago' },
     ],
   });
 
@@ -499,7 +499,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
             ...c,
             valueSkin: activeBrandSkin,
             _origIdx: idx,
-            rate: c.rate || '$0',
+            rate: c.rate || '₹0',
             featured: false,
             willingToBarter: true,
           })));
@@ -742,10 +742,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
         const existing = prev[dealKey];
         if (!existing) return { ...prev, [dealKey]: { intent: 'campaign' as const, phase: 'chatroom' as const, briefFilled: true, briefTitle: '', offerAmount: '', counterAmount: '', brandResponseAmount: '', chatMessages: fbMessages as ChatMessage[], chatInput: '', performanceClause: false, advancePercent: 50, approvalPercent: 50 } };
         // Merge: use local messages as base, append any from shared state not already present
-        const localMap = new Set(existing.chatMessages.map(m => m.id));
+        const localMsgs = existing.chatMessages || [];
+        const localMap = new Set(localMsgs.map(m => m.id));
         const newFromFb = (fbMessages as ChatMessage[]).filter(m => !localMap.has(m.id));
         if (newFromFb.length === 0) return prev;
-        return { ...prev, [dealKey]: { ...existing, chatMessages: [...existing.chatMessages, ...newFromFb] } };
+        return { ...prev, [dealKey]: { ...existing, chatMessages: [...localMsgs, ...newFromFb] } };
       });
     }
   }, [sharedState.messages, selectedMarketplaceSkin, negotiatingOpp, marketplaceRole, negotiatingCreator, brandCurrentOppIndex, setDealStates, backendCreators]);
@@ -907,7 +908,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
     if (!activeDealKey) return;
     setDealStates(prev => {
       const deal = prev[activeDealKey] || getOrCreateDeal(activeDealKey);
-      const newMsgs = typeof fn === 'function' ? fn(deal.chatMessages) : fn;
+      const newMsgs = typeof fn === 'function' ? fn(deal.chatMessages || []) : fn;
       return { ...prev, [activeDealKey]: { ...deal, chatMessages: newMsgs } };
     });
   };
@@ -1586,9 +1587,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
     drawSectionTitle('DEAL OVERVIEW');
     drawWrapped(`Title: ${deal.briefTitle || opp?.type || 'N/A'}`, 11, m, 500, { bold: true });
     drawWrapped(`Brand: ${opp?.brand || 'N/A'}`, 10, m, 500);
-    drawLine(`Offer Amount: $${deal.offerAmount || '0'}`, 10, m);
-    drawLine(`Counter Amount: $${deal.counterAmount || '0'}`, 10, m);
-    drawLine(`Final Amount: $${deal.agreementAmount || deal.offerAmount || '0'}`, 10, m, { bold: true });
+    drawLine(`Offer Amount: ₹${deal.offerAmount || '0'}`, 10, m);
+    drawLine(`Counter Amount: ₹${deal.counterAmount || '0'}`, 10, m);
+    drawLine(`Final Amount: ₹${deal.agreementAmount || deal.offerAmount || '0'}`, 10, m, { bold: true });
     drawLine(`Performance Clause: ${deal.performanceClause ? 'Yes' : 'No'}`, 10, m);
     drawLine(`Payment Split: Advance ${deal.advancePercent}% / Approval ${deal.approvalPercent}%`, 9, m, { color: gray });
     if (deal.poc) {
@@ -1624,7 +1625,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       drawLine('No deliverables recorded', 10, m, { color: gray });
     }
     if (deal.escrowFunded) {
-      drawLine(`Escrow: Funded (Pool: $${deal.escrowPool || 'N/A'})`, 10, m);
+      drawLine(`Escrow: Funded (Pool: ₹${deal.escrowPool || 'N/A'})`, 10, m);
     }
     drawSep();
 
@@ -1639,7 +1640,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       drawSectionTitle('TIPS');
       tips.forEach(t => {
         const extra = t.message ? ': ' + t.message : '';
-        drawLine(`  $${t.amount} from ${t.from}${extra}`, 10, m);
+        drawLine(`  ₹${t.amount} from ${t.from}${extra}`, 10, m);
       });
       drawSep();
     }
@@ -2487,6 +2488,40 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const missedDeals = selectedMarketplaceSkin
     ? liveCampaigns.filter(c => c.status === 'expired' && c.requiredProfessions.includes(selectedMarketplaceSkin))
     : [];
+
+  // ── Demo session identity ───────────────────────────────────────────
+  // The marketplace demo signs you in locally (role + profile + skins), with
+  // no auth cookie. SettingsHub checks the real session API first and falls
+  // back to this identity so it never claims you are logged out in the demo.
+  const demoSignedIn = marketplaceRole !== 'none' || !!profileName || !!account;
+  const demoAccount: Account | null = demoSignedIn
+    ? {
+        id: typeof account?.id === 'number' ? account.id : -1,
+        email: account?.email || null,
+        display_name: profileName || account?.display_name || 'User',
+        avatar_url: profileAvatar || account?.avatar_url || null,
+      }
+    : null;
+
+  const handleDemoLogout = () => {
+    try {
+      localStorage.removeItem(SK.persist);
+      localStorage.removeItem(SK.valueSkins);
+      localStorage.removeItem(SK.dealSync);
+      localStorage.removeItem(SK.campaigns);
+      localStorage.removeItem(SK.applications);
+    } catch (e) { /* ignore */ }
+    setMarketplaceRole('none');
+    setValueSkins({});
+    setBrandValueSkins([]);
+    setActiveBrandSkin(null);
+    setSelectedMarketplaceSkin(null);
+    setProfileName('');
+    setProfileBio('');
+    setProfileAvatar(null);
+    setSettingsPane('hub');
+    setActiveView('mim');
+  };
 
   return (
     <div style={{ background: C.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', overflowX: 'hidden' }}>
@@ -3369,7 +3404,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           creatorEngagement: `${metrics.engagement.toFixed(1)}%`,
                                           creatorLevel: getLevel(metrics.dealsCompleted),
                                           creatorMatchScore: opp.match,
-                                          creatorRate: rateCard.reel ? `$${rateCard.reel}` : '$3,000',
+                                          creatorRate: rateCard.reel ? `₹${rateCard.reel}` : '₹3,000',
                                           creatorDealCompletionRate: 95,
                                           creatorPortfolio: [],
                                           creatorAudienceLocation: selectedCountry || 'USA',
@@ -3513,7 +3548,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             }
                                             const now = new Date();
                                             const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                            const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator entered negotiation for $${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
+                                            const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator entered negotiation for ₹${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                             const existingMsgs = (activeDeal?.chatMessages) || [];
                                             updateDeal(localKey, {
                                               phase: 'chatroom',
@@ -3568,7 +3603,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           onClick={() => {
                                             const now = new Date();
                                             const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                            const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator confirmed agreement at $${parseInt(dealCounterAmount).toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
+                                            const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator confirmed agreement at ₹${parseInt(dealCounterAmount).toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                             setChatMessages(prev => [...prev, acceptMsg]);
                                             sharedAddMessage(activeDealKey || '', acceptMsg);
                                             updateDeal(activeDealKey!, { phase: 'accepted' });
@@ -3704,7 +3739,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'8px' }}>Contract Terms</div>
                                           {[
                                             { key: 'deliverables', label: `I agree to deliver ${opp.deliverables.map(d => `${d.count}x ${d.format}`).join(', ')} by ${opp.deadline ? new Date(opp.deadline).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : 'agreed date'}` },
-                                            { key: 'payment', label: `Payment of $${totalPrice.toLocaleString()} split as: ${advPct}% advance, ${approvalPct}% on approval` },
+                                            { key: 'payment', label: `Payment of ₹${totalPrice.toLocaleString()} split as: ${advPct}% advance, ${approvalPct}% on approval` },
                                             { key: 'usage', label: `Brand may use content for ${opp.usageRights || 'agreed period'} per usage rights terms` },
                                             { key: 'exclusivity', label: `Exclusivity: ${opp.exclusivity || 'None'} — I will not promote competing brands during this period` },
                                             { key: 'revisions', label: `Up to ${opp.revisionLimit} revision round${opp.revisionLimit !== 1 ? 's' : ''} included at no extra cost` },
@@ -3778,7 +3813,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   creatorFollowers: `${(metrics.followers / 1000).toFixed(metrics.followers >= 1000000 ? 1 : 0)}${metrics.followers >= 1000000 ? 'M' : 'K'}`,
                                                   creatorEngagement: `${metrics.engagement.toFixed(1)}%`,
                                                   creatorLevel: getLevel(metrics.dealsCompleted),
-                                                  creatorMatchScore: '94%', creatorRate: rateCard.reel ? `$${rateCard.reel}` : '$3,000',
+                                                  creatorMatchScore: '94%', creatorRate: rateCard.reel ? `₹${rateCard.reel}` : '₹3,000',
                                                   creatorDealCompletionRate: 95, creatorPortfolio: [],
                                                   creatorAudienceLocation: selectedCountry || 'USA', creatorAudienceAge: '25-34',
                                                   creatorResponseTimeHrs: 6, creatorWebsiteUrl: `https://portfolio.valueskins.com/creator_demo`,
@@ -4424,7 +4459,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 const creatorAsk = parseInt(dealCounterAmount);
                                                 const now = new Date();
                                                 const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                                const counterMsg = { id: Date.now(), sender: 'creator' as const, text: `Counter-offer: $${creatorAsk.toLocaleString()} (brand offered $${brandOffer.toLocaleString()})`, time: timeStr, isoTime: now.toISOString(), seen: false };
+                                                const counterMsg = { id: Date.now(), sender: 'creator' as const, text: `Counter-offer: ₹${creatorAsk.toLocaleString()} (brand offered ₹${brandOffer.toLocaleString()})`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                                 setChatMessages(prev => [...prev, counterMsg]);
                                                 sharedAddMessage(activeDealKey ?? '', counterMsg);
                                                 // Write counter amount + phase + chat messages to shared deal state
@@ -4435,8 +4470,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     counterAmount: String(creatorAsk),
                                                   });
                                                 }
-                                                sharedSendNotification(opp?.brand || 'Brand', 'message', `Creator countered: $${creatorAsk.toLocaleString()} (you offered $${brandOffer.toLocaleString()})`);
-                                                setPurchaseToast(`Counter sent: $${creatorAsk.toLocaleString()}`);
+                                                sharedSendNotification(opp?.brand || 'Brand', 'message', `Creator countered: ₹${creatorAsk.toLocaleString()} (you offered ₹${brandOffer.toLocaleString()})`);
+                                                setPurchaseToast(`Counter sent: ₹${creatorAsk.toLocaleString()}`);
                                                 setTimeout(() => setPurchaseToast(null), 2000);
                                               }}
                                               style={{ width: '100%', background: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? C.primary : C.border, border: 'none', padding: '6px', borderRadius: '6px', color: '#fff', fontWeight: 600, fontSize: '11px', cursor: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 'pointer' : 'not-allowed', opacity: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 1 : 0.5 }}
@@ -4520,7 +4555,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             if (activeDealKey) {
                                               const now = new Date();
                                               const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                              const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator accepted final offer: $${parseInt(dealOfferAmount || '0').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
+                                              const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator accepted final offer: ₹${parseInt(dealOfferAmount || '0').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                               setChatMessages(prev => [...prev, acceptMsg]);
                                               sharedAddMessage(activeDealKey || '', acceptMsg);
                                               updateDeal(activeDealKey, { phase: 'accepted', offerAmount: dealOfferAmount });
@@ -4679,7 +4714,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   <div style={{ width:'0%', height:'100%', background:C.border, borderRadius:'3px' }} />
                                                 </div>
                                                 <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'6px' }}>
-                                                  $0 / ${agreedPrice.toLocaleString()} deposited
+                                                  ₹0 / ₹${agreedPrice.toLocaleString()} deposited
                                                 </div>
                                               </div>
                                               </div>{/* end textAlign:center */}
@@ -4789,7 +4824,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     });
                                                     sharedSendNotification(opp?.brand || 'Brand', 'application', `Deliverables submitted: ${agreedAmt.toLocaleString()} – Advance milestone released. Awaiting approval.`);
                                                   }
-                                                  setPurchaseToast(`Submitted for review — $${Math.round(agreedAmt * advancePercent / 100).toLocaleString()} released, $${Math.round(agreedAmt * approvalPercent / 100).toLocaleString()} pending approval`);
+                                                  setPurchaseToast(`Submitted for review — ₹${Math.round(agreedAmt * advancePercent / 100).toLocaleString()} released, ₹${Math.round(agreedAmt * approvalPercent / 100).toLocaleString()} pending approval`);
                                                   setTimeout(() => setPurchaseToast(null), 4000);
                                                 }} style={{ width:'100%', background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'#fff', fontWeight:600, cursor:'pointer', fontSize:'13px', marginBottom:'8px' }}>
                                                   Submit for Review
@@ -5602,13 +5637,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 setEscrowFundingInProgress2(false);
                                 setShowEscrowFundingModal(false);
                                 setCampaignsSectionOpen(true);
-                                setPurchaseToast(`Escrow funded — $${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured.`);
+                                setPurchaseToast(`Escrow funded — ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured.`);
                                 setTimeout(() => setPurchaseToast(null), 4000);
                               }, 2000);
                             }}
                             style={{ width:'100%', background: escrowFundingInProgress2 ? C.border : C.primary, border:'none', borderRadius:'10px', padding:'13px', color:'#fff', fontWeight:700, fontSize:'14px', cursor: escrowFundingInProgress2 ? 'not-allowed' : 'pointer', opacity: escrowFundingInProgress2 ? 0.6 : 1, marginBottom:'8px' }}
                           >
-                            {escrowFundingInProgress2 ? 'Finding matching creators...' : `Deposit $${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} into Escrow`}
+                            {escrowFundingInProgress2 ? 'Finding matching creators...' : `Deposit ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} into Escrow`}
                           </button>
                           <div style={{ fontSize:'10px', color:C.textMuted, textAlign:'center', lineHeight:1.5 }}>
                             Funds are non-transferable until released per milestone. Unused funds return within 5 business days.
@@ -5764,7 +5799,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           </div>
                           <div style={{ display:'flex', gap:'8px' }}>
                             <button onClick={() => { setShowTipModal(false); setTipAmount(''); setTipForDealId(null); }} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', color:C.text, fontWeight:600, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
-                            <button onClick={() => { if (tipAmount && completedDeals[tipForDealId!]) { const updatedDeals = [...completedDeals]; updatedDeals[tipForDealId!] = { ...updatedDeals[tipForDealId!], tipped: (updatedDeals[tipForDealId!].tipped || 0) + parseInt(tipAmount) }; setCompletedDeals(updatedDeals); setPurchaseToast(`💰 Tip of $${parseInt(tipAmount).toLocaleString()} sent to ${completedDeals[tipForDealId!].brand}`); setTimeout(() => setPurchaseToast(null), 3000); setShowTipModal(false); setTipAmount(''); setTipForDealId(null); } }} disabled={!tipAmount || parseInt(tipAmount) < 1} style={{ flex:1, background: (tipAmount && parseInt(tipAmount) >= 1) ? C.warning : C.border, border:'none', borderRadius:'8px', padding:'10px', color:tipAmount && parseInt(tipAmount) >= 1 ? '#000' : C.text, fontWeight:600, fontSize:'13px', cursor: (tipAmount && parseInt(tipAmount) >= 1) ? 'pointer' : 'not-allowed', opacity: (tipAmount && parseInt(tipAmount) >= 1) ? 1 : 0.5 }}>Send Tip</button>
+                            <button onClick={() => { if (tipAmount && completedDeals[tipForDealId!]) { const updatedDeals = [...completedDeals]; updatedDeals[tipForDealId!] = { ...updatedDeals[tipForDealId!], tipped: (updatedDeals[tipForDealId!].tipped || 0) + parseInt(tipAmount) }; setCompletedDeals(updatedDeals); setPurchaseToast(`💰 Tip of ₹${parseInt(tipAmount).toLocaleString()} sent to ${completedDeals[tipForDealId!].brand}`); setTimeout(() => setPurchaseToast(null), 3000); setShowTipModal(false); setTipAmount(''); setTipForDealId(null); } }} disabled={!tipAmount || parseInt(tipAmount) < 1} style={{ flex:1, background: (tipAmount && parseInt(tipAmount) >= 1) ? C.warning : C.border, border:'none', borderRadius:'8px', padding:'10px', color:tipAmount && parseInt(tipAmount) >= 1 ? '#000' : C.text, fontWeight:600, fontSize:'13px', cursor: (tipAmount && parseInt(tipAmount) >= 1) ? 'pointer' : 'not-allowed', opacity: (tipAmount && parseInt(tipAmount) >= 1) ? 1 : 0.5 }}>Send Tip</button>
                           </div>
                         </div>
                       </div>
@@ -6223,35 +6258,35 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     </div>
                     {/* Example calculation */}
                     <div style={{ marginTop: '12px', padding: '10px', background: C.bg, borderRadius: '6px', border: `1px solid ${C.border}` }}>
-                      <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '8px' }}>Example: $10,000 deal @ {platformCommissionPct}%</div>
+                      <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '8px' }}>Example: ₹10,000 deal @ {platformCommissionPct}%</div>
                       {commissionPaidBy === 'brand' ? (
                         <>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '3px' }}>
                             <span style={{ color: C.textSecondary }}>Creator receives</span>
-                            <span style={{ color: C.success, fontWeight: 700 }}>$10,000</span>
+                            <span style={{ color: C.success, fontWeight: 700 }}>₹10,000</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
                             <span style={{ color: C.textSecondary }}>Brand pays (total)</span>
-                            <span style={{ color: C.primary, fontWeight: 700 }}>${(10000 + 10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span style={{ color: C.primary, fontWeight: 700 }}>₹{(10000 + 10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '3px', paddingTop: '3px', borderTop: `1px solid ${C.border}`, color: C.textMuted }}>
                             <span>ValueSkins revenue</span>
-                            <span>${(10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span>₹{(10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                         </>
                       ) : (
                         <>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '3px' }}>
                             <span style={{ color: C.textSecondary }}>Creator receives</span>
-                            <span style={{ color: C.success, fontWeight: 700 }}>${(10000 - 10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span style={{ color: C.success, fontWeight: 700 }}>₹{(10000 - 10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
                             <span style={{ color: C.textSecondary }}>Brand pays (total)</span>
-                            <span style={{ color: C.primary, fontWeight: 700 }}>$10,000</span>
+                            <span style={{ color: C.primary, fontWeight: 700 }}>₹10,000</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '3px', paddingTop: '3px', borderTop: `1px solid ${C.border}`, color: C.textMuted }}>
                             <span>ValueSkins revenue</span>
-                            <span>${(10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span>₹{(10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                         </>
                       )}
@@ -6528,7 +6563,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   { label: 'Availability Calendar', desc: 'Creator "available from" date shown on cards and in search', value: adminShowAvailabilityCalendar, set: setAdminShowAvailabilityCalendar },
                   { label: 'Portfolio Samples', desc: 'Past brand work visible on creator cards', value: adminShowPortfolio, set: setAdminShowPortfolio },
                   { label: 'Deal Completion Rate', desc: 'Creator % of started deals finished — penalises ghosting', value: adminShowDealCompletion, set: setAdminShowDealCompletion },
-                  { label: 'Verified Income Tier', desc: 'Trust badge showing lifetime earnings tier ($10K+, $50K+, etc)', value: adminShowIncomeTier, set: setAdminShowIncomeTier },
+                  { label: 'Verified Income Tier', desc: 'Trust badge showing lifetime earnings tier (₹10K+, ₹50K+, etc)', value: adminShowIncomeTier, set: setAdminShowIncomeTier },
                   { label: 'First-Deal Badge', desc: 'Badge shown on creators open to discounted first collaboration', value: adminShowFirstDealBadge, set: setAdminShowFirstDealBadge },
                   { label: 'Exclusivity Slot Signal', desc: 'Shows "Slot taken until [date]" when creator is exclusive with a brand', value: adminShowExclusivitySignal, set: setAdminShowExclusivitySignal },
                   { label: 'Revision Limit Display', desc: 'Number of revisions included shown upfront on creator cards', value: adminShowRevisionLimit, set: setAdminShowRevisionLimit },
@@ -6831,7 +6866,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
               the older preferences panel is now a pane inside it rather than a
               separate route, so nothing leaves the app shell. */}
           {activeView === 'settings' && settingsPane === 'hub' && (
-            <SettingsHub embedded onOpenPreferences={() => setSettingsPane('preferences')} />
+            <SettingsHub embedded onOpenPreferences={() => setSettingsPane('preferences')} fallbackAccount={demoAccount} onLogout={handleDemoLogout} />
           )}
 
           {activeView === 'settings' && settingsPane === 'preferences' && (
@@ -6946,7 +6981,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
               {[
                 { label: 'Level', value: `${currentLevel}`, sub: 'of 5' },
                 { label: 'Deals', value: `${metrics.dealsCompleted}`, sub: 'completed' },
-                { label: 'Avg Deal', value: `$${Math.round(metrics.avgDealValue / 1000)}k`, sub: 'per deal' },
+                { label: 'Avg Deal', value: `₹${Math.round(metrics.avgDealValue / 1000)}k`, sub: 'per deal' },
               ].map(s => (
                 <div key={s.label} style={{ textAlign: 'center', padding: '12px 8px', background: C.surfaceAlt, borderRadius: '10px' }}>
                   <div style={{ fontSize: '18px', fontWeight: 800, color: C.text, lineHeight: 1 }}>{s.value}</div>

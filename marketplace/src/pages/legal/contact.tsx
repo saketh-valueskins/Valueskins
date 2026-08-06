@@ -21,7 +21,7 @@ export default function Contact() {
             </div>
             <div style={{ marginBottom: '20px' }}>
               <p style={{ margin: '0 0 4px 0' }}><strong style={{ color: C.text }}>Phone:</strong></p>
-              <a href="tel:+918805695324" style={{ color: C.primary, fontSize: '15px' }}>+91 96658 20468</a>
+              <a href="tel:+918805695324" style={{ color: C.primary, fontSize: '15px' }}>+91 88056 95324</a>
             </div>
             <div style={{ marginBottom: '20px' }}>
               <p style={{ margin: '0 0 4px 0' }}><strong style={{ color: C.text }}>Support:</strong></p>
@@ -29,7 +29,7 @@ export default function Contact() {
             </div>
             <div>
               <p style={{ margin: '0 0 4px 0' }}><strong style={{ color: C.text }}>Phone:</strong></p>
-              <a href="tel:+918805695324" style={{ color: C.primary, fontSize: '15px' }}>+91 96658 20468</a>
+              <a href="tel:+918805695324" style={{ color: C.primary, fontSize: '15px' }}>+91 88056 95324</a>
             </div>
           </div>
 

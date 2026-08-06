@@ -170,7 +170,7 @@ export default function Footer() {
                 color: C.textSecondary,
                 textDecoration: 'none',
               }}>
-                +91 96658 20468
+                +91 88056 95324
               </a>
             </div>
           </div>

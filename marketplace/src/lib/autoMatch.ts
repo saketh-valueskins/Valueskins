@@ -230,7 +230,7 @@ function getMatchReasons(campaign: Campaign, creator: Creator, matchScore: numbe
   const creatorRate = parseRate(creator.rate);
   const dealBudget = typeof campaign.budget === 'string' ? parseInt(campaign.budget) : campaign.budget;
   if (creatorRate <= dealBudget) {
-    reasons.push(`Rate fits budget: ${creator.rate} ≤ $${dealBudget}`);
+    reasons.push(`Rate fits budget: ${creator.rate} ≤ ₹${dealBudget}`);
   }
 
   // Response time

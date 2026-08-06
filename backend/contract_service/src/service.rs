@@ -120,7 +120,7 @@ impl ContractService {
         let kill_fee_pct = req.kill_fee_pct.unwrap_or(template.default_kill_fee_pct);
         let advance_pct = req.advance_pct.unwrap_or(template.default_advance_pct);
         let exclusivity_days = req.exclusivity_days.unwrap_or(template.default_exclusivity_days);
-        let currency = req.currency.as_deref().unwrap_or("USD");
+        let currency = req.currency.as_deref().unwrap_or("INR");
 
         let content = template.template_body
             .replace("{{creator_name}}", &creator_name)

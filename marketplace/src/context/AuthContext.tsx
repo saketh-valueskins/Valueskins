@@ -7,7 +7,7 @@ interface ModuleSummary {
   activated_at?: string;
 }
 
-interface Account {
+export interface Account {
   id: number;
   email: string | null;
   phone: string | null;

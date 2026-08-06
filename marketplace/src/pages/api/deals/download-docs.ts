@@ -14,8 +14,8 @@ const sanitizeHtml = (text: string): string => {
 };
 
 const formatCurrency = (cents: number): string => {
-  if (typeof cents !== 'number' || cents < 0) return '$0.00';
-  return `$${(cents / 100).toFixed(2)}`;
+  if (typeof cents !== 'number' || cents < 0) return '₹0.00';
+  return `₹${(cents / 100).toFixed(2)}`;
 };
 
 const formatDate = (d: any): string => {
