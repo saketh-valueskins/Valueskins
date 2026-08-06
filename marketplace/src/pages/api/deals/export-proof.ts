@@ -271,7 +271,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       },
       timeline: [
         { event: 'Deal Created', timestamp: deal.created_at },
-        ...paymentsResult.rows.map((p: any) => ({ event: `Payment: $${p.amount}`, timestamp: p.created_at, transactionId: p.transaction_id })),
+        ...paymentsResult.rows.map((p: any) => ({ event: `Payment: ₹${p.amount}`, timestamp: p.created_at, transactionId: p.transaction_id })),
         ...milestones.filter((m: any) => m.completed_at).map((m: any) => ({ event: `Milestone completed: ${m.title}`, timestamp: m.completed_at })),
         ...(deal.completed_at ? [{ event: 'Deal Completed', timestamp: deal.completed_at }] : []),
       ],

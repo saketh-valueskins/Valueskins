@@ -21,9 +21,9 @@ const C = {
 };
 
 function formatCurrency(n: number): string {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
-  return `$${n.toLocaleString()}`;
+  if (n >= 1_000_000) return `₹${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `₹${(n / 1_000).toFixed(1)}K`;
+  return `₹${n.toLocaleString()}`;
 }
 
 function StatCard({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
@@ -189,7 +189,7 @@ function CreatorDashboard({ data, tab }: { data: any; tab: Tab }) {
     return (
       <div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-          <StatCard label="Lifetime Earnings" value={formatCurrency(r.lifetimeEarnings)} sub={`${r.thisMonth > 0 ? `$${r.thisMonth.toLocaleString()} this month` : 'No activity this month'}`} color={C.success} />
+          <StatCard label="Lifetime Earnings" value={formatCurrency(r.lifetimeEarnings)} sub={`${r.thisMonth > 0 ? `₹${r.thisMonth.toLocaleString()} this month` : 'No activity this month'}`} color={C.success} />
           <StatCard label="Deals Completed" value={String(dl.total || 0)} sub={`${lv.currentLevel > 0 ? `Level ${lv.currentLevel}` : 'No level yet'}`} color={C.primary} />
           <StatCard label="Brands Worked With" value={String(br.totalBrands || 0)} sub={`${br.repeatBrands} repeat (${br.repeatPercent}%)`} color={C.accent} />
           <StatCard label="Avg Rating" value={(pf.avgRating || 0).toFixed(1)} sub={`${pf.totalReviews} reviews`} color={C.warning} />
@@ -346,7 +346,7 @@ function BrandDashboard({ data, tab }: { data: any; tab: Tab }) {
     return (
       <div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-          <StatCard label="Total Spend" value={formatCurrency(s.total)} sub={`${s.thisMonth > 0 ? `$${s.thisMonth.toLocaleString()} this month` : 'No spend this month'}`} color={C.danger} />
+          <StatCard label="Total Spend" value={formatCurrency(s.total)} sub={`${s.thisMonth > 0 ? `₹${s.thisMonth.toLocaleString()} this month` : 'No spend this month'}`} color={C.danger} />
           <StatCard label="Campaigns" value={String(cp.created || 0)} sub={`${cp.active} active`} color={C.primary} />
           <StatCard label="Creators Hired" value={String(cr.totalCreators || 0)} sub={`${cr.repeatCreators} repeat`} color={C.accent} />
           <StatCard label="Avg Campaign Cost" value={formatCurrency(cp.avgCost || 0)} color={C.warning} />

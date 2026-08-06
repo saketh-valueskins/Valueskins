@@ -22,8 +22,8 @@ export default function AdminDashboard() {
   const statCards = [
     { label: 'Total Users', value: data.users?.total || 0, sub: `${data.users?.new_this_week || 0} new this week` },
     { label: 'Active Deals', value: data.deals?.active || 0, sub: `${data.deals?.total || 0} total deals` },
-    { label: 'Escrow Locked', value: `$${Number(data.escrow?.total_locked || 0).toLocaleString()}`, sub: `${data.escrow?.total || 0} active` },
-    { label: 'Total Paid', value: `$${Number(data.payments?.total_paid || 0).toLocaleString()}`, sub: `${data.payments?.total || 0} transactions` },
+    { label: 'Escrow Locked', value: `₹${Number(data.escrow?.total_locked || 0).toLocaleString()}`, sub: `${data.escrow?.total || 0} active` },
+    { label: 'Total Paid', value: `₹${Number(data.payments?.total_paid || 0).toLocaleString()}`, sub: `${data.payments?.total || 0} transactions` },
     { label: 'Brand Verifications', value: data.brands?.pending || 0, sub: `${data.brands?.total || 0} total` },
   ];
 

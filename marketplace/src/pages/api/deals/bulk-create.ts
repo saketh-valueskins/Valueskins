@@ -38,7 +38,7 @@ const validateBulkCreate = (data: any, config: any): { valid: boolean; errors: s
     errors.push('offerAmount must be positive number');
   }
   if (data.offerAmount > maxAmount) {
-    errors.push(`offerAmount cannot exceed $${maxAmount}`);
+    errors.push(`offerAmount cannot exceed ₹${maxAmount}`);
   }
   if (!data.contentType || typeof data.contentType !== 'string' || data.contentType.length > 255) {
     errors.push('contentType must be non-empty string (max 255 chars)');

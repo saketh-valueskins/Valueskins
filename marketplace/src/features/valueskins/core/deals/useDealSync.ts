@@ -723,7 +723,7 @@ export function useDealSync(userId?: number, initialData?: {
   ) => {
     const deal = dealStates[key];
     const dealId = deal?.backendDealRoomId;
-    const offerText = `Offer: $${(amountCents / 100).toFixed(0)}${note ? ` - ${note}` : ''}`;
+    const offerText = `Offer: ₹${(amountCents / 100).toFixed(0)}${note ? ` - ${note}` : ''}`;
 
     if (dealId) {
       try {

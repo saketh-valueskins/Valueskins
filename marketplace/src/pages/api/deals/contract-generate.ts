@@ -6,8 +6,8 @@ const sanitizeHtml = (text: string): string => {
 };
 
 const formatCurrency = (amount: number): string => {
-  if (typeof amount !== 'number' || amount < 0) return '$0.00';
-  return `$${amount.toFixed(2)}`;
+  if (typeof amount !== 'number' || amount < 0) return '₹0.00';
+  return `₹${amount.toFixed(2)}`;
 };
 
 const formatDate = (dateStr: any): string => {
