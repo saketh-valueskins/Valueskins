@@ -133,7 +133,7 @@ export default function Privacy() {
           <p>In compliance with the Information Technology Act, 2000 and the DPDP Act, 2023, we have appointed a Grievance Officer to address your concerns regarding data processing and privacy:</p>
           <p><strong>Grievance Officer:</strong> [Name]<br/>
           <strong>Email:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a><br/>
-          <strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 96658 20468</a></p>
+          <strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 88056 95324</a></p>
           <p>We will acknowledge your complaint within 24 hours and resolve it within 30 days as required by law.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>16. Data Protection Officer (GDPR)</h2>
@@ -145,9 +145,9 @@ export default function Privacy() {
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>18. Contact Us</h2>
           <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
           <p><strong>Email:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a></p>
-          <p><strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 96658 20468</a></p>
+          <p><strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 88056 95324</a></p>
           <p><strong>Support:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a></p>
-          <p><strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 96658 20468</a></p>
+          <p><strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 88056 95324</a></p>
 
         </div>
       </div>

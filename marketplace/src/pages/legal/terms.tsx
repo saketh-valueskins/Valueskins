@@ -14,7 +14,7 @@ export default function Terms() {
           <p>We are Valueskins (&quot;Company,&quot; &quot;we,&quot; &quot;us,&quot; &quot;our&quot;), a company based in India.</p>
           <p>We operate the website https://www.valueskins.com (the &quot;Site&quot;), as well as any other related products and services that refer or link to these legal terms (the &quot;Legal Terms&quot;) (collectively, the &quot;Services&quot;).</p>
           <p>A marketplace for brands and creators to find and collaborate amongst each other. Everything both parties do on our app is documented (example — the chats) so that future disputes don&apos;t arise.</p>
-          <p>You can contact us by phone at <a href="tel:+919665820468" style={{color: C.primary}}>+91 96658 20468</a>, email at <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a>, or by mail to India.</p>
+          <p>You can contact us by phone at <a href="tel:+918805695324" style={{color: C.primary}}>+91 88056 95324</a>, email at <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a>, or by mail to India.</p>
           <p>These Legal Terms constitute a legally binding agreement made between you, whether personally or on behalf of an entity (&quot;you&quot;), and Valueskins, concerning your access to and use of the Services. You agree that by accessing the Services, you have read, understood, and agreed to be bound by all of these Legal Terms. IF YOU DO NOT AGREE WITH ALL OF THESE LEGAL TERMS, THEN YOU ARE EXPRESSLY PROHIBITED FROM USING THE SERVICES AND YOU MUST DISCONTINUE USE IMMEDIATELY.</p>
           <p>Supplemental terms and conditions or documents that may be posted on the Services from time to time are hereby expressly incorporated herein by reference. We reserve the right, in our sole discretion, to make changes or modifications to these Legal Terms from time to time. We will alert you about any changes by updating the &quot;Last updated&quot; date of these Legal Terms, and you waive any right to receive specific notice of each such change. It is your responsibility to periodically review these Legal Terms to stay informed of updates. You will be subject to, and will be deemed to have been made aware of and to have accepted, the changes in any revised Legal Terms by your continued use of the Services after the date such revised Legal Terms are posted.</p>
           <p>The Services are intended for users who are at least 18 years old. Persons under the age of 18 are not permitted to use or register for the Services.</p>
@@ -249,7 +249,7 @@ export default function Terms() {
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>39. Contact Us</h2>
           <p>In order to resolve a complaint regarding the Services or to receive further information regarding use of the Services, please contact us at:</p>
           <p><strong>Valueskins</strong></p>
-          <p><strong>Phone:</strong> <a href="tel:+919665820468" style={{color: C.primary}}>+91 96658 20468</a></p>
+          <p><strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 88056 95324</a></p>
           <p><strong>Email:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a></p>
 
         </div>
