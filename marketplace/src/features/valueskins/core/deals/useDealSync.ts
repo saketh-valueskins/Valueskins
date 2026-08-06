@@ -488,7 +488,8 @@ export function useDealSync(userId?: number, initialData?: {
               const remote = v as Partial<DealState>;
               const local = merged[k];
               if (local) {
-                merged[k] = { ...remote, ...local, chatMessages: local.chatMessages.length > 0 ? local.chatMessages : (remote.chatMessages || []) };
+                const localMsgs = local.chatMessages || [];
+                merged[k] = { ...remote, ...local, chatMessages: localMsgs.length > 0 ? localMsgs : (remote.chatMessages || []) };
               } else {
                 merged[k] = remote as DealState;
               }

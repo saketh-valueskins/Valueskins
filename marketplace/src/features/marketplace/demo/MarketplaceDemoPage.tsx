@@ -742,10 +742,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
         const existing = prev[dealKey];
         if (!existing) return { ...prev, [dealKey]: { intent: 'campaign' as const, phase: 'chatroom' as const, briefFilled: true, briefTitle: '', offerAmount: '', counterAmount: '', brandResponseAmount: '', chatMessages: fbMessages as ChatMessage[], chatInput: '', performanceClause: false, advancePercent: 50, approvalPercent: 50 } };
         // Merge: use local messages as base, append any from shared state not already present
-        const localMap = new Set(existing.chatMessages.map(m => m.id));
+        const localMsgs = existing.chatMessages || [];
+        const localMap = new Set(localMsgs.map(m => m.id));
         const newFromFb = (fbMessages as ChatMessage[]).filter(m => !localMap.has(m.id));
         if (newFromFb.length === 0) return prev;
-        return { ...prev, [dealKey]: { ...existing, chatMessages: [...existing.chatMessages, ...newFromFb] } };
+        return { ...prev, [dealKey]: { ...existing, chatMessages: [...localMsgs, ...newFromFb] } };
       });
     }
   }, [sharedState.messages, selectedMarketplaceSkin, negotiatingOpp, marketplaceRole, negotiatingCreator, brandCurrentOppIndex, setDealStates, backendCreators]);
@@ -907,7 +908,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
     if (!activeDealKey) return;
     setDealStates(prev => {
       const deal = prev[activeDealKey] || getOrCreateDeal(activeDealKey);
-      const newMsgs = typeof fn === 'function' ? fn(deal.chatMessages) : fn;
+      const newMsgs = typeof fn === 'function' ? fn(deal.chatMessages || []) : fn;
       return { ...prev, [activeDealKey]: { ...deal, chatMessages: newMsgs } };
     });
   };
