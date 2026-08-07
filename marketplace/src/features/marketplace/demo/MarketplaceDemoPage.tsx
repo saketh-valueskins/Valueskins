@@ -694,10 +694,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
       setDealStates(prev => {
         const updated: Record<string, DealState> = { ...prev };
         for (const [key, fbDeal] of Object.entries(sharedState.deals)) {
-          // Merge shared state with local state, shared takes precedence
+          // Merge remote snapshot under LOCAL state so in-flight typing is never clobbered
           updated[key] = {
-            ...(prev[key] || ({} as DealState)),
             ...((fbDeal as Partial<DealState>) || {}),
+            ...(prev[key] || ({} as DealState)),
           };
         }
         return updated;
