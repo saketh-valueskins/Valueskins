@@ -7,11 +7,11 @@ export default function Privacy() {
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
         <Link href="/" style={{ color: C.primary, textDecoration: 'none', fontSize: '14px', marginBottom: '32px', display: 'inline-block' }}>← Back</Link>
         <h1 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '12px' }}>Privacy Policy</h1>
-        <p style={{ color: C.textSecondary, marginBottom: '40px' }}>Last updated: June 22, 2026</p>
+        <p style={{ color: C.textSecondary, marginBottom: '40px' }}>Last updated: August 8, 2026</p>
         <div style={{ lineHeight: '1.8', color: C.textSecondary }}>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>1. Introduction</h2>
-          <p>ValueSkins ("Company," "we," "us," or "our") respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform, website, and related services (collectively, the "Platform").</p>
+          <p>Valueskins Pvt. Ltd. ("Company," "we," "us," or "our") respects your privacy and is committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform, website, and related services (collectively, the "Platform").</p>
           <p>This Policy complies with the Information Technology Act, 2000; the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011; the Digital Personal Data Protection Act, 2023 (DPDP Act) of India; the General Data Protection Regulation (GDPR) of the European Union; and the California Consumer Privacy Act (CCPA).</p>
           <p>Please read this Policy carefully. By using the Platform, you consent to the practices described in this Policy. If you do not agree with this Policy, please do not use the Platform.</p>
 
@@ -132,6 +132,7 @@ export default function Privacy() {
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>15. Grievance Officer (India)</h2>
           <p>In compliance with the Information Technology Act, 2000 and the DPDP Act, 2023, we have appointed a Grievance Officer to address your concerns regarding data processing and privacy:</p>
           <p><strong>Grievance Officer:</strong> [Name]<br/>
+          <strong>Company:</strong> Valueskins Pvt. Ltd.<br/>
           <strong>Email:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a><br/>
           <strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 88056 95324</a></p>
           <p>We will acknowledge your complaint within 24 hours and resolve it within 30 days as required by law.</p>
@@ -144,6 +145,7 @@ export default function Privacy() {
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>18. Contact Us</h2>
           <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
+          <p><strong>Registered Entity:</strong> Valueskins Pvt. Ltd.</p>
           <p><strong>Email:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a></p>
           <p><strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 88056 95324</a></p>
           <p><strong>Support:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a></p>

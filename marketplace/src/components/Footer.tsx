@@ -191,7 +191,7 @@ export default function Footer() {
             color: C.textSecondary,
             margin: 0,
           }}>
-            © {currentYear} ValueSkins. All rights reserved.
+            © {currentYear} Valueskins Pvt. Ltd. All rights reserved.
           </p>
           <div style={{
             fontSize: '12px',
