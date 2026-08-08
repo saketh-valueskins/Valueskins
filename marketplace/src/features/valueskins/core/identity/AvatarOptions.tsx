@@ -104,6 +104,7 @@ export const PROFESSION_BADGES: Record<string, ProfessionBadge> = {
   'Security Researcher':    { id: 'sec',  label: 'Security Researcher',    abbreviation: 'SEC', color: '#B71C1C', emoji: '' },
   'EdTech Creator':         { id: 'etc',  label: 'EdTech Creator',         abbreviation: 'ETC', color: '#1A237E', emoji: '' },
   'Culinary Student':       { id: 'cust', label: 'Culinary Student',       abbreviation: 'CUS', color: '#E65100', emoji: '' },
+  'Lifestyle':              { id: 'life', label: 'Lifestyle',              abbreviation: 'LIF', color: '#EF6C00', emoji: '' },
 };
 
 // Brand-category badges (Type 1 ValueSkins) — mirrors PROFESSIONS keys in MarketplaceDemoPage.tsx
@@ -137,6 +138,7 @@ export function defaultAboutMe(profession: string): string {
     'Gym': 'Modern fitness facility focused on results-driven training. We help people transform their health through innovative programs.',
     'SaaS Company': 'B2B SaaS platform solving real problems for real businesses. We partner with creators who can explain complex products simply.',
     'Cosmetics Brand': 'Clean beauty brand committed to ingredients you can trust. We believe in real beauty, real results, and real transparency.',
+    'Lifestyle': 'Everyday life, shot beautifully. I create authentic lifestyle content that feels real and connects brands with real people.',
   };
   return defaults[profession] ?? `${profession} — click Edit to write your brand story and explain what makes you unique.`;
 }

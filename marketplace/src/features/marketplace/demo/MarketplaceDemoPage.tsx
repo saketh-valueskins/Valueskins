@@ -146,6 +146,7 @@ const CREATOR_PROFESSIONS: Record<string, { name: string; subProfessions: string
   'Gaming': { name: 'Gaming', subProfessions: ['Game Developer', 'Esports Pro', 'Game Streamer', 'Game Tester'] },
   'Content': { name: 'Content', subProfessions: ['Content Creator', 'Educational Creator', 'Podcast Host', 'Video Creator', 'Streamer'] },
   'Media & Journalism': { name: 'Media & Journalism', subProfessions: ['Journalist', 'Reporter', 'Editor', 'Photojournalist'] },
+  'Lifestyle': { name: 'Lifestyle', subProfessions: ['Lifestyle', 'Lifestyle Creator', 'Influencer', 'Travel Vlogger', 'Fitness Influencer'] },
 };
 
 const CAMPAIGN_TYPES = ['Product Review', 'Brand Ambassador', 'Sponsored Content', 'Event Coverage', 'Affiliate', 'Whitelabel', 'UGC', 'Podcast'];
@@ -2521,6 +2522,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
     setProfileAvatar(null);
     setSettingsPane('hub');
     setActiveView('mim');
+    // SettingsHub already POSTed /api/auth/logout (cleared the session cookie),
+    // so reload to drop the in-memory account and land on the signed-out role
+    // screen instead of the "ValueSkin Required" marketplace gate.
+    window.location.href = '/demo/marketplace';
   };
 
   return (
@@ -3067,8 +3072,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
           {activeView === 'mim' && (
             <>
-              {/* Layer 1: Gate — no ValueSkin */}
-              {!hasAnySkin && (
+              {/* Layer 1: Gate — no ValueSkin (signed-in only; logged-out users
+                  get the role picker below instead of a dead-end store prompt) */}
+              {!hasAnySkin && marketplaceRole !== 'none' && (
                 <>
                   <div style={{ height: '60px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', paddingLeft: '20px', fontWeight: 'bold', fontSize: '16px', background: C.surface }}>Marketplace</div>
                   <div style={{ padding: '60px 20px', textAlign: 'center' }}>
