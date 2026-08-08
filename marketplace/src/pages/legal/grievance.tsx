@@ -29,6 +29,7 @@ export default function GrievanceOfficer() {
             If you have any complaints, concerns, or queries regarding your data, privacy, or use of the platform, you may contact our Grievance Officer:
           </p>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px', padding: '24px', marginTop: '16px' }}>
+            <p><strong style={{ color: C.text }}>Company:</strong> Valueskins Pvt. Ltd.</p>
             <p><strong style={{ color: C.text }}>Grievance Officer:</strong> Saketh Velamuri</p>
             <p><strong style={{ color: C.text }}>Email:</strong> <a href="mailto:founder@valueskins.com" style={{ color: C.primary }}>founder@valueskins.com</a></p>
             <p><strong style={{ color: C.text }}>Phone:</strong> <a href="tel:+918805695324" style={{ color: C.primary }}>+91 88056 95324</a></p>

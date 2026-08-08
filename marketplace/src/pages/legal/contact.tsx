@@ -16,6 +16,10 @@ export default function Contact() {
 
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px', padding: '24px', marginTop: '16px', marginBottom: '24px' }}>
             <div style={{ marginBottom: '20px' }}>
+              <p style={{ margin: '0 0 4px 0' }}><strong style={{ color: C.text }}>Registered Entity:</strong></p>
+              <span style={{ color: C.text, fontSize: '15px' }}>Valueskins Pvt. Ltd.</span>
+            </div>
+            <div style={{ marginBottom: '20px' }}>
               <p style={{ margin: '0 0 4px 0' }}><strong style={{ color: C.text }}>Email:</strong></p>
               <a href="mailto:founder@valueskins.com" style={{ color: C.primary, fontSize: '15px' }}>founder@valueskins.com</a>
             </div>

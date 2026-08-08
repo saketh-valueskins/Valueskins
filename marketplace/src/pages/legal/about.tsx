@@ -27,6 +27,7 @@ export default function About() {
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>Company Information</h2>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px', padding: '24px', marginTop: '16px' }}>
+            <p><strong style={{ color: C.text }}>Registered Entity:</strong> Valueskins Pvt. Ltd.</p>
             <p><strong style={{ color: C.text }}>Founder:</strong> Saketh Velamuri</p>
             <p><strong style={{ color: C.text }}>Email:</strong> <a href="mailto:founder@valueskins.com" style={{ color: C.primary }}>founder@valueskins.com</a></p>
             <p><strong style={{ color: C.text }}>Phone:</strong> <a href="tel:+918805695324" style={{ color: C.primary }}>+91 88056 95324</a></p>
