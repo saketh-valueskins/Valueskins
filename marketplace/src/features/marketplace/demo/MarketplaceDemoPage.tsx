@@ -1370,7 +1370,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
       setDealStates(prev => {
         const merged = { ...prev };
         for (const [key, deal] of Object.entries(fbDeals)) {
-          merged[key] = { ...merged[key], ...(deal as DealState) };
+          const mergedDeal = { ...merged[key], ...(deal as Partial<DealState>) } as DealState;
+          mergedDeal.chatMessages = Array.isArray(mergedDeal.chatMessages) ? mergedDeal.chatMessages : [];
+          merged[key] = mergedDeal;
         }
         return merged;
       });
@@ -1387,7 +1389,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
           const existing = merged[dealKey] || ({} as DealState);
           merged[dealKey] = {
             ...existing,
-            chatMessages: msgs as ChatMessage[],
+            chatMessages: Array.isArray(msgs) ? msgs as ChatMessage[] : [],
           } as DealState;
         }
         return merged;
