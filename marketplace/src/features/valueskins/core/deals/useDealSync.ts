@@ -469,6 +469,12 @@ export function useDealSync(userId?: number, initialData?: {
     };
   }, []);
 
+  // Ensure every deal object has a chatMessages array (sync sources may store partial deals)
+  const withChatMessages = (deal: Partial<DealState> | undefined): DealState => ({
+    ...(deal || {} as Partial<DealState>),
+    chatMessages: Array.isArray(deal?.chatMessages) ? deal.chatMessages as ChatMessage[] : [],
+  } as DealState);
+
   // ── Cross-device sync (Supabase shared state) ─────────────────────────
 
   // 1. Load shared state from Supabase on mount
@@ -485,13 +491,13 @@ export function useDealSync(userId?: number, initialData?: {
           setDealStates(prev => {
             const merged = { ...prev };
             for (const [k, v] of Object.entries(data.deals)) {
-              const remote = v as Partial<DealState>;
+              const remote = withChatMessages(v as Partial<DealState>);
               const local = merged[k];
               if (local) {
-                const localMsgs = local.chatMessages || [];
-                merged[k] = { ...remote, ...local, chatMessages: localMsgs.length > 0 ? localMsgs : (remote.chatMessages || []) };
+                const localDeal = withChatMessages(local);
+                merged[k] = { ...remote, ...localDeal, chatMessages: localDeal.chatMessages.length > 0 ? localDeal.chatMessages : remote.chatMessages };
               } else {
-                merged[k] = remote as DealState;
+                merged[k] = remote;
               }
             }
             return merged;
@@ -527,12 +533,13 @@ export function useDealSync(userId?: number, initialData?: {
         setDealStates(prev => {
           const merged = { ...prev };
           for (const [k, v] of Object.entries(data.deals)) {
-            const remote = v as Partial<DealState>;
+            const remote = withChatMessages(v as Partial<DealState>);
             const local = merged[k];
             if (local) {
-              merged[k] = { ...remote, ...local, chatMessages: local.chatMessages.length > 0 ? local.chatMessages : (remote.chatMessages || []) };
+              const localDeal = withChatMessages(local);
+              merged[k] = { ...remote, ...localDeal, chatMessages: localDeal.chatMessages.length > 0 ? localDeal.chatMessages : remote.chatMessages };
             } else {
-              merged[k] = remote as DealState;
+              merged[k] = remote;
             }
           }
           return merged;
@@ -555,10 +562,10 @@ export function useDealSync(userId?: number, initialData?: {
           for (const [dealKey, msgs] of Object.entries(data.messages)) {
             const existing = updated[dealKey];
             if (!existing || !Array.isArray(msgs) || msgs.length === 0) continue;
-            const localIds = new Set(existing.chatMessages.map(m => m.id));
+            const localIds = new Set((existing.chatMessages || []).map(m => m.id));
             const newMsgs = (msgs as ChatMessage[]).filter(m => !localIds.has(m.id));
             if (newMsgs.length === 0) continue;
-            updated = { ...updated, [dealKey]: { ...existing, chatMessages: [...existing.chatMessages, ...newMsgs] } };
+            updated = { ...updated, [dealKey]: { ...existing, chatMessages: [...(existing.chatMessages || []), ...newMsgs] } };
           }
           return updated;
         });
@@ -571,7 +578,8 @@ export function useDealSync(userId?: number, initialData?: {
   // ---- Deal state helpers ----
 
   const getOrCreateDeal = useCallback((key: string): DealState => {
-    return dealStates[key] ?? {
+    const existing = dealStates[key];
+    if (!existing) return {
       phase: 'brief' as const,
       intent: 'campaign' as const,
       briefFilled: false,
@@ -594,6 +602,7 @@ export function useDealSync(userId?: number, initialData?: {
       customsComplianceAcknowledged: false,
       poc: undefined,
     };
+    return withChatMessages(existing);
   }, [dealStates]);
 
   const updateDeal = useCallback((key: string, patch: Partial<DealState>) => {
@@ -621,7 +630,7 @@ export function useDealSync(userId?: number, initialData?: {
         customsComplianceAcknowledged: false,
         poc: undefined,
       };
-      return { ...prev, [key]: { ...existing, ...prev[key], ...patch } };
+      return { ...prev, [key]: withChatMessages({ ...existing, ...prev[key], ...patch }) };
     });
   }, []);
 
@@ -699,7 +708,7 @@ export function useDealSync(userId?: number, initialData?: {
         ...prev,
         [key]: {
           ...existing,
-          chatMessages: [...existing.chatMessages, newMsg],
+          chatMessages: [...(existing.chatMessages || []), newMsg],
           chatInput: '',
         },
       };
