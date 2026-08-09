@@ -3310,7 +3310,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           // Deal key format: creatorName|creatorSkin|oppIndex (allows multiple deals per creator)
                           // Use actual opportunity index from activeOpportunities (not filtered index)
                           const actualOppIndex = activeOpportunities.indexOf(opp);
-                          const matchingCreator = BRAND_MARKETPLACE_CREATORS.find(c => c.valueSkin === selectedMarketplaceSkin);
+                          const matchingCreator = backendCreators.find((c: any) => c.valueSkin === selectedMarketplaceSkin);
                           const dealCreatorName = matchingCreator?.name || profileName;
                           const dealKey = `${dealCreatorName}|${selectedMarketplaceSkin}|${actualOppIndex}`;
                           const relatedDealEntries = Object.entries(dealStates).filter(([k, d]) =>
@@ -3396,7 +3396,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         opportunityIndex: actualOppIndex,
                                         creatorName: dealCreatorName,
                                         creatorSkin: selectedMarketplaceSkin,
-                                        creatorMarketplaceIndex: matchingCreator ? BRAND_MARKETPLACE_CREATORS.indexOf(matchingCreator) : undefined,
+                                        creatorMarketplaceIndex: matchingCreator ? (matchingCreator as any)._origIdx : undefined,
                                       });
                                       if (opp.campaignId) {
                                         const newApp: SharedApplication = {
@@ -5564,6 +5564,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           </div>
                           <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'20px', lineHeight:1.5 }}>
                             Deposit funds upfront to cover all creators in this campaign. Funds are held securely and released per each creator's agreed payment milestones. Unused funds are returned if fewer creators are hired.
+                            <div style={{ marginTop:'8px', fontSize:'11px', color:C.success, fontWeight:600 }}>Any applicants will be notified.</div>
                           </div>
 
                           {/* Campaign summary */}
@@ -5962,6 +5963,97 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           })}
                         </div>
                       ) : null;
+                    })()}
+
+                    {/* Applicants & Offers — creator applications/offers received for this brand's campaigns */}
+                    {(() => {
+                      const applicantDeals: any[] = Object.entries(dealStates)
+                        .filter(([k, d]) => {
+                          if (!d || !d.phase || d.phase === 'brief') return false;
+                          return d.creatorMarketplaceIndex !== undefined || !!d.creatorName || !!d.creatorSkin;
+                        })
+                        .map(([key, d]) => ({ key, ...d }))
+                        .filter((d: any, i: number, arr: any[]) => {
+                          const uid = `${d.creatorName || d.key.split('|')[0]}|${d.creatorSkin || d.key.split('|')[1]}|${d.opportunityIndex ?? d.key.split('|')[2]}`;
+                          const prevUid = (x: any) => `${x.creatorName || x.key.split('|')[0]}|${x.creatorSkin || x.key.split('|')[1]}|${x.opportunityIndex ?? x.key.split('|')[2]}`;
+                          return arr.findIndex((x: any) => prevUid(x) === uid) === i;
+                        });
+                      if (applicantDeals.length === 0) return null;
+                      const statusOf = (d: any) => {
+                        if (d.phase === 'accepted') return { label: 'Accepted', color: C.success };
+                        if (d.phase === 'rejected') return { label: 'Rejected', color: '#ef4444' };
+                        if (d.phase === 'formal_offer') return { label: 'Final offer — awaiting your approval', color: C.primary };
+                        if (d.phase === 'counter' || d.phase === 'brand_countered' || d.phase === 'chatroom' || d.phase === 'pending') return { label: 'Negotiating', color: '#f59e0b' };
+                        if (d.phase === 'checklist' || d.phase === 'softhold') return { label: 'In progress', color: C.success };
+                        return { label: 'Applied', color: C.textSecondary };
+                      };
+                      const pushStatusMessage = (key: string, text: string) => {
+                        const now = new Date();
+                        updateDeal(key, {
+                          chatMessages: [...((dealStates as any)[key]?.chatMessages || []), {
+                            id: Date.now(),
+                            sender: 'brand' as const,
+                            text,
+                            time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false }),
+                            isoTime: now.toISOString(),
+                            seen: false,
+                          }],
+                        });
+                      };
+                      return (
+                        <div style={{ background:C.card, borderRadius:'12px', padding:'14px', marginBottom:'14px', border:`1px solid ${C.border}` }}>
+                          <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'4px' }}>
+                            Applicants ({applicantDeals.length})
+                          </div>
+                          <div style={{ fontSize:'10px', color:C.textSecondary, marginBottom:'10px' }}>Any applicants will be notified.</div>
+                          {applicantDeals.map((d: any, i: number) => {
+                            const creatorName = d.creatorName || d.key.split('|')[0];
+                            const creatorSkin = d.creatorSkin || d.key.split('|')[1];
+                            const offer = d.counterAmount || d.offerAmount || '—';
+                            const st = statusOf(d);
+                            const actionable = d.phase === 'formal_offer' || d.phase === 'pending' || d.phase === 'counter' || d.phase === 'brand_countered' || d.phase === 'chatroom';
+                            return (
+                              <div key={d.key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'8px', padding:'10px 0', borderTop:i>0?`1px solid ${C.border}`:'none' }}>
+                                <div style={{ flex:1, minWidth:0 }}>
+                                  <div
+                                    onMouseEnter={(e) => showHoverCard(buildCreatorHover(creatorName, creatorSkin), e)}
+                                    onMouseMove={updateHoverPosition}
+                                    onMouseLeave={hideHoverCard}
+                                    style={{ fontSize:'13px', fontWeight:600, color:C.text, cursor:'pointer' }}
+                                  >{creatorName}</div>
+                                  <div style={{ fontSize:'10px', color:C.textSecondary, marginTop:'2px' }}>{creatorSkin}</div>
+                                  <div style={{ fontSize:'11px', color:C.text, marginTop:'4px' }}>Offer: <strong>₹{parseInt(String(offer).replace(/[^0-9]/g, '')) ? parseInt(String(offer).replace(/[^0-9]/g, '')).toLocaleString() : offer}</strong></div>
+                                </div>
+                                <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'6px' }}>
+                                  <span style={{ fontSize:'10px', fontWeight:600, color:st.color, background:`${withAlpha(st.color, 0x12)}`, padding:'2px 8px', borderRadius:'10px', border:`1px solid ${withAlpha(st.color, 0x30)}` }}>{st.label}</span>
+                                  {actionable && (
+                                    <div style={{ display:'flex', gap:'6px' }}>
+                                      <button
+                                        onClick={() => {
+                                          updateDeal(d.key, { phase: 'accepted', brandApprovalPhase: 'accepted' });
+                                          pushStatusMessage(d.key, `Brand accepted your offer of ₹${parseInt(String(offer).replace(/[^0-9]/g, '') || '0').toLocaleString()}.`);
+                                          setPurchaseToast(`${creatorName} has been notified of your approval`);
+                                          setTimeout(() => setPurchaseToast(null), 3000);
+                                        }}
+                                        style={{ background:C.success, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:700, color:'#fff', cursor:'pointer' }}
+                                      >Approve</button>
+                                      <button
+                                        onClick={() => {
+                                          updateDeal(d.key, { phase: 'rejected' });
+                                          pushStatusMessage(d.key, 'Brand declined the offer.');
+                                          setPurchaseToast(`${creatorName} has been notified of your decision`);
+                                          setTimeout(() => setPurchaseToast(null), 3000);
+                                        }}
+                                        style={{ background:'none', border:`1px solid rgba(239,68,68,0.3)`, borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:700, color:'#ef4444', cursor:'pointer' }}
+                                      >Reject</button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
                     })()}
 
                     {/* Brand Past Deals — computed from dealStates */}
