@@ -14,12 +14,7 @@
  */
 
 export const INTERESTS = [
-  'Music', 'Fashion', 'Fitness', 'Tech', 'Gaming', 'Art & Design', 'Food & Cooking',
-  'Travel', 'Beauty & Makeup', 'Entertainment', 'Sports', 'Education', 'Business',
-  'Lifestyle', 'Comedy', 'Dance', 'Photography', 'Wellness', 'DIY & Crafts',
-  'Parenting', 'Finance', 'Self-Improvement', 'Mental Health', 'Entrepreneurship',
-  'Social Issues', 'Environment', 'Books', 'Movies & TV', 'Anime & Manga',
-  'Automobiles', 'Home & Garden', 'Pets', 'Relationships', 'Career',
+  'Fashion & Beauty', 'Food', 'Travel', 'Music', 'Tech', 'Education', 'Comedy & Entertainment',
 ];
 
 export const SKILLS = [

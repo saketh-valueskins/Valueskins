@@ -5,6 +5,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Footer from '@/components/Footer';
 import CookieConsent from '@/components/CookieConsent';
 import SplashIntro from '@/components/SplashIntro';
+import DiagnosticsPanel from '@/components/DiagnosticsPanel';
 import { ThemeProvider } from '@/theme/ThemeContext';
 import '@/styles/globals.css';
 
@@ -95,6 +96,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <Component {...pageProps} />
       {!hideFooter && <Footer />}
       <CookieConsent />
+      <DiagnosticsPanel />
     </AuthProvider>
     </ThemeProvider>
     </ErrorBoundary>

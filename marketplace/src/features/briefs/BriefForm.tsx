@@ -20,7 +20,7 @@ const PLATFORMS = [
 
 const CONTENT_TYPES = ['photo', 'video', 'story', 'live', 'carousel', 'text'];
 
-const CATEGORIES = ['Tech', 'Art', 'Law', 'Medical', 'Gaming', 'Finance', 'Fitness', 'Content'] as const;
+const CATEGORIES = ['Fashion & Beauty', 'Food', 'Travel', 'Music', 'Tech', 'Education', 'Comedy & Entertainment'] as const;
 
 export default function BriefForm({ onSaved }: { onSaved: () => void }) {
   const [form, setForm] = useState({
