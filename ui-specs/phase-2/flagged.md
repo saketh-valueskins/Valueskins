@@ -76,11 +76,11 @@ Every spec cites `Project.md` as the authority, but the file is not in the repo 
 
 1. **Tier names (`§4`).** The phase-2 Profile spec pins **Signal = level 3** and **Aura = level 4 at 35 deals**, and describes the scale as **"Raw→Icon"**. `lib/levels.ts` thresholds already matched exactly (15–34, 35+), so levels 1/3/4/5 were renamed **Raw / Signal / Aura / Icon**. **Level 2's canonical name is unconfirmed** — it still reads `Emerging` from the old scale. Needs confirming.
 2. **ValueSkin Type (`§28`).** The Type pill (Passion / Professional / Hobby) currently falls back to `Professional`. The rule that assigns it is in `Project.md`.
-3. **Stat computation (`§11`).** The six Track Record stats are specified as computed server-side from completed deals. `/api/profile/me` does not return `repeat_rate`, `on_time_rate`, `avg_response_hours` or `trust_score`, so those tiles render 0 until the endpoint provides them. **The UI is built and correct; the data is not wired.**
+3. ~~**Stat computation (`§11`).**~~ **Wired (verified 2026-08-18).** `/api/profile/stats` exists and computes all six from completed deals via `lib/profile-stats.ts`; `/api/profile/me` also merges them in. Both `ProfileView` callers consume them. Nothing here is stored or editable.
 
 **Also fixed in passing:** `lib/levels.ts` carried **green `#22c55e`**, purple `#a855f7` and amber `#f59e0b` as tier colours — a flat G3 violation ("sand only, no green"). All five are now sand.
 
-- **Status:** open — needs `Project.md` in the repo, then confirm level 2's name and wire the four missing stats.
+- **Status:** open — still needs `Project.md` in the repo to confirm level 2's name and the ValueSkin Type rule. Stats are done.
 
 ---
 
@@ -90,7 +90,7 @@ Every spec cites `Project.md` as the authority, but the file is not in the repo 
 - **Mock:** a **two-pane master/detail** — left is a searchable, numbered profession list with per-category skin counts; right is a white detail pane with a 2×2 grid of skin cards, an `Acquire` button per card, and an `EQUIPPED` state on the owned one.
 - **Not rebuilt here** because it is a structural change, not a repaint, and the phase-2 folder has no written store spec to pin exact values against — only the mock. Needs either a `phase-2/Store.md` with numbers, or explicit approval to build straight from the mock.
 - **Fixed now regardless:** the hardcoded `₹950` is gone (GP3 / F1 — the mock deliberately shows no price). The buy button reads `Acquire`, matching the mock.
-- **Status:** open — awaiting a decision on the two-pane rebuild.
+- **Status:** open — awaiting a decision on the two-pane rebuild. (The hardcoded price removal is done; only the layout is outstanding, and it is blocked on there being no `phase-2/Store.md` to pin values against.)
 
 ---
 
@@ -106,8 +106,8 @@ Every spec cites `Project.md` as the authority, but the file is not in the repo 
 
 Transform and opacity only; reduced-motion skips the flight entirely.
 
-- **Not built** — it spans two surfaces (equip happens in the store, the frame lives on the profile), so it needs a decision on where equip is triggered from before the FLIP source/target can be wired. The profile-side landing target (the 160px frame) now exists.
-- **Status:** open.
+- ~~**Not built**~~ — **built and wired (verified 2026-08-18).** `features/valueskins/SlapToProfile.tsx` implements the three beats and is rendered by `ProfileView` against the 160px frame ref, with `justEquipped` driving it from both `/profile/me` and the app shell. Reduced motion skips the flight.
+- **Status:** ✅ closed.
 
 ---
 

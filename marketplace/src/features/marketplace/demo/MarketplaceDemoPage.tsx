@@ -2243,6 +2243,21 @@ export default function MarketplaceDemoPage(initialDealData?: {
   );
 
   const hasValueSkin = Object.values(valueSkins).some(entry => entry?.profession);
+
+  // §9 data bindings for the profile hero. The worn ValueSkin is the
+  // profession; name/handle/location come from the real profile row.
+  const wornProfession = Object.values(valueSkins).find(e => e?.profession)?.profession || '';
+  const [heroProfile, setHeroProfile] = useState<{
+    display_name?: string; username?: string; location?: string; country?: string;
+  } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/profile/me', { credentials: 'include' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (!cancelled && d) setHeroProfile(d); })
+      .catch(() => { /* hero falls back to account + local state */ });
+    return () => { cancelled = true; };
+  }, []);
   const hasAnySkin = hasValueSkin || brandValueSkins.length > 0;
 
   // List of owned skins for the marketplace skin selector
@@ -2854,11 +2869,15 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     onEquipAnimationDone={() => setJustEquipped(false)}
                     onEditProfile={() => setEditingProfile(true)}
                     profile={{
-                      display_name: account?.display_name || profileName || 'Your Name',
-                      username: (account?.email || '').split('@')[0] || 'you',
-                      profession: isBrand ? 'Brand' : 'Creator',
-                      languages: ['English'],
-                      open_for_work: true,
+                      display_name: heroProfile?.display_name || account?.display_name || profileName || 'Your Name',
+                      username: heroProfile?.username || (account?.email || '').split('@')[0] || 'you',
+                      // the worn ValueSkin IS the profession (§9); fall back to
+                      // the role only while no skin is equipped
+                      profession: wornProfession || (isBrand ? 'Brand' : 'Creator'),
+                      location: heroProfile?.location,
+                      country: heroProfile?.country,
+                      languages: selectedLanguages.length ? selectedLanguages : ['English'],
+                      open_for_work: creatorEnergy !== 'pause',
                       // computed server-side from completed deals — never editable
                       deals_completed: trackRecord?.deals_completed ?? completedDeals.length,
                       deals_this_month: trackRecord?.deals_this_month ?? 0,
