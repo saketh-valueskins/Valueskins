@@ -111,4 +111,16 @@ Transform and opacity only; reduced-motion skips the flight entirely.
 
 ---
 
+## P2-F9 — Creator Profile Preferences was orphaned; `Edit profile` entry point needs a call
+
+- **Symptom:** `features/profiles/CreatorProfile.tsx` — the Creator Profile Preferences editor, built to `ui-specs/Creator Profile Preferences.md` (tabbed, live completion bar, near-black Save, sand-only stats) — had **zero importers**. It shipped in the repo but was unreachable in production from every entry point:
+  - Settings > Profile & Skins row **labelled** `Creator Profile Preferences` pointed at `/profile/me` — the read-only ProfileView, not the editor.
+  - `Edit profile` in the app shell opened the old inline name/bio card (`editingProfile`).
+  - `Edit profile` at `/profile/me` pushed to the Settings hub.
+- **Fix applied:** the editor now renders as a Settings pane inside the app shell (`settingsPane === 'creator-preferences'`) with a Back that returns to the hub in its prior state (G4). It gained `embedded` + `onBack` props, matching the pattern `ProfileView`/`SettingsHub` already use. The mis-pointed Settings row now opens it. A standalone route `/account/creator-profile` exists for direct links and the non-embedded hub.
+- **Open — needs Aubrey's call:** `Creator Profile Preferences.md` §1 says the **primary** entry is the Profile hero's `Edit preferences` button. Today that button (`Edit profile`) opens the old inline name/bio card instead. Repointing it at the editor is the spec-correct move and the editor's Identity tab already covers display name, username, niche, city, country and bio — but it would orphan the inline card, so it is a flow change, not a repaint. **Not changed here.** Say the word and I will repoint it and remove the inline card.
+- **Status:** editor reachable ✅ · Profile-hero entry point ⬜ open.
+
+---
+
 *Build agent: when a spec's visual can't be built without a workflow/data/session change, STOP and add it here as the next `P2-F#` with root cause + proposed change, then proceed. Never change a workflow silently.*
