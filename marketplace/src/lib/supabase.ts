@@ -1,21 +1,30 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+/**
+ * Supabase stub - functionality moved to Render backend
+ * Kept for backward compatibility, but returns no-op stubs
+ */
 
-let _supabase: SupabaseClient | null = null;
+type SupabaseClient = any;
 
 export function getSupabase(): SupabaseClient {
-  if (!_supabase) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) throw new Error('Supabase env vars not set');
-    _supabase = createClient(url, key);
-  }
-  return _supabase;
+  // Return stub object to prevent crashes in unused code paths
+  return {
+    rpc: async () => ({ error: null, data: null }),
+    channel: () => ({
+      subscribe: () => {},
+      on: () => {},
+      send: async () => {},
+      removeChannel: () => {}
+    }),
+    realtime: { subscribe: () => {}, on: () => {} },
+    auth: { getSession: async () => ({ data: { session: null } }) },
+    removeChannel: () => {},
+  };
 }
 
-// Backward-compat alias — only call from client components
+// Backward-compat alias
 export const supabase = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    return (getSupabase() as any)[prop];
+  get() {
+    return async () => ({ data: null, error: null });
   },
 });
 
