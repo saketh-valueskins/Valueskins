@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { downloadDealPDF } from '@/lib/supabase-storage';
+import { downloadDealPDF } from '@/lib/render-storage';
 import { getSessionUserId } from '@/lib/session';
 import { query } from '@/lib/db-pool';
 
@@ -44,8 +44,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ error: 'Unauthorized: not deal participant' });
     }
 
-    // Download PDF from Supabase
-    const pdfBuffer = await downloadDealPDF(path);
+    // Download PDF from Render storage
+    const pdfBlob = await downloadDealPDF(path);
+    const pdfBuffer = Buffer.from(await pdfBlob.arrayBuffer());
 
     // Return PDF
     res.setHeader('Content-Type', 'application/pdf');

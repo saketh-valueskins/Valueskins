@@ -186,6 +186,10 @@ async fn main() -> std::io::Result<()> {
             "https://valueskins.io,https://www.valueskins.io".to_string()
         });
     validate_allowed_origins(&allowed_origins);
+    tracing::info!(
+        allowed_origins = allowed_origins.as_str(),
+        "API gateway CORS allow-list (requests with other Origin headers will be rejected and logged)"
+    );
 
     tracing::info!("Connecting to database...");
     let pool = match get_db_pool(&database_url).await {
@@ -454,9 +458,24 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let origins_clone = allowed_origins.clone();
         let cors = Cors::default()
-            .allowed_origin_fn(move |origin, _req_head| {
+            .allowed_origin_fn(move |origin, req_head| {
+                let origin_str = origin.to_str().unwrap_or("(unparseable)").to_string();
                 let origins: Vec<&str> = origins_clone.split(',').collect();
-                origins.iter().any(|o| origin.as_bytes() == o.as_bytes())
+                let allowed = origins.iter().any(|o| origin_str.as_bytes() == o.as_bytes());
+                if !allowed {
+                    // CORS rejections are silent to the browser, so we must
+                    // surface them server-side or "backend not working" becomes
+                    // a mystery. If you see these in the logs, a frontend origin
+                    // is missing from ALLOWED_ORIGINS.
+                    tracing::warn!(
+                        origin = origin_str.as_str(),
+                        method = req_head.method.as_str(),
+                        path = req_head.uri.path(),
+                        allowed_origins = origins_clone.as_str(),
+                        "CORS rejection — request origin not in ALLOWED_ORIGINS"
+                    );
+                }
+                allowed
             })
             .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
             .allowed_headers(vec!["Authorization", "Content-Type", "X-API-Key", "X-Correlation-ID"])

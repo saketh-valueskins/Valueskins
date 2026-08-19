@@ -68,9 +68,14 @@ This is the **single source of truth** for all creator professions.
 
 ```typescript
 export const PROFESSION_BADGES: Record<string, ProfessionBadge> = {
-  'Software Engineer':      { id: 'swe',  label: 'Software Engineer',      ... },
-  'Comedian':               { id: 'cmd',  label: 'Comedian',               ... },
-  // ... 60 more professions
+  'Fashion & Beauty':       { id: 'fab',  label: 'Fashion & Beauty',       ... },
+  'Food':                   { id: 'food', label: 'Food',                   ... },
+  'Travel':                 { id: 'trvl', label: 'Travel',                 ... },
+  'Music':                  { id: 'mus',  label: 'Music',                  ... },
+  'Tech':                   { id: 'tech', label: 'Tech',                   ... },
+  'Education':              { id: 'edu',  label: 'Education',              ... },
+  'Comedy & Entertainment': { id: 'com',  label: 'Comedy & Entertainment', ... },
+  // EXACTLY 7 — the platform is intentionally focused on these niches
 };
 ```
 
@@ -87,12 +92,17 @@ src/features/marketplace/demo/MarketplaceDemoPage.tsx  (same constant)
 
 ```typescript
 const PROFESSIONS = {
-  'Food & Beverage':   { subProfessions: ['Cafe', 'Restaurant', 'Bakery', ...] },
-  'Retail & E-commerce': { subProfessions: ['Fashion Brand', 'Beauty Brand', ...] },
-  'Technology': { subProfessions: ['SaaS', 'Mobile App', 'Gaming Studio', ...] },
-  // ...
+  'F&B Organisation':   { subProfessions: ['Cafe', 'Restaurant', 'Bakery', ...] },
+  'Fashion & Beauty Organisation': { subProfessions: ['Boutique', 'Salon', 'Cosmetics Store', ...] },
+  'Tech Organisation': { subProfessions: ['SaaS Company', 'App Developer', 'Gaming Studio', ...] },
+  // ... 7 total (F&B, Fashion & Beauty, Travel, Music, Tech, Education, Entertainment)
 };
 ```
+
+> **Naming rule**: System 1 category labels are DISTINCT from Systems 2/3 profession
+> names (e.g. `F&B Organisation` vs the profession `Food`). They must never collide —
+> a brand is a business, a creator is a person. The subProfessions themselves are the
+> actual business types a brand buys (Cafe, Restaurant, SaaS, etc.).
 
 ---
 
@@ -116,14 +126,16 @@ are DIFFERENT LISTS.** They must never share constants or be used interchangeabl
 
 1. **Edit `PROFESSION_BADGES`** in `AvatarOptions.tsx` (the ONLY file to change)
 2. Also add to `CREATOR_PROFESSIONS` in `MarketplaceDemoPage.tsx` (store grid for creators)
-3. Also add to `PROFESSIONS` in `valueskins/store.tsx` (store page for creators)
-4. System 2 and System 3 automatically pick it up from `PROFESSION_BADGES`
+3. System 2 and System 3 automatically pick it up from `PROFESSION_BADGES`
    because both iterate over `Object.entries(PROFESSION_BADGES)`
+   (`valueskins/store.tsx` is a redirect only — no changes needed there)
 
 ### Adding a new brand business type (System 1)
 
 1. **Edit `PROFESSIONS`** in `MarketplaceDemoPage.tsx` and `config/professions.ts`
-2. This has ZERO effect on matching. It's purely a brand identity display.
+2. Mirror the category keys in `BRAND_CATEGORY_BADGES` in `AvatarOptions.tsx`
+3. This has ZERO effect on matching. It's purely a brand identity display.
+4. Keep category labels DISTINCT from creator profession names (e.g. `F&B Organisation`, not `Food`)
 
 ### Never
 
@@ -138,16 +150,16 @@ are DIFFERENT LISTS.** They must never share constants or be used interchangeabl
 
 ```
 Brand picks identity:
-  → selects "Cafe" from store (System 1 = PROFESSIONS, brand type)
+  → selects "Cafe" from F&B Organisation store (System 1 = PROFESSIONS, brand type)
   → Stored as brand's value_skin, displayed on brand profile
 
-Brand creates campaign targeting comedians:
-  → selects "Comedian" from dropdown (System 2 = PROFESSION_BADGES)
-  → campaign.requiredProfessions = ['Comedian']
+Brand creates campaign targeting food creators:
+  → selects "Food" from dropdown (System 2 = PROFESSION_BADGES)
+  → campaign.requiredProfessions = ['Food']
 
-Creator registers as comedian:
-  → selects "Comedian" from picker (System 3 = PROFESSION_BADGES)
-  → POST /api/skins/manage → INSERT INTO user_value_skins (user_id, 'Comedian')
+Creator registers as a food creator:
+  → selects "Food" from picker (System 3 = PROFESSION_BADGES)
+  → POST /api/skins/manage → INSERT INTO user_value_skins (user_id, 'Food')
 
 Auto-matching:
   → /api/creators/all JOINs user_value_skins → returns creators with value_skin

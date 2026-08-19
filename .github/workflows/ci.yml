@@ -31,11 +31,12 @@ jobs:
         run: |
           npm ci
           npx next lint --no-cache 2>&1 || true
-      - name: Marketplace typecheck
+      # Ratchet, not a gate: fails only when the type-error count rises above
+      # the checked-in baseline. This used to be `continue-on-error` + `|| true`,
+      # which meant it could never fail — see P2-F4.
+      - name: Marketplace typecheck (ratchet)
         working-directory: marketplace
-        continue-on-error: true
-        run: |
-          npx tsc --noEmit 2>&1 || true
+        run: ./scripts/typecheck-ratchet.sh
 
   test-marketplace:
     name: Marketplace Tests

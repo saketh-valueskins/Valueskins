@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db-pool';
 import { generateDealPDF } from '@/lib/pdf-generator';
-import { uploadDealPDF, getDealPDFVersions } from '@/lib/supabase-storage';
+import { uploadDealPDF, getDealPDFVersions } from '@/lib/render-storage';
 import { getSessionUserId } from '@/lib/session';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

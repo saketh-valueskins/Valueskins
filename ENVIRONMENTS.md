@@ -186,3 +186,43 @@ Check workflow runs:
 - [Preview Deploys](https://github.com/redleg789/Valueskins---final-/actions/workflows/preview.yml)
 - [Staging Deploys](https://github.com/redleg789/Valueskins---final-/actions/workflows/staging.yml)
 - [Production Deploys](https://github.com/redleg789/Valueskins---final-/actions/workflows/production.yml)
+
+## Diagnosing "backend not working" from the field
+
+When a visitor (investor, beta tester) reports the backend is down but it works on a
+dev machine, the app now tells you exactly which of two problems it is:
+
+**1. Frontend is calling the wrong URL (the #1 cause)**
+
+The browser reads `NEXT_PUBLIC_BACKEND_URL` **at build time** from the Vercel
+environment. If it is unset, the code falls back to `http://localhost:8080` — which
+means *every visitor's browser tries to reach localhost:8080 on their own laptop*,
+fails, and reports "backend not working." It works for the developer only because
+they happen to run the backend on their own localhost:8080.
+
+How to see it live:
+- Open the deployed site in any browser and press F12 → Console. On boot the app logs
+  a banner: `[diag] ValueSkins frontend boot — backend URL: ...`. If it says
+  `localhost:8080` with the warning about the localhost default, this is the cause.
+- Or open the site with `?diag=1` to show the diagnostics panel (resolved URLs,
+  MOCK_API flag, recent API calls, and a "Probe backend" button).
+
+Fix (Vercel → Project → Settings → Environment Variables, then redeploy):
+```
+NEXT_PUBLIC_BACKEND_URL=https://valueskins-api.onrender.com
+NEXT_PUBLIC_WS_URL=wss://valueskins-api.onrender.com/ws
+```
+Set them in the **Production** environment (and match `ALLOWED_ORIGINS` on the
+backend, e.g. `https://valueskins.com,https://www.valueskins.com`).
+
+**2. The deployed backend itself is unreachable / unhealthy**
+
+- Open `/api/backend-health` on the deployed site (runs from Vercel's network, not
+  the visitor's browser). It probes `https://valueskins-api.onrender.com/health`
+  server-side and reports reachable vs. not, HTTP status, latency, and a note
+  explaining what it found.
+- Check Render → Dashboard → `valueskins-api` → Logs. Every request that reaches the
+  gateway is logged with method/path/status/duration by `RequestLogger`; CORS
+  rejections are logged with the rejected `origin`. If the visitor's calls never
+  appear there, the browser was not hitting the backend (see cause #1).
+- Browser console also logs every API call with a `[diag] FAIL <METHOD> <FULL URL>` line.
