@@ -146,21 +146,33 @@ export default function CampaignComposer({
   const [error, setError] = useState<string | null>(null);
   const restored = useRef(false);
 
-  // Restore any draft left behind by a previous session (G4 / GP2 — no work is
-  // ever lost on Back, and a draft survives the page going away).
+  // Restore a draft left behind by a previous session (G4 / GP2). The local
+  // copy paints immediately; the server copy then wins if it exists, which is
+  // what makes the draft survive a re-login or a different device.
   useEffect(() => {
     if (restored.current) return;
     restored.current = true;
+
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as Partial<CampaignDraft>;
-        setDraft((d) => ({ ...d, ...parsed }));
+        setDraft((d) => ({ ...d, ...(JSON.parse(raw) as Partial<CampaignDraft>) }));
         setSavedAt(Date.now());
       }
     } catch {
-      // a corrupt draft is not worth blocking the composer over
+      // a corrupt local draft is not worth blocking the composer over
     }
+
+    let cancelled = false;
+    fetch('/api/drafts/campaign', { credentials: 'include' })
+      .then((r) => (r.status === 200 ? r.json() : null))
+      .then((d) => {
+        if (cancelled || !d?.data) return;
+        setDraft((cur) => ({ ...cur, ...(d.data as Partial<CampaignDraft>) }));
+        setSavedAt(Date.now());
+      })
+      .catch(() => { /* offline or signed out — the local copy stands */ });
+    return () => { cancelled = true; };
   }, []);
 
   // Autosave, debounced. The visible marker is what kills the "did I lose my
@@ -174,6 +186,13 @@ export default function CampaignComposer({
       } catch {
         // storage full or blocked — the composer still works, just unsaved
       }
+      // GP2: persist server-side too, so ending the session cannot cost the draft
+      fetch('/api/drafts/campaign', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(draft),
+      }).catch(() => { /* local copy already saved; retry on the next edit */ });
     }, 600);
     return () => clearTimeout(t);
   }, [draft]);
@@ -199,6 +218,8 @@ export default function CampaignComposer({
     }
     setError(null);
     try { localStorage.removeItem(DRAFT_KEY); } catch { /* nothing to clear */ }
+    fetch('/api/drafts/campaign', { method: 'DELETE', credentials: 'include' })
+      .catch(() => { /* the stored draft expires on its own */ });
     onLaunch(draft);
   };
 

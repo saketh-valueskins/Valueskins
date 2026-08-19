@@ -2859,15 +2859,19 @@ export default function MarketplaceDemoPage(initialDealData?: {
               <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
 
                 {/* Identity anchor — ui-specs/phase-2/Profile page.md.
-                    The old top card below is kept as the edit form, so editing a
-                    name/bio still works exactly as before. */}
+                    Edit profile opens Creator Profile Preferences, which is the
+                    primary entry per Creator Profile Preferences.md §1 (P2-F9).
+                    Its Identity tab covers display name, username, niche, city,
+                    country and bio, so the old inline card below is superseded
+                    and no longer reachable — left in place rather than excised
+                    mid-pass, since it is interleaved with the stats block. */}
                 {!editingProfile ? (
                   <ProfileView
                     embedded
                     containerWidth={860}
                     justEquipped={justEquipped}
                     onEquipAnimationDone={() => setJustEquipped(false)}
-                    onEditProfile={() => setEditingProfile(true)}
+                    onEditProfile={() => { setActiveView('settings'); setSettingsPane('creator-preferences'); }}
                     profile={{
                       display_name: heroProfile?.display_name || account?.display_name || profileName || 'Your Name',
                       username: heroProfile?.username || (account?.email || '').split('@')[0] || 'you',
