@@ -1,114 +1,30 @@
 -- Seed professions from ValueSkins categories
-INSERT INTO professions (name, category, is_active) VALUES
-('Fashion Influencer', 'Fashion', TRUE),
-('Stylist', 'Fashion', TRUE),
-('Fashion Designer', 'Fashion', TRUE),
-('Model', 'Fashion', TRUE),
-('Personal Shopper', 'Fashion', TRUE),
-('Fashion Photographer', 'Fashion', TRUE),
-('Streetwear Creator', 'Fashion', TRUE),
-('Sustainable Fashion Advocate', 'Fashion', TRUE),
+-- EXACTLY 7 niches — the platform is intentionally focused on these.
+-- Idempotent: safe to re-run (the migration runner executes every file on each deploy).
 
-('Makeup Artist', 'Beauty', TRUE),
-('Skincare Specialist', 'Beauty', TRUE),
-('Hair Stylist', 'Beauty', TRUE),
-('Nail Artist', 'Beauty', TRUE),
-('Beauty Reviewer', 'Beauty', TRUE),
-('Fragrance Enthusiast', 'Beauty', TRUE),
-('Esthetician', 'Beauty', TRUE),
-('Beauty Educator', 'Beauty', TRUE),
+-- 1. Deactivate any profession outside the 7 canonical niches
+UPDATE professions
+SET is_active = FALSE
+WHERE LOWER(name) NOT IN (
+  'fashion & beauty', 'food', 'travel', 'music', 'tech', 'education', 'comedy & entertainment'
+);
 
-('Travel Blogger', 'Travel', TRUE),
-('Adventure Creator', 'Travel', TRUE),
-('Luxury Travel', 'Travel', TRUE),
-('Budget Travel', 'Travel', TRUE),
-('Solo Travel', 'Travel', TRUE),
-('Travel Photographer', 'Travel', TRUE),
-('Digital Nomad', 'Travel', TRUE),
-('Hotel Reviewer', 'Travel', TRUE),
+-- 2. Ensure the 7 canonical niches exist and are active (insert if missing)
+INSERT INTO professions (name, category, is_active)
+SELECT v.name, v.category, TRUE
+FROM (VALUES
+  ('Fashion & Beauty', 'Fashion & Beauty'),
+  ('Food', 'Food'),
+  ('Travel', 'Travel'),
+  ('Music', 'Music'),
+  ('Tech', 'Tech'),
+  ('Education', 'Education'),
+  ('Comedy & Entertainment', 'Comedy & Entertainment')
+) AS v(name, category)
+WHERE NOT EXISTS (SELECT 1 FROM professions p WHERE LOWER(p.name) = LOWER(v.name));
 
-('Chef', 'Food & Beverage', TRUE),
-('Food Photographer', 'Food & Beverage', TRUE),
-('Recipe Creator', 'Food & Beverage', TRUE),
-('Restaurant Reviewer', 'Food & Beverage', TRUE),
-('Pastry Chef', 'Food & Beverage', TRUE),
-('Nutritionist', 'Food & Beverage', TRUE),
-('Food Stylist', 'Food & Beverage', TRUE),
-('Culinary Student', 'Food & Beverage', TRUE),
-
-('Personal Trainer', 'Fitness', TRUE),
-('Yoga Instructor', 'Fitness', TRUE),
-('Fitness Coach', 'Fitness', TRUE),
-('CrossFit Athlete', 'Fitness', TRUE),
-('Pilates Instructor', 'Fitness', TRUE),
-('Bodybuilder', 'Fitness', TRUE),
-('Marathon Runner', 'Fitness', TRUE),
-('Sports Nutritionist', 'Fitness', TRUE),
-
-('Lifestyle Blogger', 'Lifestyle', TRUE),
-('Minimalist', 'Lifestyle', TRUE),
-('Wellness Coach', 'Lifestyle', TRUE),
-('Self-Care Advocate', 'Lifestyle', TRUE),
-('Productivity Creator', 'Lifestyle', TRUE),
-('Journal Creator', 'Lifestyle', TRUE),
-('Morning Routine Creator', 'Lifestyle', TRUE),
-('Slow Living Advocate', 'Lifestyle', TRUE),
-
-('Portrait Photographer', 'Photography', TRUE),
-('Street Photographer', 'Photography', TRUE),
-('Landscape Photographer', 'Photography', TRUE),
-('Product Photographer', 'Photography', TRUE),
-('Wedding Photographer', 'Photography', TRUE),
-('Drone Photographer', 'Photography', TRUE),
-('Photo Editor', 'Photography', TRUE),
-('Analog Film Creator', 'Photography', TRUE),
-
-('Interior Designer', 'Interior Design', TRUE),
-('Home Decor Creator', 'Interior Design', TRUE),
-('DIY Home', 'Interior Design', TRUE),
-('Minimalist Home', 'Interior Design', TRUE),
-('Plant Parent', 'Interior Design', TRUE),
-('Organization Expert', 'Interior Design', TRUE),
-('Furniture Designer', 'Interior Design', TRUE),
-('Renovation Creator', 'Interior Design', TRUE),
-
-('Software Engineer', 'Technology', TRUE),
-('Full Stack Developer', 'Technology', TRUE),
-('Data Scientist', 'Technology', TRUE),
-('Product Manager', 'Technology', TRUE),
-('DevOps Engineer', 'Technology', TRUE),
-('UX/UI Designer', 'Technology', TRUE),
-('Tech Entrepreneur', 'Technology', TRUE),
-('AI/ML Specialist', 'Technology', TRUE),
-
-('Actor', 'Entertainment', TRUE),
-('Comedian', 'Entertainment', TRUE),
-('Musician', 'Entertainment', TRUE),
-('Producer', 'Entertainment', TRUE),
-('Director', 'Entertainment', TRUE),
-('Screenwriter', 'Entertainment', TRUE),
-('Animator', 'Entertainment', TRUE),
-('Voice Actor', 'Entertainment', TRUE),
-('Podcast Host', 'Entertainment', TRUE),
-('DJ', 'Entertainment', TRUE),
-('Streamer', 'Entertainment', TRUE),
-('Stunt Performer', 'Entertainment', TRUE),
-
-('Professional Athlete', 'Sports', TRUE),
-('Fitness Coach', 'Sports', TRUE),
-('Sports Coach', 'Sports', TRUE),
-('Yoga Instructor', 'Sports', TRUE),
-('Nutritionist', 'Sports', TRUE),
-('Sports Analyst', 'Sports', TRUE),
-('Personal Trainer', 'Sports', TRUE),
-('Physical Therapist', 'Sports', TRUE),
-
-('CEO', 'Business', TRUE),
-('Entrepreneur', 'Business', TRUE),
-('Consultant', 'Business', TRUE),
-('Sales Manager', 'Business', TRUE),
-('HR Manager', 'Business', TRUE),
-('Operations Manager', 'Business', TRUE),
-('Marketing Manager', 'Business', TRUE),
-('Business Analyst', 'Business', TRUE)
-ON CONFLICT DO NOTHING;
+-- 3. Re-activate the 7 canonical niches
+UPDATE professions SET is_active = TRUE
+WHERE LOWER(name) IN (
+  'fashion & beauty', 'food', 'travel', 'music', 'tech', 'education', 'comedy & entertainment'
+);

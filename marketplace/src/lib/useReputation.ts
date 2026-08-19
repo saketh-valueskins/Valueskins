@@ -8,7 +8,7 @@ export interface ReputationScore {
   response_score: number; // 0-1.0
   revision_efficiency: number; // 0-1.0
   repeat_brand_rate: number; // 0-1.0
-  max_deal_size: number; // USD
+  max_deal_size: number; // INR
   completed_deals: number;
   dispute_count: number;
 }

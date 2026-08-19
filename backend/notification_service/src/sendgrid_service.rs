@@ -132,7 +132,7 @@ impl SendGridService {
         let dynamic_data = serde_json::json!({
             "creator_name": creator_name,
             "brand_name": brand_name,
-            "amount": format!("${:.2}", amount as f64 / 100.0),
+            "amount": format!("₹{:.2}", amount as f64 / 100.0),
             "deal_link": deal_link,
             "action_url": format!("https://valueskins.com/deals?ref={}", uuid::Uuid::new_v4()),
         });
@@ -157,7 +157,7 @@ impl SendGridService {
         let dynamic_data = serde_json::json!({
             "brand_name": brand_name,
             "creator_name": creator_name,
-            "amount": format!("${:.2}", amount as f64 / 100.0),
+            "amount": format!("₹{:.2}", amount as f64 / 100.0),
             "next_steps": "Creator will submit deliverables within the agreed timeline",
         });
 
@@ -205,7 +205,7 @@ impl SendGridService {
     ) -> Result<EmailResponse, NotificationError> {
         let dynamic_data = serde_json::json!({
             "creator_name": creator_name,
-            "amount": format!("${:.2}", amount as f64 / 100.0),
+            "amount": format!("₹{:.2}", amount as f64 / 100.0),
             "payout_date": payout_date,
             "view_payout_link": "https://valueskins.com/creator/earnings",
         });
@@ -230,7 +230,7 @@ impl SendGridService {
             "user_name": user_name,
             "new_offers": stats.new_offers,
             "active_deals": stats.active_deals,
-            "earnings_this_week": format!("${:.2}", stats.earnings_cents as f64 / 100.0),
+            "earnings_this_week": format!("₹{:.2}", stats.earnings_cents as f64 / 100.0),
             "dashboard_link": "https://valueskins.com/dashboard",
         });
 

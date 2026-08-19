@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { getCurrencySymbol } from '@/lib/currency';
+import { C as TH } from '@/theme/colors';
 
 // Creator Profile Preferences — per ui-specs/Creator Profile Preferences.md.
 // Tabbed editor (was accordion), live completion bar, reputation read-only,
@@ -11,18 +12,19 @@ import { getCurrencySymbol } from '@/lib/currency';
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
 const C = {
-  bg: '#0A0A0A',
-  surface: '#1A1A1A',
-  surfaceAlt: '#2D2D2D',
-  text: '#F5F5F0',
-  textMuted: '#B8B4AC',
+  bg: TH.bg,
+  surface: TH.surface,
+  surfaceAlt: TH.surfaceAlt,
+  text: TH.text,
+  textMuted: TH.textMuted,
+  // sand is identical in both themes (BRANDING §4) — these stay literal
   primary: '#C8B89A',
   sand: '#C8B89A',
   deepSand: '#A08A5E',
   success: '#C8B89A', // was green — sand (G3)
   warning: '#B8B4AC', // was orange — neutral muted (G3)
   danger: '#B0413E', // was bright red — restrained brick (G3)
-  border: '#2D2D2D',
+  border: TH.border,
 };
 
 interface CreatorProfileData {
@@ -81,14 +83,23 @@ const initialData: CreatorProfileData = {
 
 type Tab = 'identity' | 'social' | 'pitch' | 'marketplace';
 
-export default function CreatorProfile() {
+export default function CreatorProfile({
+  embedded = false,
+  onBack,
+}: {
+  /** Inside the app shell: drop the page background and full-height wrapper,
+   *  since the shell already provides its own chrome and bottom tab spine. */
+  embedded?: boolean;
+  /** Where "Back to profile" goes. Defaults to routing to /profile/me. */
+  onBack?: () => void;
+} = {}) {
   const router = useRouter();
   const { account } = useAuth();
   const [profile, setProfile] = useState<CreatorProfileData>(initialData);
   const [tab, setTab] = useState<Tab>('identity');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [currencySymbol, setCurrencySymbol] = useState('$');
+  const [currencySymbol, setCurrencySymbol] = useState('₹');
 
   const hasValueSkins = account?.modules?.some((m) => m.code === 'valueskin' && m.is_active) || false;
   const isBrand = account?.modules?.some((m) => m.code === 'brand' && m.is_active) || false;
@@ -155,7 +166,7 @@ export default function CreatorProfile() {
 
   if (!account) {
     return (
-      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text, fontFamily: FONT }}>
+      <div style={{ minHeight: embedded ? '240px' : '100vh', background: embedded ? undefined : C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text, fontFamily: FONT }}>
         <div>Loading...</div>
       </div>
     );
@@ -169,7 +180,11 @@ export default function CreatorProfile() {
   ] as { id: Tab; label: string; show: boolean }[]).filter((t) => t.show);
 
   return (
-    <div style={{ minHeight: '100vh', background: `linear-gradient(180deg, ${C.bg} 0%, #161512 100%)`, color: C.text, fontFamily: FONT, padding: '20px' }}>
+    <div style={{
+      minHeight: embedded ? undefined : '100vh',
+      background: embedded ? undefined : C.bg,
+      color: C.text, fontFamily: FONT, padding: '20px',
+    }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         {/* Sticky header + completion bar (spec §2) */}
         <div style={{ marginBottom: '24px' }}>
@@ -179,7 +194,7 @@ export default function CreatorProfile() {
               {message && <span style={{ fontSize: '0.8125rem', color: message === 'Saved' ? C.sand : C.danger }}>{message}</span>}
             </div>
             <button
-              onClick={() => router.push('/profile/me')}
+              onClick={() => (onBack ? onBack() : router.push('/profile/me'))}
               style={{ padding: '10px 20px', background: 'transparent', color: C.text, border: `1px solid rgba(160,138,94,0.35)`, borderRadius: '6px', fontWeight: 600, cursor: 'pointer', fontFamily: FONT }}
             >
               Back to profile
@@ -373,7 +388,7 @@ export default function CreatorProfile() {
 const fieldStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px 12px',
-  background: '#0A0A0A',
+  background: TH.surface,
   border: `1px solid ${C.border}`,
   borderRadius: '6px',
   color: C.text,
@@ -428,8 +443,8 @@ function SaveButton({ onClick, loading }: { onClick: () => void; loading: boolea
       disabled={loading}
       style={{
         padding: '12px 24px',
-        background: C.text,
-        color: '#0A0A0A',
+        background: TH.primary,
+        color: TH.onPrimary,
         border: 'none',
         borderRadius: '6px',
         fontWeight: 700,

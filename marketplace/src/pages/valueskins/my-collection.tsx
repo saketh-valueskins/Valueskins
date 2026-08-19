@@ -49,7 +49,7 @@ export default function MyCollection() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, marginBottom: 48 }}>
           <div style={{ background: C.surface, border: `1px solid ${C.outlineVariant}`, borderRadius: 24, padding: 32 }}>
             <p style={{ fontSize: 12, color: C.outline, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12, fontWeight: 600 }}>Total Value</p>
-            <p style={{ fontSize: 32, fontWeight: 700, color: C.primary }}>$4,650</p>
+            <p style={{ fontSize: 32, fontWeight: 700, color: C.primary }}>₹4,650</p>
           </div>
           <div style={{ background: C.surface, border: `1px solid ${C.outlineVariant}`, borderRadius: 24, padding: 32 }}>
             <p style={{ fontSize: 12, color: C.outline, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12, fontWeight: 600 }}>Equipped</p>

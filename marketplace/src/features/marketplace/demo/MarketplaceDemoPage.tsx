@@ -3,17 +3,19 @@ import { C as THEME, withAlpha } from '@/theme/colors';
 // ARCHITECTURE: See ARCHITECTURE_GUIDE.txt for codebase overview
 // FILE PURPOSE: Creator-Brand Marketplace demo page - shows creator & brand workflow
 // ROLE IN SYSTEM: Frontend UI component that displays marketplace, deals, chat, script negotiation
-// DATA SOURCE: useDealSync.ts (local state) + api.ts (backend calls) + Firebase (real-time)
+// DATA SOURCE: useDealSync.ts (local state) + api.ts (backend calls) + Supabase (real-time)
 // OUTPUT: Interactive UI where creators browse offers and negotiate with brands
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, type Account } from '@/context/AuthContext';
 import { getLevel, getProgressToNext } from '@/lib/levels';
 import ProfileView from '@/features/profiles/ProfileView';
 import SettingsHub from '@/features/settings/SettingsHub';
+import CreatorProfile from '@/features/profiles/CreatorProfile';
+import CampaignComposer, { CAMPAIGN_DRAFT_KEY } from '@/features/campaigns/CampaignComposer';
 import { useReputationConfig } from '@/lib/useConfigStorage';
 import { useDealSync, type DealState, type DealRoomPhase, type SharedApplication, type Campaign, type ChatMessage } from '@/features/valueskins/core/deals/useDealSync';
-import { useFirebaseRoom } from '@/features/valueskins/core/realtime/useFirebaseRoom';
+import { useSupabaseRoom } from '@/features/valueskins/core/realtime/useSupabaseRoom';
 import { autoMatchCreators, type AutoMatchResult } from '@/lib/autoMatch';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { apiFetch, backendUrl } from '@/lib/backend';
@@ -105,64 +107,20 @@ const DEAL_LABELS = {
   c2c_collab: { proposer: 'Initiator', receiver: 'Collaborator' },
 } as const;
 
-const COUNTRY_CURRENCY_MAP: Record<string, { code: string; symbol: string }> = {
-  'India': { code: 'INR', symbol: '₹' },
-  'United States': { code: 'USD', symbol: '$' },
-  'United Kingdom': { code: 'GBP', symbol: '£' },
-  'Canada': { code: 'CAD', symbol: 'CA$' },
-  'Australia': { code: 'AUD', symbol: 'A$' },
-  'Singapore': { code: 'SGD', symbol: 'S$' },
-  'Japan': { code: 'JPY', symbol: '¥' },
-  'South Korea': { code: 'KRW', symbol: '₩' },
-  'Germany': { code: 'EUR', symbol: '€' },
-  'France': { code: 'EUR', symbol: '€' },
-  'Italy': { code: 'EUR', symbol: '€' },
-  'Spain': { code: 'EUR', symbol: '€' },
-  'Netherlands': { code: 'EUR', symbol: '€' },
-  'Brazil': { code: 'BRL', symbol: 'R$' },
-  'Mexico': { code: 'MXN', symbol: 'MX$' },
-  'United Arab Emirates': { code: 'AED', symbol: 'د.إ' },
-  'Sweden': { code: 'SEK', symbol: 'kr' },
-  'Norway': { code: 'NOK', symbol: 'kr' },
-  'Denmark': { code: 'DKK', symbol: 'kr' },
-  'New Zealand': { code: 'NZD', symbol: 'NZ$' },
-  'Nigeria': { code: 'NGN', symbol: '₦' },
-  'Kenya': { code: 'KES', symbol: 'KSh' },
-  'South Africa': { code: 'ZAR', symbol: 'R' },
-  'Indonesia': { code: 'IDR', symbol: 'Rp' },
-  'Philippines': { code: 'PHP', symbol: '₱' },
-  'Vietnam': { code: 'VND', symbol: '₫' },
-  'Thailand': { code: 'THB', symbol: '฿' },
-  'Malaysia': { code: 'MYR', symbol: 'RM' },
-  'Pakistan': { code: 'PKR', symbol: '₨' },
-  'Bangladesh': { code: 'BDT', symbol: '৳' },
-  'Sri Lanka': { code: 'LKR', symbol: 'Rs' },
-  'Nepal': { code: 'NPR', symbol: 'Rs' },
-};
-
-function currencyForCountry(country: string): { code: string; symbol: string } {
-  return COUNTRY_CURRENCY_MAP[country] || { code: 'USD', symbol: '$' };
-}
+const INR_CURRENCY = { code: 'INR', symbol: '₹' };
 
 // System 1: Brand business types — what the brand IS (display-only, no matching logic)
-// These are concrete storefront/business types, NOT creator professions
+// These are concrete storefront/business types, NOT creator professions.
+// EXACTLY 7 brand categories — named DISTINCTLY from creator professions (Systems 2/3)
+// so the two systems are never conflated.
 const PROFESSIONS: Record<string, { name: string; subProfessions: string[] }> = {
-  'Food & Beverage': { name: 'Food & Beverage', subProfessions: ['Cafe', 'Restaurant', 'Bakery', 'Pizzeria', 'Ice Cream Shop', 'Food Truck', 'Juice Bar', 'Bar', 'Brewery', 'Winery'] },
-  'Retail & Shopping': { name: 'Retail & Shopping', subProfessions: ['Clothing Boutique', 'Department Store', 'Vintage Shop', 'Jewelry Store', 'Bookstore', 'Grocery Store', 'Convenience Store', 'Thrift Store'] },
-  'Technology': { name: 'Technology', subProfessions: ['App Developer', 'Software Company', 'Gaming Studio', 'Computer Store', 'Tech Startup', 'Repair Shop', 'IT Services'] },
-  'Health & Fitness': { name: 'Health & Fitness', subProfessions: ['Gym', 'Yoga Studio', 'Spa', 'Meditation Center', 'Health Clinic', 'Pharmacy', 'Dental Clinic'] },
-  'Beauty & Personal Care': { name: 'Beauty & Personal Care', subProfessions: ['Salon', 'Barbershop', 'Nail Salon', 'Tattoo Studio', 'Cosmetics Store', 'Fragrance Shop'] },
-  'Travel & Hospitality': { name: 'Travel & Hospitality', subProfessions: ['Hotel', 'Resort', 'Bed & Breakfast', 'Hostel', 'Travel Agency', 'Tour Company'] },
-  'Fashion & Apparel': { name: 'Fashion & Apparel', subProfessions: ['Boutique', 'Streetwear Store', 'Sneaker Shop', 'Tailor', 'Uniform Shop', 'Shoe Store'] },
-  'Entertainment & Media': { name: 'Entertainment & Media', subProfessions: ['Comedy Club', 'Movie Theater', 'Nightclub', 'Arcade', 'Concert Venue', 'Escape Room', 'Bowling Alley', 'Karaoke Bar'] },
-  'Sports & Recreation': { name: 'Sports & Recreation', subProfessions: ['Sports Bar', 'Golf Course', 'Tennis Club', 'Bike Shop', 'Skate Park', 'Swimming Pool', 'Stadium'] },
-  'Education': { name: 'Education', subProfessions: ['School', 'Preschool', 'Tutoring Center', 'Dance Studio', 'Music School', 'Coding Bootcamp', 'Language School', 'Driving School'] },
-  'Finance & Insurance': { name: 'Finance & Insurance', subProfessions: ['Bank', 'Credit Union', 'Investment Office', 'Insurance Agency', 'Accounting Office', 'Currency Exchange'] },
-  'Real Estate': { name: 'Real Estate', subProfessions: ['Real Estate Office', 'Property Management', 'Co-working Space', 'Apartment Complex', 'Storage Facility'] },
-  'Professional Services': { name: 'Professional Services', subProfessions: ['Law Firm', 'Marketing Agency', 'Consulting Firm', 'Architecture Firm', 'Design Studio', 'Photography Studio', 'Print Shop'] },
-  'Automotive': { name: 'Automotive', subProfessions: ['Car Dealership', 'Auto Repair Shop', 'Car Wash', 'Gas Station', 'EV Charging Station', 'Tire Shop'] },
-  'Home & Garden': { name: 'Home & Garden', subProfessions: ['Furniture Store', 'Home Depot', 'Garden Center', 'Florist', 'Hardware Store', 'Paint Shop'] },
-  'Non-Profit & Community': { name: 'Non-Profit & Community', subProfessions: ['Charity Shop', 'Community Center', 'Museum', 'Library', 'Art Gallery', 'Animal Shelter', 'Place of Worship'] },
+  'Fashion & Beauty Organisation': { name: 'Fashion & Beauty Organisation', subProfessions: ['Boutique', 'Clothing Store', 'Jewelry Store', 'Sneaker Shop', 'Salon', 'Barbershop', 'Nail Salon', 'Cosmetics Store'] },
+  'F&B Organisation': { name: 'F&B Organisation', subProfessions: ['Cafe', 'Restaurant', 'Bakery', 'Pizzeria', 'Ice Cream Shop', 'Food Truck', 'Juice Bar', 'Bar', 'Brewery', 'Winery'] },
+  'Travel Organisation': { name: 'Travel Organisation', subProfessions: ['Hotel', 'Resort', 'Bed & Breakfast', 'Hostel', 'Travel Agency', 'Tour Company'] },
+  'Music Organisation': { name: 'Music Organisation', subProfessions: ['Music School', 'Concert Venue', 'Recording Studio', 'Music Label', 'Instrument Store', 'DJ Service'] },
+  'Tech Organisation': { name: 'Tech Organisation', subProfessions: ['SaaS Company', 'App Developer', 'Software Company', 'Gaming Studio', 'Tech Startup', 'Computer Store', 'Repair Shop', 'IT Services'] },
+  'Education Organisation': { name: 'Education Organisation', subProfessions: ['School', 'Preschool', 'Tutoring Center', 'Coding Bootcamp', 'Language School', 'Driving School'] },
+  'Entertainment Organisation': { name: 'Entertainment Organisation', subProfessions: ['Comedy Club', 'Movie Theater', 'Nightclub', 'Arcade', 'Escape Room', 'Bowling Alley', 'Karaoke Bar', 'Production House'] },
 };
 
 // Creator data is now fetched from backend via /api/creators/match
@@ -170,19 +128,15 @@ const PROFESSIONS: Record<string, { name: string; subProfessions: string[] }> = 
 const BRAND_MARKETPLACE_CREATORS: any[] = [];
 
 // Systems 2/3: Creator professions — used in store for creators (not brands)
+// EXACTLY 7 professions, matching PROFESSION_BADGES (source of truth).
 const CREATOR_PROFESSIONS: Record<string, { name: string; subProfessions: string[] }> = {
-  'Technology': { name: 'Technology', subProfessions: ['Software Engineer', 'Data Scientist', 'Product Manager', 'DevOps Engineer', 'UX/UI Designer', 'AI/ML Specialist', 'Security Researcher'] },
-  'Entertainment': { name: 'Entertainment', subProfessions: ['Actor', 'Comedian', 'Musician', 'Producer', 'Director', 'Screenwriter', 'Animator', 'Voice Actor', 'Dancer'] },
-  'Healthcare': { name: 'Healthcare', subProfessions: ['Doctor', 'Surgeon', 'Nurse', 'Pharmacist', 'Therapist', 'Nutritionist', 'Veterinarian'] },
-  'Legal': { name: 'Legal', subProfessions: ['Lawyer', 'Attorney', 'Judge', 'Corporate Lawyer', 'Paralegal'] },
-  'Business & Finance': { name: 'Business & Finance', subProfessions: ['CEO', 'Entrepreneur', 'Operations Manager', 'Consultant', 'Financial Advisor', 'Trader', 'Investment Banker', 'Crypto Analyst'] },
-  'Education': { name: 'Education', subProfessions: ['Teacher', 'Professor', 'Tutor', 'EdTech Creator'] },
-  'Food & Beverage': { name: 'Food & Beverage', subProfessions: ['Chef', 'Pastry Chef', 'Food Critic', 'Food Photographer', 'Sommelier'] },
-  'Sports & Fitness': { name: 'Sports & Fitness', subProfessions: ['Professional Athlete', 'Fitness Coach', 'Yoga Instructor', 'Sports Manager'] },
-  'Creative': { name: 'Creative', subProfessions: ['Graphic Designer', 'Digital Artist', 'Illustrator', 'Photographer', 'Motion Designer', '3D Artist'] },
-  'Gaming': { name: 'Gaming', subProfessions: ['Game Developer', 'Esports Pro', 'Game Streamer', 'Game Tester'] },
-  'Content': { name: 'Content', subProfessions: ['Content Creator', 'Educational Creator', 'Podcast Host', 'Video Creator', 'Streamer'] },
-  'Media & Journalism': { name: 'Media & Journalism', subProfessions: ['Journalist', 'Reporter', 'Editor', 'Photojournalist'] },
+  'Fashion & Beauty': { name: 'Fashion & Beauty', subProfessions: ['Fashion & Beauty'] },
+  'Food': { name: 'Food', subProfessions: ['Food'] },
+  'Travel': { name: 'Travel', subProfessions: ['Travel'] },
+  'Music': { name: 'Music', subProfessions: ['Music'] },
+  'Tech': { name: 'Tech', subProfessions: ['Tech'] },
+  'Education': { name: 'Education', subProfessions: ['Education'] },
+  'Comedy & Entertainment': { name: 'Comedy & Entertainment', subProfessions: ['Comedy & Entertainment'] },
 };
 
 const CAMPAIGN_TYPES = ['Product Review', 'Brand Ambassador', 'Sponsored Content', 'Event Coverage', 'Affiliate', 'Whitelabel', 'UGC', 'Podcast'];
@@ -232,8 +186,7 @@ type Opportunity = {
 };
 
 // Opportunities vary by profession — different brands want different skills
-// No hardcoded opportunities — only real brand-created campaigns from Firebase appear
-
+// No hardcoded opportunities — only real brand-created campaigns from shared state appear
 
 // Channels — skin-gated group DMs. These appear alongside regular DMs with a ValueSkin badge.
 const CHANNELS: any[] = [];
@@ -305,7 +258,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
     }
   };
   const [activeView, setActiveView] = useState<'profile' | 'mim' | 'store' | 'admin' | 'messages' | 'settings' | 'explore' | 'notifications' | 'events'>(() => {
-
 
     if (typeof window !== 'undefined') {
       const p = window.location.pathname;
@@ -411,10 +363,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
     ],
     2: [
       { id: 5, author: 'Sam K.', handle: '@samk_ceo', text: 'Lesson from year 3: hire for mindset, train for skill. Churn dropped 40%.', time: '5h ago' },
-      { id: 6, author: 'Lin M.', handle: '@lin_builds', text: 'We just crossed $1M ARR. Sharing the full breakdown next week. AMA.', time: '1h ago' },
+      { id: 6, author: 'Lin M.', handle: '@lin_builds', text: 'We just crossed ₹8 Cr ARR. Sharing the full breakdown next week. AMA.', time: '1h ago' },
     ],
   });
-
 
   // 3-slot ValueSkin state — persisted to localStorage
   const [valueSkins, setValueSkins] = useState<ValueSkinMap>({});
@@ -437,7 +388,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
       localStorage.setItem(SK.valueSkins, JSON.stringify(valueSkins));
     } catch (e) { /* quota exceeded — safe to ignore */ }
   }, [valueSkins, skinsLoaded, loading]);
-
 
   const [valueskinAvatarEnabled, setValueskinAvatarEnabled] = useState(false);
   const [skinPositions, setSkinPositions] = useState<Record<string, {x: number, y: number}>>({});
@@ -484,7 +434,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
     } catch (e) { /* ignore */ }
   }, [loading, SK.persist]);
 
-
   const { factors } = useReputationConfig();
 
   const [showMetricsModal, setShowMetricsModal] = useState(false);
@@ -495,7 +444,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   // Set right after a skin is applied, so the profile plays the slap animation.
   const [justEquipped, setJustEquipped] = useState(false);
   // Settings tab: the hub, or the older preferences panel opened from it.
-  const [settingsPane, setSettingsPane] = useState<'hub' | 'preferences'>('hub');
+  const [settingsPane, setSettingsPane] = useState<'hub' | 'preferences' | 'creator-preferences'>('hub');
 
   // ValueSkin edit modal state
   const [showEditValueSkinModal, setShowEditValueSkinModal] = useState(false);
@@ -536,7 +485,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
             ...c,
             valueSkin: activeBrandSkin,
             _origIdx: idx,
-            rate: c.rate || '$0',
+            rate: c.rate || '₹0',
             featured: false,
             willingToBarter: true,
           })));
@@ -718,29 +667,29 @@ export default function MarketplaceDemoPage(initialDealData?: {
     dealStates: initialDealData.initialDealStates,
     applications: initialDealData.initialApplications,
   } : undefined);
-  // Firebase sync — all users share one global namespace
-  const { state: firebaseState, syncing: firebaseSyncing, createCampaign: firebaseCreateCampaign, updateDeal: firebaseUpdateDeal, addMessage: firebaseAddMessage, sendNotification: firebaseSendNotification, createApplication: firebaseCreateApplication } = useFirebaseRoom(null, null, '');
+  // Shared state — all users share one global namespace (Supabase realtime)
+  const { state: sharedState, syncing: sharedSyncing, realtimeConnected, createCampaign: sharedCreateCampaign, updateDeal: sharedUpdateDeal, addMessage: sharedAddMessage, sendNotification: sharedSendNotification, createApplication: sharedCreateApplication } = useSupabaseRoom(null, null, '');
   const { dealStates, setDealStates, getOrCreateDeal, updateDeal: localUpdateDeal } = dealSync;
 
   // Ref to bridge activeOpportunities declaration order (defined later at line ~2395)
   const activeOppsRef = useRef<any[]>([]);
 
-  // CRITICAL FIX: Sync Firebase state back to local state for real-time multi-device updates
+  // CRITICAL FIX: Sync shared state back to local state for real-time multi-device updates
   useEffect(() => {
-    if (firebaseState.deals && Object.keys(firebaseState.deals).length > 0) {
+    if (sharedState.deals && Object.keys(sharedState.deals).length > 0) {
       setDealStates(prev => {
         const updated: Record<string, DealState> = { ...prev };
-        for (const [key, fbDeal] of Object.entries(firebaseState.deals)) {
-          // Merge Firebase state with local state, Firebase takes precedence
+        for (const [key, fbDeal] of Object.entries(sharedState.deals)) {
+          // Merge remote snapshot under LOCAL state so in-flight typing is never clobbered
           updated[key] = {
-            ...(prev[key] || ({} as DealState)),
             ...((fbDeal as Partial<DealState>) || {}),
+            ...(prev[key] || ({} as DealState)),
           };
         }
         return updated;
       });
     }
-  }, [firebaseState.deals, setDealStates]);
+  }, [sharedState.deals, setDealStates]);
 
   // Auto-scroll deal room into view when it opens
   useEffect(() => {
@@ -756,9 +705,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const brandChatEndRef = useRef<HTMLDivElement>(null);
   // Track previous brandDealKey to reset notifications when switching creators
 
-  // Sync Firebase messages back to local deal state — merge, don't replace
+  // Sync shared messages back to local deal state — merge, don't replace
   useEffect(() => {
-    if (!firebaseState.messages) return;
+    if (!sharedState.messages) return;
     let dealKey: string | null = null;
     if (marketplaceRole === 'creator' && selectedMarketplaceSkin && negotiatingOpp !== null) {
       const matchingCreator = backendCreators.find((c: any) => c.valueSkin === selectedMarketplaceSkin);
@@ -773,19 +722,20 @@ export default function MarketplaceDemoPage(initialDealData?: {
     }
 
     if (!dealKey) return;
-    const fbMessages = firebaseState.messages[dealKey] || [];
+    const fbMessages = sharedState.messages[dealKey] || [];
     if (fbMessages.length > 0) {
       setDealStates(prev => {
         const existing = prev[dealKey];
         if (!existing) return { ...prev, [dealKey]: { intent: 'campaign' as const, phase: 'chatroom' as const, briefFilled: true, briefTitle: '', offerAmount: '', counterAmount: '', brandResponseAmount: '', chatMessages: fbMessages as ChatMessage[], chatInput: '', performanceClause: false, advancePercent: 50, approvalPercent: 50 } };
-        // Merge: use local messages as base, append any from Firebase not already present
-        const localMap = new Set(existing.chatMessages.map(m => m.id));
+        // Merge: use local messages as base, append any from shared state not already present
+        const localMsgs = existing.chatMessages || [];
+        const localMap = new Set(localMsgs.map(m => m.id));
         const newFromFb = (fbMessages as ChatMessage[]).filter(m => !localMap.has(m.id));
         if (newFromFb.length === 0) return prev;
-        return { ...prev, [dealKey]: { ...existing, chatMessages: [...existing.chatMessages, ...newFromFb] } };
+        return { ...prev, [dealKey]: { ...existing, chatMessages: [...localMsgs, ...newFromFb] } };
       });
     }
-  }, [firebaseState.messages, selectedMarketplaceSkin, negotiatingOpp, marketplaceRole, negotiatingCreator, brandCurrentOppIndex, setDealStates, backendCreators]);
+  }, [sharedState.messages, selectedMarketplaceSkin, negotiatingOpp, marketplaceRole, negotiatingCreator, brandCurrentOppIndex, setDealStates, backendCreators]);
 
   // Sync payment milestones + creator deal lifecycle from dealStates to local UI state (real-time)
   useEffect(() => {
@@ -825,8 +775,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
   const updateDeal = useCallback((key: string, updates: Partial<DealState>) => {
     localUpdateDeal(key, updates);
-    firebaseUpdateDeal(key, updates);
-  }, [localUpdateDeal, firebaseUpdateDeal]);
+    sharedUpdateDeal(key, updates);
+  }, [localUpdateDeal, sharedUpdateDeal]);
   const dealsLoaded = dealSync.loaded;
 
   // Active deal key — STABLE across creator/brand for two-device sync
@@ -886,7 +836,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
         accepted: 'Deal accepted',
         softhold: 'Escrow hold',
       };
-      firebaseSendNotification(opp?.brand || 'Brand', 'application', `${phaseNames[p]} · ${opp?.brand} & you are now at: ${phaseNames[p]}`);
+      sharedSendNotification(opp?.brand || 'Brand', 'application', `${phaseNames[p]} · ${opp?.brand} & you are now at: ${phaseNames[p]}`);
       setPurchaseToast(`Deal moved to: ${phaseNames[p]}`);
       setTimeout(() => setPurchaseToast(null), 2500);
     }
@@ -944,7 +894,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
     if (!activeDealKey) return;
     setDealStates(prev => {
       const deal = prev[activeDealKey] || getOrCreateDeal(activeDealKey);
-      const newMsgs = typeof fn === 'function' ? fn(deal.chatMessages) : fn;
+      const newMsgs = typeof fn === 'function' ? fn(deal.chatMessages || []) : fn;
       return { ...prev, [activeDealKey]: { ...deal, chatMessages: newMsgs } };
     });
   };
@@ -1004,9 +954,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [brandBudget, setBrandBudget] = useState('4000');
   const [brandCampaignDesc, setBrandCampaignDesc] = useState('Looking for authentic content creators to showcase our product');
   const [brandCampaignType, setBrandCampaignType] = useState('Product Review');
-
-  // Brand's country — used for campaign matching (must match creator country)
-  const [brandCountry, setBrandCountry] = useState('');
 
   // Brand-side deal room state — uses dealStates for real-time sync (was: localStorage-only)
   // Key format MUST match creator side: creatorName|creatorSkin
@@ -1121,7 +1068,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       `Creator Skin: ${deal.creatorSkin || selectedMarketplaceSkin || 'N/A'}`,
       '',
       'COMMERCIAL TERMS',
-      `Agreed Amount (USD): ${agreedAmount}`,
+      `Agreed Amount (INR): ${agreedAmount}`,
       `Deal Type: ${deal.dealType || 'paid'}`,
       `Offer Amount: ${deal.offerAmount || 'N/A'}`,
       `Counter Amount: ${deal.counterAmount || 'N/A'}`,
@@ -1219,7 +1166,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [filterBarterOnly, setFilterBarterOnly] = useState(false);
   const [filterOppsBarterOnly, setFilterOppsBarterOnly] = useState(false);
 
-  const [firebaseNotifications, setFirebaseNotifications] = useState<Array<{id: string; type: 'campaign' | 'application' | 'message'; message: string; createdAt: number; read: boolean}>>([]);
+  const [sharedNotifications, setSharedNotifications] = useState<Array<{id: string; type: 'campaign' | 'application' | 'message'; message: string; createdAt: number; read: boolean}>>([]);
 
   // Brand field filter — which ValueSkin profession the brand wants to target
   const [brandSearchQuery, setBrandSearchQuery] = useState('');
@@ -1310,15 +1257,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
   const forceRefreshCampaigns = useCallback(async () => {
     try {
-      // 1. Push local campaigns to shared DB (so old localStorage-only campaigns appear)
-      if (campaigns.length > 0) {
-        await fetch('/api/realtime/state', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ value: { campaigns } }),
-        });
-      }
-      // 2. Pull latest from shared DB (update in-place, don't append-only)
+      // Pull latest from shared DB (update in-place, don't append-only).
+      // Writes to shared state go through useSupabaseRoom's granular upserts.
       const res = await fetch('/api/realtime/state');
       if (res.ok) {
         const data = await res.json();
@@ -1345,7 +1285,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
     } catch (e) {
       console.error('Failed to refresh campaigns:', e);
     }
-  }, [campaigns, setCampaigns]);
+  }, [setCampaigns]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -1353,13 +1293,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
     setRefreshing(false);
   }, [fetchAllCreators, forceRefreshCampaigns]);
 
-  // Merge Firebase campaigns into local state (cross-device sync)
+  // Merge shared campaigns into local state (cross-device sync)
   // Updates existing campaigns and adds new ones for real-time visibility
   // Also persist to localStorage for cross-session persistence
   useEffect(() => {
-    if (firebaseState.campaigns.length > 0) {
+    if (sharedState.campaigns.length > 0) {
       setCampaigns(prev => {
-        const fbCampaigns = firebaseState.campaigns as Campaign[];
+        const fbCampaigns = sharedState.campaigns as Campaign[];
         const localMap = new Map(prev.map(c => [c.id, c]));
 
         // Update existing or add new campaigns
@@ -1379,7 +1319,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
         return updated;
       });
     }
-  }, [firebaseState.campaigns, setCampaigns]);
+  }, [sharedState.campaigns, setCampaigns]);
 
   // On mount, load campaigns from localStorage for persistence across sessions
   useEffect(() => {
@@ -1394,41 +1334,39 @@ export default function MarketplaceDemoPage(initialDealData?: {
         // Invalid JSON, ignore
       }
     }
+    // Pull the latest campaigns from shared state on load so previously-created
+    // campaigns render immediately without having to create a new one first.
+    forceRefreshCampaigns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-refresh campaigns from shared DB every 10s (cross-device sync)
   useEffect(() => {
-    const interval = setInterval(() => {
-      forceRefreshCampaigns();
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [forceRefreshCampaigns]);
-
-  useEffect(() => {
-    // Firebase always active
-    if (firebaseState.applications.length > 0) {
-      setSharedApplications(firebaseState.applications as SharedApplication[]);
+    // Shared state always active
+    if (sharedState.applications.length > 0) {
+      setSharedApplications(sharedState.applications as SharedApplication[]);
     }
-  }, [firebaseState.applications, setSharedApplications]);
+  }, [sharedState.applications, setSharedApplications]);
 
-  // Sync deal states from Firebase (other device's deal updates appear here)
+  // Sync deal states from shared state (other device's deal updates appear here)
   useEffect(() => {
-    // Firebase always active
-    const fbDeals = firebaseState.deals;
+    // Shared state always active
+    const fbDeals = sharedState.deals;
     if (Object.keys(fbDeals).length > 0) {
       setDealStates(prev => {
         const merged = { ...prev };
         for (const [key, deal] of Object.entries(fbDeals)) {
-          merged[key] = { ...merged[key], ...(deal as DealState) };
+          const mergedDeal = { ...merged[key], ...(deal as Partial<DealState>) } as DealState;
+          mergedDeal.chatMessages = Array.isArray(mergedDeal.chatMessages) ? mergedDeal.chatMessages : [];
+          merged[key] = mergedDeal;
         }
         return merged;
       });
     }
-  }, [firebaseState.deals]);
+  }, [sharedState.deals]);
 
-  // Sync Firebase messages into deal chatMessages
+  // Sync shared messages into deal chatMessages
   useEffect(() => {
-    const fbMessages = firebaseState.messages;
+    const fbMessages = sharedState.messages;
     if (Object.keys(fbMessages).length > 0) {
       setDealStates(prev => {
         const merged: Record<string, DealState> = { ...prev };
@@ -1436,20 +1374,20 @@ export default function MarketplaceDemoPage(initialDealData?: {
           const existing = merged[dealKey] || ({} as DealState);
           merged[dealKey] = {
             ...existing,
-            chatMessages: msgs as ChatMessage[],
+            chatMessages: Array.isArray(msgs) ? msgs as ChatMessage[] : [],
           } as DealState;
         }
         return merged;
       });
     }
-  }, [firebaseState.messages]);
+  }, [sharedState.messages]);
 
-  // Sync Firebase notifications
+  // Sync shared notifications
   useEffect(() => {
-    // Firebase always active
-    if (firebaseState.notifications.length > 0) {
-      setFirebaseNotifications(firebaseState.notifications);
-      const newNotifs = firebaseState.notifications.filter((n: any) => !n.read);
+    // Shared state always active
+    if (sharedState.notifications.length > 0) {
+      setSharedNotifications(sharedState.notifications);
+      const newNotifs = sharedState.notifications.filter((n: any) => !n.read);
       if (newNotifs.length > 0) {
         newNotifs.forEach((n: any) => {
           const msg = n.type === 'campaign' ? `New campaign: ${n.message}` : n.type === 'application' ? `New application: ${n.message}` : `Message: ${n.message}`;
@@ -1460,9 +1398,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
         });
       }
     }
-  }, [firebaseState.notifications]);
+  }, [sharedState.notifications]);
 
-  // No seeded campaigns or applications — only real data from Firebase
+  // No seeded campaigns or applications — only real data from shared state
 
   const [marketplaceTab, setMarketplaceTab] = useState<'creators' | 'campaigns' | 'applications' | 'sent'>('creators');
   // All creators across all professions — used for continuous live auto-matching
@@ -1471,47 +1409,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [refreshing, setRefreshing] = useState(false);
   const [hiddenSentDealIds, setHiddenSentDealIds] = useState<Set<number>>(new Set());
   const [showCampaignCreator, setShowCampaignCreator] = useState(false);
-  const [newCampaignTitle, setNewCampaignTitle] = useState('');
-  const [newCampaignDesc, setNewCampaignDesc] = useState('');
-  const [newCampaignBudget, setNewCampaignBudget] = useState('');
-  const [newCampaignDeadline, setNewCampaignDeadline] = useState('');
-  const [newCampaignDeliveryDeadline, setNewCampaignDeliveryDeadline] = useState('');
-  const [newCampaignProfessions, setNewCampaignProfessions] = useState<string[]>([]);
-  const [newCampaignMinLevel, setNewCampaignMinLevel] = useState(1);
-  const [newCampaignMaxLevel, setNewCampaignMaxLevel] = useState(5);
-  const [newCampaignLocation, setNewCampaignLocation] = useState('');
-  const [newCampaignDeliverables, setNewCampaignDeliverables] = useState('');
-  const [newCampaignNonNeg, setNewCampaignNonNeg] = useState<string[]>([]);
-  const [newCampaignAbout, setNewCampaignAbout] = useState('');
-  const [newCampaignCompensation, setNewCampaignCompensation] = useState('Paid');
-  const [newCampaignExclusivity, setNewCampaignExclusivity] = useState('None');
-  const [newCampaignUsageRights, setNewCampaignUsageRights] = useState('30 days, social only');
-  const [newCampaignHasDigitalRights, setNewCampaignHasDigitalRights] = useState(false);
-  const [newCampaignDigitalRightsAmount, setNewCampaignDigitalRightsAmount] = useState('');
-  const [newCampaignDigitalRightsReels, setNewCampaignDigitalRightsReels] = useState(0);
-  const [newCampaignDigitalRightsStories, setNewCampaignDigitalRightsStories] = useState(0);
-  const [newCampaignDigitalRightsDays, setNewCampaignDigitalRightsDays] = useState('30');
-  const [newCampaignAudienceTarget, setNewCampaignAudienceTarget] = useState('');
-  const [newCampaignRequirements, setNewCampaignRequirements] = useState<string[]>([]);
-  const [newCampaignReqInput, setNewCampaignReqInput] = useState('');
-  const [newCampaignCreatorCount, setNewCampaignCreatorCount] = useState(1);
-  const [newCampaignValueskin, setNewCampaignValueskin] = useState<ValueSkinSlot>('profession');
-  const [newCampaignSelectedProfession, setNewCampaignSelectedProfession] = useState('');
-  const [newCampaignPostsCount, setNewCampaignPostsCount] = useState(0);
-  const [newCampaignReelsCount, setNewCampaignReelsCount] = useState(0);
-  const [newCampaignStoriesCount, setNewCampaignStoriesCount] = useState(0);
-  const [newCampaignPocEmail, setNewCampaignPocEmail] = useState('');
-  const [newCampaignPocPhone, setNewCampaignPocPhone] = useState('');
-  const [newCampaignContentLanguage, setNewCampaignContentLanguage] = useState('English');
-
-  // Campaign POC (Point of Contact) fields
-  const [newCampaignPocName, setNewCampaignPocName] = useState('');
-  const [newCampaignPocRole, setNewCampaignPocRole] = useState('');
-
-  // Campaign script mode selection (brand chooses during creation)
-  const [newCampaignScriptMode, setNewCampaignScriptMode] = useState<'non_negotiable' | 'discussion' | 'creator_freedom'>('creator_freedom');
-  const [newCampaignScriptText, setNewCampaignScriptText] = useState('');
-  const [newCampaignContentReview, setNewCampaignContentReview] = useState<'direct_upload' | 'review_required'>('review_required');
 
   // Barter goods tracker and international compliance states
   const [goodsTrackingInput, setGoodsTrackingInput] = useState('');
@@ -1568,7 +1465,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   };
   const persistApplications = (updated: SharedApplication[]) => {
     setSharedApplications(updated);
-    updated.forEach(a => firebaseCreateApplication(a));
+    updated.forEach(a => sharedCreateApplication(a));
   };
   const downloadDealReport = useCallback(async (dealKey: string) => {
     const deal = dealStates[dealKey];
@@ -1637,9 +1534,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
     drawSectionTitle('DEAL OVERVIEW');
     drawWrapped(`Title: ${deal.briefTitle || opp?.type || 'N/A'}`, 11, m, 500, { bold: true });
     drawWrapped(`Brand: ${opp?.brand || 'N/A'}`, 10, m, 500);
-    drawLine(`Offer Amount: $${deal.offerAmount || '0'}`, 10, m);
-    drawLine(`Counter Amount: $${deal.counterAmount || '0'}`, 10, m);
-    drawLine(`Final Amount: $${deal.agreementAmount || deal.offerAmount || '0'}`, 10, m, { bold: true });
+    drawLine(`Offer Amount: ₹${deal.offerAmount || '0'}`, 10, m);
+    drawLine(`Counter Amount: ₹${deal.counterAmount || '0'}`, 10, m);
+    drawLine(`Final Amount: ₹${deal.agreementAmount || deal.offerAmount || '0'}`, 10, m, { bold: true });
     drawLine(`Performance Clause: ${deal.performanceClause ? 'Yes' : 'No'}`, 10, m);
     drawLine(`Payment Split: Advance ${deal.advancePercent}% / Approval ${deal.approvalPercent}%`, 9, m, { color: gray });
     if (deal.poc) {
@@ -1675,7 +1572,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       drawLine('No deliverables recorded', 10, m, { color: gray });
     }
     if (deal.escrowFunded) {
-      drawLine(`Escrow: Funded (Pool: $${deal.escrowPool || 'N/A'})`, 10, m);
+      drawLine(`Escrow: Funded (Pool: ₹${deal.escrowPool || 'N/A'})`, 10, m);
     }
     drawSep();
 
@@ -1690,7 +1587,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       drawSectionTitle('TIPS');
       tips.forEach(t => {
         const extra = t.message ? ': ' + t.message : '';
-        drawLine(`  $${t.amount} from ${t.from}${extra}`, 10, m);
+        drawLine(`  ₹${t.amount} from ${t.from}${extra}`, 10, m);
       });
       drawSep();
     }
@@ -1765,11 +1662,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
     setCreatorMarketplaceTab('opportunities');
     setMarketplaceTab('creators');
     setCreatorCampaignSearch('');
-    setNewCampaignTitle('');
-    setNewCampaignDesc('');
-    setNewCampaignBudget('');
-    setNewCampaignDeadline('');
-    setNewCampaignDeliverables('');
+    // The composer owns the campaign draft now — clear it rather than five
+    // individual form fields.
+    if (typeof window !== 'undefined') localStorage.removeItem(CAMPAIGN_DRAFT_KEY);
     setPurchaseToast('MVP reset complete — demo restarted from beginning');
     setTimeout(() => setPurchaseToast(null), 2500);
     if (typeof window !== 'undefined') {
@@ -2049,8 +1944,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
     fetchStats();
   }, []);
 
-
-
   // Fetch ValueSkins from API based on user role
   useEffect(() => {
     const fetchValueSkins = async () => {
@@ -2323,10 +2216,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
     if (bothApproved) {
       payload.scriptApprovedAt = new Date().toISOString();
       payload.scriptStatus = 'approved';
-      firebaseSendNotification(otherParty, 'application', 'Both parties approved the script! Ready to move to deliverables.');
+      sharedSendNotification(otherParty, 'application', 'Both parties approved the script! Ready to move to deliverables.');
       setPurchaseToast('Script approved by both parties');
     } else {
-      firebaseSendNotification(otherParty, 'application', `${isCreatorRole ? 'Creator' : 'Brand'} approved the script. Awaiting your approval to proceed.`);
+      sharedSendNotification(otherParty, 'application', `${isCreatorRole ? 'Creator' : 'Brand'} approved the script. Awaiting your approval to proceed.`);
       setPurchaseToast(`Script approved by ${isCreatorRole ? 'you' : 'brand'}`);
     }
     updateDeal(activeDealKey, payload);
@@ -2350,6 +2243,21 @@ export default function MarketplaceDemoPage(initialDealData?: {
   );
 
   const hasValueSkin = Object.values(valueSkins).some(entry => entry?.profession);
+
+  // §9 data bindings for the profile hero. The worn ValueSkin is the
+  // profession; name/handle/location come from the real profile row.
+  const wornProfession = Object.values(valueSkins).find(e => e?.profession)?.profession || '';
+  const [heroProfile, setHeroProfile] = useState<{
+    display_name?: string; username?: string; location?: string; country?: string;
+  } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/profile/me', { credentials: 'include' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (!cancelled && d) setHeroProfile(d); })
+      .catch(() => { /* hero falls back to account + local state */ });
+    return () => { cancelled = true; };
+  }, []);
   const hasAnySkin = hasValueSkin || brandValueSkins.length > 0;
 
   // List of owned skins for the marketplace skin selector
@@ -2424,10 +2332,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
     if (newApps.length > 0) {
       const updated = [...sharedApplications, ...newApps];
       setSharedApplications(updated);
-      updated.forEach(a => firebaseCreateApplication(a));
+      updated.forEach(a => sharedCreateApplication(a));
     }
     hasBackfilledApps.current = true;
-  }, [dealStates, liveCampaigns, sharedApplications, setSharedApplications, firebaseCreateApplication]);
+  }, [dealStates, liveCampaigns, sharedApplications, setSharedApplications, sharedCreateApplication]);
 
   // Continuous live auto-matching: recomputes whenever campaigns or allCreators change
   const campaignMatches = useMemo(() => {
@@ -2508,7 +2416,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       featured: true,
       willingToBarter: (c.compensationType || '').toLowerCase().includes('barter'),
       about: c.about || c.description,
-      budget: `$${parseInt(c.budget || '0').toLocaleString()}`,
+      budget: `₹${parseInt(c.budget || '0').toLocaleString()}`,
       deadline: c.deliveryDeadline && c.deliveryDeadline.trim() ? c.deliveryDeadline : undefined,
       applicationDeadline: c.deadline,
       deliverables: (c.deliverables || '').split(',').map(d => {
@@ -2538,6 +2446,44 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const missedDeals = selectedMarketplaceSkin
     ? liveCampaigns.filter(c => c.status === 'expired' && c.requiredProfessions.includes(selectedMarketplaceSkin))
     : [];
+
+  // ── Demo session identity ───────────────────────────────────────────
+  // The marketplace demo signs you in locally (role + profile + skins), with
+  // no auth cookie. SettingsHub checks the real session API first and falls
+  // back to this identity so it never claims you are logged out in the demo.
+  const demoSignedIn = marketplaceRole !== 'none' || !!profileName || !!account;
+  const demoAccount: Account | null = demoSignedIn
+    ? {
+        id: typeof account?.id === 'number' ? account.id : -1,
+        email: account?.email || null,
+        display_name: profileName || account?.display_name || 'User',
+        avatar_url: profileAvatar || account?.avatar_url || null,
+      }
+    : null;
+
+  const handleDemoLogout = () => {
+    try {
+      localStorage.removeItem(SK.persist);
+      localStorage.removeItem(SK.valueSkins);
+      localStorage.removeItem(SK.dealSync);
+      localStorage.removeItem(SK.campaigns);
+      localStorage.removeItem(SK.applications);
+    } catch (e) { /* ignore */ }
+    setMarketplaceRole('none');
+    setValueSkins({});
+    setBrandValueSkins([]);
+    setActiveBrandSkin(null);
+    setSelectedMarketplaceSkin(null);
+    setProfileName('');
+    setProfileBio('');
+    setProfileAvatar(null);
+    setSettingsPane('hub');
+    setActiveView('mim');
+    // SettingsHub already POSTed /api/auth/logout (cleared the session cookie),
+    // so reload to drop the in-memory account and land on the signed-out role
+    // screen instead of the "ValueSkin Required" marketplace gate.
+    window.location.href = '/demo/marketplace';
+  };
 
   return (
     <div style={{ background: C.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', overflowX: 'hidden' }}>
@@ -2889,7 +2835,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
         </div>
       )}
 
-
       {/* Main Content */}
       <div style={{ display: activeView === 'events' ? 'none' : 'flex', flex: 1, justifyContent: 'center', overflowX: 'hidden', paddingBottom: '60px' }}>
         {/* Content column. It used to be pinned to 600px (900px for a few views),
@@ -2914,21 +2859,29 @@ export default function MarketplaceDemoPage(initialDealData?: {
               <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
 
                 {/* Identity anchor — ui-specs/phase-2/Profile page.md.
-                    The old top card below is kept as the edit form, so editing a
-                    name/bio still works exactly as before. */}
+                    Edit profile opens Creator Profile Preferences, which is the
+                    primary entry per Creator Profile Preferences.md §1 (P2-F9).
+                    Its Identity tab covers display name, username, niche, city,
+                    country and bio, so the old inline card below is superseded
+                    and no longer reachable — left in place rather than excised
+                    mid-pass, since it is interleaved with the stats block. */}
                 {!editingProfile ? (
                   <ProfileView
                     embedded
                     containerWidth={860}
                     justEquipped={justEquipped}
                     onEquipAnimationDone={() => setJustEquipped(false)}
-                    onEditProfile={() => setEditingProfile(true)}
+                    onEditProfile={() => { setActiveView('settings'); setSettingsPane('creator-preferences'); }}
                     profile={{
-                      display_name: account?.display_name || profileName || 'Your Name',
-                      username: (account?.email || '').split('@')[0] || 'you',
-                      profession: isBrand ? 'Brand' : 'Creator',
-                      languages: ['English'],
-                      open_for_work: true,
+                      display_name: heroProfile?.display_name || account?.display_name || profileName || 'Your Name',
+                      username: heroProfile?.username || (account?.email || '').split('@')[0] || 'you',
+                      // the worn ValueSkin IS the profession (§9); fall back to
+                      // the role only while no skin is equipped
+                      profession: wornProfession || (isBrand ? 'Brand' : 'Creator'),
+                      location: heroProfile?.location,
+                      country: heroProfile?.country,
+                      languages: selectedLanguages.length ? selectedLanguages : ['English'],
+                      open_for_work: creatorEnergy !== 'pause',
                       // computed server-side from completed deals — never editable
                       deals_completed: trackRecord?.deals_completed ?? completedDeals.length,
                       deals_this_month: trackRecord?.deals_this_month ?? 0,
@@ -3072,8 +3025,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   </div>
                 )}
 
-
-
                 {/* Account block removed: role is already on the identity hero,
                     and Delete Account lives in Settings. */}
 
@@ -3083,8 +3034,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
           {activeView === 'mim' && (
             <>
-              {/* Layer 1: Gate — no ValueSkin */}
-              {!hasAnySkin && (
+              {/* Layer 1: Gate — no ValueSkin (signed-in only; logged-out users
+                  get the role picker below instead of a dead-end store prompt) */}
+              {!hasAnySkin && marketplaceRole !== 'none' && (
                 <>
                   <div style={{ height: '60px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', paddingLeft: '20px', fontWeight: 'bold', fontSize: '16px', background: C.surface }}>Marketplace</div>
                   <div style={{ padding: '60px 20px', textAlign: 'center' }}>
@@ -3171,8 +3123,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       <span style={{ fontSize: '22px', fontWeight: 700, color: C.text }}>Marketplace</span>
                     </div>
 
-
-
                     {/* Available for deals toggle + tab selector */}
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px', gap:'8px' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
@@ -3188,9 +3138,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             {tab === 'opportunities' ? 'Opportunities' : 'My Pipeline'}
                           </button>
                         ))}
-                        <button onClick={handleRefresh} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 6px', display:'flex', alignItems:'center', gap:'4px', color:C.textMuted, fontSize:'11px', fontWeight:600, opacity: refreshing ? 0.5 : 1 }}>
-                          <span style={{ width:6, height:6, borderRadius:'50%', background: wsConnected ? '#00D46A' : '#9ca3af', flexShrink:0 }} title={wsConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
-                          {refreshing ? '↻' : '⟳'}
+                        <button onClick={handleRefresh} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 10px', display:'flex', alignItems:'center', gap:'4px', color:C.textMuted, fontSize:'11px', fontWeight:600, opacity: refreshing ? 0.5 : 1 }}>
+                          <span style={{ width:6, height:6, borderRadius:'50%', background: realtimeConnected ? '#00D46A' : '#9ca3af', flexShrink:0 }} title={realtimeConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
+                          {refreshing ? '↻' : '⟳'} Refresh
                         </button>
                       </div>
                     </div>
@@ -3318,7 +3268,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           // Deal key format: creatorName|creatorSkin|oppIndex (allows multiple deals per creator)
                           // Use actual opportunity index from activeOpportunities (not filtered index)
                           const actualOppIndex = activeOpportunities.indexOf(opp);
-                          const matchingCreator = BRAND_MARKETPLACE_CREATORS.find(c => c.valueSkin === selectedMarketplaceSkin);
+                          const matchingCreator = backendCreators.find((c: any) => c.valueSkin === selectedMarketplaceSkin);
                           const dealCreatorName = matchingCreator?.name || profileName;
                           const dealKey = `${dealCreatorName}|${selectedMarketplaceSkin}|${actualOppIndex}`;
                           const relatedDealEntries = Object.entries(dealStates).filter(([k, d]) =>
@@ -3404,7 +3354,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         opportunityIndex: actualOppIndex,
                                         creatorName: dealCreatorName,
                                         creatorSkin: selectedMarketplaceSkin,
-                                        creatorMarketplaceIndex: matchingCreator ? BRAND_MARKETPLACE_CREATORS.indexOf(matchingCreator) : undefined,
+                                        creatorMarketplaceIndex: matchingCreator ? (matchingCreator as any)._origIdx : undefined,
                                       });
                                       if (opp.campaignId) {
                                         const newApp: SharedApplication = {
@@ -3420,7 +3370,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           creatorEngagement: `${metrics.engagement.toFixed(1)}%`,
                                           creatorLevel: getLevel(metrics.dealsCompleted),
                                           creatorMatchScore: opp.match,
-                                          creatorRate: rateCard.reel ? `$${rateCard.reel}` : '$3,000',
+                                          creatorRate: rateCard.reel ? `₹${rateCard.reel}` : '₹3,000',
                                           creatorDealCompletionRate: 95,
                                           creatorPortfolio: [],
                                           creatorAudienceLocation: selectedCountry || 'USA',
@@ -3564,7 +3514,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             }
                                             const now = new Date();
                                             const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                            const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator entered negotiation for $${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
+                                            const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator entered negotiation for ₹${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                             const existingMsgs = (activeDeal?.chatMessages) || [];
                                             updateDeal(localKey, {
                                               phase: 'chatroom',
@@ -3584,7 +3534,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                               const rejectMsg = { id: Date.now(), sender: 'creator' as const, text: 'Creator declined the offer', time: timeStr, isoTime: now.toISOString(), seen: false };
                                               setChatMessages(prev => [...prev, rejectMsg]);
-                                              firebaseAddMessage(activeDealKey || '', rejectMsg);
+                                              sharedAddMessage(activeDealKey || '', rejectMsg);
                                               setDealRoomPhase('rejected');
                                               updateDeal(activeDealKey, { phase: 'rejected' });
                                             }
@@ -3619,9 +3569,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           onClick={() => {
                                             const now = new Date();
                                             const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                            const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator confirmed agreement at $${parseInt(dealCounterAmount).toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
+                                            const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator confirmed agreement at ₹${parseInt(dealCounterAmount).toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                             setChatMessages(prev => [...prev, acceptMsg]);
-                                            firebaseAddMessage(activeDealKey || '', acceptMsg);
+                                            sharedAddMessage(activeDealKey || '', acceptMsg);
                                             updateDeal(activeDealKey!, { phase: 'accepted' });
                                             setDealRoomPhase('accepted');
                                           }}
@@ -3755,7 +3705,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'8px' }}>Contract Terms</div>
                                           {[
                                             { key: 'deliverables', label: `I agree to deliver ${opp.deliverables.map(d => `${d.count}x ${d.format}`).join(', ')} by ${opp.deadline ? new Date(opp.deadline).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : 'agreed date'}` },
-                                            { key: 'payment', label: `Payment of $${totalPrice.toLocaleString()} split as: ${advPct}% advance, ${approvalPct}% on approval` },
+                                            { key: 'payment', label: `Payment of ₹${totalPrice.toLocaleString()} split as: ${advPct}% advance, ${approvalPct}% on approval` },
                                             { key: 'usage', label: `Brand may use content for ${opp.usageRights || 'agreed period'} per usage rights terms` },
                                             { key: 'exclusivity', label: `Exclusivity: ${opp.exclusivity || 'None'} — I will not promote competing brands during this period` },
                                             { key: 'revisions', label: `Up to ${opp.revisionLimit} revision round${opp.revisionLimit !== 1 ? 's' : ''} included at no extra cost` },
@@ -3829,7 +3779,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   creatorFollowers: `${(metrics.followers / 1000).toFixed(metrics.followers >= 1000000 ? 1 : 0)}${metrics.followers >= 1000000 ? 'M' : 'K'}`,
                                                   creatorEngagement: `${metrics.engagement.toFixed(1)}%`,
                                                   creatorLevel: getLevel(metrics.dealsCompleted),
-                                                  creatorMatchScore: '94%', creatorRate: rateCard.reel ? `$${rateCard.reel}` : '$3,000',
+                                                  creatorMatchScore: '94%', creatorRate: rateCard.reel ? `₹${rateCard.reel}` : '₹3,000',
                                                   creatorDealCompletionRate: 95, creatorPortfolio: [],
                                                   creatorAudienceLocation: selectedCountry || 'USA', creatorAudienceAge: '25-34',
                                                   creatorResponseTimeHrs: 6, creatorWebsiteUrl: `https://portfolio.valueskins.com/creator_demo`,
@@ -4316,7 +4266,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             const msgSender: 'brand' | 'creator' = (marketplaceRole as 'brand' | 'creator') === 'brand' ? 'brand' : 'creator';
                                             const newMsg = { id: Date.now(), sender: msgSender, text: chatInput.trim(), time: timeStr, isoTime: isoNow, seen: false };
                                             setChatMessages(prev => [...prev, newMsg]);
-                                            firebaseAddMessage(activeDealKey ?? '', newMsg);
+                                            sharedAddMessage(activeDealKey ?? '', newMsg);
                                             setChatInput('');
                                           }} style={{ display: 'flex', gap: '4px', padding: '6px', borderTop: `1px solid ${C.border}` }}>
                                             <input
@@ -4475,9 +4425,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 const creatorAsk = parseInt(dealCounterAmount);
                                                 const now = new Date();
                                                 const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                                const counterMsg = { id: Date.now(), sender: 'creator' as const, text: `Counter-offer: $${creatorAsk.toLocaleString()} (brand offered $${brandOffer.toLocaleString()})`, time: timeStr, isoTime: now.toISOString(), seen: false };
+                                                const counterMsg = { id: Date.now(), sender: 'creator' as const, text: `Counter-offer: ₹${creatorAsk.toLocaleString()} (brand offered ₹${brandOffer.toLocaleString()})`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                                 setChatMessages(prev => [...prev, counterMsg]);
-                                                firebaseAddMessage(activeDealKey ?? '', counterMsg);
+                                                sharedAddMessage(activeDealKey ?? '', counterMsg);
                                                 // Write counter amount + phase + chat messages to shared deal state
                                                 // so brand sees the update in real-time under Sent Deals
                                                 if (activeDealKey) {
@@ -4486,8 +4436,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     counterAmount: String(creatorAsk),
                                                   });
                                                 }
-                                                firebaseSendNotification(opp?.brand || 'Brand', 'message', `Creator countered: $${creatorAsk.toLocaleString()} (you offered $${brandOffer.toLocaleString()})`);
-                                                setPurchaseToast(`Counter sent: $${creatorAsk.toLocaleString()}`);
+                                                sharedSendNotification(opp?.brand || 'Brand', 'message', `Creator countered: ₹${creatorAsk.toLocaleString()} (you offered ₹${brandOffer.toLocaleString()})`);
+                                                setPurchaseToast(`Counter sent: ₹${creatorAsk.toLocaleString()}`);
                                                 setTimeout(() => setPurchaseToast(null), 2000);
                                               }}
                                               style={{ width: '100%', background: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? C.primary : C.border, border: 'none', padding: '6px', borderRadius: '6px', color: '#fff', fontWeight: 600, fontSize: '11px', cursor: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 'pointer' : 'not-allowed', opacity: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 1 : 0.5 }}
@@ -4571,9 +4521,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             if (activeDealKey) {
                                               const now = new Date();
                                               const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                              const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator accepted final offer: $${parseInt(dealOfferAmount || '0').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
+                                              const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator accepted final offer: ₹${parseInt(dealOfferAmount || '0').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                               setChatMessages(prev => [...prev, acceptMsg]);
-                                              firebaseAddMessage(activeDealKey || '', acceptMsg);
+                                              sharedAddMessage(activeDealKey || '', acceptMsg);
                                               updateDeal(activeDealKey, { phase: 'accepted', offerAmount: dealOfferAmount });
                                             }
                                             setPurchaseToast('Deal accepted');
@@ -4590,7 +4540,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
                                               const declineMsg = { id: Date.now(), sender: 'creator' as const, text: 'Creator declined the final offer.', time: timeStr, isoTime: now.toISOString(), seen: false };
                                               setChatMessages(prev => [...prev, declineMsg]);
-                                              firebaseAddMessage(activeDealKey || '', declineMsg);
+                                              sharedAddMessage(activeDealKey || '', declineMsg);
                                               updateDeal(activeDealKey, { phase: 'rejected' });
                                             }
                                             setNegotiatingOpp(null);
@@ -4730,7 +4680,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   <div style={{ width:'0%', height:'100%', background:C.border, borderRadius:'3px' }} />
                                                 </div>
                                                 <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'6px' }}>
-                                                  $0 / ${agreedPrice.toLocaleString()} deposited
+                                                  ₹0 / ₹${agreedPrice.toLocaleString()} deposited
                                                 </div>
                                               </div>
                                               </div>{/* end textAlign:center */}
@@ -4838,9 +4788,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                       deliverableStatuses: deliverableStatuses,
                                                       deliverableLinks: deliverableLinks,
                                                     });
-                                                    firebaseSendNotification(opp?.brand || 'Brand', 'application', `Deliverables submitted: ${agreedAmt.toLocaleString()} – Advance milestone released. Awaiting approval.`);
+                                                    sharedSendNotification(opp?.brand || 'Brand', 'application', `Deliverables submitted: ${agreedAmt.toLocaleString()} – Advance milestone released. Awaiting approval.`);
                                                   }
-                                                  setPurchaseToast(`Submitted for review — $${Math.round(agreedAmt * advancePercent / 100).toLocaleString()} released, $${Math.round(agreedAmt * approvalPercent / 100).toLocaleString()} pending approval`);
+                                                  setPurchaseToast(`Submitted for review — ₹${Math.round(agreedAmt * advancePercent / 100).toLocaleString()} released, ₹${Math.round(agreedAmt * approvalPercent / 100).toLocaleString()} pending approval`);
                                                   setTimeout(() => setPurchaseToast(null), 4000);
                                                 }} style={{ width:'100%', background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'#fff', fontWeight:600, cursor:'pointer', fontSize:'13px', marginBottom:'8px' }}>
                                                   Submit for Review
@@ -5214,8 +5164,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     )}
                     </>)}
 
-
-
                   </div>
                 </>
                 );
@@ -5228,6 +5176,19 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                       <span style={{ fontSize: '22px', fontWeight: 700, color: C.text }}>Brand Dashboard</span>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button
+                          onClick={handleRefresh}
+                          title="Refresh campaigns from shared state"
+                          style={{
+                            background: 'none', border: `1px solid ${C.border}`, borderRadius: '8px',
+                            padding: '8px 12px', fontSize: '13px', fontWeight: 600, color: C.textSecondary,
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                            opacity: refreshing ? 0.5 : 1,
+                          }}
+                        >
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: realtimeConnected ? '#00D46A' : '#9ca3af', flexShrink: 0 }} title={realtimeConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
+                          {refreshing ? '↻' : '⟳'} Refresh
+                        </button>
                         <button
                           onClick={() => setShowCampaignCreator(true)}
                           style={{
@@ -5252,335 +5213,98 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     )}
                   </div>
                   <div style={{ padding: '0 16px 16px' }}>
-                    {/* New Campaign Creator Modal */}
+                    {/* Campaign composer — ui-specs/Market.md §3.
+                        The modal is retired: campaign creation is long and
+                        multi-field, so it cramped content and forced scrolling
+                        in a small window. The full-page composer carries a
+                        persistent frame (Back + title + Draft·autosaved +
+                        Launch) which is what keeps the user oriented (G4), and
+                        it autosaves so Back never loses work. */}
                     {showCampaignCreator && (
-                      <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999 }}>
-                        <div style={{ background:C.surface, borderRadius:'16px', padding:'24px', maxWidth:'480px', width:'95vw', maxHeight:'90vh', overflowY:'auto', border:`1px solid ${C.border}`, position:'relative' }}>
-                          <button onClick={() => setShowCampaignCreator(false)} style={{ position:'absolute', top:'16px', right:'16px', background:'none', border:'none', color:C.textMuted, fontSize:'22px', cursor:'pointer', lineHeight:1 }}>x</button>
-                          <div style={{ fontSize:'16px', fontWeight:700, color:C.text, marginBottom:'16px' }}>Create Campaign</div>
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Brand name *</div>
-                            <input type="text" value={profileName} onChange={e=>setProfileName(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                          </div>
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Campaign title *</div>
-                            <input type="text" value={newCampaignTitle} onChange={e=>setNewCampaignTitle(e.target.value)}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                          </div>
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>About your product / campaign *</div>
-                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Creators need to understand what they are promoting. Be specific — what is the product, who is it for, and what makes it worth their audience's trust.</div>
-                            <textarea value={newCampaignAbout} onChange={e=>setNewCampaignAbout(e.target.value)} rows={4}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', resize:'none', boxSizing:'border-box' as const }} />
-                          </div>
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Campaign description *</div>
-                            <textarea value={newCampaignDesc} onChange={e=>setNewCampaignDesc(e.target.value)} rows={2}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', resize:'none', boxSizing:'border-box' as const }} />
-                            <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'6px' }}>Note: Any kind of exclusivity or non-compete clauses must be mentioned here.</div>
-                          </div>
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Target profession/niche *</div>
-                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Choose the type of creator you want to target. Only creators with this valueskin will be matched.</div>
-                            <select
-                              value={newCampaignSelectedProfession}
-                              onChange={e => setNewCampaignSelectedProfession(e.target.value)}
-                              style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}
-                            >
-                              <option value="">Select a profession...</option>
-                              {Object.entries(PROFESSION_BADGES).map(([name]) => (
-                                <option key={name} value={name}>{name}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Your country *</div>
-                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Only creators in the same country will be matched. Funds and payments stay within this country.</div>
-                            <select
-                              value={brandCountry}
-                              onChange={e => setBrandCountry(e.target.value)}
-                              style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}
-                            >
-                              <option value="">Select your country...</option>
-                              {['India','United States','United Kingdom','Canada','Australia','Singapore','Japan','South Korea','Germany','France','Brazil','Mexico','United Arab Emirates','Italy','Spain','Netherlands','Sweden','Norway','Denmark','New Zealand','Nigeria','Kenya','South Africa','Indonesia','Philippines','Vietnam','Thailand','Malaysia','Pakistan','Bangladesh','Sri Lanka','Nepal'].map(name => (
-                                <option key={name} value={name}>{name}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Content language *</div>
-                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Which language should the creator use in their content?</div>
-                            <select
-                              value={newCampaignContentLanguage}
-                              onChange={e => setNewCampaignContentLanguage(e.target.value)}
-                              style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}
-                            >
-                              {['English','Hindi','Spanish','French','German','Portuguese','Arabic','Japanese','Korean','Chinese','Italian','Dutch','Russian','Turkish','Vietnamese','Thai','Indonesian','Malay','Tamil','Telugu','Bengali','Marathi','Gujarati','Kannada','Malayalam','Punjabi','Urdu'].map(lang => (
-                                <option key={lang} value={lang}>{lang}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Creator level range *</div>
-                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>Select min and max level. Only creators within this range can apply.</div>
-                            <div style={{ display:'flex', gap:'6px', alignItems:'center' }}>
-                              <span style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, width:24 }}>Min</span>
-                              {[1,2,3,4,5].map(l => (
-                                <button key={l} onClick={()=>{ setNewCampaignMinLevel(l); if (l > newCampaignMaxLevel) setNewCampaignMaxLevel(l); }} style={{ flex:1, padding:'7px 0', borderRadius:'6px', fontSize:'12px', fontWeight:700, cursor:'pointer', background:newCampaignMinLevel===l?C.primary:C.bg, color:newCampaignMinLevel===l?'#fff':C.textSecondary, border:`1px solid ${newCampaignMinLevel===l?C.primary:C.border}` }}>L{l}</button>
-                              ))}
-                            </div>
-                            <div style={{ display:'flex', gap:'6px', alignItems:'center', marginTop:'6px' }}>
-                              <span style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, width:24 }}>Max</span>
-                              {[1,2,3,4,5].map(l => (
-                                <button key={l} onClick={()=>{ setNewCampaignMaxLevel(l); if (l < newCampaignMinLevel) setNewCampaignMinLevel(l); }} disabled={l < newCampaignMinLevel} style={{ flex:1, padding:'7px 0', borderRadius:'6px', fontSize:'12px', fontWeight:700, cursor: l < newCampaignMinLevel ? 'not-allowed' : 'pointer', background:newCampaignMaxLevel===l?'#22c55e':C.bg, color:newCampaignMaxLevel===l?'#fff': l < newCampaignMinLevel ? C.border : C.textSecondary, border:`1px solid ${newCampaignMaxLevel===l?'#22c55e':C.border}`, opacity: l < newCampaignMinLevel ? 0.4 : 1 }}>L{l}</button>
-                              ))}
-                            </div>
-                            <div style={{ fontSize:'10px', color:C.primary, marginTop:'4px', fontWeight:600 }}>Accepting Level {newCampaignMinLevel}{newCampaignMaxLevel !== newCampaignMinLevel ? ` to ${newCampaignMaxLevel}` : ' only'}</div>
-                          </div>
-                          {(() => { const c = currencyForCountry(brandCountry); return (<>
-                          <div style={{ display:'flex', gap:'10px', marginBottom:'12px' }}>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Budget per creator ({c.symbol}) *</div>
-                              <input type="text" value={newCampaignBudget} onChange={e=>setNewCampaignBudget(e.target.value.replace(/[^0-9]/g,''))}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                            </div>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Creators to hire *</div>
-                              <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
-                                <button onClick={()=>setNewCampaignCreatorCount(c=>Math.max(1,c-1))} style={{ width:32, height:32, borderRadius:'6px', background:C.bg, border:`1px solid ${C.border}`, color:C.text, fontSize:'16px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>−</button>
-                                <div style={{ flex:1, background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontWeight:700, textAlign:'center' }}>{newCampaignCreatorCount}</div>
-                                <button onClick={()=>setNewCampaignCreatorCount(c=>Math.min(50,c+1))} style={{ width:32, height:32, borderRadius:'6px', background:C.bg, border:`1px solid ${C.border}`, color:C.text, fontSize:'16px', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>+</button>
-                              </div>
-                            </div>
-                          </div>
-                          {newCampaignBudget && (() => { const c = currencyForCountry(brandCountry); return (
-                            <div style={{ background:'rgba(0,212,106,0.06)', border:'1px solid rgba(0,212,106,0.2)', borderRadius:'8px', padding:'10px 12px', marginBottom:'12px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                              <div>
-                                <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.4px' }}>Total escrow required</div>
-                                <div style={{ fontSize:'11px', color:C.textSecondary, marginTop:'2px' }}>{c.symbol}{parseInt(newCampaignBudget||'0').toLocaleString()} × {newCampaignCreatorCount} creator{newCampaignCreatorCount!==1?'s':''}</div>
-                              </div>
-                              <div style={{ fontSize:'20px', fontWeight:800, color:C.success }}>{c.symbol}{(parseInt(newCampaignBudget||'0')*newCampaignCreatorCount).toLocaleString()}</div>
-                            </div>
-                          );})()}
-                          </>)})()}
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Deliverables</div>
-                            <input type="text" value={newCampaignDeliverables} onChange={e=>setNewCampaignDeliverables(e.target.value)}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                          </div>
-                          {/* Compensation type */}
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'6px' }}>Compensation type *</div>
-                            <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
-                              {['Paid','Paid + Barter','Barter only','Performance-based'].map(t => (
-                                <button key={t} onClick={()=>setNewCampaignCompensation(t)} style={{ padding:'5px 10px', borderRadius:'6px', fontSize:'11px', fontWeight:600, cursor:'pointer', background:newCampaignCompensation===t?`${withAlpha(C.primary, 0x15)}`:C.bg, color:newCampaignCompensation===t?C.primary:C.textSecondary, border:`1px solid ${newCampaignCompensation===t?C.primary:C.border}` }}>{t}</button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Script mode selection */}
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'6px' }}>Script negotiation mode *</div>
-                            <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
-                              <button onClick={()=>setNewCampaignScriptMode('non_negotiable')} style={{ padding:'10px 12px', borderRadius:'8px', textAlign:'left', background:newCampaignScriptMode==='non_negotiable'?`${withAlpha(C.primary, 0x15)}`:C.bg, border:`1px solid ${newCampaignScriptMode==='non_negotiable'?C.primary:C.border}`, cursor:'pointer' }}>
-                                <div style={{ fontSize:'12px', fontWeight:700, color:newCampaignScriptMode==='non_negotiable'?C.primary:C.text, marginBottom:'2px' }}>Non-negotiable (Locked)</div>
-                                <div style={{ fontSize:'10px', color:C.textMuted }}>You provide the exact script creators must use</div>
-                              </button>
-                              <button onClick={()=>setNewCampaignScriptMode('discussion')} style={{ padding:'10px 12px', borderRadius:'8px', textAlign:'left', background:newCampaignScriptMode==='discussion'?`${withAlpha(C.primary, 0x15)}`:C.bg, border:`1px solid ${newCampaignScriptMode==='discussion'?C.primary:C.border}`, cursor:'pointer' }}>
-                                <div style={{ fontSize:'12px', fontWeight:700, color:newCampaignScriptMode==='discussion'?C.primary:C.text, marginBottom:'2px' }}>Collaborative (Both Edit)</div>
-                                <div style={{ fontSize:'10px', color:C.textMuted }}>Both parties negotiate and edit the script together</div>
-                              </button>
-                              <button onClick={()=>setNewCampaignScriptMode('creator_freedom')} style={{ padding:'10px 12px', borderRadius:'8px', textAlign:'left', background:newCampaignScriptMode==='creator_freedom'?`${withAlpha(C.primary, 0x15)}`:C.bg, border:`1px solid ${newCampaignScriptMode==='creator_freedom'?C.primary:C.border}`, cursor:'pointer' }}>
-                                <div style={{ fontSize:'12px', fontWeight:700, color:newCampaignScriptMode==='creator_freedom'?C.primary:C.text, marginBottom:'2px' }}>Creator Freedom</div>
-                                <div style={{ fontSize:'10px', color:C.textMuted }}>Creator has complete freedom; you only review and approve</div>
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Non-negotiable script text input */}
-                          {newCampaignScriptMode === 'non_negotiable' && (
-                            <div style={{ marginBottom:'12px' }}>
-                              <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Script to provide (locked) *</div>
-                              <textarea value={newCampaignScriptText} onChange={e=>setNewCampaignScriptText(e.target.value)} rows={3} placeholder="Paste the exact script creators must follow..." style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', resize:'none', boxSizing:'border-box' as const }} />
-                            </div>
-                          )}
-
-                          {/* Collaborative script text input (optional starter) */}
-                          {newCampaignScriptMode === 'discussion' && (
-                            <div style={{ marginBottom:'12px' }}>
-                              <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Starting script (optional)</div>
-                              <textarea value={newCampaignScriptText} onChange={e=>setNewCampaignScriptText(e.target.value)} rows={3} placeholder="Provide a starting point — creators can edit and suggest changes..." style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', resize:'none', boxSizing:'border-box' as const }} />
-                            </div>
-                          )}
-
-                          {/* Content Review Mode */}
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'6px' }}>Content delivery mode *</div>
-                            <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
-                              <button onClick={()=>setNewCampaignContentReview('review_required')} style={{ padding:'10px 12px', borderRadius:'8px', textAlign:'left', background:newCampaignContentReview==='review_required'?`${withAlpha(C.primary, 0x15)}`:C.bg, border:`1px solid ${newCampaignContentReview==='review_required'?C.primary:C.border}`, cursor:'pointer' }}>
-                                <div style={{ fontSize:'12px', fontWeight:700, color:newCampaignContentReview==='review_required'?C.primary:C.text, marginBottom:'2px' }}>Review content before publish</div>
-                                <div style={{ fontSize:'10px', color:C.textMuted }}>Creator sends a Google Drive link for you to review before the final publish</div>
-                              </button>
-                              <button onClick={()=>setNewCampaignContentReview('direct_upload')} style={{ padding:'10px 12px', borderRadius:'8px', textAlign:'left', background:newCampaignContentReview==='direct_upload'?`${withAlpha(C.primary, 0x15)}`:C.bg, border:`1px solid ${newCampaignContentReview==='direct_upload'?C.primary:C.border}`, cursor:'pointer' }}>
-                                <div style={{ fontSize:'12px', fontWeight:700, color:newCampaignContentReview==='direct_upload'?C.primary:C.text, marginBottom:'2px' }}>Direct upload — no review needed</div>
-                                <div style={{ fontSize:'10px', color:C.textMuted }}>Creator uploads the published content link directly; no pre-approval needed</div>
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Usage Rights */}
-                          <div style={{ marginBottom:'12px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Usage rights duration</div>
-                            <select value={newCampaignUsageRights} onChange={e=>setNewCampaignUsageRights(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}>
-                              <option value="30 days, social only">30 days, social only</option>
-                              <option value="60 days, social only">60 days, social only</option>
-                              <option value="90 days, all platforms">90 days, all platforms</option>
-                              <option value="120 days, all platforms">120 days, all platforms</option>
-                              <option value="180 days, all platforms">180 days, all platforms</option>
-                              <option value="Perpetual">Perpetual</option>
-                            </select>
-                          </div>
-
-                          {/* Digital Rights */}
-                          <div style={{ marginBottom:'12px', padding:'12px', background:`${withAlpha(C.primary, 0x06)}`, borderRadius:'8px', border:`1px solid ${withAlpha(C.primary, 0x15)}` }}>
-                            <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'8px' }}>
-                              <input type="checkbox" checked={newCampaignHasDigitalRights} onChange={e=>setNewCampaignHasDigitalRights(e.target.checked)} style={{ cursor:'pointer' }} />
-                              <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600 }}>Offer separate digital & ad rights</div>
-                            </div>
-                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'8px' }}>Creator charges extra for content repurposing rights. Amount below is IN ADDITION to content fees.</div>
-                            {newCampaignHasDigitalRights && (
-                              <>
-                                <div style={{ display:'flex', gap:'8px', marginBottom:'8px' }}>
-                                  <div style={{ flex:1 }}>
-                                    <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, marginBottom:'3px' }}>Digital rights amount ({currencyForCountry(brandCountry).symbol})</div>
-                                    <input type="text" value={newCampaignDigitalRightsAmount} onChange={e=>setNewCampaignDigitalRightsAmount(e.target.value.replace(/[^0-9]/g,''))}  style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'6px', color:C.text, padding:'6px 8px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                                  </div>
-                                  <div style={{ flex:1 }}>
-                                    <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, marginBottom:'3px' }}>Duration (days)</div>
-                                    <select value={newCampaignDigitalRightsDays} onChange={e=>setNewCampaignDigitalRightsDays(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'6px', color:C.text, padding:'6px 8px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }}>
-                                      {['30','60','90','120','180','Perpetual'].map(d => <option key={d} value={d}>{d}</option>)}
-                                    </select>
-                                  </div>
-                                </div>
-                                <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, marginBottom:'6px' }}>Which content pieces get digital rights?</div>
-                                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
-                                  <div>
-                                    <label style={{ fontSize:'10px', color:C.text, display:'block', marginBottom:'3px' }}>Reels with rights:</label>
-                                    <div style={{ display:'flex', alignItems:'center', gap:'4px' }}>
-                                      <button onClick={()=>setNewCampaignDigitalRightsReels(Math.max(0,newCampaignDigitalRightsReels-1))} style={{ width:24, height:24, borderRadius:'4px', border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:'12px', cursor:'pointer', fontWeight:600 }}>−</button>
-                                      <div style={{ flex:1, background:C.bg, border:`1px solid ${C.border}`, borderRadius:'6px', color:C.text, padding:'4px', fontSize:'12px', fontWeight:600, textAlign:'center' }}>{newCampaignDigitalRightsReels}</div>
-                                      <button onClick={()=>setNewCampaignDigitalRightsReels(newCampaignDigitalRightsReels+1)} style={{ width:24, height:24, borderRadius:'4px', border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:'12px', cursor:'pointer', fontWeight:600 }}>+</button>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <label style={{ fontSize:'10px', color:C.text, display:'block', marginBottom:'3px' }}>Stories with rights:</label>
-                                    <div style={{ display:'flex', alignItems:'center', gap:'4px' }}>
-                                      <button onClick={()=>setNewCampaignDigitalRightsStories(Math.max(0,newCampaignDigitalRightsStories-1))} style={{ width:24, height:24, borderRadius:'4px', border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:'12px', cursor:'pointer', fontWeight:600 }}>−</button>
-                                      <div style={{ flex:1, background:C.bg, border:`1px solid ${C.border}`, borderRadius:'6px', color:C.text, padding:'4px', fontSize:'12px', fontWeight:600, textAlign:'center' }}>{newCampaignDigitalRightsStories}</div>
-                                      <button onClick={()=>setNewCampaignDigitalRightsStories(newCampaignDigitalRightsStories+1)} style={{ width:24, height:24, borderRadius:'4px', border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:'12px', cursor:'pointer', fontWeight:600 }}>+</button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </>
-                            )}
-                          </div>
-
-                          <div style={{ marginBottom:'16px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Application deadline</div>
-                            <input type="date" value={newCampaignDeadline} onChange={e=>setNewCampaignDeadline(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                          </div>
-                          <div style={{ marginBottom:'16px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'4px' }}>Delivery deadline</div>
-                            <input type="date" value={newCampaignDeliveryDeadline} onChange={e=>setNewCampaignDeliveryDeadline(e.target.value)} style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'13px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                          </div>
-
-                          {/* Point of Contact */}
-                          <div style={{ marginBottom:'16px' }}>
-                            <div style={{ fontSize:'11px', color:C.textMuted, fontWeight:600, marginBottom:'2px' }}>Point of Contact</div>
-                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'8px' }}>The person creators should reference for this campaign. Shown to both parties in the deal room.</div>
-                            <input type="text" value={newCampaignPocName} onChange={e=>setNewCampaignPocName(e.target.value)} placeholder="Full name" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const, marginBottom:'8px' }} />
-                            <input type="email" value={newCampaignPocEmail} onChange={e=>setNewCampaignPocEmail(e.target.value)} placeholder="work email (required)" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const, marginBottom:'8px' }} />
-                            <input type="tel" value={newCampaignPocPhone} onChange={e=>setNewCampaignPocPhone(e.target.value)} placeholder="phone (optional)" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                            <input type="text" value={newCampaignPocRole} onChange={e=>setNewCampaignPocRole(e.target.value)} placeholder="Role / title (e.g. Partnerships Manager)" style={{ width:'100%', background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, padding:'8px 10px', fontSize:'12px', fontFamily:'inherit', outline:'none', boxSizing:'border-box' as const }} />
-                          </div>
-
-                          <button
-                            onClick={() => {
-                              const missing: string[] = [];
-                              if (!newCampaignTitle.trim()) missing.push('Title');
-                              if (!newCampaignAbout.trim()) missing.push('About product/campaign');
-                              if (!newCampaignDesc.trim()) missing.push('Description');
-                              if (!newCampaignBudget) missing.push('Budget');
-                              if (!newCampaignSelectedProfession) missing.push('Target profession');
-                              if (!brandCountry) missing.push('Your country');
-                              if (missing.length > 0) { setPurchaseToast(`Missing: ${missing.join(', ')}`); setTimeout(()=>setPurchaseToast(null),4000); return; }
-                              const escrowPool = parseInt(newCampaignBudget||'0') * newCampaignCreatorCount;
-                              const newC: Campaign = {
-                                id:Date.now(), brandName:profileName, brandProfession:newCampaignSelectedProfession, title:newCampaignTitle, description:newCampaignDesc, about:newCampaignAbout, requiredProfessions:[newCampaignSelectedProfession], requiredValueskin: newCampaignValueskin, minLevel:newCampaignMinLevel, maxLevel:newCampaignMaxLevel, budget:newCampaignBudget, deadline:newCampaignDeadline, deliveryDeadline:newCampaignDeliveryDeadline, location:newCampaignLocation, country:brandCountry, nonNegotiables:newCampaignNonNeg, deliverables:newCampaignDeliverables, compensationType:newCampaignCompensation, exclusivity:newCampaignExclusivity, usageRights:newCampaignUsageRights, audienceTarget:newCampaignAudienceTarget, requirements:newCampaignRequirements, scriptMode:newCampaignScriptMode, scriptText:newCampaignScriptText, contentReview:newCampaignContentReview, status:'open', applicants:0, creatorCount:newCampaignCreatorCount, escrowFunded:false, escrowPool, escrowAllocated:0, hasDigitalRights:newCampaignHasDigitalRights, digitalRightsAmount:newCampaignDigitalRightsAmount, digitalRightsDays:newCampaignDigitalRightsDays, digitalRightsReels:newCampaignDigitalRightsReels, digitalRightsStories:newCampaignDigitalRightsStories,
-                                poc: newCampaignPocName.trim() ? {
-                                  name: newCampaignPocName.trim(),
-                                  workEmail: newCampaignPocEmail.trim(),
-                                  role: newCampaignPocRole.trim(),
-                                  phone: newCampaignPocPhone.trim() || undefined,
-                                } : undefined,
-                              };
-                              const updated = [...campaigns, newC];
-                              persistCampaigns(updated);
-                              setCampaigns(updated);
-                              // Save to localStorage for persistence
-                              localStorage.setItem('valueskins_campaigns', JSON.stringify(updated));
-                              firebaseCreateCampaign(newC);
-                              // Force immediate persistence to realtime API for cross-device sync
-                              const persistPromise = fetch('/api/realtime/state', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  value: {
-                                    deals: firebaseState.deals,
-                                    campaigns: [...(firebaseState.campaigns || []), newC],
-                                    messages: firebaseState.messages,
-                                    applications: firebaseState.applications,
-                                    notifications: firebaseState.notifications,
-                                  }
-                                })
-                              }).catch(() => {});
-                              // After persistence, trigger immediate refetch on all other sessions
-                              persistPromise.then(() => {
-                                setTimeout(() => {
-                                  fetch('/api/realtime/state').then(r => r.json()).then(data => {
-                                    // Campaigns are now in DB, ready for other users to fetch
-                                  }).catch(() => {});
-                                }, 50);
-                              });
-                              // Also save to PostgreSQL so it's visible across devices
-                              const demoUuid = localStorage.getItem('vs_demo_user_id') || (() => {
-                                const u = crypto.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
-                                localStorage.setItem('vs_demo_user_id', u);
-                                return u;
-                              })();
-                              fetch('/api/campaigns/list', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  user_id: demoUuid,
-                                  title: newC.title,
-                                  description: `${newC.about}\n\n${newC.description}`,
-                                  budget_per_creator: parseInt(newC.budget || '0'),
-                                  total_budget: parseInt(newC.budget || '0') * newC.creatorCount,
-                                  deadline: newC.deadline || null,
-                                  delivery_type: 'no_delivery',
-                                  usage_rights_days: 365,
-                                  required_niches: [newC.brandProfession],
-                                }),
-                              }).catch(() => {});
-                              setShowCampaignCreator(false);
-                              setLastCreatedCampaignId(newC.id);
-                              setPendingCampaignForEscrow(newC);
-                              setShowEscrowFundingModal(true);
-                              setEscrowFundingInProgress2(false);
-                              setBatchSendCreatorIds(new Set());
-                              setNewCampaignTitle(''); setNewCampaignDesc(''); setNewCampaignAbout(''); setNewCampaignBudget(''); setNewCampaignDeadline(''); setNewCampaignDeliveryDeadline(''); setNewCampaignProfessions([]); setNewCampaignSelectedProfession(''); setNewCampaignMinLevel(1); setNewCampaignMaxLevel(5); setNewCampaignLocation(''); setNewCampaignDeliverables(''); setNewCampaignNonNeg([]); setNewCampaignCompensation('Paid'); setNewCampaignExclusivity('None'); setNewCampaignUsageRights('30 days, social only'); setNewCampaignHasDigitalRights(false); setNewCampaignDigitalRightsAmount(''); setNewCampaignDigitalRightsReels(0); setNewCampaignDigitalRightsStories(0); setNewCampaignDigitalRightsDays('30'); setNewCampaignAudienceTarget(''); setNewCampaignRequirements([]); setNewCampaignReqInput(''); setNewCampaignCreatorCount(1); setNewCampaignPocName(''); setNewCampaignPocEmail(''); setNewCampaignPocPhone(''); setNewCampaignPocRole(''); setNewCampaignScriptMode('creator_freedom'); setNewCampaignScriptText('');
-                            }}
-                            style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'14px', cursor:'pointer' }}
-                          >
-                            Publish Campaign
-                          </button>
-                        </div>
+                      <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:9999, background:C.bg, overflowY:'auto' }}>
+                        <CampaignComposer
+                          brandName={profileName}
+                          professions={Object.keys(PROFESSION_BADGES)}
+                          currencySymbol={INR_CURRENCY.symbol}
+                          onBack={() => setShowCampaignCreator(false)}
+                          onLaunch={(draft) => {
+                            if (draft.brandName.trim()) setProfileName(draft.brandName.trim());
+                            const budget = parseInt(draft.budget || '0', 10) || 0;
+                            const escrowPool = budget * draft.creatorCount;
+                            const newC: Campaign = {
+                              id: Date.now(),
+                              brandName: draft.brandName || profileName,
+                              brandProfession: draft.profession,
+                              title: draft.title,
+                              description: draft.description,
+                              requiredProfessions: [draft.profession],
+                              minLevel: draft.minLevel,
+                              maxLevel: draft.maxLevel,
+                              budget: draft.budget,
+                              deadline: draft.deadline,
+                              deliveryDeadline: draft.deliveryDeadline,
+                              location: '',
+                              country: draft.country,
+                              nonNegotiables: [],
+                              deliverables: draft.deliverables,
+                              compensationType: draft.compensation,
+                              exclusivity: draft.exclusivity,
+                              usageRights: draft.usageRights,
+                              scriptMode: draft.scriptMode,
+                              scriptText: draft.scriptText,
+                              contentReview: draft.contentReview,
+                              status: 'open',
+                              applicants: 0,
+                              creatorCount: draft.creatorCount,
+                              escrowFunded: false,
+                              escrowPool,
+                              escrowAllocated: 0,
+                              hasDigitalRights: draft.hasDigitalRights,
+                              digitalRightsAmount: draft.digitalRightsAmount,
+                              digitalRightsDays: draft.digitalRightsDays,
+                              digitalRightsReels: draft.digitalRightsReels,
+                              digitalRightsStories: draft.digitalRightsStories,
+                              poc: draft.pocName.trim() ? {
+                                name: draft.pocName.trim(),
+                                workEmail: draft.pocEmail.trim(),
+                                role: draft.pocRole.trim(),
+                                phone: draft.pocPhone.trim() || undefined,
+                              } : undefined,
+                            };
+                            const updated = [...campaigns, newC];
+                            persistCampaigns(updated);
+                            setCampaigns(updated);
+                            localStorage.setItem('valueskins_campaigns', JSON.stringify(updated));
+                            sharedCreateCampaign(newC);
+                            // Also save to PostgreSQL so it is visible across devices
+                            const demoUuid = localStorage.getItem('vs_demo_user_id') || (() => {
+                              const u = crypto.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16); });
+                              localStorage.setItem('vs_demo_user_id', u);
+                              return u;
+                            })();
+                            fetch('/api/campaigns/list', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                user_id: demoUuid,
+                                title: newC.title,
+                                description: newC.description,
+                                budget_per_creator: budget,
+                                total_budget: escrowPool,
+                                deadline: newC.deadline || null,
+                                delivery_type: 'no_delivery',
+                                usage_rights_days: 365,
+                                required_niches: [newC.brandProfession],
+                              }),
+                            }).catch(() => {});
+                            setShowCampaignCreator(false);
+                            setLastCreatedCampaignId(newC.id);
+                            setPendingCampaignForEscrow(newC);
+                            setShowEscrowFundingModal(true);
+                            setEscrowFundingInProgress2(false);
+                            setBatchSendCreatorIds(new Set());
+                          }}
+                        />
                       </div>
                     )}
 
@@ -5596,13 +5320,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           </div>
                           <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'20px', lineHeight:1.5 }}>
                             Deposit funds upfront to cover all creators in this campaign. Funds are held securely and released per each creator's agreed payment milestones. Unused funds are returned if fewer creators are hired.
+                            <div style={{ marginTop:'8px', fontSize:'11px', color:C.success, fontWeight:600 }}>Any applicants will be notified.</div>
                           </div>
 
                           {/* Campaign summary */}
                           <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'14px', marginBottom:'14px' }}>
                             <div style={{ fontSize:'12px', fontWeight:700, color:C.text, marginBottom:'10px' }}>{pendingCampaignForEscrow.title}</div>
                             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
-                              {(() => { const c = currencyForCountry(pendingCampaignForEscrow.country || brandCountry); return (<>
+                              {(() => { const c = INR_CURRENCY; return (<>
                               {[
                                 { label:'Per creator', value:`${c.symbol}${parseInt(pendingCampaignForEscrow.budget||'0').toLocaleString()}` },
                                 { label:'Creators hiring', value:`${pendingCampaignForEscrow.creatorCount || 1}` },
@@ -5614,7 +5339,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               ))}
                               </>)})()}
                             </div>
-                            {(() => { const c = currencyForCountry(pendingCampaignForEscrow.country || brandCountry); return (
+                            {(() => { const c = INR_CURRENCY; return (
                             <div style={{ marginTop:'10px', padding:'10px', background:'rgba(0,212,106,0.06)', border:'1px solid rgba(0,212,106,0.2)', borderRadius:'8px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                               <span style={{ fontSize:'12px', color:C.textSecondary, fontWeight:600 }}>Total escrow deposit</span>
                               <span style={{ fontSize:'20px', fontWeight:800, color:C.success }}>{c.symbol}{(pendingCampaignForEscrow.escrowPool||0).toLocaleString()}</span>
@@ -5677,13 +5402,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 setEscrowFundingInProgress2(false);
                                 setShowEscrowFundingModal(false);
                                 setCampaignsSectionOpen(true);
-                                setPurchaseToast(`Escrow funded — $${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured.`);
+                                setPurchaseToast(`Escrow funded — ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured.`);
                                 setTimeout(() => setPurchaseToast(null), 4000);
                               }, 2000);
                             }}
                             style={{ width:'100%', background: escrowFundingInProgress2 ? C.border : C.primary, border:'none', borderRadius:'10px', padding:'13px', color:'#fff', fontWeight:700, fontSize:'14px', cursor: escrowFundingInProgress2 ? 'not-allowed' : 'pointer', opacity: escrowFundingInProgress2 ? 0.6 : 1, marginBottom:'8px' }}
                           >
-                            {escrowFundingInProgress2 ? 'Finding matching creators...' : `Deposit $${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} into Escrow`}
+                            {escrowFundingInProgress2 ? 'Finding matching creators...' : `Deposit ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} into Escrow`}
                           </button>
                           <div style={{ fontSize:'10px', color:C.textMuted, textAlign:'center', lineHeight:1.5 }}>
                             Funds are non-transferable until released per milestone. Unused funds return within 5 business days.
@@ -5766,7 +5491,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                           <div style={{ display:'flex', gap:'8px' }}>
                             <button onClick={() => { setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'11px', color:C.text, fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
-                            <button onClick={() => { batchSendCreatorIds.forEach(idx => { const match = batchMatches[idx]; const campaign = campaigns.find(c => c.id === lastCreatedCampaignId); const oppIdx = activeOpportunities.findIndex(o => o.brand === campaign?.title); if (campaign) { const app: SharedApplication = { id:Date.now() + idx, campaignId:lastCreatedCampaignId ?? 0, campaignTitle:campaign.title || 'Campaign', creatorProfession:match.creatorProfession || '', creatorHandle:match.creatorHandle || '', creatorName:match.creatorName, status:'invited' as SharedApplication['status'], appliedAt:new Date().toISOString(), opportunityIndex: oppIdx >= 0 ? oppIdx : 0 }; firebaseCreateApplication(app); firebaseSendNotification(match.creatorHandle || '', 'campaign', `${profileName} invited you to: ${campaign.title || 'Campaign'}`); } }); setPurchaseToast(`Invitations sent to ${batchSendCreatorIds.size} creator${batchSendCreatorIds.size !== 1 ? 's' : ''}`); setTimeout(() => setPurchaseToast(null), 3000); setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:batchSendCreatorIds.size > 0 ? C.primary : C.border, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'13px', cursor: batchSendCreatorIds.size > 0 ? 'pointer' : 'not-allowed', opacity: batchSendCreatorIds.size > 0 ? 1 : 0.5 }}>Send to {batchSendCreatorIds.size} Creator{batchSendCreatorIds.size !== 1 ? 's' : ''}</button>
+                            <button onClick={() => { batchSendCreatorIds.forEach(idx => { const match = batchMatches[idx]; const campaign = campaigns.find(c => c.id === lastCreatedCampaignId); const oppIdx = activeOpportunities.findIndex(o => o.brand === campaign?.title); if (campaign) { const app: SharedApplication = { id:Date.now() + idx, campaignId:lastCreatedCampaignId ?? 0, campaignTitle:campaign.title || 'Campaign', creatorProfession:match.creatorProfession || '', creatorHandle:match.creatorHandle || '', creatorName:match.creatorName, status:'invited' as SharedApplication['status'], appliedAt:new Date().toISOString(), opportunityIndex: oppIdx >= 0 ? oppIdx : 0 }; sharedCreateApplication(app); sharedSendNotification(match.creatorHandle || '', 'campaign', `${profileName} invited you to: ${campaign.title || 'Campaign'}`); } }); setPurchaseToast(`Invitations sent to ${batchSendCreatorIds.size} creator${batchSendCreatorIds.size !== 1 ? 's' : ''}`); setTimeout(() => setPurchaseToast(null), 3000); setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:batchSendCreatorIds.size > 0 ? C.primary : C.border, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'13px', cursor: batchSendCreatorIds.size > 0 ? 'pointer' : 'not-allowed', opacity: batchSendCreatorIds.size > 0 ? 1 : 0.5 }}>Send to {batchSendCreatorIds.size} Creator{batchSendCreatorIds.size !== 1 ? 's' : ''}</button>
                           </div>
                         </div>
                       </div>
@@ -5839,7 +5564,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           </div>
                           <div style={{ display:'flex', gap:'8px' }}>
                             <button onClick={() => { setShowTipModal(false); setTipAmount(''); setTipForDealId(null); }} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', color:C.text, fontWeight:600, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
-                            <button onClick={() => { if (tipAmount && completedDeals[tipForDealId!]) { const updatedDeals = [...completedDeals]; updatedDeals[tipForDealId!] = { ...updatedDeals[tipForDealId!], tipped: (updatedDeals[tipForDealId!].tipped || 0) + parseInt(tipAmount) }; setCompletedDeals(updatedDeals); setPurchaseToast(`💰 Tip of $${parseInt(tipAmount).toLocaleString()} sent to ${completedDeals[tipForDealId!].brand}`); setTimeout(() => setPurchaseToast(null), 3000); setShowTipModal(false); setTipAmount(''); setTipForDealId(null); } }} disabled={!tipAmount || parseInt(tipAmount) < 1} style={{ flex:1, background: (tipAmount && parseInt(tipAmount) >= 1) ? C.warning : C.border, border:'none', borderRadius:'8px', padding:'10px', color:tipAmount && parseInt(tipAmount) >= 1 ? '#000' : C.text, fontWeight:600, fontSize:'13px', cursor: (tipAmount && parseInt(tipAmount) >= 1) ? 'pointer' : 'not-allowed', opacity: (tipAmount && parseInt(tipAmount) >= 1) ? 1 : 0.5 }}>Send Tip</button>
+                            <button onClick={() => { if (tipAmount && completedDeals[tipForDealId!]) { const updatedDeals = [...completedDeals]; updatedDeals[tipForDealId!] = { ...updatedDeals[tipForDealId!], tipped: (updatedDeals[tipForDealId!].tipped || 0) + parseInt(tipAmount) }; setCompletedDeals(updatedDeals); setPurchaseToast(`💰 Tip of ₹${parseInt(tipAmount).toLocaleString()} sent to ${completedDeals[tipForDealId!].brand}`); setTimeout(() => setPurchaseToast(null), 3000); setShowTipModal(false); setTipAmount(''); setTipForDealId(null); } }} disabled={!tipAmount || parseInt(tipAmount) < 1} style={{ flex:1, background: (tipAmount && parseInt(tipAmount) >= 1) ? C.warning : C.border, border:'none', borderRadius:'8px', padding:'10px', color:tipAmount && parseInt(tipAmount) >= 1 ? '#000' : C.text, fontWeight:600, fontSize:'13px', cursor: (tipAmount && parseInt(tipAmount) >= 1) ? 'pointer' : 'not-allowed', opacity: (tipAmount && parseInt(tipAmount) >= 1) ? 1 : 0.5 }}>Send Tip</button>
                           </div>
                         </div>
                       </div>
@@ -5996,6 +5721,97 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       ) : null;
                     })()}
 
+                    {/* Applicants & Offers — creator applications/offers received for this brand's campaigns */}
+                    {(() => {
+                      const applicantDeals: any[] = Object.entries(dealStates)
+                        .filter(([k, d]) => {
+                          if (!d || !d.phase || d.phase === 'brief') return false;
+                          return d.creatorMarketplaceIndex !== undefined || !!d.creatorName || !!d.creatorSkin;
+                        })
+                        .map(([key, d]) => ({ key, ...d }))
+                        .filter((d: any, i: number, arr: any[]) => {
+                          const uid = `${d.creatorName || d.key.split('|')[0]}|${d.creatorSkin || d.key.split('|')[1]}|${d.opportunityIndex ?? d.key.split('|')[2]}`;
+                          const prevUid = (x: any) => `${x.creatorName || x.key.split('|')[0]}|${x.creatorSkin || x.key.split('|')[1]}|${x.opportunityIndex ?? x.key.split('|')[2]}`;
+                          return arr.findIndex((x: any) => prevUid(x) === uid) === i;
+                        });
+                      if (applicantDeals.length === 0) return null;
+                      const statusOf = (d: any) => {
+                        if (d.phase === 'accepted') return { label: 'Accepted', color: C.success };
+                        if (d.phase === 'rejected') return { label: 'Rejected', color: '#ef4444' };
+                        if (d.phase === 'formal_offer') return { label: 'Final offer — awaiting your approval', color: C.primary };
+                        if (d.phase === 'counter' || d.phase === 'brand_countered' || d.phase === 'chatroom' || d.phase === 'pending') return { label: 'Negotiating', color: '#f59e0b' };
+                        if (d.phase === 'checklist' || d.phase === 'softhold') return { label: 'In progress', color: C.success };
+                        return { label: 'Applied', color: C.textSecondary };
+                      };
+                      const pushStatusMessage = (key: string, text: string) => {
+                        const now = new Date();
+                        updateDeal(key, {
+                          chatMessages: [...((dealStates as any)[key]?.chatMessages || []), {
+                            id: Date.now(),
+                            sender: 'brand' as const,
+                            text,
+                            time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false }),
+                            isoTime: now.toISOString(),
+                            seen: false,
+                          }],
+                        });
+                      };
+                      return (
+                        <div style={{ background:C.card, borderRadius:'12px', padding:'14px', marginBottom:'14px', border:`1px solid ${C.border}` }}>
+                          <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'4px' }}>
+                            Applicants ({applicantDeals.length})
+                          </div>
+                          <div style={{ fontSize:'10px', color:C.textSecondary, marginBottom:'10px' }}>Any applicants will be notified.</div>
+                          {applicantDeals.map((d: any, i: number) => {
+                            const creatorName = d.creatorName || d.key.split('|')[0];
+                            const creatorSkin = d.creatorSkin || d.key.split('|')[1];
+                            const offer = d.counterAmount || d.offerAmount || '—';
+                            const st = statusOf(d);
+                            const actionable = d.phase === 'formal_offer' || d.phase === 'pending' || d.phase === 'counter' || d.phase === 'brand_countered' || d.phase === 'chatroom';
+                            return (
+                              <div key={d.key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'8px', padding:'10px 0', borderTop:i>0?`1px solid ${C.border}`:'none' }}>
+                                <div style={{ flex:1, minWidth:0 }}>
+                                  <div
+                                    onMouseEnter={(e) => showHoverCard(buildCreatorHover(creatorName, creatorSkin), e)}
+                                    onMouseMove={updateHoverPosition}
+                                    onMouseLeave={hideHoverCard}
+                                    style={{ fontSize:'13px', fontWeight:600, color:C.text, cursor:'pointer' }}
+                                  >{creatorName}</div>
+                                  <div style={{ fontSize:'10px', color:C.textSecondary, marginTop:'2px' }}>{creatorSkin}</div>
+                                  <div style={{ fontSize:'11px', color:C.text, marginTop:'4px' }}>Offer: <strong>₹{parseInt(String(offer).replace(/[^0-9]/g, '')) ? parseInt(String(offer).replace(/[^0-9]/g, '')).toLocaleString() : offer}</strong></div>
+                                </div>
+                                <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'6px' }}>
+                                  <span style={{ fontSize:'10px', fontWeight:600, color:st.color, background:`${withAlpha(st.color, 0x12)}`, padding:'2px 8px', borderRadius:'10px', border:`1px solid ${withAlpha(st.color, 0x30)}` }}>{st.label}</span>
+                                  {actionable && (
+                                    <div style={{ display:'flex', gap:'6px' }}>
+                                      <button
+                                        onClick={() => {
+                                          updateDeal(d.key, { phase: 'accepted', brandApprovalPhase: 'accepted' });
+                                          pushStatusMessage(d.key, `Brand accepted your offer of ₹${parseInt(String(offer).replace(/[^0-9]/g, '') || '0').toLocaleString()}.`);
+                                          setPurchaseToast(`${creatorName} has been notified of your approval`);
+                                          setTimeout(() => setPurchaseToast(null), 3000);
+                                        }}
+                                        style={{ background:C.success, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:700, color:'#fff', cursor:'pointer' }}
+                                      >Approve</button>
+                                      <button
+                                        onClick={() => {
+                                          updateDeal(d.key, { phase: 'rejected' });
+                                          pushStatusMessage(d.key, 'Brand declined the offer.');
+                                          setPurchaseToast(`${creatorName} has been notified of your decision`);
+                                          setTimeout(() => setPurchaseToast(null), 3000);
+                                        }}
+                                        style={{ background:'none', border:`1px solid rgba(239,68,68,0.3)`, borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:700, color:'#ef4444', cursor:'pointer' }}
+                                      >Reject</button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+
                     {/* Brand Past Deals — computed from dealStates */}
                     {(() => {
                       const brandPastDeals = Object.entries(dealStates)
@@ -6079,7 +5895,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         </div>
                       ) : null;
                     })()}
-
 
                   </div>
                 </>
@@ -6193,7 +6008,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           }}
                         />
                         <span style={{ fontSize: '12px', color: C.textSecondary, minWidth: '80px' }}>
-                          ${(tier === 'community' ? communityTierCredits : marketplaceTierCredits) * 0.1}.00 USD
+                          ₹{(tier === 'community' ? communityTierCredits : marketplaceTierCredits) * 8}.00 INR
                         </span>
                       </div>
                     ))}
@@ -6298,35 +6113,35 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     </div>
                     {/* Example calculation */}
                     <div style={{ marginTop: '12px', padding: '10px', background: C.bg, borderRadius: '6px', border: `1px solid ${C.border}` }}>
-                      <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '8px' }}>Example: $10,000 deal @ {platformCommissionPct}%</div>
+                      <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '8px' }}>Example: ₹10,000 deal @ {platformCommissionPct}%</div>
                       {commissionPaidBy === 'brand' ? (
                         <>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '3px' }}>
                             <span style={{ color: C.textSecondary }}>Creator receives</span>
-                            <span style={{ color: C.success, fontWeight: 700 }}>$10,000</span>
+                            <span style={{ color: C.success, fontWeight: 700 }}>₹10,000</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
                             <span style={{ color: C.textSecondary }}>Brand pays (total)</span>
-                            <span style={{ color: C.primary, fontWeight: 700 }}>${(10000 + 10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span style={{ color: C.primary, fontWeight: 700 }}>₹{(10000 + 10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '3px', paddingTop: '3px', borderTop: `1px solid ${C.border}`, color: C.textMuted }}>
                             <span>ValueSkins revenue</span>
-                            <span>${(10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span>₹{(10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                         </>
                       ) : (
                         <>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '3px' }}>
                             <span style={{ color: C.textSecondary }}>Creator receives</span>
-                            <span style={{ color: C.success, fontWeight: 700 }}>${(10000 - 10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span style={{ color: C.success, fontWeight: 700 }}>₹{(10000 - 10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
                             <span style={{ color: C.textSecondary }}>Brand pays (total)</span>
-                            <span style={{ color: C.primary, fontWeight: 700 }}>$10,000</span>
+                            <span style={{ color: C.primary, fontWeight: 700 }}>₹10,000</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '3px', paddingTop: '3px', borderTop: `1px solid ${C.border}`, color: C.textMuted }}>
                             <span>ValueSkins revenue</span>
-                            <span>${(10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span>₹{(10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                         </>
                       )}
@@ -6603,7 +6418,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   { label: 'Availability Calendar', desc: 'Creator "available from" date shown on cards and in search', value: adminShowAvailabilityCalendar, set: setAdminShowAvailabilityCalendar },
                   { label: 'Portfolio Samples', desc: 'Past brand work visible on creator cards', value: adminShowPortfolio, set: setAdminShowPortfolio },
                   { label: 'Deal Completion Rate', desc: 'Creator % of started deals finished — penalises ghosting', value: adminShowDealCompletion, set: setAdminShowDealCompletion },
-                  { label: 'Verified Income Tier', desc: 'Trust badge showing lifetime earnings tier ($10K+, $50K+, etc)', value: adminShowIncomeTier, set: setAdminShowIncomeTier },
+                  { label: 'Verified Income Tier', desc: 'Trust badge showing lifetime earnings tier (₹10K+, ₹50K+, etc)', value: adminShowIncomeTier, set: setAdminShowIncomeTier },
                   { label: 'First-Deal Badge', desc: 'Badge shown on creators open to discounted first collaboration', value: adminShowFirstDealBadge, set: setAdminShowFirstDealBadge },
                   { label: 'Exclusivity Slot Signal', desc: 'Shows "Slot taken until [date]" when creator is exclusive with a brand', value: adminShowExclusivitySignal, set: setAdminShowExclusivitySignal },
                   { label: 'Revision Limit Display', desc: 'Number of revisions included shown upfront on creator cards', value: adminShowRevisionLimit, set: setAdminShowRevisionLimit },
@@ -6906,7 +6721,21 @@ export default function MarketplaceDemoPage(initialDealData?: {
               the older preferences panel is now a pane inside it rather than a
               separate route, so nothing leaves the app shell. */}
           {activeView === 'settings' && settingsPane === 'hub' && (
-            <SettingsHub embedded onOpenPreferences={() => setSettingsPane('preferences')} />
+            <SettingsHub
+              embedded
+              onOpenPreferences={() => setSettingsPane('preferences')}
+              onOpenCreatorPreferences={() => setSettingsPane('creator-preferences')}
+              fallbackAccount={demoAccount}
+              onLogout={handleDemoLogout}
+            />
+          )}
+
+          {/* Creator Profile Preferences — features/profiles/CreatorProfile.tsx,
+              built to ui-specs/Creator Profile Preferences.md. It shipped with
+              no importer, so the editor was unreachable in the app; it is a
+              pane here rather than a route so nothing leaves the app shell. */}
+          {activeView === 'settings' && settingsPane === 'creator-preferences' && (
+            <CreatorProfile embedded onBack={() => setSettingsPane('hub')} />
           )}
 
           {activeView === 'settings' && settingsPane === 'preferences' && (
@@ -7021,7 +6850,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
               {[
                 { label: 'Level', value: `${currentLevel}`, sub: 'of 5' },
                 { label: 'Deals', value: `${metrics.dealsCompleted}`, sub: 'completed' },
-                { label: 'Avg Deal', value: `$${Math.round(metrics.avgDealValue / 1000)}k`, sub: 'per deal' },
+                { label: 'Avg Deal', value: `₹${Math.round(metrics.avgDealValue / 1000)}k`, sub: 'per deal' },
               ].map(s => (
                 <div key={s.label} style={{ textAlign: 'center', padding: '12px 8px', background: C.surfaceAlt, borderRadius: '10px' }}>
                   <div style={{ fontSize: '18px', fontWeight: 800, color: C.text, lineHeight: 1 }}>{s.value}</div>
@@ -7069,9 +6898,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
       {/* Brand Store Modal */}
       {/* Brand Store Modal — this is now unused since brands buy skins from the main store like creators */}
-
-
-
 
       {/* ── EVENTS VIEW ──────────────────────────── */}
       {activeView === 'events' && (

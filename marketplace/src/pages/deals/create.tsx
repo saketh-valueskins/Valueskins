@@ -114,7 +114,7 @@ export default function CreateDealPage() {
 
         <div>
           <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>
-            Budget (USD)
+            Budget (₹)
           </label>
           <input
             type="number"

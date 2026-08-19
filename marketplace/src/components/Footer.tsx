@@ -170,7 +170,7 @@ export default function Footer() {
                 color: C.textSecondary,
                 textDecoration: 'none',
               }}>
-                +91 96658 20468
+                +91 88056 95324
               </a>
             </div>
           </div>
@@ -191,7 +191,7 @@ export default function Footer() {
             color: C.textSecondary,
             margin: 0,
           }}>
-            © {currentYear} ValueSkins. All rights reserved.
+            © {currentYear} Valueskins Pvt. Ltd. All rights reserved.
           </p>
           <div style={{
             fontSize: '12px',

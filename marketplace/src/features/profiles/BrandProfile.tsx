@@ -75,7 +75,7 @@ export default function BrandProfile() {
   const [editing, setEditing] = useState<EditSection>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
-  const [currencySymbol, setCurrencySymbol] = useState('$');
+  const [currencySymbol, setCurrencySymbol] = useState('₹');
 
   useEffect(() => {
     if (account) {

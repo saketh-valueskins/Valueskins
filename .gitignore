@@ -11,3 +11,6 @@ backend/target/
 
 # stale backup of node_modules — never ship, never track
 node_modules.bak/
+
+# secrets — never commit
+SUPABASE_CREDENTIALS.md

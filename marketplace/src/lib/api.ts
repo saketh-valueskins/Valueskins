@@ -8,6 +8,7 @@
 // CALLED BY: instagram/page.tsx, tiktok/page.tsx, useDealSync.ts, and other components
 
 import type { DealStatus, DeliverableType, OpportunityStatus } from './deals';
+import { logApiRequest } from './api-diagnostics';
 
 // In browser: use Render backend directly (CORS configured)
 // On server (SSR): use BACKEND_URL env var
@@ -63,22 +64,57 @@ class HttpClient {
         }
 
         try {
+            const startedAt = performance.now();
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 ...options,
                 // Send httpOnly cookie on every request (browser clients)
                 credentials: 'include',
                 headers,
             });
+            const durationMs = Math.round(performance.now() - startedAt);
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                return { error: errorData.error || `HTTP ${response.status}` };
+                const message = errorData.error || `HTTP ${response.status}`;
+                logApiRequest({
+                    ts: new Date().toISOString(),
+                    method: options.method || 'GET',
+                    url: `${API_BASE_URL}${endpoint}`,
+                    ok: false,
+                    status: response.status,
+                    error: message,
+                    durationMs,
+                    from: typeof window !== 'undefined' ? 'browser' : 'server',
+                });
+                return { error: message };
             }
 
             const data = await response.json();
+            logApiRequest({
+                ts: new Date().toISOString(),
+                method: options.method || 'GET',
+                url: `${API_BASE_URL}${endpoint}`,
+                ok: true,
+                status: response.status,
+                durationMs,
+                from: typeof window !== 'undefined' ? 'browser' : 'server',
+            });
             return { data };
         } catch (error) {
-            return { error: error instanceof Error ? error.message : 'Network error' };
+            const message = error instanceof Error ? error.message : 'Network error';
+            // Network-level failures (connection refused, DNS, mixed content, CORS
+            // blocked by browser) surface here. Log the FULL url so we can tell
+            // apart "calling localhost:8080 (env misconfig)" from "backend down".
+            logApiRequest({
+                ts: new Date().toISOString(),
+                method: options.method || 'GET',
+                url: `${API_BASE_URL}${endpoint}`,
+                ok: false,
+                error: message,
+                durationMs: 0,
+                from: typeof window !== 'undefined' ? 'browser' : 'server',
+            });
+            return { error: message };
         }
     }
 }

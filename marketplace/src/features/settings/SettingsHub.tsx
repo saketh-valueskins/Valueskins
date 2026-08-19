@@ -9,17 +9,20 @@ import Link from 'next/link';
 // scrollspy, sand accents, quiet danger zone, no green/blue/red resting states.
 // Inlines the real Account + Notifications + Privacy APIs; links out to the
 // existing rich editors (Profile & Skins, Payouts, Data) so no feature is lost.
+import { C } from '@/theme/colors';
+
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 const T = {
-  bg: '#0A0A0A',
-  surface: '#161512',
-  card: '#1A1A1A',
-  text: '#F5F5F0',
-  muted: '#B8B4AC',
+  bg: C.bg,
+  surface: C.surface,
+  card: C.card,
+  text: C.text,
+  muted: C.textMuted,
+  // sand is identical in both themes (BRANDING §4), so these stay literal
   sand: '#C8B89A',
   deepSand: '#A08A5E',
-  danger: '#B0413E',
-  border: '#2D2D2D',
+  danger: C.danger,
+  border: C.border,
   sandBorder: 'rgba(160,138,94,0.28)',
 };
 
@@ -44,6 +47,9 @@ const SECTIONS = [
 export default function SettingsHub({
   embedded = false,
   onOpenPreferences,
+  onOpenCreatorPreferences,
+  fallbackAccount = null,
+  onLogout,
 }: {
   /** Rendered inside the app shell: drop the page padding and the left rail,
    *  since the app supplies its own chrome and bottom tab spine. */
@@ -51,6 +57,15 @@ export default function SettingsHub({
   /** Embedded only — open the in-app preferences view instead of navigating
    *  away to /settings. */
   onOpenPreferences?: () => void;
+  /** Embedded only — open the Creator Profile Preferences editor
+   *  (features/profiles/CreatorProfile.tsx) as an in-app pane. */
+  onOpenCreatorPreferences?: () => void;
+  /** Demo identity used when the real session API returns 401 — the marketplace
+   *  demo signs you in locally (role + profile), so Settings must not claim you
+   *  are logged out just because there is no auth cookie. */
+  fallbackAccount?: Account | null;
+  /** Demo logout — reset the local session instead of navigating to /auth/login. */
+  onLogout?: () => void;
 } = {}) {
   const router = useRouter();
   const [account, setAccount] = useState<Account | null>(null);
@@ -80,9 +95,17 @@ export default function SettingsHub({
             setAccount(json as Account);
             setDisplayName(json.display_name || '');
           }
+        } else if (fallbackAccount) {
+          setAccount(fallbackAccount);
+          setDisplayName(fallbackAccount.display_name || '');
         }
       } catch (e) {
-        console.error('Error loading account:', e);
+        if (fallbackAccount) {
+          setAccount(fallbackAccount);
+          setDisplayName(fallbackAccount.display_name || '');
+        } else {
+          console.error('Error loading account:', e);
+        }
       } finally {
         setLoading(false);
       }
@@ -166,7 +189,11 @@ export default function SettingsHub({
     try {
       await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     } finally {
-      router.push('/auth/login');
+      if (onLogout) {
+        onLogout();
+      } else {
+        router.push('/auth/login');
+      }
     }
   };
 
@@ -278,7 +305,11 @@ export default function SettingsHub({
 
           {/* Profile & Skins — quiet link rows to the rich editors (nothing lost) */}
           <Section id="profile" title="Profile & Skins">
-            <LinkRow href="/profile/me" label="Creator Profile Preferences" sub="Bio, social links, pitch, marketplace settings" />
+            {embedded && onOpenCreatorPreferences ? (
+              <LinkRow onClick={onOpenCreatorPreferences} label="Creator Profile Preferences" sub="Bio, social links, pitch, marketplace settings" />
+            ) : (
+              <LinkRow href="/account/creator-profile" label="Creator Profile Preferences" sub="Bio, social links, pitch, marketplace settings" />
+            )}
             {embedded && onOpenPreferences ? (
               <LinkRow onClick={onOpenPreferences} label="Profile & brand details" sub="Rate card, audience, deal preferences, skin showcase, availability" />
             ) : (
@@ -395,7 +426,7 @@ const inputStyle: React.CSSProperties = {
   fontSize: '1rem',
   boxSizing: 'border-box',
   color: T.text,
-  background: '#0A0A0A',
+  background: C.surface,
   fontFamily: FONT,
 };
 
@@ -433,8 +464,8 @@ const quietDanger: React.CSSProperties = {
 function primaryBtn(disabled: boolean): React.CSSProperties {
   return {
     padding: '10px 20px',
-    background: T.text,
-    color: '#0A0A0A',
+    background: C.primary,
+    color: C.onPrimary,
     border: 'none',
     borderRadius: '6px',
     fontSize: '0.875rem',
@@ -497,7 +528,7 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
       aria-pressed={on}
       style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: 'pointer', position: 'relative', background: on ? T.sand : T.border, transition: 'background 0.2s', flexShrink: 0 }}
     >
-      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#F5F5F0', position: 'absolute', top: '3px', left: on ? '23px' : '3px', transition: 'left 0.2s' }} />
+      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#F5F5F0', border: '1px solid rgba(10,10,10,0.12)', boxSizing: 'border-box', position: 'absolute', top: '3px', left: on ? '23px' : '3px', transition: 'left 0.2s' }} />
     </button>
   );
 }

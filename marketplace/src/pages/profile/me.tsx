@@ -63,7 +63,7 @@ export default function ProfileMePage() {
           router.replace('/profile/me', undefined, { shallow: true });
         }}
         onSettings={() => router.push('/demo/marketplace?view=settings')}
-        onEditProfile={() => router.push('/demo/marketplace?view=settings')}
+        onEditProfile={() => router.push('/account/creator-profile')}
       />
     </>
   );

@@ -166,12 +166,13 @@ function calculateMatchScore(campaign: Campaign, creator: Creator): number {
  */
 function isSimilarProfession(prof1: string, prof2: string): boolean {
   const similar: { [key: string]: string[] } = {
-    'Fashion': ['Boutique', 'Streetwear Brand', 'Luxury Fashion'],
-    'Beauty': ['Cosmetics Brand', 'Skincare Line', 'Salon'],
-    'Travel': ['Hotel', 'Resort', 'Travel Agency'],
+    'Fashion & Beauty': ['Boutique', 'Clothing Store', 'Cosmetics Store', 'Salon'],
     'Food': ['Restaurant', 'Cafe', 'Bakery', 'Catering'],
-    'Fitness': ['Gym', 'Fitness Studio', 'Yoga Studio'],
-    'Technology': ['SaaS Company', 'Mobile App', 'Agency'],
+    'Travel': ['Hotel', 'Resort', 'Travel Agency'],
+    'Music': ['Concert Venue', 'Music Label', 'Recording Studio'],
+    'Tech': ['SaaS Company', 'Software Company', 'App Developer', 'IT Services'],
+    'Education': ['School', 'Coding Bootcamp', 'Tutoring Center'],
+    'Comedy & Entertainment': ['Comedy Club', 'Movie Theater', 'Production House'],
   };
 
   const prof1Lower = prof1.toLowerCase();
@@ -230,7 +231,7 @@ function getMatchReasons(campaign: Campaign, creator: Creator, matchScore: numbe
   const creatorRate = parseRate(creator.rate);
   const dealBudget = typeof campaign.budget === 'string' ? parseInt(campaign.budget) : campaign.budget;
   if (creatorRate <= dealBudget) {
-    reasons.push(`Rate fits budget: ${creator.rate} ≤ $${dealBudget}`);
+    reasons.push(`Rate fits budget: ${creator.rate} ≤ ₹${dealBudget}`);
   }
 
   // Response time

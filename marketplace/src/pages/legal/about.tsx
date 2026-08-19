@@ -20,20 +20,21 @@ export default function About() {
           <p><strong style={{ color: C.text }}>For Brands:</strong> Browse creator profiles, post campaign briefs, and negotiate deal terms. Fund deals through secure escrow. Review deliverables and release payment only when you approve.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>Escrow-Based Payments</h2>
-          <p>Every deal on ValueSkins is protected by escrow. When a brand funds a deal, the payment is held securely by our payment partners (Razorpay for INR, Stripe for USD). Funds are only released to the creator once the brand approves the deliverables. This protects both sides — creators get guaranteed payment, and brands only pay for work they approve.</p>
+          <p>Every deal on ValueSkins is protected by escrow. When a brand funds a deal, the payment is held securely by our payment partner (Razorpay for INR). Funds are only released to the creator once the brand approves the deliverables. This protects both sides — creators get guaranteed payment, and brands only pay for work they approve.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>Our Platform Fee</h2>
           <p>ValueSkins charges a 2% platform fee on completed transactions. There are no upfront costs, no subscription fees, and no charges for cancelled deals. We only make money when you do.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>Company Information</h2>
           <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px', padding: '24px', marginTop: '16px' }}>
+            <p><strong style={{ color: C.text }}>Registered Entity:</strong> Valueskins Pvt. Ltd.</p>
             <p><strong style={{ color: C.text }}>Founder:</strong> Saketh Velamuri</p>
             <p><strong style={{ color: C.text }}>Email:</strong> <a href="mailto:founder@valueskins.com" style={{ color: C.primary }}>founder@valueskins.com</a></p>
-            <p><strong style={{ color: C.text }}>Phone:</strong> <a href="tel:+918805695324" style={{ color: C.primary }}>+91 96658 20468</a></p>
+            <p><strong style={{ color: C.text }}>Phone:</strong> <a href="tel:+918805695324" style={{ color: C.primary }}>+91 88056 95324</a></p>
           </div>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>Contact Us</h2>
-          <p>Have questions? Reach out at <a href="mailto:founder@valueskins.com" style={{ color: C.primary }}>founder@valueskins.com</a> or call <a href="tel:+918805695324" style={{ color: C.primary }}>+91 96658 20468</a>.</p>
+          <p>Have questions? Reach out at <a href="mailto:founder@valueskins.com" style={{ color: C.primary }}>founder@valueskins.com</a> or call <a href="tel:+918805695324" style={{ color: C.primary }}>+91 88056 95324</a>.</p>
 
         </div>
       </div>

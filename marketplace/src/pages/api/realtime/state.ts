@@ -1,6 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { getSupabase } from '@/lib/supabase';
 
-const FIREBASE_DB_URL = process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || '';
+const EMPTY_STATE = {
+  deals: {},
+  campaigns: [],
+  messages: {},
+  applications: [],
+  notifications: [],
+};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,34 +18,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).end();
   }
 
+  let supabase;
+  try {
+    supabase = getSupabase();
+  } catch {
+    return res.status(200).json(EMPTY_STATE);
+  }
+
   if (req.method === 'GET') {
     try {
-      const firebaseRes = await fetch(`${FIREBASE_DB_URL}/realtime-state.json`);
-      if (!firebaseRes.ok) {
-        return res.status(200).json({
-          deals: {},
-          campaigns: [],
-          messages: {},
-          applications: [],
-          notifications: [],
-        });
-      }
-      const data = await firebaseRes.json();
-      return res.status(200).json(data || {
-        deals: {},
-        campaigns: [],
-        messages: {},
-        applications: [],
-        notifications: [],
+      const { data } = await supabase
+        .from('shared_state')
+        .select('state')
+        .eq('id', 'main')
+        .maybeSingle();
+
+      const s = data?.state || {};
+      return res.status(200).json({
+        deals: s.deals || {},
+        campaigns: Array.isArray(s.campaigns) ? s.campaigns : Object.values(s.campaigns || {}),
+        messages: s.messages || {},
+        applications: Array.isArray(s.applications) ? s.applications : Object.values(s.applications || {}),
+        notifications: Array.isArray(s.notifications) ? s.notifications : Object.values(s.notifications || {}),
       });
     } catch (error) {
-      return res.status(200).json({
-        deals: {},
-        campaigns: [],
-        messages: {},
-        applications: [],
-        notifications: [],
-      });
+      console.error('[API] shared_state GET error:', error);
+      return res.status(200).json(EMPTY_STATE);
     }
   }
 
@@ -47,18 +52,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!value) return res.status(400).json({ error: 'value is required' });
 
     try {
-      // Write directly to Firebase Realtime Database
-      const firebaseRes = await fetch(`${FIREBASE_DB_URL}/realtime-state.json`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(value),
-      });
-
-      if (firebaseRes.ok) {
-        return res.status(200).json({ success: true });
+      // Merge each top-level key granularly — never replace the whole row, so
+      // concurrent device writes can't clobber each other.
+      const ops: Promise<unknown>[] = [];
+      for (const [path, v] of Object.entries(value as Record<string, unknown>)) {
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+            ops.push(supabase.rpc('upsert_shared_state_path', { path, key: String(k), value: val }));
+          }
+        } else if (Array.isArray(v)) {
+          for (const item of v) {
+            if (item && typeof item === 'object' && (item as any).id !== undefined) {
+              ops.push(supabase.rpc('upsert_shared_state_path', { path, key: String((item as any).id), value: item }));
+            }
+          }
+        }
       }
-      return res.status(500).json({ error: 'Failed to write to database' });
+      await Promise.all(ops);
+      return res.status(200).json({ success: true });
     } catch (error) {
+      console.error('[API] shared_state POST error:', error);
       return res.status(500).json({ error: 'Database error' });
     }
   }
