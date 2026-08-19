@@ -20,3 +20,9 @@ docs
 patent_forms
 razorpay payment
 marketplace 2
+
+# Never upload a local .vercel/output — Vercel treats it as prebuilt Build
+# Output API artifacts and skips the build entirely, shipping whatever stale
+# bundle happened to be on disk. A month-old output here was erroring deploys.
+.vercel
+**/.vercel
