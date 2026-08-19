@@ -6483,7 +6483,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   </div>
                 </div>
 
-                {/* Option 2: Platform DMs */}
+                {/* Option 2: Instagram DMs */}
                 <div
                   onClick={() => setDealCommMode('platform_dms')}
                   style={{
@@ -6493,7 +6493,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>Platform DMs (Instagram, etc.)</div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>Instagram Direct Messages</div>
                     <div style={{ width: '20px', height: '20px', borderRadius: '50%', border: `2px solid ${dealCommMode === 'platform_dms' ? C.primary : C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {dealCommMode === 'platform_dms' && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: C.primary }} />}
                     </div>
@@ -6539,7 +6539,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                 {dealCommMode === 'platform_dms' && (
                   <div style={{ background: 'rgba(230,81,0,0.06)', border: '1px solid rgba(230,81,0,0.2)', borderRadius: '10px', padding: '14px 16px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>Integration requirements for Platform DMs</div>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>Integration requirements for Instagram DMs</div>
                     <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.6 }}>
                       If DMs are chosen as the communication channel, the platform must expose the following hooks to ValueSkins:
                     </div>
@@ -6562,7 +6562,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 )}
 
                 <button
-                  onClick={() => { setPurchaseToast(`Communication mode set to: ${dealCommMode === 'valueskins_chatroom' ? 'ValueSkins Deal Room' : 'Platform DMs with security layer'}`); setTimeout(() => setPurchaseToast(null), 3000); }}
+                  onClick={() => { setPurchaseToast(`Communication mode set to: ${dealCommMode === 'valueskins_chatroom' ? 'ValueSkins Deal Room' : 'Instagram DMs with security layer'}`); setTimeout(() => setPurchaseToast(null), 3000); }}
                   style={{ width: '100%', marginTop: '14px', padding: '11px', background: C.primary, border: 'none', borderRadius: '8px', color: C.onPrimary, fontWeight: 700, fontSize: '13px', cursor: 'pointer' }}
                 >
                   Save Communication Mode
