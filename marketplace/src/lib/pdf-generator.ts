@@ -1,4 +1,3 @@
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import PDFDocument from 'pdfkit';
 
 interface DealData {

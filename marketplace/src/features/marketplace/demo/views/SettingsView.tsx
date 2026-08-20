@@ -883,7 +883,7 @@ export default function SettingsView({
                   </div>
                   {!hasCredential && (
                     <div style={{ marginTop: '10px', padding: '8px 10px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '8px', fontSize: '11px', color: '#f59e0b' }}>
-                      Next: Link a credential (LinkedIn/Twitter) to earn +15 pts
+                      Next: Verify your Instagram account to earn +15 pts
                     </div>
                   )}
                 </div>

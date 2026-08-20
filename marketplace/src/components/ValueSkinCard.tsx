@@ -29,9 +29,6 @@ interface ValueSkinCardData {
   dateJoined?: string;
   socialLinks?: {
     instagram?: string;
-    tiktok?: string;
-    youtube?: string;
-    twitter?: string;
   };
   portfolio?: PortfolioItem[];
   reviews?: BrandReview[];
@@ -83,9 +80,6 @@ function SocialIcon({ platform, handle }: { platform: string; handle?: string })
       onMouseLeave={e => { e.currentTarget.style.background = `${withAlpha(C.primary, 0x10)}`; e.currentTarget.style.borderColor = C.border; }}
     >
       {platform === 'instagram' && <span style={{ fontSize: '12px' }}>IG</span>}
-      {platform === 'tiktok' && <span style={{ fontSize: '12px' }}>TT</span>}
-      {platform === 'youtube' && <span style={{ fontSize: '12px' }}>YT</span>}
-      {platform === 'twitter' && <span style={{ fontSize: '12px' }}>X</span>}
       @{handle}
     </a>
   );
@@ -268,9 +262,6 @@ export default function ValueSkinCard({ data, variant = 'full', onViewProfile, o
           </div>
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             {data.socialLinks.instagram && <SocialIcon platform="instagram" handle={data.socialLinks.instagram} />}
-            {data.socialLinks.tiktok && <SocialIcon platform="tiktok" handle={data.socialLinks.tiktok} />}
-            {data.socialLinks.youtube && <SocialIcon platform="youtube" handle={data.socialLinks.youtube} />}
-            {data.socialLinks.twitter && <SocialIcon platform="twitter" handle={data.socialLinks.twitter} />}
           </div>
         </div>
       )}

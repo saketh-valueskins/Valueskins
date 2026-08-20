@@ -77,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const campaign = await query('SELECT c.*, a.display_name as brand_name FROM campaigns c JOIN accounts a ON c.brand_id = a.id WHERE c.id = $1', [campaign_id]);
         if (!campaign.rows[0]) return bad(res, 'Campaign not found');
 
-        const isBrandOwner = Number(campaign.rows[0].brand_id) === userId;
+        const isBrandOwner = String(campaign.rows[0].brand_id) === String(userId);
 
         if (isBrandOwner) {
           const bids = await query(
@@ -124,8 +124,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const campaign = await query('SELECT * FROM campaigns WHERE id = $1', [bid.rows[0].campaign_id]);
       if (!campaign.rows[0]) return notFound(res);
 
-      const isBrandOwner = Number(campaign.rows[0].brand_id) === userId;
-      const isBidOwner = Number(bid.rows[0].creator_id) === userId;
+      const isBrandOwner = String(campaign.rows[0].brand_id) === String(userId);
+      const isBidOwner = String(bid.rows[0].creator_id) === String(userId);
 
       if (!isBrandOwner && !isBidOwner) return unauthorized(res);
 

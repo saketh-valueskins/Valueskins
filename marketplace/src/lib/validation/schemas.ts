@@ -70,6 +70,7 @@ export type SubmitRatingInput = z.infer<typeof SubmitRatingSchema>;
 export const FundEscrowSchema = z.object({
   escrow_id: z.string().uuid('Invalid escrow ID'),
   deal_id: z.string().uuid('Invalid deal ID'),
+  brand_id: z.string().uuid('Invalid brand ID'),
   amount: z.number().positive('Amount must be greater than 0'),
   payment_intent_id: z.string().min(1, 'Payment intent ID required'),
 });
@@ -87,7 +88,7 @@ export const ReleaseEscrowSchema = z.object({
 export type ReleaseEscrowInput = z.infer<typeof ReleaseEscrowSchema>;
 
 // Helper function to validate and parse
-export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): T {
+export function validateRequest<S extends z.ZodTypeAny>(schema: S, data: unknown): z.infer<S> {
   try {
     return schema.parse(data);
   } catch (error) {

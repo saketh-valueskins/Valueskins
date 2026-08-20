@@ -12,10 +12,6 @@ const C = {
 
 const PLATFORMS = [
   { id: 'instagram', label: 'Instagram' },
-  { id: 'tiktok', label: 'TikTok' },
-  { id: 'youtube', label: 'YouTube' },
-  { id: 'twitter', label: 'Twitter/X' },
-  { id: 'linkedin', label: 'LinkedIn' },
 ];
 
 const CONTENT_TYPES = ['photo', 'video', 'story', 'live', 'carousel', 'text'];

@@ -81,15 +81,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Generate PDF
       const pdfBuffer = await generateDealPDF(deal, messages, deliverables);
 
-      // Upload to Supabase
-      const filepath = await uploadDealPDF(dealId, pdfBuffer);
+      // Timestamped so each generation is a distinct version, not an overwrite
+      const fileName = `deal-${dealId}-${new Date().toISOString().replace(/[:.]/g, '-')}.pdf`;
+      const filepath = await uploadDealPDF(dealId, pdfBuffer, fileName);
 
       // Get all versions
       const versions = await getDealPDFVersions(dealId);
 
       // Return PDF as download
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="deal-${dealId}-${new Date().toISOString().split('T')[0]}.pdf"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
       res.setHeader('Content-Length', pdfBuffer.length);
 
       return res.end(pdfBuffer);

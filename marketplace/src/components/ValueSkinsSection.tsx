@@ -13,8 +13,8 @@ export default function ValueSkinsSection({ userId, token }: ValueSkinsSectionPr
       <h3 style={{ marginBottom: '15px' }}>🎖️ ValueSkins Credentials</h3>
       <p style={{ color: '#999', marginBottom: '15px' }}>Verified social media accounts with sticker badges</p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '20px' }}>
-        {['instagram', 'tiktok', 'youtube', 'twitter'].map(platform => {
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(1, 1fr)', gap: '10px', marginBottom: '20px' }}>
+        {['instagram'].map(platform => {
           const hasLinked = credentials.some(c => c.platform === platform);
           return (
             <button

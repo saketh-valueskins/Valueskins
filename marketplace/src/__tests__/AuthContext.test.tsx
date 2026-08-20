@@ -83,9 +83,9 @@ describe('AuthContext', () => {
     renderProvider(<TestConsumer />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('account-id').textContent).toBe('null');
+      expect(screen.getByTestId('loading').textContent).toBe('false');
     });
-    expect(screen.getByTestId('loading').textContent).toBe('false');
+    expect(screen.getByTestId('account-id').textContent).toBe('null');
   });
 
   it('sets null account on network error', async () => {

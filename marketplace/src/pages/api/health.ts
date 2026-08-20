@@ -20,9 +20,9 @@ export default async function handler(
 ) {
   if (setupCors(req, res)) return;
 
-  const checks = {
-    database: 'unhealthy' as const,
-    api: 'healthy' as const,
+  const checks: HealthResponse['checks'] = {
+    database: 'unhealthy',
+    api: 'healthy',
   };
 
   try {

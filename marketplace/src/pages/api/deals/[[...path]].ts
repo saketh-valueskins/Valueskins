@@ -129,7 +129,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
 
           const revieweeIdNum = parseInt(revieweeId);
-          if (isNaN(revieweeIdNum) || revieweeIdNum === accountId) {
+          if (isNaN(revieweeIdNum) || String(revieweeIdNum) === String(accountId)) {
             return bad(res, 'Cannot review yourself');
           }
 
