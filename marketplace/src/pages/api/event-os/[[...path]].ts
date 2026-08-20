@@ -133,7 +133,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
            if (!eventRow) return notFound(res);
            if (!tier) return bad(res, 'Ticket tier not found');
-           if (eventRow.host_user_id && Number(eventRow.host_user_id) === accountId) {
+           if (eventRow.host_user_id && String(eventRow.host_user_id) === String(accountId)) {
              return bad(res, 'Hosts cannot buy tickets to their own event');
            }
            if (tier.remaining <= 0 && tier.quantity < 999999) {

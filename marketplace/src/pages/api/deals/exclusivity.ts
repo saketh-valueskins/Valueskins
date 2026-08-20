@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const deal = await query('SELECT * FROM deals WHERE id = $1', [dealId]);
   if (!deal.rows[0]) return res.status(404).json({ error: 'Deal not found' });
 
-  const isBrand = Number(deal.rows[0].brand_id) === accountId;
+  const isBrand = String(deal.rows[0].brand_id) === String(accountId);
 
   if (req.method === 'GET') {
     return res.json({
