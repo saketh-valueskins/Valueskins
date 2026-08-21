@@ -15,7 +15,7 @@ const reasons = [
   {
     number: '02',
     title: 'Clear Pricing',
-    description: '12% of the deal amount — that\'s it. No hidden charges and no calls to discuss the charges. Transparent from day one.'
+    description: '12% of the deal amountthat\'s it. No hidden charges and no calls to discuss the charges. Transparent from day one.'
   },
   {
     number: '03',
@@ -30,12 +30,12 @@ const reasons = [
   {
     number: '05',
     title: 'Built-in Chatbox',
-    description: 'You don\'t need to go to DMs or WhatsApp to negotiate. We have a chatroom where you can negotiate the advance, deal amount, or anything else — so you don\'t get confused between multiple brands on your WhatsApp (we know you\'ll be very famous and busy).'
+    description: 'You don\'t need to go to DMs or WhatsApp to negotiate. We have a chatroom where you can negotiate the advance, deal amount, or anything elseso you don\'t get confused between multiple brands on your WhatsApp (we know you\'ll be very famous and busy).'
   },
   {
     number: '06',
     title: 'Auto-Generated Deal PDF',
-    description: 'An "After the Deal" PDF downloads automatically after the deal is done. It acts as a summary and proof of everything — including chats, exact terms negotiated, etc. Get into your Harvey Specter mood and kill them with proof(s).'
+    description: 'An "After the Deal" PDF downloads automatically after the deal is done. It acts as a summary and proof of everythingincluding chats, exact terms negotiated, etc. Get into your Harvey Specter mood and kill them with proof(s).'
   }
 ];
 
