@@ -324,6 +324,14 @@ export default function HomePage() {
           <p style={{ fontSize: '0.9375rem', color: C.textSecondary, margin: '28px auto 0', maxWidth: '480px', lineHeight: 1.6 }}>
             Less than half of what agencies charge — and only when the work is done.
           </p>
+          <div style={{ marginTop: '32px' }}>
+            <Link href="/competitors" style={{
+              fontSize: '0.9375rem', color: C.accent, textDecoration: 'none', fontWeight: 600,
+              borderBottom: `1px solid ${C.accent}`, paddingBottom: '2px'
+            }}>
+              See how we compare to competitors →
+            </Link>
+          </div>
         </Reveal>
       </div>
 
