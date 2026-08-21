@@ -86,6 +86,7 @@ const ROUTES_WITHOUT_GLOBAL_FOOTER = ['/auth/login'];
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const hideFooter = ROUTES_WITHOUT_GLOBAL_FOOTER.includes(router.pathname);
+  const isDev = process.env.NODE_ENV === 'development';
 
   return (
     <ErrorBoundary>
@@ -96,7 +97,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <Component {...pageProps} />
       {!hideFooter && <Footer />}
       <CookieConsent />
-      <DiagnosticsPanel />
+      {isDev && <DiagnosticsPanel />}
     </AuthProvider>
     </ThemeProvider>
     </ErrorBoundary>

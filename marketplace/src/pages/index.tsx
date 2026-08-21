@@ -185,6 +185,14 @@ export default function HomePage() {
           ValueSkins connects content creators with brands for paid campaigns. Every deal is backed by escrow. Creators get guaranteed payment, brands only pay for work they approve.
         </p>
 
+        <p style={{ fontSize: '1.125rem', color: C.textSecondary, margin: '0 auto 20px', maxWidth: '600px', lineHeight: 1.6 }}>
+          The escrow system is designed such that you only get paid when your job is done. We're not so boring that we will charge you just to see a list of creators. We're the cool ones.
+        </p>
+
+        <p style={{ fontSize: '1.125rem', color: C.textSecondary, margin: '0 auto 40px', maxWidth: '600px', lineHeight: 1.6 }}>
+          Also, we're clear about what we charge. 12% of the deal value, paid by the brands. Creators don't have to pay anything and we don't ask you to get on a call just to discuss the price, we care about you 🥰
+        </p>
+
         {/* ONE call to action. Sign-in is Google OAuth only and the callback
             creates the account on first use, so "Get Started" and "Sign In" were
             the same journey wearing two labels — and the third CTA at the bottom

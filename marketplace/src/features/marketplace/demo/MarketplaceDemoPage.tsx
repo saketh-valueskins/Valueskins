@@ -441,6 +441,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   // Store is a two-pane master/detail now — the old category modal is gone.
   const [storeCategory, setStoreCategory] = useState<string | null>(null);
   const [storeSearch, setStoreSearch] = useState('');
+  const [creatorCounts, setCreatorCounts] = useState<Record<string, number>>({});
   // Set right after a skin is applied, so the profile plays the slap animation.
   const [justEquipped, setJustEquipped] = useState(false);
   // Settings tab: the hub, or the older preferences panel opened from it.
@@ -528,6 +529,24 @@ export default function MarketplaceDemoPage(initialDealData?: {
       }
     }
   }, [backendCreators, pendingDealCreatorName]);
+
+  // Fetch creator counts by profession for store view
+  useEffect(() => {
+    if (activeView === 'store' && Object.keys(creatorCounts).length === 0) {
+      fetch('/api/creators/count-by-profession')
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            const counts: Record<string, number> = {};
+            data.forEach((item: any) => {
+              counts[item.profession] = item.count;
+            });
+            setCreatorCounts(counts);
+          }
+        })
+        .catch(e => console.error('Failed to fetch creator counts:', e));
+    }
+  }, [activeView, creatorCounts]);
 
   // Fetch all creators for continuous auto-matching (picks up new signups)
   const fetchAllCreators = useCallback(async (force = false) => {
@@ -6618,12 +6637,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     const owns = isBrandRole
                       ? prof.subProfessions.some(sp => brandValueSkins.includes(sp))
                       : ownedSkins.some(s => prof.subProfessions.includes(s.profession));
+                    const creatorCount = creatorCounts[prof.name] || 0;
                     return (
                       <button
                         key={prof.name}
                         onClick={() => setStoreCategory(prof.name)}
                         style={{
-                          position: 'relative', width: '100%', minHeight: '46px', display: 'flex', alignItems: 'center', gap: '10px',
+                          position: 'relative', width: '100%', minHeight: '52px', display: 'flex', alignItems: 'center', gap: '10px',
                           padding: '0 12px', border: 'none', borderBottom: `1px solid ${C.border}`,
                           background: active ? 'rgba(200,184,154,0.14)' : 'transparent',
                           borderRadius: active ? '6px' : 0, cursor: 'pointer', textAlign: 'left',
@@ -6631,7 +6651,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       >
                         {active && <span aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '2px', background: C.primary }} />}
                         <span style={{ fontSize: '11px', color: C.textMuted, minWidth: '18px' }}>{String(i + 1).padStart(2, '0')}</span>
-                        <span style={{ flex: 1, fontSize: '15px', fontWeight: 600, color: C.text }}>{prof.name}</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '15px', fontWeight: 600, color: C.text }}>{prof.name}</div>
+                          {creatorCount > 0 && (
+                            <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '2px' }}>
+                              {creatorCount} {creatorCount === 1 ? 'creator' : 'creators'}
+                            </div>
+                          )}
+                        </div>
                         <span style={{ fontSize: '12px', color: owns ? C.primary : C.textSecondary, fontWeight: owns ? 600 : 400 }}>
                           {owns ? 'Owned' : `${prof.subProfessions.length} skins`}
                         </span>
