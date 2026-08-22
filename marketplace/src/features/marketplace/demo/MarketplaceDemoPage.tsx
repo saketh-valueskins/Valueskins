@@ -1139,7 +1139,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   // Admin pricing
   const [communityTierCredits, setCommunityTierCredits] = useState(0);
   const [marketplaceTierCredits, setMarketplaceTierCredits] = useState(100);
-  const [platformCommissionPct, setPlatformCommissionPct] = useState(5); // Platform commission % per deal
+  const [platformCommissionPct, setPlatformCommissionPct] = useState(12); // Platform commission % per deal
   const [commissionPaidBy, setCommissionPaidBy] = useState<'brand' | 'creator'>('brand'); // Who pays the commission
 
   // Admin-configurable insight visibility

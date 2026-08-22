@@ -53,7 +53,7 @@ export const PAYMENT_CONFIG = {
 
   // Commission
   PLATFORM_COMMISSION_PERCENT: parseFloat(
-    process.env.NEXT_PUBLIC_PLATFORM_COMMISSION_PERCENT || '5'
+    process.env.NEXT_PUBLIC_PLATFORM_COMMISSION_PERCENT || '12'
   ),
 } as const;
 
