@@ -21,7 +21,10 @@ const DRIFTERS = [
   { left: '82%', top: '24%', size: 74,  dur: 21, delay: 2.5 },
   { left: '16%', top: '68%', size: 68,  dur: 19, delay: 1.2 },
   { left: '74%', top: '72%', size: 104, dur: 23, delay: 3.4 },
-  { left: '86%', top: '52%', size: 58,  dur: 25, delay: 4.1 },
+  // Login puts this one at 46%/12%, comfortably above its centred wordmark.
+  // The home hero sits ~150px higher, so at 46% it lands on top of the mark —
+  // same sprite, same size and timing, just shifted out of the centre column.
+  { left: '30%', top: '10%', size: 58,  dur: 25, delay: 4.1 },
 ];
 
 export default function DriftingSkins({ opacity = 0.09 }: { opacity?: number }) {
@@ -50,7 +53,7 @@ export default function DriftingSkins({ opacity = 0.09 }: { opacity?: number }) 
             animation: reduced ? 'none' : `vsSkinDrift ${d.dur}s ${EASE} ${d.delay}s infinite`,
           }}
         >
-          <ValueSkinSprite size={d.size} mono="var(--c-skin-drift)" />
+          <ValueSkinSprite size={d.size} />
         </span>
       ))}
       <style>{`
