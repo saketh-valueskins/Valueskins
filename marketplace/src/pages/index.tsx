@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { C } from '@/theme/colors';
 import ValueSkinsLogo from '@/components/ValueSkinsLogo';
 import DriftingSkins from '@/components/DriftingSkins';
-import LoadingState from '@/components/LoadingState';
 
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
@@ -146,7 +145,12 @@ export default function HomePage() {
     }
   }, [account, loading, router]);
 
-  if (loading) return <LoadingState />;
+  // Deliberately NOT gated on `loading`. Gating here put a blank screen in
+  // front of the front door for 6-10s in production — the auth probe resolves
+  // far slower in the browser than /api/auth/me does on its own (~0.5s), and
+  // every visitor paid for it before seeing anything. Landing on the welcome
+  // page immediately is the point; a signed-in visitor sees the hero for a
+  // moment before the redirect below fires, which is the cheaper trade.
   if (account && account.onboarding_stage === 'complete') return null;
 
   // Hero parallax + fade as you leave it (spec §2). Transform/opacity only.
