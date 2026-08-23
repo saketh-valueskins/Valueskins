@@ -254,7 +254,10 @@ export default function SettingsView({
             {/* Status indicator */}
             <div style={{ marginBottom: '14px', padding: '10px', background: isProfileComplete ? 'rgba(200, 184, 154,0.1)' : 'rgba(200, 184, 154,0.1)', borderRadius: '8px', border: `1px solid ${isProfileComplete ? 'rgba(200, 184, 154,0.3)' : 'rgba(200, 184, 154,0.3)'}` }}>
               <div style={{ fontSize: '12px', fontWeight: 600, color: isProfileComplete ? 'var(--c-accent)' : 'var(--c-warning)' }}>
-                {isProfileComplete ? '✓ Profile Complete' : '⚠ Profile Incomplete — Required to access marketplace'}
+                {/* Dropped the leading ✓ / ⚠ glyphs. BRANDING §1 rules out emoji,
+                    and the banner's own sand border already signals the state —
+                    §2: if you can cut a word, cut it. */}
+                {isProfileComplete ? 'Profile complete' : 'Profile incomplete — required to access the marketplace'}
               </div>
             </div>
 

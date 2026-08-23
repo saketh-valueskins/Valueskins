@@ -64,8 +64,22 @@ export default function MarketplaceLayout({
                             {title || 'Valueskins'}
                         </span>
                         <div style={{ position: 'absolute', right: 16, display: 'flex', gap: 16, alignItems: 'center' }}>
-                            <Link href="/notifications" style={{ textDecoration: 'none', fontSize: 18, lineHeight: 1, color: 'var(--ig-text-primary)', opacity: 0.7 }}>🔔</Link>
-                            <Link href="/settings" style={{ textDecoration: 'none', fontSize: 18, lineHeight: 1, color: 'var(--ig-text-primary)', opacity: 0.7 }}>⚙️</Link>
+                            {/* Were 🔔 and ⚙️ — BRANDING §1 rules out emoji, and
+                                they were coloured with --ig-text-primary, a token
+                                that is not defined anywhere in this repo. Line
+                                icons on the theme's text colour instead. */}
+                            <Link href="/notifications" aria-label="Notifications" style={{ display: 'inline-flex', color: 'var(--c-text)', opacity: 0.7 }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                </svg>
+                            </Link>
+                            <Link href="/settings" aria-label="Settings" style={{ display: 'inline-flex', color: 'var(--c-text)', opacity: 0.7 }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="3" />
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                                </svg>
+                            </Link>
                             {headerRight}
                         </div>
                     </header>

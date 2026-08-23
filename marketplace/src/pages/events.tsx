@@ -11,7 +11,10 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(180deg, #07111f 0%, #0A0A0A 40%, #111827 100%)',
+    // Was linear-gradient(#07111f, #0A0A0A, #111827) — both endpoints are navy,
+    // and BRANDING §4 bans blues outright. §10.2 permits a tonal, single-family
+    // gradient, so this is Near Black to Charcoal with nothing else in it.
+    background: 'linear-gradient(180deg, var(--c-bg) 0%, var(--c-surface) 55%, var(--c-surface-highest) 100%)',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     padding: '20px',
   } as React.CSSProperties,
@@ -69,7 +72,6 @@ export default function EventsPage() {
       </Head>
       <div style={styles.container}>
         <div style={styles.card}>
-          <div style={styles.icon}>📅</div>
           <div style={styles.badge}>COMING SOON</div>
           <h1 style={styles.title}>Events</h1>
           <p style={styles.subtitle}>
