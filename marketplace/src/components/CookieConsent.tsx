@@ -54,7 +54,9 @@ export default function CookieConsent() {
     <div
       style={{
         position: 'fixed',
-        bottom: 0,
+        // sits above the tab bar where there is one, flush to the floor where
+        // there isn't (BottomTabBar publishes --vs-tabbar-height)
+        bottom: 'var(--vs-tabbar-height, 0px)',
         left: 0,
         right: 0,
         background: C.surface,

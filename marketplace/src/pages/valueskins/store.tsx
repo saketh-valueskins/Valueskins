@@ -22,8 +22,8 @@ export default function StoreRedirect() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0A0A0A',
-        color: '#8A867E',
+        background: 'var(--c-bg)',
+        color: 'var(--c-text-muted)',
         fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
       }}
     >

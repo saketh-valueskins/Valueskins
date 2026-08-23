@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ValueSkinSprite } from '@/features/profiles/ProfileView';
+import { useTheme } from '@/theme/ThemeContext';
 
 // The faint, slowly drifting ValueSkin identities from the login screen
 // (login page.md §0b.2), lifted into a component so other full-bleed brand
@@ -27,8 +28,18 @@ const DRIFTERS = [
   { left: '30%', top: '10%', size: 58,  dur: 25, delay: 4.1 },
 ];
 
-export default function DriftingSkins({ opacity = 0.09 }: { opacity?: number }) {
+export default function DriftingSkins({ opacity }: { opacity?: number }) {
+  const { theme } = useTheme();
   const [reduced, setReduced] = useState(false);
+
+  // On dark the full-colour sprite is used, identical to the login screen.
+  // On light its face tone is lighter than the Off White ground, so the figure
+  // washes out to a pale blob — _global-conventions.md G5 rule 3 calls for
+  // exactly this: "figure = near-black in light, off-white in dark. A sprite
+  // built only for dark disappears on light — always theme-paint."
+  const light = theme === 'light';
+  const mono = light ? '#0A0A0A' : undefined;
+  const layerOpacity = opacity ?? (light ? 0.12 : 0.09);
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -41,7 +52,7 @@ export default function DriftingSkins({ opacity = 0.09 }: { opacity?: number }) 
   return (
     <div
       aria-hidden="true"
-      style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity, overflow: 'hidden' }}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none', opacity: layerOpacity, overflow: 'hidden' }}
     >
       {DRIFTERS.map((d, i) => (
         <span
@@ -53,7 +64,7 @@ export default function DriftingSkins({ opacity = 0.09 }: { opacity?: number }) 
             animation: reduced ? 'none' : `vsSkinDrift ${d.dur}s ${EASE} ${d.delay}s infinite`,
           }}
         >
-          <ValueSkinSprite size={d.size} />
+          <ValueSkinSprite size={d.size} mono={mono} />
         </span>
       ))}
       <style>{`
