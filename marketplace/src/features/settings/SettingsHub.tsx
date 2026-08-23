@@ -240,10 +240,13 @@ export default function SettingsHub({
     <div style={{
       minHeight: embedded ? undefined : '100vh',
       background: T.bg, color: T.text, fontFamily: FONT,
-      padding: embedded ? '16px 16px 24px' : '32px 20px',
+      // .shell padding from the sample: 40px 40px 90px.
+      padding: embedded ? '24px 24px 90px' : '40px 40px 90px',
     }}>
       <div style={{
-        maxWidth: embedded ? undefined : '1180px',
+        // profile-settings-sample.html's .shell is max-width:1180px. Embedded
+        // previously took whatever the shell gave it, which is now far wider.
+        maxWidth: '1180px',
         margin: '0 auto',
         display: 'grid',
         // The rail used to be dropped whenever embedded, on the reasoning that
@@ -254,11 +257,15 @@ export default function SettingsHub({
         // rather than on context.
         gridTemplateColumns: showRail ? '236px 1fr' : '1fr',
         gap: embedded ? '40px' : '56px',
-        alignItems: 'start',
+        // NOT `alignItems:'start'` — that sizes each grid item to its own
+        // content, leaving the rail zero room to travel inside its containing
+        // block, so position:sticky had nothing to stick within. The items
+        // stretch; the rail sticks inside its (now full-height) column.
       }}>
         {/* ---- Left rail (sticky, scrollspy) ---- */}
         {showRail && (
-        <aside style={{ position: 'sticky', top: embedded ? '12px' : '32px' }}>
+        <div>
+        <aside style={{ position: 'sticky', top: embedded ? '16px' : '32px' }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 4px' }}>{embedded ? 'Profile Settings' : 'Settings'}</h1>
           <div style={{ fontSize: '0.8125rem', color: T.muted, marginBottom: '20px' }}>Manage your account</div>
           <nav style={{ borderLeft: `1px solid ${T.border}` }}>
@@ -291,10 +298,11 @@ export default function SettingsHub({
             })}
           </nav>
         </aside>
+        </div>
         )}
 
         {/* ---- Content ---- */}
-        <div ref={contentRef} style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
+        <div ref={contentRef} style={{ display: 'flex', flexDirection: 'column', gap: '48px', alignSelf: 'start', minWidth: 0 }}>
           {/* Account */}
           <Section id="account" title="Account">
             {/* profile-settings-sample.html: the Account section opens with a
