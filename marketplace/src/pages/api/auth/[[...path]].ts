@@ -121,7 +121,21 @@ async function runMigrations() {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await runMigrations();
+  // `runMigrations()` used to run here on EVERY request to this route, and this
+  // route serves GET /api/auth/me — the call the whole app blocks on at start-up.
+  //
+  // It is ~30 sequential DDL statements, and `migrated` is a module-level flag
+  // that resets on every serverless cold start. So each cold start prepended a
+  // full ALTER TABLE sweep to whatever the user was doing. Measured on
+  // production: /api/auth/me at 8.9s cold versus 0.5s warm, which is where the
+  // multi-second stall at start-up was coming from.
+  //
+  // Reads no longer wait on it. Writes still migrate up front, and there is a
+  // dedicated /api/admin/run-migrations endpoint for doing it deliberately.
+  // If a fresh environment genuinely lacks a column, the read below throws and
+  // getSessionUser migrates and retries once — so correctness does not depend
+  // on having run migrations first, only speed does.
+  if (req.method !== 'GET') await runMigrations();
   const { path } = req.query;
   const pathStr = Array.isArray(path) ? path.join('/') : (path ?? '');
 
@@ -132,14 +146,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!match) return null;
 
     const sessionToken = match[1];
-    const result = await query(
-      `SELECT u.id, u.instagram_user_id, u.username, u.display_name, u.avatar_url,
+    const SQL = `SELECT u.id, u.instagram_user_id, u.username, u.display_name, u.avatar_url,
               u.is_active, u.created_at, u.last_login_at, u.role, u.onboarding_stage
        FROM auth_sessions s
        JOIN users u ON s.user_id = u.id
-       WHERE s.id = $1 AND s.is_active = true AND s.expires_at > NOW()`,
-      [sessionToken]
-    );
+       WHERE s.id = $1 AND s.is_active = true AND s.expires_at > NOW()`;
+
+    let result;
+    try {
+      result = await query(SQL, [sessionToken]);
+    } catch (err) {
+      // Reads skip migrations for speed (see handler). The columns this selects
+      // are ones migrations add, so on an environment that has never been
+      // migrated this throws — migrate once, then retry. Steady state never
+      // reaches here.
+      await runMigrations();
+      result = await query(SQL, [sessionToken]);
+    }
 
     if (result.rows.length === 0) return null;
     return result.rows[0];
