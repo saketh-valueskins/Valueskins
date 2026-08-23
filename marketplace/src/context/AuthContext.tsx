@@ -59,9 +59,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ? `${backendUrl}/auth/unified/login` // We use /me below
         : '/api/auth/me';
       
-      // Use the backend /me endpoint to get current user
+      // Use the backend /me endpoint to get current user.
+      //
+      // This attempt is time-boxed. In production NEXT_PUBLIC_BACKEND_URL points
+      // at a Render host that does not respond — the Rust backend is not
+      // deployed — and it is also absent from the CSP connect-src list. Today
+      // the CSP block is the only reason the app loads fast: fetch throws
+      // immediately, and the catch below falls through to the same-origin
+      // /api/auth/me route, which is what actually serves auth.
+      //
+      // That makes "just add the origin to connect-src" an actively harmful
+      // fix: the request would stop failing fast and instead hang until the
+      // host times out (measured: >25s), with `loading` true the whole time —
+      // a 25-second gate on every page load. The abort keeps that impossible
+      // however the CSP and env var are configured.
       const meUrl = backendUrl ? `${backendUrl}/auth/me` : '/api/auth/me';
-      const res = await fetch(meUrl, { credentials: 'include' });
+      const ctrl = new AbortController();
+      const abortTimer = setTimeout(() => ctrl.abort(), 3000);
+      let res: Response;
+      try {
+        res = await fetch(meUrl, { credentials: 'include', signal: ctrl.signal });
+      } finally {
+        clearTimeout(abortTimer);
+      }
       if (res.ok) {
         const data = await res.json();
         setAccount(data);
