@@ -2870,6 +2870,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
           // length past ~860px gets uncomfortable.
           maxWidth: (activeView === 'store' || activeView === 'mim' || activeView === 'admin')
             ? 'min(1760px, calc(100vw - 48px))'
+            // Profile is an identity page, not a reading column: the sample and
+            // Profile page.md §0 both put it at 900px, so the shell has to let
+            // 900 through rather than clipping it to the 860 reading width.
+            : activeView === 'profile'
+            ? '960px'
             : '860px',
           // No side rules. They drew a visible column edge down both sides of
           // every screen, which store-page-mock.svg does not have — the mock is
@@ -2884,7 +2889,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
           {activeView === 'profile' && (
             <>
               {/* ── PROFILE VIEW ── */}
-              <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+              {/* 900px, per profile-identity-sample.html's .wrap and Profile
+                  page.md §0 ("content column 900px, centered"). This was 600px,
+                  so ProfileView's own maxWidth:900 never applied and the page
+                  rendered ~520px wide with 460px gutters either side — the
+                  empty-sides problem. The sample's padding is 34px 28px 80px. */}
+              <div style={{ padding: '34px 28px 80px', maxWidth: '900px', margin: '0 auto' }}>
 
                 {/* Identity anchor — ui-specs/phase-2/Profile page.md.
                     Edit profile opens Creator Profile Preferences, which is the
@@ -5727,35 +5737,59 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     {(() => {
                       const activeCampaigns = liveCampaigns.filter(c => c.status === 'open');
                       return activeCampaigns.length > 0 ? (
-                        <div style={{ background:C.card, borderRadius:'12px', padding:'14px', marginBottom:'14px', border:`1px solid ${C.border}` }}>
-                          <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>
-                            Active Campaigns ({activeCampaigns.length})
+                        // app-merged-sample.html — the campaign card is a `.stub`:
+                        // 22px padding, 14px radius, a 16px/700 title, and ONE
+                        // muted 14px line joining the facts with " · ". The old
+                        // card stacked five stacked rows at 10-13px, which read
+                        // as a dense form rather than a listing.
+                        <div style={{ marginBottom: '20px' }}>
+                          {/* .sl — section label with the trailing hairline */}
+                          <div style={{ display:'flex', alignItems:'center', gap:'12px', margin:'6px 0 14px' }}>
+                            <span style={{ fontSize:'12px', fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:C.textSecondary }}>
+                              Open campaigns
+                            </span>
+                            <span aria-hidden="true" style={{ flex:1, height:'1px', background:C.border }} />
                           </div>
+
+                          {/* .cards — two up, collapsing to one on narrow */}
+                          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:'14px' }}>
                           {activeCampaigns.map((c, i) => {
                             const preferenceMatch = campaignMatchesCreatorPreferences(c);
+                            // The sample's meta line: category · rate · level · extra.
+                            // Built from whatever this campaign actually has, so a
+                            // sparse record does not render dangling separators.
+                            const meta = [
+                              c.brandName,
+                              c.budget ? `₹${parseInt(c.budget || '0').toLocaleString()}` : null,
+                              c.requiredProfessions?.length ? c.requiredProfessions.join(', ') : null,
+                              c.escrowFunded ? 'Escrow funded' : 'Escrow pending',
+                              c.deadline || null,
+                            ].filter(Boolean).join(' · ');
                             return (
-                              <div key={i} style={{ padding:'12px 0', borderTop:i>0?`1px solid ${C.border}`:'none' }}>
-                                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'6px', flexWrap:'wrap', gap:'4px' }}>
-                                  <span style={{ fontSize:'13px', fontWeight:700, color:C.text }}>{c.title}</span>
-                                  <span style={{ fontSize:'12px', fontWeight:700, color:C.success }}>₹{parseInt(c.budget||'0').toLocaleString()}</span>
-                                </div>
-                                {c.brandName && <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'4px' }}>by {c.brandName}</div>}
-                                <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px', lineHeight:1.4 }}>{c.description}</div>
-                                <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'8px' }}>
-                                  {c.requiredProfessions.map(p => <span key={p} style={{ fontSize:'10px', fontWeight:600, color:C.primary, background:`${withAlpha(C.primary, 0x12)}`, padding:'2px 7px', borderRadius:'6px', border:`1px solid ${withAlpha(C.primary, 0x30)}` }}>{p}</span>)}
-                                </div>
-                                {!preferenceMatch.matches && preferenceMatch.reason && (
-                                  <div style={{ fontSize:'10px', color:'var(--c-warning)', background:'rgba(200, 184, 154, 0.12)', border:'1px solid rgba(200, 184, 154, 0.3)', padding:'6px 8px', borderRadius:'6px', marginBottom:'8px' }}>
-                                    ⚠️ {preferenceMatch.reason} but you can still apply if you want.
-                                  </div>
+                              <div
+                                key={i}
+                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
+                                style={{
+                                  background: C.card, border: `1px solid ${C.border}`,
+                                  borderRadius: '14px', padding: '22px',
+                                  transition: 'border-color 180ms linear',
+                                }}
+                              >
+                                <h3 style={{ fontSize:'16px', fontWeight:700, color:C.text, margin:0 }}>{c.title}</h3>
+                                <p style={{ fontSize:'14px', color:C.textSecondary, margin:'6px 0 0', lineHeight:1.5 }}>{meta}</p>
+                                {c.description && (
+                                  <p style={{ fontSize:'14px', color:C.textSecondary, margin:'6px 0 0', lineHeight:1.5 }}>{c.description}</p>
                                 )}
-                                <div style={{ display:'flex', gap:'12px', flexWrap:'wrap', fontSize:'10px', color:C.textMuted }}>
-                                  <span>Escrow: {c.escrowFunded ? '✓ Funded' : 'Pending'}</span>
-                                  {c.deadline && <span>{c.deadline}</span>}
-                                </div>
+                                {!preferenceMatch.matches && preferenceMatch.reason && (
+                                  <p style={{ fontSize:'13px', color:C.textMuted, margin:'12px 0 0', lineHeight:1.5 }}>
+                                    {preferenceMatch.reason} — you can still apply.
+                                  </p>
+                                )}
                               </div>
                             );
                           })}
+                          </div>
                         </div>
                       ) : null;
                     })()}
