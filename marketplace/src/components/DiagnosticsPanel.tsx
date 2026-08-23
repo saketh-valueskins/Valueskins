@@ -227,7 +227,7 @@ export default function DiagnosticsPanel() {
           style={{
             background: 'rgba(99,102,241,0.2)',
             color: C.text,
-            border: '1px solid #6366f1',
+            border: '1px solid var(--c-accent)',
             borderRadius: 6,
             fontSize: 11,
             padding: '6px 10px',
@@ -240,7 +240,7 @@ export default function DiagnosticsPanel() {
           href="/api/backend-health"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ alignSelf: 'center', color: '#6366f1', fontSize: 11 }}
+          style={{ alignSelf: 'center', color: 'var(--c-accent)', fontSize: 11 }}
         >
           open raw JSON ↗
         </a>

@@ -50,9 +50,9 @@ const C = {
   textMuted: '#B8B4AC',
   textSecondary: '#D6D2C8',
   primary: '#C8B89A',
-  success: '#22c55e',
-  warning: '#f59e0b',
-  accent: '#a855f7',
+  success: 'var(--c-accent)',
+  warning: 'var(--c-warning)',
+  accent: 'var(--c-accent)',
   border: '#2D2D2D',
 };
 

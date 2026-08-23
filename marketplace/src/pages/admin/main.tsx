@@ -12,8 +12,8 @@ const C = {
   text: '#F5F5F0',
   textSecondary: '#B8B4AC',
   primary: '#C8B89A',
-  danger: '#ef4444',
-  success: '#22c55e',
+  danger: 'var(--c-error)',
+  success: 'var(--c-accent)',
 };
 
 export default function AdminDashboard() {
@@ -120,7 +120,7 @@ export default function AdminDashboard() {
           <div style={{
             padding: '16px',
             background: '#fee2e2',
-            color: '#991b1b',
+            color: 'var(--c-error)',
             borderRadius: '8px',
             marginBottom: '20px',
             border: `1px solid #fecaca`

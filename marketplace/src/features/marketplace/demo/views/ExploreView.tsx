@@ -11,14 +11,14 @@ function getStickerForProfession(profession: string): string | undefined {
 
 const C = {
   primary: 'var(--c-primary, #0A0A0A)',
-  bg: 'var(--c-bg, #ffffff)',
-  surface: 'var(--c-surface, #ffffff)',
-  surfaceAlt: 'var(--c-surface-alt, #f9fafb)',
-  card: 'var(--c-card, #f3f4f6)',
-  text: 'var(--c-text, #1f2937)',
-  textSecondary: 'var(--c-text-secondary, #6b7280)',
-  textMuted: 'var(--c-outline, #9ca3af)',
-  border: 'var(--c-border, #e5e7eb)',
+  bg: 'var(--c-bg, var(--c-surface-lowest))',
+  surface: 'var(--c-surface, var(--c-surface-lowest))',
+  surfaceAlt: 'var(--c-surface-alt, var(--c-surface))',
+  card: 'var(--c-card, var(--c-surface-container))',
+  text: 'var(--c-text, var(--c-text))',
+  textSecondary: 'var(--c-text-secondary, var(--c-text-variant))',
+  textMuted: 'var(--c-outline, var(--c-text-variant))',
+  border: 'var(--c-border, var(--c-border))',
   success: 'var(--c-success, #10b981)',
 };
 
@@ -197,7 +197,7 @@ export default function ExploreView() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>
                       {c.display_name || c.username}
-                      {c.verified && <span style={{ marginLeft: '4px', fontSize: '11px', color: '#0095F6' }}>&#10003;</span>}
+                      {c.verified && <span style={{ marginLeft: '4px', fontSize: '11px', color: 'var(--c-accent)' }}>&#10003;</span>}
                     </div>
                     <div style={{ fontSize: '11px', color: C.textSecondary }}>
                       @{c.username} {c.profession ? `· ${c.profession}` : c.value_skin ? `· ${c.value_skin}` : ''}
@@ -233,7 +233,7 @@ export default function ExploreView() {
               <div>
                 <div style={{ fontSize: '16px', fontWeight: 700, color: C.text }}>
                   {previewCreator.display_name || previewCreator.username}
-                  {previewCreator.verified && <span style={{ marginLeft: '4px', fontSize: '12px', color: '#0095F6' }}>&#10003;</span>}
+                  {previewCreator.verified && <span style={{ marginLeft: '4px', fontSize: '12px', color: 'var(--c-accent)' }}>&#10003;</span>}
                 </div>
                 <div style={{ fontSize: '13px', color: C.textSecondary }}>@{previewCreator.username}</div>
                 {(previewCreator.profession || previewCreator.value_skin) && (
@@ -245,7 +245,7 @@ export default function ExploreView() {
                       return sticker ? (
                         <img src={sticker} alt={profession} style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
                       ) : badge ? (
-                        <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: badge.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '7px', fontWeight: 700, color: '#fff' }}>{badge.abbreviation}</div>
+                        <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: badge.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '7px', fontWeight: 700, color: 'var(--c-surface-lowest)' }}>{badge.abbreviation}</div>
                       ) : null;
                     })()}
                     <span style={{ fontSize: '12px', fontWeight: 600, color: C.primary }}>{previewCreator.profession || previewCreator.value_skin}</span>

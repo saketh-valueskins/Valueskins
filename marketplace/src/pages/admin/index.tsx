@@ -9,11 +9,11 @@ const C = {
   surface: '#F5F5F0',
   card: '#ffffff',
   text: '#0A0A0A',
-  textSecondary: '#475569',
+  textSecondary: 'var(--c-text-muted)',
   textMuted: '#B8B4AC',
   border: '#E0E0DA',
-  success: '#22c55e',
-  danger: '#ef4444',
+  success: 'var(--c-accent)',
+  danger: 'var(--c-error)',
 };
 
 export default function AdminPanel() {

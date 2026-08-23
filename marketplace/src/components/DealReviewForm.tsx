@@ -6,11 +6,11 @@ const C = {
   primary: '#0A0A0A',
   bg: '#ffffff',
   surface: '#f9fafb',
-  text: '#1f2937',
-  textSecondary: '#6b7280',
+  text: 'var(--c-text)',
+  textSecondary: 'var(--c-text-variant)',
   border: '#e5e7eb',
-  error: '#ef4444',
-  success: '#22c55e',
+  error: 'var(--c-error)',
+  success: 'var(--c-accent)',
 };
 
 interface DealReviewFormProps {
@@ -50,7 +50,7 @@ const StarRating: React.FC<StarRatingProps> = ({ label, value, onChange }) => {
   const starStyle = (filled: boolean): CSSProperties => ({
     fontSize: '24px',
     cursor: 'pointer',
-    color: filled ? '#fbbf24' : C.border,
+    color: filled ? 'var(--c-warning)' : C.border,
     transition: 'color 0.2s',
   });
 

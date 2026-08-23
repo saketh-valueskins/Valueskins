@@ -31,7 +31,7 @@ export default function VerificationsPage() {
       </h1>
 
       {verifications.length === 0 ? (
-        <div style={{ color: '#6b7280' }}>No pending verifications</div>
+        <div style={{ color: 'var(--c-text-variant)' }}>No pending verifications</div>
       ) : (
         <div style={{ display: 'grid', gap: '16px' }}>
           {verifications.map(v => (
@@ -48,15 +48,15 @@ export default function VerificationsPage() {
             >
               <div>
                 <div style={{ fontWeight: 700 }}>{v.brand_id}</div>
-                <div style={{ fontSize: '14px', color: '#6b7280' }}>{v.email}</div>
-                <div style={{ fontSize: '12px', color: '#9ca3af' }}>Domain: {v.domain}</div>
+                <div style={{ fontSize: '14px', color: 'var(--c-text-variant)' }}>{v.email}</div>
+                <div style={{ fontSize: '12px', color: 'var(--c-text-variant)' }}>Domain: {v.domain}</div>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   onClick={() => handleVerify(v.brand_id, 'approve')}
                   style={{
                     padding: '8px 16px',
-                    background: '#22c55e',
+                    background: 'var(--c-accent)',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '6px',
@@ -71,7 +71,7 @@ export default function VerificationsPage() {
                   onClick={() => handleVerify(v.brand_id, 'reject')}
                   style={{
                     padding: '8px 16px',
-                    background: '#ef4444',
+                    background: 'var(--c-error)',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '6px',

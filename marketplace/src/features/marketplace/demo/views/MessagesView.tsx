@@ -9,15 +9,15 @@ import { useWebSocket } from '@/hooks/useWebSocket';
 const C = {
   onPrimary: 'var(--c-on-primary)',
   primary: 'var(--c-primary, #0A0A0A)',
-  bg: 'var(--c-bg, #ffffff)',
-  surface: 'var(--c-surface, #ffffff)',
-  surfaceAlt: 'var(--c-surface-alt, #f9fafb)',
-  card: 'var(--c-card, #f3f4f6)',
-  text: 'var(--c-text, #1f2937)',
-  textSecondary: 'var(--c-text-secondary, #6b7280)',
-  textMuted: 'var(--c-outline, #9ca3af)',
-  border: 'var(--c-border, #e5e7eb)',
-  success: 'var(--c-success, #00D46A)',
+  bg: 'var(--c-bg, var(--c-surface-lowest))',
+  surface: 'var(--c-surface, var(--c-surface-lowest))',
+  surfaceAlt: 'var(--c-surface-alt, var(--c-surface))',
+  card: 'var(--c-card, var(--c-surface-container))',
+  text: 'var(--c-text, var(--c-text))',
+  textSecondary: 'var(--c-text-secondary, var(--c-text-variant))',
+  textMuted: 'var(--c-outline, var(--c-text-variant))',
+  border: 'var(--c-border, var(--c-border))',
+  success: 'var(--c-success, var(--c-accent))',
 };
 
 interface BackendCommunity {
@@ -257,7 +257,7 @@ export default function MessagesView({
               <div style={{
                 maxWidth: '75%', padding: '10px 14px', borderRadius: msg.sender === 'me' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
                 background: msg.sender === 'me' ? C.primary : C.card,
-                color: msg.sender === 'me' ? '#fff' : C.text,
+                color: msg.sender === 'me' ? 'var(--c-surface-lowest)' : C.text,
                 fontSize: '14px', lineHeight: 1.4,
                 border: msg.sender === 'me' ? 'none' : `1px solid ${C.border}`,
               }}>
@@ -271,7 +271,7 @@ export default function MessagesView({
           <input type="text" value={dmInput} onChange={e => setDmInput(e.target.value)} placeholder="Message..."
             onKeyDown={e => { if (e.key === 'Enter') sendDm(); }}
             style={{ flex: 1, padding: '10px 14px', borderRadius: '22px', border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: '14px', outline: 'none' }} />
-          <button onClick={sendDm} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', background: dmInput.trim() ? C.primary : C.surfaceAlt, color: dmInput.trim() ? '#fff' : C.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={sendDm} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', background: dmInput.trim() ? C.primary : C.surfaceAlt, color: dmInput.trim() ? 'var(--c-surface-lowest)' : C.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
@@ -287,7 +287,7 @@ export default function MessagesView({
           <button onClick={() => setActiveCommunityId(null)} style={{ background: 'none', border: 'none', color: C.text, cursor: 'pointer', padding: 0, display: 'flex' }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
-          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: activeCommunity.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '11px' }}>
+          <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: activeCommunity.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--c-surface-lowest)', fontWeight: 700, fontSize: '11px' }}>
             {activeCommunity.avatar_abbr}
           </div>
           <div style={{ flex: 1 }}>
@@ -344,7 +344,7 @@ export default function MessagesView({
           <input type="text" value={postInput} onChange={e => setPostInput(e.target.value)} placeholder="Post to community..."
             onKeyDown={e => { if (e.key === 'Enter') sendCommunityPost(); }}
             style={{ flex: 1, padding: '10px 14px', borderRadius: '22px', border: `1px solid ${C.border}`, background: C.surface, color: C.text, fontSize: '14px', outline: 'none' }} />
-          <button onClick={sendCommunityPost} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', background: postInput.trim() ? C.primary : C.surfaceAlt, color: postInput.trim() ? '#fff' : C.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={sendCommunityPost} style={{ width: '36px', height: '36px', borderRadius: '50%', border: 'none', background: postInput.trim() ? C.primary : C.surfaceAlt, color: postInput.trim() ? 'var(--c-surface-lowest)' : C.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
@@ -432,7 +432,7 @@ export default function MessagesView({
                 style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', cursor: ch.is_member ? 'pointer' : 'default', borderBottom: `1px solid ${C.border}` }}
                 onMouseEnter={e => { if (ch.is_member) e.currentTarget.style.background = C.surfaceAlt; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: ch.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: '12px' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: ch.avatar_color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--c-surface-lowest)', fontWeight: 700, fontSize: '12px' }}>
                   {ch.avatar_abbr}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -526,7 +526,7 @@ export default function MessagesView({
       )}
 
       {toast && (
-        <div style={{ position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)', background: C.primary, color: '#fff', padding: '10px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, zIndex: 9999 }}>
+        <div style={{ position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)', background: C.primary, color: 'var(--c-surface-lowest)', padding: '10px 20px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, zIndex: 9999 }}>
           {toast}
         </div>
       )}

@@ -93,8 +93,8 @@ export default function DealRoomChat({
         <div
           style={{
             padding: '12px 16px',
-            background: 'rgba(245, 158, 11, 0.1)',
-            borderBottom: '1px solid rgba(245, 158, 11, 0.3)',
+            background: 'rgba(200, 184, 154, 0.1)',
+            borderBottom: '1px solid rgba(200, 184, 154, 0.3)',
             fontSize: '12px',
             color: '#92400e',
             display: 'flex',
@@ -134,10 +134,10 @@ export default function DealRoomChat({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', margin: 0 }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--c-text)', margin: 0 }}>
               Deal with {brandName}
             </h3>
-            <p style={{ fontSize: '12px', color: '#6b7280', margin: '4px 0 0 0' }}>
+            <p style={{ fontSize: '12px', color: 'var(--c-text-variant)', margin: '4px 0 0 0' }}>
               Status: In Progress
             </p>
           </div>
@@ -226,7 +226,7 @@ export default function DealRoomChat({
               <div
                 style={{
                   fontSize: '11px',
-                  color: '#9ca3af',
+                  color: 'var(--c-text-variant)',
                   textAlign: 'center',
                   width: '100%',
                   padding: '8px',
@@ -239,7 +239,7 @@ export default function DealRoomChat({
                 style={{
                   maxWidth: '70%',
                   background: msg.sender === 'me' ? '#0A0A0A' : '#f3f4f6',
-                  color: msg.sender === 'me' ? '#ffffff' : '#1f2937',
+                  color: msg.sender === 'me' ? '#ffffff' : 'var(--c-text)',
                   padding: '12px 16px',
                   borderRadius: '12px',
                   fontSize: '14px',

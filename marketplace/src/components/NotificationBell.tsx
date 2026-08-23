@@ -55,7 +55,7 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
               position: 'absolute',
               top: '0',
               right: '0',
-              background: '#ef4444',
+              background: 'var(--c-error)',
               color: '#ffffff',
               borderRadius: '999px',
               width: '20px',
@@ -94,7 +94,7 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
           </div>
 
           {notifications.length === 0 ? (
-            <div style={{ padding: '24px 16px', color: '#6b7280', textAlign: 'center', fontSize: '14px' }}>
+            <div style={{ padding: '24px 16px', color: 'var(--c-text-variant)', textAlign: 'center', fontSize: '14px' }}>
               No notifications
             </div>
           ) : (
@@ -114,10 +114,10 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
                   <div style={{ fontWeight: 600, marginBottom: '4px' }}>
                     {n.title}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--c-text-variant)' }}>
                     {n.message}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--c-text-variant)', marginTop: '4px' }}>
                     {new Date(n.created_at).toLocaleDateString()}
                   </div>
                 </div>

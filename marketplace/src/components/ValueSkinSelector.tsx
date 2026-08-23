@@ -20,7 +20,7 @@ export default function ValueSkinSelector({ userId, onSelect, selectedSkin }: Va
   }, [userId]);
 
   if (loading) return <div>Loading skins...</div>;
-  if (skins.length === 0) return <div style={{ color: '#ef4444' }}>No value skins purchased</div>;
+  if (skins.length === 0) return <div style={{ color: 'var(--c-error)' }}>No value skins purchased</div>;
 
   return (
     <div>
@@ -45,7 +45,7 @@ export default function ValueSkinSelector({ userId, onSelect, selectedSkin }: Va
           <option key={skin} value={skin}>{skin}</option>
         ))}
       </select>
-      <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
+      <p style={{ fontSize: '12px', color: 'var(--c-text-variant)', marginTop: '8px' }}>
         You own {skins.length}/3 skins. Only 1 skin can be used per deal.
       </p>
     </div>

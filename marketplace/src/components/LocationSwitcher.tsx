@@ -24,7 +24,7 @@ export default function LocationSwitcher({ parentBrandId, onSelect }: LocationSw
   }, [parentBrandId, onSelect]);
 
   if (loading) return <div>Loading locations...</div>;
-  if (locations.length === 0) return <div style={{ fontSize: '14px', color: '#6b7280' }}>No locations</div>;
+  if (locations.length === 0) return <div style={{ fontSize: '14px', color: 'var(--c-text-variant)' }}>No locations</div>;
 
   return (
     <div>

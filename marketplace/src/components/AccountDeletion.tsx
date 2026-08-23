@@ -9,13 +9,13 @@ const C = {
   border: '#2D2D2D',
   text: '#F5F5F0',
   textSecondary: '#D6D2C8',
-  error: '#ef4444',
+  error: 'var(--c-error)',
   errorBg: '#7f1d1d',
-  success: '#22c55e',
+  success: 'var(--c-accent)',
   successBg: '#052e16',
-  warning: '#f59e0b',
+  warning: 'var(--c-warning)',
   warningBg: '#451a03',
-  info: '#3b82f6',
+  info: 'var(--c-accent)',
   infoBg: '#1e3a5f',
 };
 

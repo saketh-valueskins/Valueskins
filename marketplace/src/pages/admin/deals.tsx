@@ -88,13 +88,13 @@ export default function AdminDeals() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return '#22c55e';
+        return 'var(--c-accent)';
       case 'in_progress':
-        return '#3b82f6';
+        return 'var(--c-accent)';
       case 'pending':
-        return '#f59e0b';
+        return 'var(--c-warning)';
       case 'disputed':
-        return '#ef4444';
+        return 'var(--c-error)';
       default:
         return C.textSecondary;
     }
@@ -126,7 +126,7 @@ export default function AdminDeals() {
           <div style={{
             padding: '16px',
             background: '#fee2e2',
-            color: '#991b1b',
+            color: 'var(--c-error)',
             borderRadius: '8px',
             marginBottom: '20px',
             border: `1px solid #fecaca`

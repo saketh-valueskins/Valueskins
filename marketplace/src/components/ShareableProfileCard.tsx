@@ -23,11 +23,11 @@ interface ProfileCardProps {
 }
 
 const LEVEL_COLORS = {
-    1: { primary: '#6b7280', secondary: '#4b5563', name: 'Entry' },
-    2: { primary: '#22c55e', secondary: '#16a34a', name: 'Established' },
+    1: { primary: 'var(--c-text-variant)', secondary: '#4b5563', name: 'Entry' },
+    2: { primary: 'var(--c-accent)', secondary: 'var(--c-accent)', name: 'Established' },
     3: { primary: '#A08A5E', secondary: '#0A0A0A', name: 'Professional' },
-    4: { primary: '#a855f7', secondary: '#9333ea', name: 'Expert' },
-    5: { primary: '#f59e0b', secondary: '#d97706', name: 'Legendary' },
+    4: { primary: 'var(--c-accent)', secondary: '#9333ea', name: 'Expert' },
+    5: { primary: 'var(--c-warning)', secondary: 'var(--c-warning)', name: 'Legendary' },
 };
 
 export default function ShareableProfileCard({

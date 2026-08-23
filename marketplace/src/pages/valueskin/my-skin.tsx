@@ -13,8 +13,8 @@ const C = {
   text: '#F5F5F0',
   textSecondary: '#D6D2C8',
   primary: '#0066CC',
-  success: '#22c55e',
-  warning: '#f59e0b',
+  success: 'var(--c-accent)',
+  warning: 'var(--c-warning)',
 };
 
 interface ValueSkin {
@@ -71,9 +71,9 @@ export default function MyValueSkinPage() {
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             padding: '16px',
-            background: 'rgba(239, 68, 68, 0.1)',
+            background: 'rgba(176, 65, 62, 0.1)',
             color: '#fca5a5',
-            border: '1px solid #dc2626',
+            border: '1px solid var(--c-error)',
             borderRadius: '8px',
             marginBottom: '20px',
           }}>

@@ -129,8 +129,8 @@ export default function MyData() {
             </div>
 
             {deleteSuccess ? (
-              <div style={{ background: C.surface, border: '1px solid #22c55e40', borderRadius: '12px', padding: '24px' }}>
-                <div style={{ color: '#22c55e', fontWeight: 700, fontSize: '15px', marginBottom: '8px' }}>
+              <div style={{ background: C.surface, border: '1px solid rgba(200, 184, 154, 0.25)', borderRadius: '12px', padding: '24px' }}>
+                <div style={{ color: 'var(--c-accent)', fontWeight: 700, fontSize: '15px', marginBottom: '8px' }}>
                   ✓ Deletion Scheduled
                 </div>
                 <p style={{ color: C.textSecondary, fontSize: '13px', margin: 0 }}>

@@ -113,7 +113,7 @@ export default function DealPDFDownloader({ dealId, dealPhase, onDownload }: Dea
         <div style={{
           padding: '8px',
           background: '#fee2e2',
-          color: '#991b1b',
+          color: 'var(--c-error)',
           borderRadius: '4px',
           fontSize: '12px',
           marginBottom: '12px',

@@ -10,8 +10,8 @@ const C = {
   text: '#F5F5F0',
   textSecondary: '#D6D2C8',
   border: '#2D2D2D',
-  success: '#22c55e',
-  accent: '#f59e0b',
+  success: 'var(--c-accent)',
+  accent: 'var(--c-warning)',
 };
 
 interface Creator {
@@ -157,7 +157,7 @@ export default function CreatorProfilePage() {
   const idBadgeStyle: CSSProperties = {
     display: 'inline-block',
     padding: '6px 12px',
-    background: 'rgba(34, 197, 94, 0.1)',
+    background: 'rgba(200, 184, 154, 0.1)',
     color: C.success,
     borderRadius: '6px',
     fontSize: '12px',
@@ -240,8 +240,8 @@ export default function CreatorProfilePage() {
 
   const statusBadgeStyle = (status: string): CSSProperties => {
     const colors: Record<string, [string, string]> = {
-      completed: ['rgba(34, 197, 94, 0.1)', C.success],
-      'in-progress': ['rgba(245, 158, 11, 0.1)', C.accent],
+      completed: ['rgba(200, 184, 154, 0.1)', C.success],
+      'in-progress': ['rgba(200, 184, 154, 0.1)', C.accent],
       pending: ['rgba(184, 180, 172, 0.1)', C.textSecondary],
     };
     const [bg, color] = colors[status] || colors.pending;
@@ -272,10 +272,10 @@ export default function CreatorProfilePage() {
         <div style={innerStyle}>
           <div style={{
             padding: '24px',
-            background: 'rgba(239, 68, 68, 0.1)',
+            background: 'rgba(176, 65, 62, 0.1)',
             color: '#fca5a5',
             borderRadius: '8px',
-            border: '1px solid #dc2626',
+            border: '1px solid var(--c-error)',
             marginBottom: '24px',
           }}>
             {error || 'Creator not found'}
@@ -333,7 +333,7 @@ export default function CreatorProfilePage() {
                   <span style={{
                     display: 'inline-block',
                     padding: '6px 12px',
-                    background: 'rgba(245, 158, 11, 0.1)',
+                    background: 'rgba(200, 184, 154, 0.1)',
                     color: C.accent,
                     borderRadius: '6px',
                     fontSize: '12px',

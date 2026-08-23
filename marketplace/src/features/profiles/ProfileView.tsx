@@ -19,19 +19,28 @@ const EASE = 'cubic-bezier(0.16,1,0.3,1)';
 const WARM_SAND = '#C8B89A';
 const DEEP_SAND = '#A08A5E';
 
-// §8 — colour tokens, copied verbatim
+// §8 colour tokens, re-mapped onto BRANDING §4.
+//
+// The spec's table was written against _global-conventions G5, which grounds
+// light on #F4F3EE with #FFFFFF cards. §4 has neither colour, and §4 is the
+// authority ("if a build disagrees with them, they win"). Light is therefore
+// Off White with a tonal Off White→Warm Sand ramp, and cards sit flat and
+// separate with the sand hairline rather than a white fill.
+//
+// Structure, spacing and motion still follow the spec exactly — only the
+// colours are re-mapped.
 const TOKENS = {
   dark: {
     bgA: '#0A0A0A', bgB: '#141310', bgC: '#1C1B17',
-    head: '#F5F5F0', text: '#C9C5BC', muted2: '#8A867E',
+    head: '#F5F5F0', text: '#B8B4AC', muted2: '#8A867E',
     card: '#141310', hair: 'rgba(245,245,240,0.08)', divider: 'rgba(245,245,240,0.10)',
     cardbrd: 'rgba(200,184,154,0.16)', headerBg: 'rgba(10,10,10,0.7)',
   },
   light: {
-    bgA: '#F4F3EE', bgB: '#EEE9DE', bgC: '#E6E0D2',
-    head: '#0A0A0A', text: '#3A362E', muted2: '#6E6A60',
-    card: '#FFFFFF', hair: 'rgba(45,45,45,0.10)', divider: 'rgba(160,138,94,0.20)',
-    cardbrd: 'rgba(160,138,94,0.28)', headerBg: 'rgba(245,245,240,0.85)',
+    bgA: '#F5F5F0', bgB: '#F2EEE4', bgC: '#EAE2D0',
+    head: '#0A0A0A', text: '#2D2D2D', muted2: '#6E6A60',
+    card: '#F5F5F0', hair: 'rgba(160,138,94,0.18)', divider: 'rgba(160,138,94,0.20)',
+    cardbrd: 'rgba(160,138,94,0.34)', headerBg: 'rgba(245,245,240,0.85)',
   },
 } as const;
 
@@ -308,7 +317,7 @@ export default function ProfileView({
               </div>
 
               <div style={{ marginTop: 20, display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: isNarrow ? 'center' : 'flex-start' }}>
-                <button style={{ ...action, background: WARM_SAND, color: '#0A0A0A', border: `1px solid ${WARM_SAND}` }}>
+                <button style={{ ...action, background: t.head, color: t.bgA, border: `1px solid ${t.head}` }}>
                   Watch pitch clip
                 </button>
                 <button
@@ -349,7 +358,7 @@ export default function ProfileView({
           {/* §3 — level progress card */}
           <section style={{
             marginTop: 18, borderRadius: 16, padding: '22px 24px',
-            background: t.card, border: `1px solid ${t.hair}`,
+            background: t.card, border: `1px solid ${t.cardbrd}`,
             ...enter(0.18, 12),
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
@@ -439,7 +448,7 @@ function StatTile({ stat, t, reduced, shown, delay }: { stat: StatCard; t: Token
   return (
     <div style={{
       borderRadius: 16, padding: '22px 24px',
-      background: t.card, border: `1px solid ${t.hair}`,
+      background: t.card, border: `1px solid ${t.cardbrd}`,
       opacity: shown ? 1 : 0,
       transform: shown ? 'translateY(0)' : 'translateY(12px)',
       transition: reduced ? 'none' : `opacity 0.6s ${EASE} ${delay}s, transform 0.6s ${EASE} ${delay}s`,

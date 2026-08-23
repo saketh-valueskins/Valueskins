@@ -9,7 +9,7 @@ import EmptyState from '@/components/EmptyState';
 const C = {
   bg: '#0A0A0A', surface: '#1A1A1A', surfaceAlt: '#2D2D2D',
   text: '#F5F5F0', textMuted: '#B8B4AC', primary: '#C8B89A',
-  success: '#10b981', warning: '#f59e0b', danger: '#ef4444', border: '#2D2D2D',
+  success: 'var(--c-accent)', warning: 'var(--c-warning)', danger: 'var(--c-error)', border: '#2D2D2D',
 };
 
 interface CampaignListProps {

@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import MarketplaceLayout from '@/components/MarketplaceLayout';
 
 const C = {
-  bg: '#0b0e1a', surface: '#111827', text: '#E0E0DA', textMuted: '#6b7280',
-  primary: '#6366f1', success: '#22c55e', border: '#1A1A1A',
+  bg: 'var(--c-bg)', surface: '#111827', text: '#E0E0DA', textMuted: 'var(--c-text-variant)',
+  primary: 'var(--c-accent)', success: 'var(--c-accent)', border: '#1A1A1A',
 };
 
 export default function NotificationSettingsPage() {

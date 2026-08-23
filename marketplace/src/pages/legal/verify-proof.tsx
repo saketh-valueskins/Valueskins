@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useState, useRef } from 'react';
 
-const C = { bg: '#0A0A0A', text: '#F5F5F0', textSecondary: '#B8B4AC', primary: '#C8B89A', success: '#4ade80', error: '#f87171' };
+const C = { bg: '#0A0A0A', text: '#F5F5F0', textSecondary: '#B8B4AC', primary: '#C8B89A', success: 'var(--c-accent)', error: '#f87171' };
 
 export default function VerifyProof() {
   const [result, setResult] = useState<{ valid: boolean; checks: any; details: any; computedChainTip?: string; reportedChainTip?: string } | null>(null);

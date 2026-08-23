@@ -70,7 +70,7 @@ export default function DealPage() {
 
           <div style={{ display: 'grid', gap: '16px' }}>
             <div>
-              <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>
+              <div style={{ fontSize: '12px', color: 'var(--c-text-variant)', fontWeight: 600 }}>
                 STATUS
               </div>
               <div style={{ fontSize: '14px', fontWeight: 600 }}>
@@ -79,7 +79,7 @@ export default function DealPage() {
             </div>
 
             <div>
-              <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>
+              <div style={{ fontSize: '12px', color: 'var(--c-text-variant)', fontWeight: 600 }}>
                 PHASE
               </div>
               <div style={{ fontSize: '14px', fontWeight: 600 }}>
@@ -88,7 +88,7 @@ export default function DealPage() {
             </div>
 
             <div>
-              <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>
+              <div style={{ fontSize: '12px', color: 'var(--c-text-variant)', fontWeight: 600 }}>
                 VALUE SKIN
               </div>
               <div style={{ fontSize: '14px', fontWeight: 600 }}>
@@ -97,7 +97,7 @@ export default function DealPage() {
             </div>
 
             <div>
-              <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>
+              <div style={{ fontSize: '12px', color: 'var(--c-text-variant)', fontWeight: 600 }}>
                 BUDGET
               </div>
               <div style={{ fontSize: '14px', fontWeight: 600 }}>
@@ -133,7 +133,7 @@ export default function DealPage() {
                   onClick={handleComplete}
                   style={{
                     padding: '10px 16px',
-                    background: '#22c55e',
+                    background: 'var(--c-accent)',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '6px',

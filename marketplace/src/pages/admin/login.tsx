@@ -111,7 +111,7 @@ export default function AdminLogin() {
             <div style={{
               padding: '12px',
               background: '#fee2e2',
-              color: '#991b1b',
+              color: 'var(--c-error)',
               borderRadius: '8px',
               fontSize: '14px',
               marginBottom: '20px',
