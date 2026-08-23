@@ -265,7 +265,13 @@ export default function SettingsHub({
         {/* ---- Left rail (sticky, scrollspy) ---- */}
         {showRail && (
         <div>
-        <aside style={{ position: 'sticky', top: embedded ? '16px' : '32px' }}>
+        <aside style={{
+          position: 'sticky',
+          // Inside the app shell the header is itself sticky at top:0, so the
+          // rail has to start below it or it slides underneath. Falls back to
+          // 0 on the standalone route, where there is no app header.
+          top: embedded ? 'calc(var(--vs-header-h, 0px) + 20px)' : '32px',
+        }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 4px' }}>{embedded ? 'Profile Settings' : 'Settings'}</h1>
           <div style={{ fontSize: '0.8125rem', color: T.muted, marginBottom: '20px' }}>Manage your account</div>
           <nav style={{ borderLeft: `1px solid ${T.border}` }}>
