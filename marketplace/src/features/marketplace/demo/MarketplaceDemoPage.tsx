@@ -12,6 +12,7 @@ import { getLevel, getProgressToNext } from '@/lib/levels';
 import ProfileView from '@/features/profiles/ProfileView';
 import SettingsHub from '@/features/settings/SettingsHub';
 import CreatorProfile from '@/features/profiles/CreatorProfile';
+import { ValueSkinSprite } from '@/features/profiles/ProfileView';
 import CampaignComposer, { CAMPAIGN_DRAFT_KEY } from '@/features/campaigns/CampaignComposer';
 import { useReputationConfig } from '@/lib/useConfigStorage';
 import { useDealSync, type DealState, type DealRoomPhase, type SharedApplication, type Campaign, type ChatMessage } from '@/features/valueskins/core/deals/useDealSync';
@@ -2865,8 +2866,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
           maxWidth: (activeView === 'store' || activeView === 'mim' || activeView === 'admin')
             ? '1280px'
             : '860px',
-          borderLeft: isMobile ? 'none' : `1px solid ${C.border}`,
-          borderRight: isMobile ? 'none' : `1px solid ${C.border}`,
+          // No side rules. They drew a visible column edge down both sides of
+          // every screen, which store-page-mock.svg does not have — the mock is
+          // full-bleed and lets whitespace do the framing (BRANDING §6:
+          // "breathing room over density", borders "thin, quiet").
+          
           background: C.bg,
           overflowX: 'hidden',
         }}>
@@ -6642,14 +6646,25 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       <button
                         key={prof.name}
                         onClick={() => setStoreCategory(prof.name)}
+                        onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(200,184,154,0.07)'; const m = e.currentTarget.firstElementChild as HTMLElement; if (m) m.style.opacity = '1'; } }}
+                        onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; const m = e.currentTarget.firstElementChild as HTMLElement; if (m) m.style.opacity = '0'; } }}
                         style={{
                           position: 'relative', width: '100%', minHeight: '52px', display: 'flex', alignItems: 'center', gap: '10px',
                           padding: '0 12px', border: 'none', borderBottom: `1px solid ${C.border}`,
                           background: active ? 'rgba(200,184,154,0.14)' : 'transparent',
                           borderRadius: active ? '6px' : 0, cursor: 'pointer', textAlign: 'left',
+                          transition: 'background 160ms cubic-bezier(0.16,1,0.3,1)',
                         }}
                       >
-                        {active && <span aria-hidden="true" style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '2px', background: C.primary }} />}
+                        {/* Sand edge marker — solid when this row is selected,
+                            faded in on hover (mock). Opacity only, so it
+                            composites; §10.5 allows transform and opacity. */}
+                        <span aria-hidden="true" style={{
+                          position: 'absolute', left: 0, top: 0, bottom: 0, width: '2px',
+                          background: C.accent,
+                          opacity: active ? 1 : 0,
+                          transition: 'opacity 160ms cubic-bezier(0.16,1,0.3,1)',
+                        }} />
                         <span style={{ fontSize: '11px', color: C.textMuted, minWidth: '18px' }}>{String(i + 1).padStart(2, '0')}</span>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: '15px', fontWeight: 600, color: C.text }}>{prof.name}</div>
@@ -6684,9 +6699,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     <div style={{ height: '1px', background: C.border, margin: '16px 0 14px' }} />
 
                     <p style={{ fontSize: '13px', color: C.textSecondary, margin: '0 0 18px' }}>
+                      {/* No price. GP3 and flagged.md F1 both say currency stays
+                          unset until the final hardcode pass, and the mock shows
+                          none — leading with price is also the Tata Nano rule
+                          (BRANDING §1). */}
                       {isBrandRole
-                        ? `Tap any profession to add it to your brand ValueSkins (₹${SKIN_PRICE_RUPEES}).`
-                        : `Tap a badge to purchase (₹${SKIN_PRICE_RUPEES}) and instantly apply it as your ValueSkin. One active skin at a time.`}
+                        ? 'Tap any profession to add it to your brand ValueSkins.'
+                        : 'Tap a badge to apply it as your ValueSkin. One active skin at a time.'}
                     </p>
 
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: '10px' }}>
@@ -6703,29 +6722,44 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             key={sub}
                             onClick={() => !isFull && purchaseProfession(sub)}
                             disabled={!!isFull}
+                            onMouseEnter={(e) => { if (!isFull) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = C.accent; } }}
+                            onMouseLeave={(e) => { if (!isFull) { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = (isActiveHere || isOwned) ? C.accent : C.border; } }}
                             style={{
+                              transition: 'transform 180ms cubic-bezier(0.16,1,0.3,1), border-color 180ms linear',
                               background: (isActiveHere || isOwned) ? `${withAlpha(C.primary, 0x12)}` : C.card,
-                              border: `1px solid ${(isActiveHere || isOwned) ? C.primary : C.border}`,
+                              border: `1px solid ${(isActiveHere || isOwned) ? C.accent : C.border}`,
                               borderRadius: '12px', color: isFull ? C.textMuted : C.text,
                               padding: '14px 12px', cursor: isFull ? 'default' : 'pointer',
                               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
                               opacity: isFull ? 0.45 : 1, position: 'relative', minHeight: '44px',
                             }}
                           >
+                            {/* The mock shows a pixel ValueSkin on every card.
+                                Where a profession has no sticker art yet, fall
+                                back to the pixel sprite rather than tinted
+                                initials — the tint came from professions.ts,
+                                which is off-palette, and initials read as a
+                                placeholder rather than an identity. */}
                             {stickerSrc ? (
                               <img src={stickerSrc} alt="" style={{ width: '56px', height: '56px', objectFit: 'contain', borderRadius: '8px' }} />
                             ) : (
-                              <div style={{ width: '56px', height: '56px', borderRadius: '8px', background: `${badgeColor}20`, border: `1px solid ${badgeColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: badgeColor, fontSize: '16px', fontWeight: 800 }}>
-                                {abbr}
-                              </div>
+                              <ValueSkinSprite size={56} />
                             )}
                             <span style={{ fontSize: '13px', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>{sub}</span>
                             {(isActiveHere || isOwned) ? (
-                              <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.primary }}>Equipped</span>
+                              <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.accent }}>Equipped</span>
                             ) : isFull ? (
                               <span style={{ fontSize: '11px', color: C.textMuted }}>Max skins (1/1)</span>
                             ) : (
-                              <span style={{ fontSize: '11px', fontWeight: 600, color: C.textSecondary }}>₹{SKIN_PRICE_RUPEES}</span>
+                              /* Mock: a full-width Acquire button per card, solid
+                                 primary — off-white on dark, near-black on light
+                                 (G5 rule 4). Rendered as a span because the card
+                                 itself is the button. */
+                              <span style={{
+                                width: '100%', marginTop: '2px', padding: '9px 10px', borderRadius: '8px',
+                                background: C.primary, color: C.onPrimary,
+                                fontSize: '13px', fontWeight: 600, textAlign: 'center',
+                              }}>Acquire</span>
                             )}
                           </button>
                         );
