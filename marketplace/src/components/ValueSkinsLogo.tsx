@@ -2,13 +2,31 @@
 
 import React from 'react';
 
-// ValueSkins wordmark — spec per LOGO_HANDOFF.md.
+// ValueSkins wordmark — spec per BRANDING.md §3.
 // The word IS the logo: no icon, no symbol. Do not add one.
-// Dark theme (default): off-white on near-black. Light: near-black on off-white.
+//
+// Colour follows the live theme by default. The three colours resolve to CSS
+// custom properties (--c-logo-*) defined per theme in styles/globals.css, so
+// the mark re-skins with the rest of the product.
+//
+// It used to take a hardcoded `theme` prop that baked in a hex. Every caller
+// that passed theme="light" rendered a #0A0A0A wordmark, which is invisible
+// on the near-black dark surface — the front door lost its own brand mark.
+// Pass `theme` now ONLY to pin the mark against a surface that is itself
+// hardcoded to one treatment (e.g. the login page's fixed dark hero).
 
 const FONT_STACK = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
+// BRANDING §3 exact values, for the pinned cases.
+const FIXED = {
+  dark:  { word: '#F5F5F0', tag: '#B8B4AC', dot: '#C8B89A' },
+  light: { word: '#0A0A0A', tag: '#2D2D2D', dot: '#A08A5E' },
+};
+
+const THEMED = { word: 'var(--c-logo-word)', tag: 'var(--c-logo-tag)', dot: 'var(--c-logo-dot)' };
+
 interface LogoProps {
+  /** Omit to follow the live theme. Pass a value only to pin against a fixed surface. */
   theme?: 'dark' | 'light';
   /** Wordmark font size in px. Tagline scales at 25%. */
   size?: number;
@@ -17,11 +35,8 @@ interface LogoProps {
   style?: React.CSSProperties;
 }
 
-export function ValueSkinsLogo({ theme = 'dark', size = 44, hideTagline = false, style }: LogoProps) {
-  const isDark = theme === 'dark';
-  const word = isDark ? '#F5F5F0' : '#0A0A0A';
-  const tagWord = isDark ? '#B8B4AC' : '#2D2D2D';
-  const dot = isDark ? '#C8B89A' : '#A08A5E';
+export function ValueSkinsLogo({ theme, size = 44, hideTagline = false, style }: LogoProps) {
+  const c = theme ? FIXED[theme] : THEMED;
 
   return (
     <div
@@ -29,12 +44,12 @@ export function ValueSkinsLogo({ theme = 'dark', size = 44, hideTagline = false,
       aria-label="ValueSkins"
       style={{ fontFamily: FONT_STACK, textAlign: 'center', lineHeight: 1, ...style }}
     >
-      <div style={{ color: word, fontWeight: 700, fontSize: size, letterSpacing: '0.18em' }}>
+      <div style={{ color: c.word, fontWeight: 700, fontSize: size, letterSpacing: '0.18em' }}>
         VALUESKINS
       </div>
       {!hideTagline && (
-        <div style={{ marginTop: size * 0.32, color: tagWord, fontWeight: 500, fontSize: size * 0.25, letterSpacing: '0.34em' }}>
-          TRUST <span style={{ color: dot }}>·</span> EARNED <span style={{ color: dot }}>·</span> SERIOUS
+        <div style={{ marginTop: size * 0.32, color: c.tag, fontWeight: 500, fontSize: size * 0.25, letterSpacing: '0.34em' }}>
+          TRUST <span style={{ color: c.dot }}>·</span> EARNED <span style={{ color: c.dot }}>·</span> SERIOUS
         </div>
       )}
     </div>

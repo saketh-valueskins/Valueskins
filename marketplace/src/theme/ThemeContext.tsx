@@ -26,36 +26,39 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  preference: 'light',
-  theme: 'light',
+  preference: 'dark',
+  theme: 'dark',
   setPreference: () => {},
 });
 
 function systemTheme(): ResolvedTheme {
-  if (typeof window === 'undefined') return 'light';
+  if (typeof window === 'undefined') return 'dark';
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function readStored(): ThemePreference {
-  if (typeof window === 'undefined') return 'light';
+  if (typeof window === 'undefined') return 'dark';
   try {
     const v = window.localStorage.getItem(STORAGE_KEY);
     if (v === 'light' || v === 'dark' || v === 'system') return v;
   } catch {
     /* storage blocked — fall through to the default */
   }
-  return 'light';
+  return 'dark';
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // Light on the server and first paint so a no-JS render is never a black page;
-  // the stored preference is applied on mount.
-  const [preference, setPreferenceState] = useState<ThemePreference>('light');
-  const [system, setSystem] = useState<ResolvedTheme>('light');
+  // G7: dark on the server and first paint. _document's boot script has
+  // already stamped the real (possibly stored 'light') value onto <html>
+  // before paint, so this initial value never reaches the screen.
+  const [preference, setPreferenceState] = useState<ThemePreference>('dark');
+  const [system, setSystem] = useState<ResolvedTheme>('dark');
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setPreferenceState(readStored());
     setSystem(systemTheme());
+    setHydrated(true);
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const on = () => setSystem(mq.matches ? 'dark' : 'light');
     mq.addEventListener('change', on);
@@ -64,12 +67,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const theme: ResolvedTheme = preference === 'system' ? system : preference;
 
-  // Stamp it on <html> so the CSS palettes take effect.
+  // Stamp it on <html> so the CSS palettes take effect. Skipped until the
+  // stored preference has been read — before that the boot script's value is
+  // already correct and overwriting it would flash the wrong theme.
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined' || !hydrated) return;
     document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.style.colorScheme = theme;
-  }, [theme]);
+  }, [theme, hydrated]);
 
   const setPreference = useCallback((p: ThemePreference) => {
     setPreferenceState(p);

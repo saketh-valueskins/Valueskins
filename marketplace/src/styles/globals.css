@@ -1,53 +1,14 @@
-
 /* ── THEME PALETTES ──────────────────────────────────────────────────────
    theme/colors.ts resolves every token to one of these vars, so flipping
    data-theme on <html> re-skins the whole app — including the thousands of
    inline style={{}} surfaces a stylesheet could never reach.
-   Light is the default so a no-JS / pre-hydration render is never a black page. */
+
+   G7: dark is the default. The bare :root carries the dark palette so a
+   no-JS / pre-hydration render is dark rather than flashing light, and
+   _document ships a blocking script that stamps data-theme before first
+   paint so a stored 'light' preference never flashes dark either. */
 
 :root,
-:root[data-theme="light"] {
-  --c-primary: #0A0A0A;
-  --c-primary-container: #F0F0EA;
-  --c-on-primary: #F5F5F0;
-  --c-on-primary-container: #2D2D2D;
-  --c-secondary: #2D2D2D;
-
-  --c-bg: #F5F5F0;
-  --c-surface: #F5F5F0;
-  --c-surface-bright: #FFFFFF;
-  --c-surface-dim: #E8E8E2;
-  --c-surface-lowest: #FFFFFF;
-  --c-surface-low: #FAFAF7;
-  --c-surface-container: #F0F0EA;
-  --c-surface-high: #EAEAE4;
-  --c-surface-highest: #E0E0DA;
-
-  --c-text: #0A0A0A;
-  --c-text-muted: #2D2D2D;
-  --c-text-variant: #8B8B85;
-
-  --c-outline: #8B8B85;
-  --c-outline-variant: #E0E0DA;
-  --c-border: #E0E0DA;
-  --c-border-light: #F0F0EA;
-
-  --c-inverse-surface: #0A0A0A;
-  --c-inverse-on-surface: #F5F5F0;
-
-  --c-error: #B0413E;
-  --c-error-container: #F3E3E1;
-  --c-on-error: #FFFFFF;
-  --c-on-error-container: #7A2B29;
-
-  /* sand is the brand accent and stays sand in both themes (BRANDING §4) */
-  --c-accent: #A08A5E;
-  --c-accent-bright: #C8B89A;
-  --c-tertiary-container: #F0EBE0;
-  --c-on-tertiary-container: #6B5C3E;
-  --c-warning: #8A7A56;
-}
-
 :root[data-theme="dark"] {
   /* primary inverts: the strong action surface is off-white on near-black */
   --c-primary: #F5F5F0;
@@ -88,11 +49,112 @@
   --c-tertiary-container: #221F18;
   --c-on-tertiary-container: #C8B89A;
   --c-warning: #C0AE84;
+
+  /* Wordmark — BRANDING §3 exact values, dark treatment. */
+  --c-logo-word: #F5F5F0;
+  --c-logo-tag:  #B8B4AC;
+  --c-logo-dot:  #C8B89A;
+
+  /* Form fields + rules, themed (were pinned near-black in @layer base). */
+  --c-field-bg: #121110;
+  --c-field-border: #2A2925;
+  --c-placeholder: #8A867E;
+  --c-scrollbar-track: #0A0A0A;
+  --c-scrollbar-thumb: #2A2925;
+  --c-scrollbar-thumb-hover: #3A3833;
+  --c-selection-text: #F5F5F0;
+
+  /* ValueSkin pixel garment — brand neutral, theme-painted (G5 rule 3). */
+  --c-skin-garment: #C9C5BC;
+  --c-skin-drift: #F5F5F0;   /* silhouette for the drifting layer */
 }
 
-/* The page surface follows the theme rather than being pinned near-black. */
-:root[data-theme="light"] body { background: var(--c-bg); color: var(--c-text); }
-:root[data-theme="dark"]  body { background: var(--c-bg); color: var(--c-text); }
+/* Light — visibility-tuned per _global-conventions.md G5.
+   Body text ≥ #3A362E and muted ≥ #6E6A60 (no pale greys for real text);
+   cards are white so they separate from the off-white ground; the hairline
+   is a firm sand rather than a grey that disappears. */
+:root[data-theme="light"] {
+  --c-primary: #0A0A0A;
+  --c-primary-container: #F0EBE0;
+  --c-on-primary: #F5F5F0;
+  --c-on-primary-container: #3A362E;
+  --c-secondary: #3A362E;
+
+  --c-bg: #F4F3EE;
+  --c-surface: #F4F3EE;
+  --c-surface-bright: #FFFFFF;
+  --c-surface-dim: #EFEADF;
+  --c-surface-lowest: #FFFFFF;   /* G5 rule 2: cards are white */
+  --c-surface-low: #FFFFFF;
+  --c-surface-container: #FFFFFF;
+  --c-surface-high: #FAF8F3;
+  --c-surface-highest: #EFEADF;
+
+  --c-text: #0A0A0A;             /* G5 --head */
+  --c-text-muted: #3A362E;       /* G5 --text — body, was #2D2D2D */
+  --c-text-variant: #6E6A60;     /* G5 --muted — was #8B8B85, too pale */
+
+  --c-outline: #6E6A60;
+  --c-outline-variant: rgba(160, 138, 94, 0.22);
+  --c-border: rgba(160, 138, 94, 0.34);   /* G5 --card-border */
+  --c-border-light: rgba(160, 138, 94, 0.18);
+
+  --c-inverse-surface: #0A0A0A;
+  --c-inverse-on-surface: #F5F5F0;
+
+  --c-error: #B0413E;
+  --c-error-container: #F3E3E1;
+  --c-on-error: #FFFFFF;
+  --c-on-error-container: #7A2B29;
+
+  /* sand is the brand accent and stays sand in both themes (BRANDING §4) */
+  --c-accent: #A08A5E;
+  --c-accent-bright: #C8B89A;
+  --c-tertiary-container: #F0EBE0;
+  --c-on-tertiary-container: #6B5C3E;
+  --c-warning: #8A7A56;
+
+  /* Wordmark — BRANDING §3 exact values, light treatment. */
+  --c-logo-word: #0A0A0A;
+  --c-logo-tag:  #2D2D2D;
+  --c-logo-dot:  #A08A5E;
+
+  --c-field-bg: #FFFFFF;         /* G5 --field */
+  --c-field-border: rgba(160, 138, 94, 0.34);
+  --c-placeholder: #6E6A60;
+  --c-scrollbar-track: #EFEADF;
+  --c-scrollbar-thumb: rgba(160, 138, 94, 0.38);
+  --c-scrollbar-thumb-hover: rgba(160, 138, 94, 0.58);
+  --c-selection-text: #0A0A0A;
+
+  --c-skin-garment: #2D2D2D;
+  --c-skin-drift: #0A0A0A;
+}
+
+/* The page surface follows the theme rather than being pinned near-black.
+   Light carries the G5 tonal ground (sand glow over off-white); dark stays a
+   flat near-black. Both are single-family tonal treatments — BRANDING §10.2
+   permits these, decorative multi-hue gradients remain banned. */
+body {
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+:root[data-theme="light"] body { color: var(--c-text); }
+
+/* The light ground rides on a fixed pseudo-layer rather than
+   background-attachment:fixed, which janks badly on iOS Safari and would
+   otherwise stretch the radial across a 17,000px legal page. */
+:root[data-theme="light"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(72% 55% at 82% -8%, rgba(160, 138, 94, 0.22), transparent 62%),
+    linear-gradient(150deg, #F4F3EE 0%, #EFEADF 55%, #E4DCCB 100%);
+}
 
 
 @tailwind base;
@@ -119,9 +181,9 @@
   }
 
   body {
-    /* Brand near-black, not pure #000 (BRANDING) */
-    background: #0A0A0A;
-    color: #e5e5e5;
+    /* themed — the palette block above owns the actual colours */
+    background: var(--c-bg);
+    color: var(--c-text);
     font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
     font-size: 1rem; /* G6: 16px base, no smaller root */
     line-height: 1.6;
@@ -134,7 +196,7 @@
   /* G3: sand selection, never pink */
   ::selection {
     background: rgba(200, 184, 154, 0.28);
-    color: #F5F5F0;
+    color: var(--c-selection-text);
   }
 
   ::-webkit-scrollbar {
@@ -143,16 +205,16 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #0A0A0A;
+    background: var(--c-scrollbar-track);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #1a1a1a;
+    background: var(--c-scrollbar-thumb);
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #333;
+    background: var(--c-scrollbar-thumb-hover);
   }
 
   /* G3/G5: sand focus ring, never pink/blue */
@@ -188,13 +250,13 @@
   }
 
   a:hover {
-    color: #C8B89A;
+    color: var(--c-accent);
   }
 
   input, textarea, select {
-    background: #0a0a0a;
-    border: 1px solid #1a1a1a;
-    color: #e5e5e5;
+    background: var(--c-field-bg);
+    border: 1px solid var(--c-field-border);
+    color: var(--c-text);
     border-radius: 6px;
     padding: 10px 14px;
     font-family: 'Inter', sans-serif;
@@ -204,13 +266,13 @@
 
   /* G3/G5: sand focus ring on inputs, never pink */
   input:focus, textarea:focus, select:focus {
-    border-color: #A08A5E;
+    border-color: var(--c-accent);
     box-shadow: 0 0 0 3px rgba(160, 138, 94, 0.16);
     outline: none;
   }
 
   input::placeholder, textarea::placeholder {
-    color: #525252;
+    color: var(--c-placeholder);
   }
 
   button {
@@ -220,7 +282,7 @@
 
   hr {
     border: none;
-    border-top: 1px solid #1a1a1a;
+    border-top: 1px solid var(--c-border);
   }
 }
 

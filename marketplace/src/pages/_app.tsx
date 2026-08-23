@@ -4,7 +4,6 @@ import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Footer from '@/components/Footer';
 import CookieConsent from '@/components/CookieConsent';
-import SplashIntro from '@/components/SplashIntro';
 import DiagnosticsPanel from '@/components/DiagnosticsPanel';
 import { ThemeProvider } from '@/theme/ThemeContext';
 import '@/styles/globals.css';
@@ -92,7 +91,6 @@ export default function App({ Component, pageProps }: AppProps) {
     <ErrorBoundary>
       <ThemeProvider>
       <AuthProvider>
-      <SplashIntro />
       <HomeButton />
       <Component {...pageProps} />
       {!hideFooter && <Footer />}

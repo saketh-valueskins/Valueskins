@@ -101,7 +101,12 @@ function useCountUp(target: number, reduced: boolean, decimals: number) {
 
 // §2 — ValueSkin pixel art: 12x12 grid, palette-tied (BRANDING §10.4),
 // mirroring the reference sprite in profile-page-mock.svg.
-const S = '#241C15', F = '#E8B98A', E = '#141414', B = '#3B6FB0', A = '#C8B89A', _ = null;
+// B was '#3B6FB0' — a blue, which BRANDING §4 bans outright and §10.4 rules out
+// again ("palette-tied only ... No new colours"), despite the comment above
+// claiming it was already palette-tied. It is now a themed brand neutral:
+// charcoal on light, muted grey on dark, so the figure reads on either ground
+// instead of vanishing into one of them (G5 rule 3 — always theme-paint).
+const S = '#241C15', F = '#E8B98A', E = '#141414', B = 'var(--c-skin-garment)', A = '#C8B89A', _ = null;
 const SKIN_GRID: (string | null)[][] = [
   [_, _, _, _, S, S, S, S, _, _, _, _],
   [_, _, _, S, S, S, S, S, S, _, _, _],
@@ -117,7 +122,12 @@ const SKIN_GRID: (string | null)[][] = [
   [_, _, _, _, _, A, A, _, _, _, _, _],
 ];
 
-export function ValueSkinSprite({ size }: { size: number }) {
+export function ValueSkinSprite({ size, mono }: { size: number; mono?: string }) {
+  // `mono` flattens the sprite to a single colour — used by the drifting
+  // background layer, where a full-colour figure reads as a pale smudge on the
+  // light ground. G5 rule 3 wants the figure near-black on light and off-white
+  // on dark, which a silhouette gives for free. Omitted everywhere else, so the
+  // full-colour identity mark is unchanged.
   return (
     <svg
       width={size} height={size} viewBox="0 0 12 12"
@@ -125,7 +135,7 @@ export function ValueSkinSprite({ size }: { size: number }) {
       style={{ imageRendering: 'pixelated', display: 'block' }}
     >
       {SKIN_GRID.map((row, y) =>
-        row.map((c, x) => (c ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={c} /> : null))
+        row.map((c, x) => (c ? <rect key={`${x}-${y}`} x={x} y={y} width="1" height="1" fill={mono ?? c} /> : null))
       )}
     </svg>
   );
