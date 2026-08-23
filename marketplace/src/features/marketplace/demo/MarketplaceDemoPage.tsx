@@ -2863,8 +2863,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
             measured so line length does not get uncomfortable. */}
         <div style={{
           width: '100%',
+          // Store and Market run near full-bleed — they are two-pane layouts and
+          // 1280px left a wide empty gutter on a desktop screen. They now take
+          // the viewport minus a margin, capped so the panes do not stretch
+          // absurdly on an ultrawide. Reading views stay measured, because line
+          // length past ~860px gets uncomfortable.
           maxWidth: (activeView === 'store' || activeView === 'mim' || activeView === 'admin')
-            ? '1280px'
+            ? 'min(1760px, calc(100vw - 48px))'
             : '860px',
           // No side rules. They drew a visible column edge down both sides of
           // every screen, which store-page-mock.svg does not have — the mock is
@@ -6631,7 +6636,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 </div>
               </div>
 
-              <div style={{ padding: '0 16px 24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: '20px', alignItems: 'start' }}>
+              <div style={{ padding: '0 16px 24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(280px, 360px) 1fr', gap: '28px', alignItems: 'start' }}>
 
                 {/* LEFT — numbered profession list */}
                 <div>
