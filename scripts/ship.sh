@@ -29,7 +29,10 @@ git add -A marketplace/
 git diff --cached --quiet && echo "  (nothing staged)" || printf '%s' "$MSG" | git commit -q -F -
 
 echo "→ pushing develop"
-git push -q origin develop
+# --no-thin: plain push crashed the packer with "pack-objects died of signal 10"
+# (SIGBUS) on this repo — ~12.8k loose objects and a 62MB pack. Building the
+# full pack instead of a thin one avoids the delta search that was blowing up.
+git push -q --no-thin origin develop
 
 echo "→ opening PR"
 PR=$(gh pr list --base main --head develop --json number --jq '.[0].number' 2>/dev/null || true)
