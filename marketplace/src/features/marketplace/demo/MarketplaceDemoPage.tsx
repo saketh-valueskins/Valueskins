@@ -5200,9 +5200,20 @@ export default function MarketplaceDemoPage(initialDealData?: {
               {/* Layer 3b: Brand Marketplace */}
               {hasAnySkin && marketplaceRole === 'brand' && (
                 <>
-                  <div style={{ padding: '12px 16px 0', position: 'sticky', top: 0, background: C.bg, zIndex: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                      <span style={{ fontSize: '22px', fontWeight: 700, color: C.text }}>Brand Dashboard</span>
+                  <div style={{
+                    padding: '20px 16px 0', position: 'sticky', top: 0, zIndex: 10,
+                    // §2a: tonal wash, not decoration — a single-family depth
+                    // gradient with a faint deep-sand glow top-right. Layered
+                    // over the theme background so light mode is unaffected.
+                    background: `radial-gradient(60% 50% at 85% 0%, rgba(160,138,94,0.10), transparent 70%), ${C.bg}`,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', marginBottom: '18px' }}>
+                      <div>
+                        {/* §2b: ~40px, weight 700, tight tracking, left-aligned,
+                            with a quiet muted sub-line under it. */}
+                        <div style={{ fontSize: 'clamp(28px, 3.4vw, 40px)', fontWeight: 700, color: C.text, letterSpacing: '-0.02em', lineHeight: 1.05 }}>Brand Dashboard</div>
+                        <div style={{ fontSize: '15px', color: C.textSecondary, marginTop: '6px' }}>Your campaigns, applicants, and deals</div>
+                      </div>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button
                           onClick={handleRefresh}
@@ -6727,10 +6738,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             key={sub}
                             onClick={() => !isFull && purchaseProfession(sub)}
                             disabled={!!isFull}
-                            onMouseEnter={(e) => { if (!isFull) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = C.accent; } }}
-                            onMouseLeave={(e) => { if (!isFull) { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = (isActiveHere || isOwned) ? C.accent : C.border; } }}
+                            onMouseEnter={(e) => { if (!isFull) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.background = 'rgba(200,184,154,0.07)'; } }}
+                            onMouseLeave={(e) => { if (!isFull) { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = (isActiveHere || isOwned) ? C.accent : C.border; e.currentTarget.style.background = (isActiveHere || isOwned) ? withAlpha(C.primary, 0x12) : C.card; } }}
                             style={{
-                              transition: 'transform 180ms cubic-bezier(0.16,1,0.3,1), border-color 180ms linear',
+                              transition: 'transform 180ms cubic-bezier(0.16,1,0.3,1), border-color 180ms linear, background 180ms linear',
                               background: (isActiveHere || isOwned) ? `${withAlpha(C.primary, 0x12)}` : C.card,
                               border: `1px solid ${(isActiveHere || isOwned) ? C.accent : C.border}`,
                               borderRadius: '12px', color: isFull ? C.textMuted : C.text,
