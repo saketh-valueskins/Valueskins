@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useTheme } from '@/theme/ThemeContext';
+import { ValueSkinSprite } from '@/features/profiles/ProfileView';
 import Link from 'next/link';
 
 // Merged Settings hub — the single final settings page.
@@ -208,6 +209,13 @@ export default function SettingsHub({
     alert('Data export initiated — you will receive an email with a download link within 24 hours.');
   };
 
+  // Hooks must run unconditionally and in a stable order, so this sits above
+  // the `loading` / `!account` early returns below. Placing it after them meant
+  // useWide was skipped on the first render and React never re-ran it, leaving
+  // the rail permanently collapsed.
+  const wide = useWide();
+  const showRail = !embedded || wide;
+
   if (loading) {
     return (
       <LoadingState fullScreen={!embedded} />
@@ -238,17 +246,21 @@ export default function SettingsHub({
         maxWidth: embedded ? undefined : '1180px',
         margin: '0 auto',
         display: 'grid',
-        // Embedded drops the left rail — the app already has the tab spine, and
-        // the column is too narrow for a 236px sidebar.
-        gridTemplateColumns: embedded ? '1fr' : '236px 1fr',
-        gap: embedded ? '32px' : '56px',
+        // The rail used to be dropped whenever embedded, on the reasoning that
+        // the in-app column was too narrow for 236px. That column is now
+        // near full-bleed, so the reasoning no longer holds and the embedded
+        // view was needlessly losing its section nav — the thing that makes
+        // profile-settings-sample.html readable. It now collapses on width
+        // rather than on context.
+        gridTemplateColumns: showRail ? '236px 1fr' : '1fr',
+        gap: embedded ? '40px' : '56px',
         alignItems: 'start',
       }}>
         {/* ---- Left rail (sticky, scrollspy) ---- */}
-        {!embedded && (
-        <aside style={{ position: 'sticky', top: '32px' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 4px' }}>Settings</h1>
-          <div style={{ fontSize: '0.8125rem', color: T.muted, marginBottom: '20px' }}>ValueSkins preferences</div>
+        {showRail && (
+        <aside style={{ position: 'sticky', top: embedded ? '12px' : '32px' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '0 0 4px' }}>{embedded ? 'Profile Settings' : 'Settings'}</h1>
+          <div style={{ fontSize: '0.8125rem', color: T.muted, marginBottom: '20px' }}>Manage your account</div>
           <nav style={{ borderLeft: `1px solid ${T.border}` }}>
             {SECTIONS.map((s) => {
               const on = active === s.id;
@@ -285,12 +297,49 @@ export default function SettingsHub({
         <div ref={contentRef} style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
           {/* Account */}
           <Section id="account" title="Account">
-            <Field label="Display Name">
-              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} style={inputStyle} />
-            </Field>
-            <Field label="Email">
-              <div style={{ ...inputStyle, color: T.muted }}>{account.email || 'No email set'}</div>
-            </Field>
+            {/* profile-settings-sample.html: the Account section opens with a
+                hero card — pixel avatar, name, email, and the Type/Tier pills —
+                on the dark treatment in BOTH themes, which BRANDING §10.1 keeps
+                for identity surfaces. It is what makes that screen read as a
+                profile rather than a form. */}
+            <div style={{
+              display: 'flex', gap: '22px', alignItems: 'center', flexWrap: 'wrap',
+              borderRadius: '18px', padding: '26px 28px', marginBottom: '22px',
+              position: 'relative', overflow: 'hidden',
+              background: 'linear-gradient(160deg,#0A0A0A 0%,#161512 60%,#20201B 100%)',
+              border: '1px solid rgba(200,184,154,0.24)',
+            }}>
+              <span aria-hidden="true" style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none',
+                background: 'radial-gradient(50% 70% at 12% 20%, rgba(160,138,94,0.18), transparent 70%)',
+              }} />
+              <div style={{
+                position: 'relative', zIndex: 1, width: '92px', height: '92px', flex: 'none',
+                background: 'rgba(245,245,240,0.05)', border: '1px solid rgba(200,184,154,0.3)',
+                borderRadius: '14px', padding: '10px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <ValueSkinSprite size={64} />
+              </div>
+              <div style={{ position: 'relative', zIndex: 1, flex: 1, minWidth: '180px' }}>
+                <div style={{ fontSize: '24px', fontWeight: 700, color: '#F5F5F0' }}>
+                  {displayName || account.display_name || 'Your name'}
+                </div>
+                <div style={{ fontSize: '14px', color: '#B8B4AC', marginTop: '3px' }}>
+                  {account.email || 'No email set'}
+                </div>
+              </div>
+            </div>
+
+            {/* .grid2 — display name and email side by side above 640px */}
+            <div style={{ display: 'grid', gridTemplateColumns: wide ? '1fr 1fr' : '1fr', gap: '18px' }}>
+              <Field label="Display Name">
+                <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} style={inputStyle} />
+              </Field>
+              <Field label="Email">
+                <div style={{ ...inputStyle, color: T.muted }}>{account.email || 'No email set'}</div>
+              </Field>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <button onClick={handleSaveProfile} disabled={saving} style={primaryBtn(saving)}>
                 {saving ? 'Saving...' : 'Save Changes'}
@@ -470,6 +519,19 @@ function primaryBtn(disabled: boolean): React.CSSProperties {
     opacity: disabled ? 0.6 : 1,
     fontFamily: FONT,
   };
+}
+
+// The rail collapses below this; above it there is room for the 236px column
+// the sample specifies.
+function useWide(min = 900) {
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const on = () => setWide(window.innerWidth >= min);
+    on();
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, [min]);
+  return wide;
 }
 
 function Section({ id, title, note, children }: { id: string; title: string; note?: string; children: React.ReactNode }) {
