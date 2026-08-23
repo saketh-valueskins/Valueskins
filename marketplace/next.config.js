@@ -8,6 +8,14 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
   swcMinify: true,
+  // Next inlines the whole Google Fonts stylesheet, which includes the legacy
+  // .woff faces alongside the .woff2 ones. On production that had the browser
+  // pulling both formats — traced at 3.1s, 8.2s and 8.6s for individual font
+  // files, which is also what was holding the load event open (domComplete
+  // 9.5s). Leaving the <link> alone lets the browser negotiate and take only
+  // the woff2 subsets it actually needs. font-display:swap already means text
+  // paints immediately either way, so this costs nothing and drops the rest.
+  optimizeFonts: false,
   env: {
     NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
   },
