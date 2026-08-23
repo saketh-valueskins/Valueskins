@@ -5,6 +5,7 @@ import Head from 'next/head';
 import { CSSProperties } from 'react';
 import { C } from '@/theme/colors';
 import { useAuth } from '@/context/AuthContext';
+import LoadingState from '@/components/LoadingState';
 
 export default function MarketplacePage() {
   const router = useRouter();
@@ -118,7 +119,7 @@ export default function MarketplacePage() {
   const badgeStyle: CSSProperties = {
     display: 'inline-block',
     padding: '4px 12px',
-    background: 'rgba(245, 158, 11, 0.1)',
+    background: 'rgba(200, 184, 154, 0.1)',
     color: C.accent,
     borderRadius: '999px',
     fontSize: '12px',
@@ -147,9 +148,7 @@ export default function MarketplacePage() {
     return (
       <div style={containerStyle}>
         <div style={innerStyle}>
-          <div style={{ textAlign: 'center', paddingTop: '60px', color: C.textSecondary }}>
-            Loading...
-          </div>
+          <LoadingState fullScreen={false} />
         </div>
       </div>
     );

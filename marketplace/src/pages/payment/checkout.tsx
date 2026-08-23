@@ -72,8 +72,8 @@ export default function CheckoutPage() {
           </p>
         </div>
 
-        <div style={{ marginBottom: '32px', padding: '16px', background: 'rgba(34, 197, 94, 0.1)', borderRadius: '8px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
-          <p style={{ fontSize: '12px', color: '#22c55e', fontWeight: '600', margin: 0 }}>
+        <div style={{ marginBottom: '32px', padding: '16px', background: 'rgba(200, 184, 154, 0.1)', borderRadius: '8px', border: '1px solid rgba(200, 184, 154, 0.3)' }}>
+          <p style={{ fontSize: '12px', color: 'var(--c-accent)', fontWeight: '600', margin: 0 }}>
             Demo Mode: Payment approved instantly
           </p>
         </div>

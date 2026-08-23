@@ -91,7 +91,7 @@ export default function AdminPDFs() {
           <div style={{
             padding: '16px',
             background: '#fee2e2',
-            color: '#991b1b',
+            color: 'var(--c-error)',
             borderRadius: '8px',
             marginBottom: '20px',
             border: `1px solid #fecaca`

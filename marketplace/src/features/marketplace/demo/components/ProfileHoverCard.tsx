@@ -37,15 +37,15 @@ type HoverProfile = {
 
 const C = {
   primary: '#0A0A0A',
-  bg: '#ffffff',
+  bg: 'var(--c-surface-lowest)',
   surface: '#F5F5F0',
   surfaceAlt: '#f1f5f9',
-  card: '#ffffff',
+  card: 'var(--c-surface-lowest)',
   text: '#0A0A0A',
-  textSecondary: '#475569',
+  textSecondary: 'var(--c-text-muted)',
   textMuted: '#B8B4AC',
   border: '#E0E0DA',
-  success: '#22c55e',
+  success: 'var(--c-accent)',
 };
 
 function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: number }) {
@@ -82,7 +82,7 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
         top: adjustedY,
         zIndex: 99999,
         width: '320px',
-        background: '#ffffff',
+        background: 'var(--c-surface-lowest)',
         borderRadius: '16px',
         border: '1px solid #E0E0DA',
         boxShadow: '0 12px 40px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.06)',
@@ -96,7 +96,7 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
       <div style={{
         padding: '16px 16px 12px',
         background: 'linear-gradient(135deg, #0A0A0A, #2D2D2D)',
-        color: '#fff',
+        color: 'var(--c-surface-lowest)',
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
@@ -106,7 +106,7 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
           width: '48px', height: '48px', borderRadius: '50%',
           background: 'rgba(255,255,255,0.2)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '22px', fontWeight: 800, color: '#fff',
+          fontSize: '22px', fontWeight: 800, color: 'var(--c-surface-lowest)',
           flexShrink: 0, overflow: 'hidden',
         }}>
           {profile.avatarUrl ? (
@@ -149,7 +149,7 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
               width: '28px', height: '28px', borderRadius: '50%',
               background: levelInfo.color, display: 'flex',
               alignItems: 'center', justifyContent: 'center',
-              color: '#fff', fontSize: '12px', fontWeight: 800, flexShrink: 0,
+              color: 'var(--c-surface-lowest)', fontSize: '12px', fontWeight: 800, flexShrink: 0,
             }}>
               {level}
             </div>
@@ -215,7 +215,7 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
               <div key={key} style={{
                 display: 'flex', justifyContent: 'space-between',
                 padding: '4px 0', fontSize: '12px',
-                borderBottom: '1px solid #f1f5f0',
+                borderBottom: '1px solid var(--c-surface)',
               }}>
                 <span style={{ color: '#B8B4AC' }}>{key}</span>
                 <span style={{ fontWeight: 600, color: '#0A0A0A' }}>{val}</span>
@@ -236,7 +236,7 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
             <div style={{ fontSize: '10px', fontWeight: 700, color: '#B8B4AC', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
               About
             </div>
-            <div style={{ fontSize: '12px', color: '#475569', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '12px', color: 'var(--c-text-muted)', lineHeight: 1.4 }}>
               {profile.aboutMe}
             </div>
           </div>
@@ -254,7 +254,7 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
             <div style={{ fontSize: '10px', fontWeight: 700, color: '#B8B4AC', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
               Bio
             </div>
-            <div style={{ fontSize: '12px', color: '#475569', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '12px', color: 'var(--c-text-muted)', lineHeight: 1.4 }}>
               {profile.bio}
             </div>
           </div>
@@ -268,13 +268,13 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
           }}>
             {(profile.role === 'brand' ? [
               { label: 'Deals', value: profile.metrics.dealsCompleted, color: '#0A0A0A' },
-              { label: 'Avg Deal', value: `₹${profile.metrics.avgDealValue > 0 ? (profile.metrics.avgDealValue / 100).toLocaleString() : '0'}`, color: '#22c55e' },
-              { label: 'Rating', value: `${profile.metrics.brandRating}/5`, color: '#a855f7' },
+              { label: 'Avg Deal', value: `₹${profile.metrics.avgDealValue > 0 ? (profile.metrics.avgDealValue / 100).toLocaleString() : '0'}`, color: 'var(--c-accent)' },
+              { label: 'Rating', value: `${profile.metrics.brandRating}/5`, color: 'var(--c-accent)' },
             ] : [
               { label: 'Deals', value: profile.metrics.dealsCompleted, color: '#0A0A0A' },
-              { label: 'Avg Deal', value: `₹${(profile.metrics.avgDealValue / 100).toLocaleString()}`, color: '#22c55e' },
+              { label: 'Avg Deal', value: `₹${(profile.metrics.avgDealValue / 100).toLocaleString()}`, color: 'var(--c-accent)' },
               { label: 'On Time', value: `${profile.metrics.onTimeRate}%`, color: '#A08A5E' },
-              { label: 'Rating', value: `${profile.metrics.brandRating}/5`, color: '#a855f7' },
+              { label: 'Rating', value: `${profile.metrics.brandRating}/5`, color: 'var(--c-accent)' },
             ]).map(stat => (
               <div key={stat.label} style={{
                 padding: '6px 8px',
@@ -345,7 +345,7 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
                 <div key={k} style={{
                   fontSize: '11px', fontWeight: 600,
                   background: '#E0E0DA', borderRadius: '4px',
-                  padding: '2px 8px', color: '#475569',
+                  padding: '2px 8px', color: 'var(--c-text-muted)',
                 }}>
                   {k}: ₹{v}
                 </div>
@@ -368,7 +368,7 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
         {profile.completedDeals !== undefined && profile.completedDeals > 0 && (
           <div style={{
             fontSize: '11px', color: '#B8B4AC', textAlign: 'center',
-            padding: '6px', borderTop: '1px solid #f1f5f0', marginTop: '4px',
+            padding: '6px', borderTop: '1px solid var(--c-surface)', marginTop: '4px',
           }}>
             {profile.completedDeals} deal{profile.completedDeals !== 1 ? 's' : ''} completed
           </div>

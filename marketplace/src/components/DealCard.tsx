@@ -49,14 +49,14 @@ export default function DealCard({
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
         <div>
-          <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>{brand}</div>
-          <div style={{ fontSize: '16px', fontWeight: 700, color: '#1f2937', marginTop: '4px' }}>
+          <div style={{ fontSize: '12px', color: 'var(--c-text-variant)', fontWeight: 600 }}>{brand}</div>
+          <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--c-text)', marginTop: '4px' }}>
             {title}
           </div>
         </div>
         {featured && (
           <span style={{
-            background: '#fbbf24',
+            background: 'var(--c-warning)',
             color: '#78350f',
             padding: '4px 8px',
             borderRadius: '4px',
@@ -71,14 +71,14 @@ export default function DealCard({
       {/* Details Row */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
         <div>
-          <div style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 600 }}>BUDGET</div>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: '#10b981', marginTop: '4px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--c-text-variant)', fontWeight: 600 }}>BUDGET</div>
+          <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--c-accent)', marginTop: '4px' }}>
             ${budget.toLocaleString()}
           </div>
         </div>
         <div>
-          <div style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 600 }}>DEADLINE</div>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937', marginTop: '4px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--c-text-variant)', fontWeight: 600 }}>DEADLINE</div>
+          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--c-text)', marginTop: '4px' }}>
             {deadline}
           </div>
         </div>

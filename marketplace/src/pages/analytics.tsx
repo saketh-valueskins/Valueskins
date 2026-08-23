@@ -5,18 +5,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
 const C = {
-  bg: '#0b0e1a',
+  bg: 'var(--c-bg)',
   card: '#13172b',
   cardBorder: '#1e2340',
   surface: '#1a1f3a',
   text: '#f1f5f9',
   textMuted: '#64748b',
   textSecondary: '#B8B4AC',
-  primary: '#6366f1',
-  success: '#22c55e',
-  warning: '#f59e0b',
-  danger: '#ef4444',
-  accent: '#a855f7',
+  primary: 'var(--c-accent)',
+  success: 'var(--c-accent)',
+  warning: 'var(--c-warning)',
+  danger: 'var(--c-error)',
+  accent: 'var(--c-accent)',
   chart: '#C8B89A',
 };
 

@@ -6,30 +6,41 @@ import { PROFESSION_BADGES, BRAND_CATEGORY_BADGES } from '@/features/valueskins/
 import { STICKER_MANIFEST } from '@/features/valueskins/core/stickers/sticker-manifest';
 import { getLevel, getProgressToNext } from '@/lib/levels';
 
-// ValueSkins Unified Brand Colors - Trust · Earned · Serious
+// App palette, resolved to the shared theme vars.
+//
+// This was a hardcoded light-only object — bg '#F5F5F0', text '#0A0A0A',
+// a white card, '#8B8B85' muted, '#E0E0DA' borders — so on the dark theme the
+// Settings screen rendered a light header bar and light form fields floating on
+// a near-black page. That is the same light-panel-in-a-dark-shell bug
+// theme/colors.ts warns about, reintroduced locally.
+//
+// `warning` was also '#F97316', an orange that is not in BRANDING §4; sand
+// carries warning state, as it does elsewhere in the product.
+//
+// Key names are unchanged, so no call site in this file had to move.
 const C = {
   onPrimary: 'var(--c-on-primary)', // correct foreground on C.primary in BOTH themes
-  primary: '#0A0A0A',           // Dark charcoal
-  primaryGradient: 'linear-gradient(135deg, #0A0A0A, #2D2D2D)',
-  bg: '#F5F5F0',                // Cream
-  surface: '#F5F5F0',
-  surfaceAlt: '#F0F0EA',        // Light neutral
-  card: '#FFFFFF',              // White
-  text: '#0A0A0A',              // Dark charcoal
-  textSecondary: '#2D2D2D',     // Taupe gray
-  textMuted: '#8B8B85',         // Muted gray
-  border: '#E0E0DA',            // Border
-  borderLight: '#F0F0EA',       // Light border
-  success: '#22C55E',           // Green
-  successBg: 'rgba(34, 197, 94, 0.08)',
-  successBorder: 'rgba(34, 197, 94, 0.25)',
-  warning: '#F97316',           // Orange
-  warningBg: 'rgba(249, 115, 22, 0.08)',
-  warningBorder: 'rgba(249, 115, 22, 0.25)',
-  danger: '#EF4444',            // Red
-  dangerBg: 'rgba(239, 68, 68, 0.08)',
-  dangerBorder: 'rgba(239, 68, 68, 0.25)',
-  accent: '#A08A5E',            // Gold - ValueSkins brand accent
+  primary: 'var(--c-primary)',
+  primaryGradient: 'linear-gradient(135deg, var(--c-bg), var(--c-surface-highest))',
+  bg: 'var(--c-bg)',
+  surface: 'var(--c-surface)',
+  surfaceAlt: 'var(--c-surface-container)',
+  card: 'var(--c-surface-lowest)',
+  text: 'var(--c-text)',
+  textSecondary: 'var(--c-text-muted)',
+  textMuted: 'var(--c-text-variant)',
+  border: 'var(--c-border)',
+  borderLight: 'var(--c-border-light)',
+  success: 'var(--c-accent)',
+  successBg: 'rgba(200, 184, 154, 0.08)',
+  successBorder: 'rgba(200, 184, 154, 0.25)',
+  warning: 'var(--c-warning)',
+  warningBg: 'rgba(200, 184, 154, 0.08)',
+  warningBorder: 'rgba(200, 184, 154, 0.25)',
+  danger: 'var(--c-error)',
+  dangerBg: 'rgba(176, 65, 62, 0.08)',
+  dangerBorder: 'rgba(176, 65, 62, 0.25)',
+  accent: 'var(--c-accent)',
   accentBg: 'rgba(160, 138, 94, 0.08)',
   accentBorder: 'rgba(160, 138, 94, 0.25)',
 };
@@ -221,7 +232,7 @@ export default function SettingsView({
     <>
       {/* Toast */}
       {purchaseToast && (
-        <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: C.text, color: '#fff', padding: '10px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, zIndex: 99999, boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
+        <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: C.text, color: 'var(--c-surface-lowest)', padding: '10px 20px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, zIndex: 99999, boxShadow: '0 4px 12px rgba(0,0,0,0.25)' }}>
           {purchaseToast}
         </div>
       )}
@@ -241,8 +252,8 @@ export default function SettingsView({
           <div style={{ fontSize: '12px', fontWeight: 700, color: C.textMuted, letterSpacing: '0.8px', textTransform: 'uppercase', marginBottom: '12px' }}>My Profile</div>
           <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: '12px', padding: '16px' }}>
             {/* Status indicator */}
-            <div style={{ marginBottom: '14px', padding: '10px', background: isProfileComplete ? 'rgba(0,212,106,0.1)' : 'rgba(255,171,0,0.1)', borderRadius: '8px', border: `1px solid ${isProfileComplete ? 'rgba(0,212,106,0.3)' : 'rgba(255,171,0,0.3)'}` }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: isProfileComplete ? '#00D46A' : '#FFAB00' }}>
+            <div style={{ marginBottom: '14px', padding: '10px', background: isProfileComplete ? 'rgba(200, 184, 154,0.1)' : 'rgba(200, 184, 154,0.1)', borderRadius: '8px', border: `1px solid ${isProfileComplete ? 'rgba(200, 184, 154,0.3)' : 'rgba(200, 184, 154,0.3)'}` }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: isProfileComplete ? 'var(--c-accent)' : 'var(--c-warning)' }}>
                 {isProfileComplete ? '✓ Profile Complete' : '⚠ Profile Incomplete — Required to access marketplace'}
               </div>
             </div>
@@ -315,7 +326,7 @@ export default function SettingsView({
                   <div style={{ fontSize: '11px', color: C.textSecondary }}>Active</div>
                 </div>
               ) : (
-                <div style={{ width: '100%', background: C.warning, border: 'none', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 700, color: '#fff', cursor: 'default', textAlign: 'center' }}>
+                <div style={{ width: '100%', background: C.warning, border: 'none', borderRadius: '8px', padding: '10px', fontSize: '13px', fontWeight: 700, color: 'var(--c-surface-lowest)', cursor: 'default', textAlign: 'center' }}>
                   No Brand ValueSkins — visit the Store
                 </div>
               )}
@@ -407,7 +418,7 @@ export default function SettingsView({
               </div>
               {(notAvailableFrom || notAvailableTo) && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: '11px', color: '#f59e0b' }}>
+                  <div style={{ fontSize: '11px', color: 'var(--c-warning)' }}>
                     You will appear as unavailable during this period.
                   </div>
                   <button onClick={() => { setNotAvailableFrom(''); setNotAvailableTo(''); }}
@@ -443,7 +454,7 @@ export default function SettingsView({
                     {['Willing to relocate', 'Willing to travel', 'Available for live events'].map(lbl => (
                       <div key={lbl} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderTop: `1px solid ${C.border}` }}>
                         <span style={{ fontSize: '12px', color: C.text }}>{lbl}</span>
-                        <div style={{ width: '36px', height: '20px', borderRadius: '10px', background: C.border, position: 'relative', cursor: 'pointer' }}><div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px', left: '2px' }} /></div>
+                        <div style={{ width: '36px', height: '20px', borderRadius: '10px', background: C.border, position: 'relative', cursor: 'pointer' }}><div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'var(--c-surface-lowest)', position: 'absolute', top: '2px', left: '2px' }} /></div>
                       </div>
                     ))}
                   </div>
@@ -579,7 +590,7 @@ export default function SettingsView({
                       <div key={lbl} onClick={() => setter(!val)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderTop: `1px solid ${C.border}`, cursor: 'pointer' }}>
                         <span style={{ fontSize: '12px', color: C.text }}>{lbl}</span>
                         <div style={{ width: '36px', height: '20px', borderRadius: '10px', background: val ? C.primary : C.border, position: 'relative', transition: 'background 0.2s' }}>
-                          <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: '#fff', position: 'absolute', top: '2px', left: val ? '18px' : '2px', transition: 'left 0.2s' }} />
+                          <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'var(--c-surface-lowest)', position: 'absolute', top: '2px', left: val ? '18px' : '2px', transition: 'left 0.2s' }} />
                         </div>
                       </div>
                     ))}
@@ -597,7 +608,7 @@ export default function SettingsView({
                 <button onClick={() => setCreatorSettingsOpen(open ? null : 'showcase')} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.card, border: `1px solid ${C.border}`, borderRadius: open ? '10px 10px 0 0' : '10px', padding: '12px 14px', cursor: 'pointer', color: C.text }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.8px', textTransform: 'uppercase', color: C.textMuted }}>Skin Showcase</span>
-                    {creatorSkinMode === 'showcase' && <span style={{ fontSize: '9px', fontWeight: 700, color: '#fff', background: C.primary, padding: '1px 6px', borderRadius: '8px' }}>LIVE</span>}
+                    {creatorSkinMode === 'showcase' && <span style={{ fontSize: '9px', fontWeight: 700, color: 'var(--c-surface-lowest)', background: C.primary, padding: '1px 6px', borderRadius: '8px' }}>LIVE</span>}
                   </div>
                   <span style={{ fontSize: '14px', color: C.textMuted }}>{open ? '\u25B2' : '\u25BC'}</span>
                 </button>
@@ -607,8 +618,8 @@ export default function SettingsView({
                       When showcase mode is on, brands see your video pitch and bio when they click your ValueSkin on your profile.
                     </div>
                     <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
-                      <button onClick={() => setCreatorSkinMode('static')} style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: creatorSkinMode === 'static' ? C.primary : C.bg, color: creatorSkinMode === 'static' ? '#fff' : C.textSecondary, border: `1px solid ${creatorSkinMode === 'static' ? C.primary : C.border}` }}>Static</button>
-                      <button onClick={() => setCreatorSkinMode('showcase')} style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: creatorSkinMode === 'showcase' ? C.primary : C.bg, color: creatorSkinMode === 'showcase' ? '#fff' : C.textSecondary, border: `1px solid ${creatorSkinMode === 'showcase' ? C.primary : C.border}` }}>Showcase</button>
+                      <button onClick={() => setCreatorSkinMode('static')} style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: creatorSkinMode === 'static' ? C.primary : C.bg, color: creatorSkinMode === 'static' ? 'var(--c-surface-lowest)' : C.textSecondary, border: `1px solid ${creatorSkinMode === 'static' ? C.primary : C.border}` }}>Static</button>
+                      <button onClick={() => setCreatorSkinMode('showcase')} style={{ flex: 1, padding: '8px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: creatorSkinMode === 'showcase' ? C.primary : C.bg, color: creatorSkinMode === 'showcase' ? 'var(--c-surface-lowest)' : C.textSecondary, border: `1px solid ${creatorSkinMode === 'showcase' ? C.primary : C.border}` }}>Showcase</button>
                     </div>
                     {creatorSkinMode === 'showcase' && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -680,7 +691,7 @@ export default function SettingsView({
                   ) : (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                       {creatorBlockedBrands.map(b => (
-                        <span key={b} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '12px', fontSize: '11px', background: 'rgba(239,68,68,0.1)', color: C.textMuted, border: '1px solid rgba(239,68,68,0.2)' }}>
+                        <span key={b} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '12px', fontSize: '11px', background: 'rgba(176, 65, 62,0.1)', color: C.textMuted, border: '1px solid rgba(176, 65, 62,0.2)' }}>
                           {b}
                           <button onClick={() => setCreatorBlockedBrands(prev => prev.filter(x => x !== b))} style={{ background: 'none', border: 'none', color: C.textMuted, cursor: 'pointer', fontSize: '12px', padding: 0, lineHeight: 1 }}>x</button>
                         </span>
@@ -770,7 +781,7 @@ export default function SettingsView({
                         <div style={{ fontSize: '10px', color: C.textSecondary }}>Badge shown to brands  signals you'll do a discounted first collab to build your record</div>
                       </div>
                       <button onClick={() => setIsFirstDealOpen(p => !p)} style={{ width: '40px', height: '22px', borderRadius: '11px', border: 'none', backgroundColor: isFirstDealOpen ? C.primary : 'rgba(255,255,255,0.12)', cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background-color 0.2s' }}>
-                        <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#fff', position: 'absolute', top: '2px', left: isFirstDealOpen ? '20px' : '2px', transition: 'left 0.2s' }} />
+                        <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: 'var(--c-surface-lowest)', position: 'absolute', top: '2px', left: isFirstDealOpen ? '20px' : '2px', transition: 'left 0.2s' }} />
                       </button>
                     </div>
                   </div>
@@ -847,7 +858,7 @@ export default function SettingsView({
                 (hasDealPrefs ? 10 : 0) + (hasCredential ? 15 : 0) + (hasTestimonial ? 15 : 0) +
                 (hasBarterPref ? 5 : 0) + (hasEnergy ? 5 : 0);
               const tier = score >= 90 ? 'Elite' : score >= 70 ? 'Established' : score >= 40 ? 'Developing' : 'Incomplete';
-              const tierColor = score >= 90 ? '#f59e0b' : score >= 70 ? '#22c55e' : score >= 40 ? C.primary : C.textMuted;
+              const tierColor = score >= 90 ? 'var(--c-warning)' : score >= 70 ? 'var(--c-accent)' : score >= 40 ? C.primary : C.textMuted;
               const items = [
                 { label: 'Avatar', done: hasAvatar, pts: 15 },
                 { label: 'Bio', done: hasBio, pts: 15 },
@@ -874,15 +885,15 @@ export default function SettingsView({
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                     {items.map(({ label, done, pts }) => (
-                      <div key={label} style={{ padding: '6px 4px', background: done ? 'rgba(34,197,94,0.08)' : C.surfaceAlt, borderRadius: '6px', textAlign: 'center', border: `1px solid ${done ? 'rgba(34,197,94,0.25)' : C.border}` }}>
-                        <div style={{ fontSize: '14px', marginBottom: '2px' }}>{done ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2,7 5.5,10.5 12,3.5"/></svg> : <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke={C.textMuted} strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/></svg>}</div>
-                        <div style={{ fontSize: '9px', fontWeight: 600, color: done ? '#22c55e' : C.textMuted, textTransform: 'uppercase', letterSpacing: '0.3px' }}>{label}</div>
+                      <div key={label} style={{ padding: '6px 4px', background: done ? 'rgba(200, 184, 154,0.08)' : C.surfaceAlt, borderRadius: '6px', textAlign: 'center', border: `1px solid ${done ? 'rgba(200, 184, 154,0.25)' : C.border}` }}>
+                        <div style={{ fontSize: '14px', marginBottom: '2px' }}>{done ? <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="var(--c-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="2,7 5.5,10.5 12,3.5"/></svg> : <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke={C.textMuted} strokeWidth="1.5"><circle cx="7" cy="7" r="5.5"/></svg>}</div>
+                        <div style={{ fontSize: '9px', fontWeight: 600, color: done ? 'var(--c-accent)' : C.textMuted, textTransform: 'uppercase', letterSpacing: '0.3px' }}>{label}</div>
                         <div style={{ fontSize: '9px', color: C.textMuted }}>+{pts}pt</div>
                       </div>
                     ))}
                   </div>
                   {!hasCredential && (
-                    <div style={{ marginTop: '10px', padding: '8px 10px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '8px', fontSize: '11px', color: '#f59e0b' }}>
+                    <div style={{ marginTop: '10px', padding: '8px 10px', background: 'rgba(200, 184, 154,0.08)', border: '1px solid rgba(200, 184, 154,0.2)', borderRadius: '8px', fontSize: '11px', color: 'var(--c-warning)' }}>
                       Next: Verify your Instagram account to earn +15 pts
                     </div>
                   )}
@@ -1034,10 +1045,10 @@ export default function SettingsView({
           <div style={{ fontSize: '12px', color: C.textSecondary, marginBottom: '20px' }}>Brands see this when they click your ValueSkin. Tell them why they should collab with you.</div>
 
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            <button onClick={() => setCreatorSkinMode('static')} style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', background: creatorSkinMode === 'static' ? C.primary : C.bg, color: creatorSkinMode === 'static' ? '#fff' : C.textSecondary, border: `1px solid ${creatorSkinMode === 'static' ? C.primary : C.border}` }}>
+            <button onClick={() => setCreatorSkinMode('static')} style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', background: creatorSkinMode === 'static' ? C.primary : C.bg, color: creatorSkinMode === 'static' ? 'var(--c-surface-lowest)' : C.textSecondary, border: `1px solid ${creatorSkinMode === 'static' ? C.primary : C.border}` }}>
               Static Skin
             </button>
-            <button onClick={() => setCreatorSkinMode('showcase')} style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', background: creatorSkinMode === 'showcase' ? C.primary : C.bg, color: creatorSkinMode === 'showcase' ? '#fff' : C.textSecondary, border: `1px solid ${creatorSkinMode === 'showcase' ? C.primary : C.border}` }}>
+            <button onClick={() => setCreatorSkinMode('showcase')} style={{ flex: 1, padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', background: creatorSkinMode === 'showcase' ? C.primary : C.bg, color: creatorSkinMode === 'showcase' ? 'var(--c-surface-lowest)' : C.textSecondary, border: `1px solid ${creatorSkinMode === 'showcase' ? C.primary : C.border}` }}>
               Showcase Mode
             </button>
           </div>

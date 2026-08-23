@@ -33,7 +33,7 @@ export function Navigation() {
             <Link href="/" style={{
                 fontSize: '1.5rem',
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)',
+                background: 'linear-gradient(135deg, var(--c-accent), var(--c-accent))',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 textDecoration: 'none',
@@ -51,7 +51,7 @@ export function Navigation() {
                             style={{
                                 padding: '0.5rem 1rem',
                                 borderRadius: '8px',
-                                background: isActive ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                                background: isActive ? 'rgba(200, 184, 154, 0.2)' : 'transparent',
                                 color: isActive ? 'white' : '#a1a1aa',
                                 textDecoration: 'none',
                                 fontSize: '0.9rem',
@@ -82,7 +82,7 @@ export function Navigation() {
                 </Link>
                 <button style={{
                     padding: '0.5rem 1.25rem',
-                    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                    background: 'linear-gradient(135deg, var(--c-accent), var(--c-accent))',
                     border: 'none',
                     borderRadius: '8px',
                     color: 'white',

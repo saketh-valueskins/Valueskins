@@ -55,8 +55,8 @@ export default function CreateDealPage() {
         <div
           style={{
             padding: '12px 16px',
-            background: 'rgba(239, 68, 68, 0.1)',
-            color: '#991b1b',
+            background: 'rgba(176, 65, 62, 0.1)',
+            color: 'var(--c-error)',
             borderRadius: '6px',
             marginBottom: '24px',
             fontSize: '14px',

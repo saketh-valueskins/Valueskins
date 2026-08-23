@@ -5,13 +5,13 @@ import React, { useState, useEffect } from 'react';
 const C = {
   bg: '#ffffff',
   surface: '#f9fafb',
-  text: '#1f2937',
-  textMuted: '#6b7280',
+  text: 'var(--c-text)',
+  textMuted: 'var(--c-text-variant)',
   border: '#e5e7eb',
   primary: '#0A0A0A',
-  success: '#10b981',
-  warning: '#f59e0b',
-  danger: '#ef4444',
+  success: 'var(--c-accent)',
+  warning: 'var(--c-warning)',
+  danger: 'var(--c-error)',
 };
 
 interface TimelineEvent {

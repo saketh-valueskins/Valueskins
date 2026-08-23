@@ -15,6 +15,18 @@
 
 type SupabaseClient = any;
 
+/**
+ * Shape of the object returned by channel(). Declared here rather than imported
+ * from '@supabase/supabase-js', which is no longer a dependency — callers only
+ * hold the handle and call on/subscribe/send on it.
+ */
+export interface RealtimeChannel {
+  on: (...args: any[]) => RealtimeChannel;
+  subscribe: (...args: any[]) => RealtimeChannel;
+  send: (...args: any[]) => Promise<{ error: null }>;
+  unsubscribe: () => Promise<{ error: null }>;
+}
+
 function stubChannel(): any {
   const channel: any = {
     on: () => channel,

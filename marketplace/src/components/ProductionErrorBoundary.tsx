@@ -196,7 +196,7 @@ export function ApiErrorDisplay({ error, isLoading, onRetry, fallback }: ApiErro
           background: '#fee2e2',
           border: '1px solid #fecaca',
           borderRadius: '8px',
-          color: '#991b1b',
+          color: 'var(--c-error)',
           fontSize: '14px',
         }}
       >
@@ -211,7 +211,7 @@ export function ApiErrorDisplay({ error, isLoading, onRetry, fallback }: ApiErro
             disabled={isLoading}
             style={{
               padding: '6px 12px',
-              background: '#991b1b',
+              background: 'var(--c-error)',
               color: '#fff',
               border: 'none',
               borderRadius: '4px',

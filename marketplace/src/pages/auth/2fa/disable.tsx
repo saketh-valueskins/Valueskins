@@ -7,11 +7,11 @@ const C = {
   onPrimary: 'var(--c-on-primary)', // correct foreground on C.primary in BOTH themes
   primary: '#0A0A0A',
   bg: '#ffffff',
-  text: '#1f2937',
-  textSecondary: '#6b7280',
+  text: 'var(--c-text)',
+  textSecondary: 'var(--c-text-variant)',
   border: '#e5e7eb',
-  error: '#ef4444',
-  success: '#22c55e',
+  error: 'var(--c-error)',
+  success: 'var(--c-accent)',
 };
 
 export default function TwoFactorDisable() {
@@ -63,7 +63,7 @@ export default function TwoFactorDisable() {
         <p style={{ fontSize: '15px', color: C.textSecondary, marginBottom: '24px' }}>Enter a code from your authenticator app to confirm.</p>
         {error && <div style={{ padding: '10px', background: '#fef2f2', color: C.error, borderRadius: '8px', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
         <input type="text" placeholder="000000" value={code} onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} style={{ width: '100%', padding: '12px', border: `1px solid ${C.border}`, borderRadius: '8px', fontSize: '14px', marginBottom: '12px', textAlign: 'center', letterSpacing: '8px', boxSizing: 'border-box' }} />
-        <button onClick={handleDisable} disabled={loading || code.length < 6} style={{ width: '100%', padding: '12px', background: code.length < 6 ? C.border : '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600, cursor: code.length < 6 ? 'not-allowed' : 'pointer', marginBottom: '12px' }}>
+        <button onClick={handleDisable} disabled={loading || code.length < 6} style={{ width: '100%', padding: '12px', background: code.length < 6 ? C.border : 'var(--c-error)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 600, cursor: code.length < 6 ? 'not-allowed' : 'pointer', marginBottom: '12px' }}>
           {loading ? 'Disabling...' : 'Disable 2FA'}
         </button>
         <Link href="/account/settings" style={{ display: 'block', textAlign: 'center', fontSize: '13px', color: C.primary, textDecoration: 'none' }}>Cancel</Link>

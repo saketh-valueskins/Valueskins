@@ -17,7 +17,7 @@ export default function ServerError() {
         <div style={{
           fontSize: '80px',
           fontWeight: 800,
-          color: '#ef4444',
+          color: 'var(--c-error)',
           marginBottom: '16px',
         }}>
           500

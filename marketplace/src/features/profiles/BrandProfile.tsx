@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { getCurrencySymbol } from '@/lib/currency';
+import LoadingState from '@/components/LoadingState';
 
 // G3: no green/orange/red — sand/neutral/brick per BRANDING §4/§10.7
 const C = {
@@ -132,9 +133,7 @@ export default function BrandProfile() {
 
   if (!account) {
     return (
-      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text }}>
-        <div>Loading...</div>
-      </div>
+      <LoadingState />
     );
   }
 

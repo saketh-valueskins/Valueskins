@@ -11,8 +11,8 @@ const C = {
   text: '#F5F5F0',
   textSecondary: '#D6D2C8',
   primary: '#0066CC',
-  success: '#22c55e',
-  error: '#ef4444',
+  success: 'var(--c-accent)',
+  error: 'var(--c-error)',
 };
 
 interface ValueskinResult {
@@ -116,7 +116,7 @@ export default function ValueskinSearchPage() {
         {error && (
           <div style={{
             padding: '16px',
-            background: 'rgba(239, 68, 68, 0.1)',
+            background: 'rgba(176, 65, 62, 0.1)',
             color: '#fca5a5',
             border: `1px solid ${C.error}`,
             borderRadius: '8px',

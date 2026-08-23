@@ -3,18 +3,18 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '@/lib/backend';
 
 const C = {
-  bg: 'var(--c-bg, #ffffff)',
-  surface: 'var(--c-surface, #ffffff)',
-  surfaceAlt: 'var(--c-surface-alt, #f9fafb)',
-  card: 'var(--c-card, #f3f4f6)',
-  text: 'var(--c-text, #1f2937)',
-  textSecondary: 'var(--c-text-secondary, #6b7280)',
-  textMuted: 'var(--c-outline, #9ca3af)',
-  border: 'var(--c-border, #e5e7eb)',
+  bg: 'var(--c-bg, var(--c-surface-lowest))',
+  surface: 'var(--c-surface, var(--c-surface-lowest))',
+  surfaceAlt: 'var(--c-surface-alt, var(--c-surface))',
+  card: 'var(--c-card, var(--c-surface-container))',
+  text: 'var(--c-text, var(--c-text))',
+  textSecondary: 'var(--c-text-secondary, var(--c-text-variant))',
+  textMuted: 'var(--c-outline, var(--c-text-variant))',
+  border: 'var(--c-border, var(--c-border))',
   primary: 'var(--c-primary, #0A0A0A)',
-  success: 'var(--c-success, #00D46A)',
-  warning: 'var(--c-warning, #FFAB00)',
-  danger: 'var(--c-error, #ED4956)',
+  success: 'var(--c-success, var(--c-accent))',
+  warning: 'var(--c-warning, var(--c-warning))',
+  danger: 'var(--c-error, var(--c-error))',
 };
 
 interface Notification {
@@ -96,13 +96,13 @@ export default function NotificationsView({ hasAnySkin = true }: Props) {
   };
 
   const avatarColors: Record<string, string> = {
-    deal: '#0095F6',
-    community: '#7C3AED',
-    skin: '#00D46A',
+    deal: 'var(--c-accent)',
+    community: 'var(--c-accent)',
+    skin: 'var(--c-accent)',
     system: '#666',
-    message: '#0095F6',
-    payment: '#22c55e',
-    application: '#f59e0b',
+    message: 'var(--c-accent)',
+    payment: 'var(--c-accent)',
+    application: 'var(--c-warning)',
   };
 
   const unread = notifications.filter(n => !n.read);
@@ -141,7 +141,7 @@ export default function NotificationsView({ hasAnySkin = true }: Props) {
                     return (
                       <div key={n.id} onClick={() => markRead(n.id)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', cursor: 'pointer' }}>
                         <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: `linear-gradient(135deg, ${avatarColor}, ${avatarColor}99)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <span style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>{brandInitial}</span>
+                          <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--c-surface-lowest)' }}>{brandInitial}</span>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: '14px', color: C.text, lineHeight: 1.4 }}>{n.text}</div>
@@ -163,7 +163,7 @@ export default function NotificationsView({ hasAnySkin = true }: Props) {
                     return (
                       <div key={n.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px' }}>
                         <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: 0.7 }}>
-                          <span style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>{brandInitial}</span>
+                          <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--c-surface-lowest)' }}>{brandInitial}</span>
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: '14px', color: C.textSecondary, lineHeight: 1.4 }}>{n.text}</div>

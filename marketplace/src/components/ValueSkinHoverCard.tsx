@@ -34,9 +34,9 @@ const C = {
   textMuted: '#B8B4AC',
   textSecondary: '#D6D2C8',
   primary: '#C8B89A',
-  success: '#22c55e',
-  warning: '#f59e0b',
-  danger: '#ef4444',
+  success: 'var(--c-accent)',
+  warning: 'var(--c-warning)',
+  danger: 'var(--c-error)',
   border: '#2D2D2D',
 };
 

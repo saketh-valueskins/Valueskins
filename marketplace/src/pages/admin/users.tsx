@@ -105,7 +105,7 @@ export default function AdminUsers() {
           <div style={{
             padding: '16px',
             background: '#fee2e2',
-            color: '#991b1b',
+            color: 'var(--c-error)',
             borderRadius: '8px',
             marginBottom: '20px',
             border: `1px solid #fecaca`
@@ -160,8 +160,8 @@ export default function AdminUsers() {
                     <span style={{
                       padding: '4px 8px',
                       borderRadius: '4px',
-                      background: user.status === 'active' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                      color: user.status === 'active' ? '#22c55e' : '#ef4444',
+                      background: user.status === 'active' ? 'rgba(200, 184, 154, 0.2)' : 'rgba(176, 65, 62, 0.2)',
+                      color: user.status === 'active' ? 'var(--c-accent)' : 'var(--c-error)',
                       fontSize: '12px',
                       fontWeight: 600
                     }}>

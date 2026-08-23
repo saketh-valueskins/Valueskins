@@ -48,8 +48,8 @@ export default function DataRequestPage() {
           Exercise your rights under GDPR (Europe), CCPA (California), and DPDP Act (India). We will process your request within 30 days.
         </p>
 
-        {error && <div style={{ padding: '10px 14px', background: '#fef2f2', color: '#ef4444', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', border: '1px solid #fecaca' }}>{error}</div>}
-        {message && <div style={{ padding: '10px 14px', background: '#f0fdf4', color: '#22c55e', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', border: '1px solid #bbf7d0' }}>{message}</div>}
+        {error && <div style={{ padding: '10px 14px', background: '#fef2f2', color: 'var(--c-error)', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', border: '1px solid #fecaca' }}>{error}</div>}
+        {message && <div style={{ padding: '10px 14px', background: '#f0fdf4', color: 'var(--c-accent)', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', border: '1px solid #bbf7d0' }}>{message}</div>}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>

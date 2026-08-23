@@ -52,11 +52,11 @@ export default function DealDetailModal({ deal, onClose, onApply }: DealDetailMo
           alignItems: 'start',
         }}>
           <div>
-            <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600 }}>Brand</div>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', margin: '8px 0 0 0' }}>
+            <div style={{ fontSize: '12px', color: 'var(--c-text-variant)', fontWeight: 600 }}>Brand</div>
+            <h2 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--c-text)', margin: '8px 0 0 0' }}>
               {deal.title}
             </h2>
-            <div style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>{deal.brand}</div>
+            <div style={{ fontSize: '14px', color: 'var(--c-text-variant)', marginTop: '4px' }}>{deal.brand}</div>
           </div>
           <button
             onClick={onClose}
@@ -65,7 +65,7 @@ export default function DealDetailModal({ deal, onClose, onApply }: DealDetailMo
               border: 'none',
               fontSize: '24px',
               cursor: 'pointer',
-              color: '#6b7280',
+              color: 'var(--c-text-variant)',
             }}
           >
             ×
@@ -88,7 +88,7 @@ export default function DealDetailModal({ deal, onClose, onApply }: DealDetailMo
               padding: '16px',
             }}>
               <div style={{ fontSize: '12px', color: '#166534', fontWeight: 600 }}>BUDGET</div>
-              <div style={{ fontSize: '24px', fontWeight: 700, color: '#10b981', marginTop: '8px' }}>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--c-accent)', marginTop: '8px' }}>
                 ${deal.budget.toLocaleString()}
               </div>
             </div>
@@ -99,7 +99,7 @@ export default function DealDetailModal({ deal, onClose, onApply }: DealDetailMo
               padding: '16px',
             }}>
               <div style={{ fontSize: '12px', color: '#92400e', fontWeight: 600 }}>DEADLINE</div>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: '#d97706', marginTop: '8px' }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--c-warning)', marginTop: '8px' }}>
                 {deal.deadline}
               </div>
             </div>
@@ -107,7 +107,7 @@ export default function DealDetailModal({ deal, onClose, onApply }: DealDetailMo
 
           {/* Description */}
           <section style={{ marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#1f2937', marginBottom: '8px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--c-text)', marginBottom: '8px' }}>
               About This Deal
             </h3>
             <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.6' }}>
@@ -117,7 +117,7 @@ export default function DealDetailModal({ deal, onClose, onApply }: DealDetailMo
 
           {/* Deliverables */}
           <section style={{ marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#1f2937', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--c-text)', marginBottom: '12px' }}>
               Deliverables
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -135,10 +135,10 @@ export default function DealDetailModal({ deal, onClose, onApply }: DealDetailMo
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#1f2937' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--c-text)' }}>
                       {del.type}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#6b7280', marginTop: '2px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--c-text-variant)', marginTop: '2px' }}>
                       Qty: {del.count} · Due: {del.dueDate}
                     </div>
                   </div>
@@ -149,7 +149,7 @@ export default function DealDetailModal({ deal, onClose, onApply }: DealDetailMo
 
           {/* Requirements */}
           <section style={{ marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#1f2937', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--c-text)', marginBottom: '12px' }}>
               Requirements
             </h3>
             <ul style={{ fontSize: '13px', color: '#4b5563', lineHeight: '1.8', paddingLeft: '20px' }}>
@@ -169,12 +169,12 @@ export default function DealDetailModal({ deal, onClose, onApply }: DealDetailMo
             fontSize: '12px',
           }}>
             <div style={{ marginBottom: '8px' }}>
-              <strong style={{ color: '#1f2937' }}>Usage Rights:</strong>{' '}
-              <span style={{ color: '#6b7280' }}>{deal.usageRights}</span>
+              <strong style={{ color: 'var(--c-text)' }}>Usage Rights:</strong>{' '}
+              <span style={{ color: 'var(--c-text-variant)' }}>{deal.usageRights}</span>
             </div>
             <div>
-              <strong style={{ color: '#1f2937' }}>Exclusivity:</strong>{' '}
-              <span style={{ color: '#6b7280' }}>{deal.exclusivity}</span>
+              <strong style={{ color: 'var(--c-text)' }}>Exclusivity:</strong>{' '}
+              <span style={{ color: 'var(--c-text-variant)' }}>{deal.exclusivity}</span>
             </div>
           </div>
         </div>
@@ -196,7 +196,7 @@ export default function DealDetailModal({ deal, onClose, onApply }: DealDetailMo
               borderRadius: '6px',
               fontSize: '14px',
               fontWeight: 600,
-              color: '#1f2937',
+              color: 'var(--c-text)',
               cursor: 'pointer',
             }}
           >

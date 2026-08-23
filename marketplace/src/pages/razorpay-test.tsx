@@ -32,7 +32,7 @@ const C = {
   muted: '#B8B4AC',
   accent: '#C8B89A',
   success: '#86efac',
-  warning: '#fbbf24',
+  warning: 'var(--c-warning)',
   error: '#fca5a5',
 };
 

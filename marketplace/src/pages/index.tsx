@@ -6,6 +6,8 @@ import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { C } from '@/theme/colors';
 import ValueSkinsLogo from '@/components/ValueSkinsLogo';
+import DriftingSkins from '@/components/DriftingSkins';
+import LoadingState from '@/components/LoadingState';
 
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
@@ -144,17 +146,7 @@ export default function HomePage() {
     }
   }, [account, loading, router]);
 
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT }}>
-        <div style={{ textAlign: 'center' }}>
-          <ValueSkinsLogo theme="light" size={26} />
-          <div style={{ fontSize: '0.8125rem', color: C.textSecondary, marginTop: '24px' }}>Loading...</div>
-        </div>
-      </div>
-    );
-  }
-
+  if (loading) return <LoadingState />;
   if (account && account.onboarding_stage === 'complete') return null;
 
   // Hero parallax + fade as you leave it (spec §2). Transform/opacity only.
@@ -163,9 +155,13 @@ export default function HomePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: C.bg, fontFamily: FONT }}>
-      {/* Hero */}
+      {/* Hero — full-bleed brand moment, same drifting ValueSkin texture as the
+          login screen (BRANDING §10.4: the skin is a recurring brand device). */}
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+      <DriftingSkins />
       <div
         style={{
+          position: 'relative',
           maxWidth: '960px',
           margin: '0 auto',
           padding: '80px 24px 60px',
@@ -175,22 +171,14 @@ export default function HomePage() {
         }}
       >
         <div style={{ marginBottom: '40px' }}>
-          <ValueSkinsLogo theme="light" size={32} />
+          <ValueSkinsLogo size={32} />
         </div>
 
         <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 3rem)', fontWeight: 800, color: C.text, margin: '0 0 20px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
           The marketplace for<br />creators and brands
         </h1>
-        <p style={{ fontSize: '1.125rem', color: C.textSecondary, margin: '0 auto 40px', maxWidth: '600px', lineHeight: 1.6 }}>
-          ValueSkins connects content creators with brands for paid campaigns. Every deal is backed by escrow. Creators get guaranteed payment, brands only pay for work they approve.
-        </p>
-
-        <p style={{ fontSize: '1.125rem', color: C.textSecondary, margin: '0 auto 20px', maxWidth: '600px', lineHeight: 1.6 }}>
-          The escrow system is designed such that you only get paid when your job is done. We're not so boring that we will charge you just to see a list of creators. We're the cool ones.
-        </p>
-
-        <p style={{ fontSize: '1.125rem', color: C.textSecondary, margin: '0 auto 40px', maxWidth: '600px', lineHeight: 1.6 }}>
-          Also, we're clear about what we charge. 12% of the deal value, paid by the brands. Creators don't have to pay anything and we don't ask you to get on a call just to discuss the price, we care about you 🥰
+        <p style={{ fontSize: '1.125rem', color: C.textSecondary, margin: '0 auto 40px', maxWidth: '540px', lineHeight: 1.6 }}>
+          Every deal is backed by escrow. Money moves when the work is approved.
         </p>
 
         {/* ONE call to action. Sign-in is Google OAuth only and the callback
@@ -216,6 +204,7 @@ export default function HomePage() {
             <div style={{ animation: 'vsBob 1.8s ease-in-out infinite', color: C.accent, fontSize: '18px' }}>⌄</div>
           </div>
         )}
+      </div>
       </div>
 
       {/* How It Works */}

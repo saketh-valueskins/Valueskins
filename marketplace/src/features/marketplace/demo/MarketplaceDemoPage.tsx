@@ -2523,7 +2523,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
             <div style={{ fontSize:'13px', color:C.textSecondary, marginBottom:'16px', lineHeight:1.5 }}>This will permanently delete your account and all data. This cannot be undone.</div>
             <div style={{ display:'flex', gap:'8px' }}>
               <button onClick={() => setShowDeleteConfirm(false)} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'11px', color:C.text, fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
-              <button onClick={async () => { try { const r = await fetch('/api/auth/delete-account', { method: 'POST', credentials: 'include' }); if (r.ok) { window.location.href = '/auth/login'; } else { const e = await r.json(); alert('Delete failed: ' + (e.error || 'Unknown error')); } } catch (err) { console.error('Delete failed:', err); alert('Delete failed'); } }} style={{ flex:1, background:'#ef4444', border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Delete</button>
+              <button onClick={async () => { try { const r = await fetch('/api/auth/delete-account', { method: 'POST', credentials: 'include' }); if (r.ok) { window.location.href = '/auth/login'; } else { const e = await r.json(); alert('Delete failed: ' + (e.error || 'Unknown error')); } } catch (err) { console.error('Delete failed:', err); alert('Delete failed'); } }} style={{ flex:1, background:'var(--c-error)', border:'none', borderRadius:'8px', padding:'11px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Delete</button>
             </div>
           </div>
         </div>
@@ -2573,10 +2573,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
             {/* Mode toggle */}
             <div style={{ display:'flex', gap:8, marginBottom:16 }}>
-              <button onClick={()=>setCreatorSkinMode('static')} style={{ flex:1, padding:'10px', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer', background:creatorSkinMode==='static'?C.primary:C.bg, color:creatorSkinMode==='static'?'#fff':C.textSecondary, border:`1px solid ${creatorSkinMode==='static'?C.primary:C.border}` }}>
+              <button onClick={()=>setCreatorSkinMode('static')} style={{ flex:1, padding:'10px', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer', background:creatorSkinMode==='static'?C.primary:C.bg, color:creatorSkinMode==='static'?'var(--c-surface-lowest)':C.textSecondary, border:`1px solid ${creatorSkinMode==='static'?C.primary:C.border}` }}>
                 Static Skin
               </button>
-              <button onClick={()=>setCreatorSkinMode('showcase')} style={{ flex:1, padding:'10px', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer', background:creatorSkinMode==='showcase'?C.primary:C.bg, color:creatorSkinMode==='showcase'?'#fff':C.textSecondary, border:`1px solid ${creatorSkinMode==='showcase'?C.primary:C.border}` }}>
+              <button onClick={()=>setCreatorSkinMode('showcase')} style={{ flex:1, padding:'10px', borderRadius:8, fontSize:13, fontWeight:600, cursor:'pointer', background:creatorSkinMode==='showcase'?C.primary:C.bg, color:creatorSkinMode==='showcase'?'var(--c-surface-lowest)':C.textSecondary, border:`1px solid ${creatorSkinMode==='showcase'?C.primary:C.border}` }}>
                 Showcase Mode
               </button>
             </div>
@@ -2663,7 +2663,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
               </>
             )}
 
-            <button onClick={() => { setShowSkinShowcaseModal(null); setPurchaseToast(creatorSkinMode === 'showcase' ? 'Showcase saved — brands will see your pitch' : 'Skin set to static'); setTimeout(()=>setPurchaseToast(null),3000); }} style={{ width:'100%', background:creatorSkinMode==='showcase'?C.primary:C.primary, border:'none', borderRadius:8, padding:'12px', color:'#fff', fontWeight:700, fontSize:14, cursor:'pointer', marginTop:8 }}>
+            <button onClick={() => { setShowSkinShowcaseModal(null); setPurchaseToast(creatorSkinMode === 'showcase' ? 'Showcase saved — brands will see your pitch' : 'Skin set to static'); setTimeout(()=>setPurchaseToast(null),3000); }} style={{ width:'100%', background:creatorSkinMode==='showcase'?C.primary:C.primary, border:'none', borderRadius:8, padding:'12px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:14, cursor:'pointer', marginTop:8 }}>
               {creatorSkinMode === 'showcase' ? 'Save Showcase' : 'Done'}
             </button>
           </div>
@@ -2693,7 +2693,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 onMouseEnter={(e) => showHoverCard(buildBrandHover(askModalOpp.brand), e)}
                 onMouseMove={updateHoverPosition}
                 onMouseLeave={hideHoverCard}
-                style={{ width: 44, height: 44, borderRadius: '10px', background: `linear-gradient(135deg, ${C.primary}, ${C.primary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
+                style={{ width: 44, height: 44, borderRadius: '10px', background: `linear-gradient(135deg, ${C.primary}, ${C.primary})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: 'var(--c-surface-lowest)', cursor: 'pointer' }}>
                 {askModalOpp.brand.charAt(0)}
               </div>
               <div>
@@ -2808,10 +2808,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
       {/* Level-Up Modal */}
       {showLevelUpModal && (
         <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:99999 }}>
-          <div style={{ background:'#FFFFFF', borderRadius:'20px', padding:'40px 28px 28px', maxWidth:'340px', width:'90vw', textAlign:'center' }}>
+          <div style={{ background:'var(--c-surface-lowest)', borderRadius:'20px', padding:'40px 28px 28px', maxWidth:'340px', width:'90vw', textAlign:'center' }}>
             {/* Level badge */}
-            <div style={{ width:'72px', height:'72px', borderRadius:'50%', background:`linear-gradient(135deg, ${C.primary}, #7C3AED)`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px' }}>
-              <span style={{ fontSize:'28px', fontWeight:800, color:'#fff' }}>{levelUpTo}</span>
+            <div style={{ width:'72px', height:'72px', borderRadius:'50%', background:`linear-gradient(135deg, ${C.primary}, var(--c-accent))`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 20px' }}>
+              <span style={{ fontSize:'28px', fontWeight:800, color:'var(--c-surface-lowest)' }}>{levelUpTo}</span>
             </div>
             <div style={{ fontSize:'22px', fontWeight:800, color:'#1A1A1A', marginBottom:'8px' }}>Level Up</div>
             <div style={{ fontSize:'15px', color:'#666', marginBottom:'8px', lineHeight:1.5 }}>
@@ -2831,7 +2831,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 <div style={{ fontSize:'11px', color:C.primary, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.5px', marginTop:'2px' }}>After</div>
               </div>
             </div>
-            <button onClick={() => { setShowLevelUpModal(false); setPurchaseToast('Deal complete — earnings added to your balance'); setTimeout(() => setPurchaseToast(null), 3000); }} style={{ width:'100%', background:C.primary, border:'none', borderRadius:'12px', padding:'14px', color:'#fff', fontWeight:700, fontSize:'15px', cursor:'pointer' }}>
+            <button onClick={() => { setShowLevelUpModal(false); setPurchaseToast('Deal complete — earnings added to your balance'); setTimeout(() => setPurchaseToast(null), 3000); }} style={{ width:'100%', background:C.primary, border:'none', borderRadius:'12px', padding:'14px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'15px', cursor:'pointer' }}>
               Continue
             </button>
           </div>
@@ -2980,7 +2980,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             style={{ fontSize: '22px', fontWeight: 800, color: C.text, marginBottom: '4px', cursor: 'pointer' }}>{account?.display_name || profileName || 'Your Name'}</div>
                           <div style={{ fontSize: '13px', color: C.textSecondary, marginBottom: '8px' }}>{account?.email || ''}</div>
                           <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <span style={{ padding: '4px 12px', borderRadius: '20px', background: isBrand ? 'rgba(160,138,94,0.1)' : 'rgba(34,197,94,0.1)', border: `1px solid ${isBrand ? '#A08A5E' : '#22c55e'}`, color: isBrand ? '#A08A5E' : '#22c55e', fontSize: '12px', fontWeight: 600 }}>
+                            <span style={{ padding: '4px 12px', borderRadius: '20px', background: isBrand ? 'rgba(160,138,94,0.1)' : 'rgba(200, 184, 154,0.1)', border: `1px solid ${isBrand ? '#A08A5E' : 'var(--c-accent)'}`, color: isBrand ? '#A08A5E' : 'var(--c-accent)', fontSize: '12px', fontWeight: 600 }}>
                               {isBrand ? '🏢 Brand' : '🎨 Creator'}
                             </span>
                             <button onClick={() => setEditingProfile(true)} style={{ padding: '4px 12px', borderRadius: '20px', border: `1px solid ${C.border}`, background: 'none', color: C.textSecondary, fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
@@ -3147,18 +3147,18 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
                         <span style={{ fontSize:'11px', fontWeight:700, color:C.textMuted }}>Available for deals</span>
                         <button onClick={() => setAvailableForDeals(!availableForDeals)} style={{ width:36, height:20, borderRadius:20, border:'none', background: availableForDeals ? C.success : C.border, cursor:'pointer', display:'flex', alignItems:'center', padding: availableForDeals ? '0 2px 0 16px' : '0 16px 0 2px', transition:'all 0.2s' }}>
-                          <div style={{ width:16, height:16, borderRadius:'50%', background:'#fff', transition:'all 0.2s' }} />
+                          <div style={{ width:16, height:16, borderRadius:'50%', background:'var(--c-surface-lowest)', transition:'all 0.2s' }} />
                         </button>
-                        {availableForDeals && <span style={{ fontSize:'10px', fontWeight:700, color:C.success, background:'rgba(0,212,106,0.1)', padding:'2px 8px', borderRadius:'12px' }}>Taking deals</span>}
+                        {availableForDeals && <span style={{ fontSize:'10px', fontWeight:700, color:C.success, background:'rgba(200, 184, 154,0.1)', padding:'2px 8px', borderRadius:'12px' }}>Taking deals</span>}
                       </div>
                       <div style={{ display:'flex', gap:'6px', alignItems:'center' }}>
                         {(['opportunities','pipeline'] as const).map(tab => (
-                          <button key={tab} onClick={() => setCreatorMarketplaceTab(tab)} style={{ padding:'4px 10px', fontSize:'10px', fontWeight:700, borderRadius:'6px', border:`1px solid ${creatorMarketplaceTab === tab ? C.primary : C.border}`, background: creatorMarketplaceTab === tab ? C.primary : 'transparent', color: creatorMarketplaceTab === tab ? '#fff' : C.textSecondary, cursor:'pointer' }}>
+                          <button key={tab} onClick={() => setCreatorMarketplaceTab(tab)} style={{ padding:'4px 10px', fontSize:'10px', fontWeight:700, borderRadius:'6px', border:`1px solid ${creatorMarketplaceTab === tab ? C.primary : C.border}`, background: creatorMarketplaceTab === tab ? C.primary : 'transparent', color: creatorMarketplaceTab === tab ? 'var(--c-surface-lowest)' : C.textSecondary, cursor:'pointer' }}>
                             {tab === 'opportunities' ? 'Opportunities' : 'My Pipeline'}
                           </button>
                         ))}
                         <button onClick={handleRefresh} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 10px', display:'flex', alignItems:'center', gap:'4px', color:C.textMuted, fontSize:'11px', fontWeight:600, opacity: refreshing ? 0.5 : 1 }}>
-                          <span style={{ width:6, height:6, borderRadius:'50%', background: realtimeConnected ? '#00D46A' : '#9ca3af', flexShrink:0 }} title={realtimeConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
+                          <span style={{ width:6, height:6, borderRadius:'50%', background: realtimeConnected ? 'var(--c-accent)' : 'var(--c-text-variant)', flexShrink:0 }} title={realtimeConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
                           {refreshing ? '↻' : '⟳'} Refresh
                         </button>
                       </div>
@@ -3252,7 +3252,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           <div style={{ fontSize: '9px', color: C.textMuted, background: `${withAlpha(C.primary, 0x15)}`, padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
                                             Completed
                                           </div>
-                                          <button onClick={e => { e.stopPropagation(); downloadDealReport(deal.key); }} style={{ width:'100%', marginTop:'8px', background:C.primary, border:'none', borderRadius:'6px', padding:'5px 8px', color:'#fff', fontSize:'10px', fontWeight:600, cursor:'pointer' }}>
+                                          <button onClick={e => { e.stopPropagation(); downloadDealReport(deal.key); }} style={{ width:'100%', marginTop:'8px', background:C.primary, border:'none', borderRadius:'6px', padding:'5px 8px', color:'var(--c-surface-lowest)', fontSize:'10px', fontWeight:600, cursor:'pointer' }}>
                                             Download the final report
                                           </button>
                                         </div>
@@ -3313,9 +3313,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   onMouseEnter={(e) => showHoverCard(buildBrandHover(opp.brand), e)}
                                   onMouseMove={updateHoverPosition}
                                   onMouseLeave={hideHoverCard}
-                                  style={{ width: '40px', height: '40px', borderRadius: '50%', background: `linear-gradient(135deg, ${C.primary}, #7C3AED)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+                                  style={{ width: '40px', height: '40px', borderRadius: '50%', background: `linear-gradient(135deg, ${C.primary}, var(--c-accent))`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
                                 >
-                                  <span style={{ fontSize: '16px', fontWeight: 700, color: '#fff' }}>{brandInitial}</span>
+                                  <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--c-surface-lowest)' }}>{brandInitial}</span>
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <a
@@ -3404,7 +3404,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                       }
                                     }
                                   }}
-                                  style={{ flex: 1, fontSize: '13px', fontWeight: 700, color: '#fff', background: isDealDone ? C.textMuted : hasActiveDeal ? C.success : C.primary, border: 'none', padding: '10px', borderRadius: '10px', cursor: isDealDone ? 'default' : 'pointer', opacity: isDealDone ? 0.6 : 1 }}
+                                  style={{ flex: 1, fontSize: '13px', fontWeight: 700, color: 'var(--c-surface-lowest)', background: isDealDone ? C.textMuted : hasActiveDeal ? C.success : C.primary, border: 'none', padding: '10px', borderRadius: '10px', cursor: isDealDone ? 'default' : 'pointer', opacity: isDealDone ? 0.6 : 1 }}
                                 >
                                   {isDealDone ? 'Approved and Deal Completed' : hasActiveDeal ? 'Open Deal' : 'View Deal'}
                                 </button>
@@ -3455,7 +3455,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           return (
                                             <React.Fragment key={step}>
                                               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
-                                                <div style={{ width:'28px', height:'28px', borderRadius:'50%', background: dealRoomPhase === 'rejected' || dealRoomPhase === 'brand_rejected' ? C.danger : isCompleted ? C.success : !isActive && current < stepPos && current !== -1 ? C.border : isActive ? C.primary : C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'11px', fontWeight:700, color: isCompleted || isActive ? '#fff' : C.textMuted, transition:'all 0.2s' }}>
+                                                <div style={{ width:'28px', height:'28px', borderRadius:'50%', background: dealRoomPhase === 'rejected' || dealRoomPhase === 'brand_rejected' ? C.danger : isCompleted ? C.success : !isActive && current < stepPos && current !== -1 ? C.border : isActive ? C.primary : C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'11px', fontWeight:700, color: isCompleted || isActive ? 'var(--c-surface-lowest)' : C.textMuted, transition:'all 0.2s' }}>
                                                   {dealRoomPhase === 'rejected' || dealRoomPhase === 'brand_rejected' ? '✕' : isCompleted ? '✓' : idx + 1}
                                                 </div>
                                                 <div style={{ fontSize:'8px', color: isActive ? C.primary : C.textMuted, fontWeight: isActive ? 700 : 400, textAlign:'center', minWidth:'40px' }}>{LABELS[step]}</div>
@@ -3490,7 +3490,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           How the brand wants to work with you:<br/>
                                           <span style={{ color: C.textSecondary }}>Explore</span> — just browsing, no commitment<br/>
                                           <span style={{ color: C.primary }}>Campaign</span> — specific paid project<br/>
-                                          <span style={{ color: '#22c55e' }}>Long-term</span> — ongoing partnership/retainer
+                                          <span style={{ color: 'var(--c-accent)' }}>Long-term</span> — ongoing partnership/retainer
                                         </div>
                                       )}
                                     </span>
@@ -3505,8 +3505,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           <strong>Campaign Types:</strong><br/>
                                           <span style={{ color: C.textSecondary }}>Product Review</span> — showcase/review their product<br/>
                                           <span style={{ color: C.primary }}>Sponsored Content</span> — branded post/reel<br/>
-                                          <span style={{ color: '#22c55e' }}>Brand Ambassador</span> — represent the brand over time<br/>
-                                          <span style={{ color: '#f59e0b' }}>UGC</span> — user-generated content for their ads<br/>
+                                          <span style={{ color: 'var(--c-accent)' }}>Brand Ambassador</span> — represent the brand over time<br/>
+                                          <span style={{ color: 'var(--c-warning)' }}>UGC</span> — user-generated content for their ads<br/>
                                           <span style={{ color: C.textMuted }}>Affiliate</span> — earn per sale/click you drive
                                         </div>
                                       )}
@@ -3516,7 +3516,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   {/* Creator sees brand's offer — respond with accept or counter */}
                                   {(dealRoomPhase === 'pending' || dealRoomPhase === 'brief') && (
                                     <>
-                                      <div style={{ background: 'rgba(0,149,246,0.06)', borderRadius: '8px', padding: '12px', marginBottom: '12px', border: `1px solid rgba(0,149,246,0.2)` }}>
+                                      <div style={{ background: 'rgba(200, 184, 154,0.06)', borderRadius: '8px', padding: '12px', marginBottom: '12px', border: `1px solid rgba(200, 184, 154,0.2)` }}>
                                         <div style={{ fontSize: '11px', fontWeight: 700, color: C.primary, marginBottom: '6px' }}>Brand Offer Received</div>
                                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
                                           <span style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}</span>
@@ -3542,7 +3542,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             setPurchaseToast('Negotiation opened');
                                             setTimeout(() => setPurchaseToast(null), 2000);
                                           }}
-                                          style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
+                                          style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: 'var(--c-surface-lowest)', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
                                         >
                                           Accept & Negotiate ${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}
                                         </button>
@@ -3561,7 +3561,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             setPurchaseToast('Offer rejected');
                                             setTimeout(() => setPurchaseToast(null), 2000);
                                           }}
-                                          style={{ flex: 1, background: 'none', border: `1px solid rgba(239,68,68,0.3)`, padding: '9px', borderRadius: '8px', color: '#ef4444', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
+                                          style={{ flex: 1, background: 'none', border: `1px solid rgba(176, 65, 62,0.3)`, padding: '9px', borderRadius: '8px', color: 'var(--c-error)', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
                                         >
                                           Reject
                                         </button>
@@ -3572,7 +3572,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   {/* Creator has sent counter, waiting for brand response */}
                                   {dealRoomPhase === 'counter' && (
                                     <div style={{ background: 'rgba(255,193,7,0.06)', borderRadius: '8px', padding: '12px', border: `1px solid rgba(255,193,7,0.2)` }}>
-                                      <div style={{ fontSize: '11px', fontWeight: 700, color: '#f59e0b', marginBottom: '6px' }}>Counter Offer Sent</div>
+                                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--c-warning)', marginBottom: '6px' }}>Counter Offer Sent</div>
                                       <div style={{ fontSize: '12px', color: C.text, marginBottom: '8px' }}>Your counter-offer of <strong>${parseInt(dealCounterAmount || '0').toLocaleString()}</strong> has been sent to the brand.</div>
                                       <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.5 }}>Waiting for their response — they can accept, reject, or send a counter-offer back.</div>
                                     </div>
@@ -3594,13 +3594,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             updateDeal(activeDealKey!, { phase: 'accepted' });
                                             setDealRoomPhase('accepted');
                                           }}
-                                          style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
+                                          style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: 'var(--c-surface-lowest)', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
                                         >
                                           Confirm & Accept
                                         </button>
                                         <button
                                           onClick={() => setShowCancelDealModal(true)}
-                                          style={{ flex: 1, background: 'none', border: `1px solid rgba(239,68,68,0.3)`, padding: '9px', borderRadius: '8px', color: '#ef4444', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
+                                          style={{ flex: 1, background: 'none', border: `1px solid rgba(176, 65, 62,0.3)`, padding: '9px', borderRadius: '8px', color: 'var(--c-error)', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
                                         >
                                           Decline
                                         </button>
@@ -3610,8 +3610,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                                   {dealRoomPhase === 'rejected' && (
                                     <div style={{ textAlign: 'center', padding: '20px 12px' }}>
-                                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(176, 65, 62,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-error)" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                       </div>
                                       <div style={{ fontSize: '15px', fontWeight: 700, color: C.text, marginBottom: '4px' }}>Deal Rejected</div>
                                       <div style={{ fontSize: '12px', color: C.textSecondary, marginBottom: '14px' }}>You declined this offer. Return to marketplace to explore other opportunities.</div>
@@ -3626,7 +3626,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     if (activeDeal?.formalOfferSentByCreator) {
                                       return (
                                         <div style={{ textAlign: 'center', padding: '24px 12px' }}>
-                                          <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(0,149,246,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                                          <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(200, 184, 154,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
                                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                           </div>
                                           <div style={{ fontSize: '14px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>Final Offer Submitted</div>
@@ -3710,8 +3710,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                                         {/* Exclusivity conflict warning */}
                                         {activeExclusivities.some(d => d.exclusivitySkin === (selectedMarketplaceSkin || '')) && (
-                                          <div style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:'8px', padding:'10px', marginBottom:'10px' }}>
-                                            <div style={{ fontSize:'11px', fontWeight:700, color:'#ef4444', marginBottom:'3px' }}>Exclusivity Conflict</div>
+                                          <div style={{ background:'rgba(176, 65, 62,0.08)', border:'1px solid rgba(176, 65, 62,0.3)', borderRadius:'8px', padding:'10px', marginBottom:'10px' }}>
+                                            <div style={{ fontSize:'11px', fontWeight:700, color:'var(--c-error)', marginBottom:'3px' }}>Exclusivity Conflict</div>
                                             <div style={{ fontSize:'11px', color:C.textSecondary, lineHeight:1.4 }}>
                                               You have an active exclusivity agreement with <strong>{activeExclusivities.find(d => d.exclusivitySkin === selectedMarketplaceSkin)?.brand}</strong> for this skin.
                                               Accepting this deal may violate that agreement.
@@ -3731,7 +3731,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           ].map(term => (
                                             <div key={term.key} onClick={() => setContractChecks(prev => ({ ...prev, [term.key]: !prev[term.key] }))} style={{ display:'flex', alignItems:'flex-start', gap:'10px', padding:'8px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', fontSize:'11px', color: contractChecks[term.key] ? C.text : C.textSecondary, lineHeight:1.4, transition:'color 0.15s' }}>
                                               <div style={{ width:18, height:18, borderRadius:4, border: contractChecks[term.key] ? `2px solid ${C.success}` : `2px solid ${C.border}`, background: contractChecks[term.key] ? C.success : 'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1, transition:'all 0.15s' }}>
-                                                {contractChecks[term.key] && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
+                                                {contractChecks[term.key] && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--c-surface-lowest)" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
                                               </div>
                                               <span style={{ textDecoration: contractChecks[term.key] ? 'line-through' : 'none', opacity: contractChecks[term.key] ? 0.7 : 1 }}>{term.label}</span>
                                             </div>
@@ -3772,7 +3772,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             {!signed && <span>Sign your name to continue.</span>}
                                           </div>
                                         )}
-                                        <div style={{ background: 'rgba(0,149,246,0.06)', border: '1px solid rgba(0,149,246,0.2)', borderRadius: '8px', padding: '10px', marginBottom: '10px', fontSize: '11px', color: C.textSecondary, lineHeight: 1.5 }}>
+                                        <div style={{ background: 'rgba(200, 184, 154,0.06)', border: '1px solid rgba(200, 184, 154,0.2)', borderRadius: '8px', padding: '10px', marginBottom: '10px', fontSize: '11px', color: C.textSecondary, lineHeight: 1.5 }}>
                                           ⚠️ Once you accept, terms are locked. Check all details carefully — no edits after signing.
                                         </div>
                                         <div style={{ display: 'flex', gap: '8px' }}>
@@ -3807,7 +3807,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 persistApplications([...sharedApplications, newApp]);
                                               }
                                             }}
-                                            style={{ flex: 2, background: canAccept ? C.success : C.border, border: 'none', padding: '11px', borderRadius: '10px', color: '#fff', fontWeight: 700, cursor: canAccept ? 'pointer' : 'not-allowed', fontSize: '13px', opacity: canAccept ? 1 : 0.5 }}
+                                            style={{ flex: 2, background: canAccept ? C.success : C.border, border: 'none', padding: '11px', borderRadius: '10px', color: 'var(--c-surface-lowest)', fontWeight: 700, cursor: canAccept ? 'pointer' : 'not-allowed', fontSize: '13px', opacity: canAccept ? 1 : 0.5 }}
                                           >Sign &amp; Accept Deal</button>
                                           <button
                                             onClick={() => {
@@ -3818,7 +3818,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               setPurchaseToast('Deal rejected');
                                               setTimeout(() => setPurchaseToast(null), 3000);
                                             }}
-                                            style={{ flex: 1, background: 'transparent', border: `1px solid rgba(239,68,68,0.3)`, padding: '11px', borderRadius: '10px', color: 'rgba(239,68,68,0.85)', fontWeight: 600, cursor: 'pointer', fontSize: '13px' }}
+                                            style={{ flex: 1, background: 'transparent', border: `1px solid rgba(176, 65, 62,0.3)`, padding: '11px', borderRadius: '10px', color: 'rgba(176, 65, 62,0.85)', fontWeight: 600, cursor: 'pointer', fontSize: '13px' }}
                                           >Reject</button>
                                         </div>
                                         </>
@@ -3868,7 +3868,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             <button onClick={() => { setDealRoomPhase('softhold'); setGoodsTrackerStatus('goods_preparing'); }} style={{ flex: 2, background: C.primary, border: 'none', padding: '10px', borderRadius: '8px', color: C.onPrimary, fontWeight: 600, cursor: 'pointer', fontSize: '13px' }}>
                                               Begin Work
                                             </button>
-                                            <button onClick={() => setShowCancelDealModal(true)} style={{ flex: 1, background: 'none', border: `1px solid rgba(239,68,68,0.3)`, padding: '10px', borderRadius: '8px', color: '#ef4444', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
+                                            <button onClick={() => setShowCancelDealModal(true)} style={{ flex: 1, background: 'none', border: `1px solid rgba(176, 65, 62,0.3)`, padding: '10px', borderRadius: '8px', color: 'var(--c-error)', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
                                               Cancel
                                             </button>
                                           </div>
@@ -3878,7 +3878,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                       // C2C COLLAB — no money, just content
                                       return (
                                         <>
-                                          <div style={{ padding: '12px', background: 'rgba(124,58,237,0.08)', borderRadius: '10px', marginBottom: '10px', border: '1px solid rgba(124,58,237,0.2)' }}>
+                                          <div style={{ padding: '12px', background: 'rgba(200, 184, 154,0.08)', borderRadius: '10px', marginBottom: '10px', border: '1px solid rgba(200, 184, 154,0.2)' }}>
                                             <div style={{ fontSize: '13px', fontWeight: 700, color: C.accent, marginBottom: '4px' }}>Collaboration confirmed</div>
                                             <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '8px' }}>You're ready to create content together. Terms are locked and recorded.</div>
                                             <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>Collaborating with {opp.brand}</div>
@@ -3914,7 +3914,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     <input type="text" value={scriptEditReason} onChange={(e) => setScriptEditReason(e.target.value)} placeholder="Reason for change (optional)" style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'4px', padding:'4px 6px', fontSize:'9px', color:C.text, marginBottom:'4px', boxSizing:'border-box' }} />
                                                     <button
                                                       onClick={() => { handleScriptChange(scriptDraft, scriptEditReason); setScriptEditReason(''); }}
-                                                      style={{ width:'100%', background:C.primary, border:'none', borderRadius:'4px', padding:'4px', fontSize:'9px', fontWeight:700, color:'#fff', cursor:'pointer', marginBottom:'4px' }}
+                                                      style={{ width:'100%', background:C.primary, border:'none', borderRadius:'4px', padding:'4px', fontSize:'9px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
                                                     >
                                                       Save Changes
                                                     </button>
@@ -3947,7 +3947,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     {!creatorScriptApproved ? (
                                                       <button
                                                         onClick={handleScriptApprove}
-                                                        style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'6px', fontSize:'10px', fontWeight:700, color:'#fff', cursor:'pointer', marginBottom:'4px' }}
+                                                        style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'6px', fontSize:'10px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
                                                       >
                                                         I Approve Script
                                                       </button>
@@ -3994,7 +3994,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             ].map((item, i) => (
                                               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 0', fontSize: '11px', color: C.text }}>
                                                 <div style={{ width: 12, height: 12, borderRadius: 3, background: C.success, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--c-surface-lowest)" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                                                 </div>
                                                 {item}
                                               </div>
@@ -4014,10 +4014,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             </div>
                                           )}
                                           <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button disabled={!creatorScriptApproved || !brandScriptApproved} onClick={() => { if(creatorScriptApproved && brandScriptApproved) { setDealRoomPhase('softhold'); setC2cContentStatus('content_creating'); } else setPurchaseToast('Both parties must approve the script first'); }} style={{ flex: 2, background: (creatorScriptApproved && brandScriptApproved) ? C.primary : C.border, border: 'none', padding: '10px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: (creatorScriptApproved && brandScriptApproved) ? 'pointer' : 'not-allowed', fontSize: '13px', opacity: (creatorScriptApproved && brandScriptApproved) ? 1 : 0.5 }}>
+                                            <button disabled={!creatorScriptApproved || !brandScriptApproved} onClick={() => { if(creatorScriptApproved && brandScriptApproved) { setDealRoomPhase('softhold'); setC2cContentStatus('content_creating'); } else setPurchaseToast('Both parties must approve the script first'); }} style={{ flex: 2, background: (creatorScriptApproved && brandScriptApproved) ? C.primary : C.border, border: 'none', padding: '10px', borderRadius: '8px', color: 'var(--c-surface-lowest)', fontWeight: 600, cursor: (creatorScriptApproved && brandScriptApproved) ? 'pointer' : 'not-allowed', fontSize: '13px', opacity: (creatorScriptApproved && brandScriptApproved) ? 1 : 0.5 }}>
                                               Begin Work
                                             </button>
-                                            <button onClick={() => setShowCancelDealModal(true)} style={{ flex: 1, background: 'none', border: `1px solid rgba(239,68,68,0.3)`, padding: '10px', borderRadius: '8px', color: '#ef4444', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
+                                            <button onClick={() => setShowCancelDealModal(true)} style={{ flex: 1, background: 'none', border: `1px solid rgba(176, 65, 62,0.3)`, padding: '10px', borderRadius: '8px', color: 'var(--c-error)', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
                                               Cancel
                                             </button>
                                           </div>
@@ -4088,7 +4088,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     <input type="text" value={scriptEditReason} onChange={(e) => setScriptEditReason(e.target.value)} placeholder="Reason for change (optional)" style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'4px', padding:'4px 6px', fontSize:'9px', color:C.text, marginBottom:'4px', boxSizing:'border-box' }} />
                                                     <button
                                                       onClick={() => { handleScriptChange(scriptDraft, scriptEditReason); setScriptEditReason(''); }}
-                                                      style={{ width:'100%', background:C.primary, border:'none', borderRadius:'4px', padding:'4px', fontSize:'9px', fontWeight:700, color:'#fff', cursor:'pointer', marginBottom:'4px' }}
+                                                      style={{ width:'100%', background:C.primary, border:'none', borderRadius:'4px', padding:'4px', fontSize:'9px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
                                                     >
                                                       Save Changes
                                                     </button>
@@ -4121,7 +4121,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     {!creatorScriptApproved ? (
                                                       <button
                                                         onClick={handleScriptApprove}
-                                                        style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'6px', fontSize:'10px', fontWeight:700, color:'#fff', cursor:'pointer', marginBottom:'4px' }}
+                                                        style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'6px', fontSize:'10px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
                                                       >
                                                         I Approve Script
                                                       </button>
@@ -4168,7 +4168,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             ].map((item, i) => (
                                               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 0', fontSize: '11px', color: C.text }}>
                                                 <div style={{ width: 12, height: 12, borderRadius: 3, background: C.success, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--c-surface-lowest)" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                                                 </div>
                                                 {item}
                                               </div>
@@ -4204,7 +4204,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             <button onClick={() => { setDealRoomPhase('softhold'); setEscrowFunded(false); setEscrowFundingInProgress(false); setCreatorDealLifecycle('checklist'); }} style={{ flex: 2, background: C.primary, border: 'none', padding: '10px', borderRadius: '8px', color: C.onPrimary, fontWeight: 600, cursor: 'pointer', fontSize: '13px' }}>
                                               Begin Work
                                             </button>
-                                            <button onClick={() => setShowCancelDealModal(true)} style={{ flex: 1, background: 'none', border: `1px solid rgba(239,68,68,0.3)`, padding: '10px', borderRadius: '8px', color: '#ef4444', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
+                                            <button onClick={() => setShowCancelDealModal(true)} style={{ flex: 1, background: 'none', border: `1px solid rgba(176, 65, 62,0.3)`, padding: '10px', borderRadius: '8px', color: 'var(--c-error)', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
                                               Cancel
                                             </button>
                                           </div>
@@ -4225,8 +4225,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               Deal Room Chat
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(211,47,47,0.08)', border: '1px solid rgba(211,47,47,0.2)', borderRadius: '5px', padding: '2px 6px' }}>
-                                              <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#d32f2f', animation: 'pulse 1.4s ease-in-out infinite' }} />
-                                              <span style={{ fontSize: '9px', color: '#d32f2f', fontWeight: 700, letterSpacing: '0.4px' }}>AUDIT LOG</span>
+                                              <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--c-error)', animation: 'pulse 1.4s ease-in-out infinite' }} />
+                                              <span style={{ fontSize: '9px', color: 'var(--c-error)', fontWeight: 700, letterSpacing: '0.4px' }}>AUDIT LOG</span>
                                               <span style={{ fontSize: '9px', color: C.textMuted, fontWeight: 400 }}>{chatMessages.length} documented</span>
                                             </div>
                                           </div>
@@ -4241,7 +4241,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   padding: '6px 10px',
                                                   borderRadius: isMe ? '10px 10px 2px 10px' : '10px 10px 10px 2px',
                                                   background: isMe ? C.primary : C.surfaceAlt,
-                                                  color: isMe ? '#fff' : C.text,
+                                                  color: isMe ? 'var(--c-surface-lowest)' : C.text,
                                                   fontSize: '12px',
                                                   lineHeight: 1.4,
                                                 }}>
@@ -4295,7 +4295,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               placeholder="Type a message..."
                                               style={{ flex: 1, padding: '6px 10px', background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: '14px', color: C.text, fontSize: '12px', outline: 'none' }}
                                             />
-                                            <button type="submit" disabled={!chatInput.trim()} style={{ padding: '6px 12px', background: chatInput.trim() ? C.primary : `${withAlpha(C.primary, 0x40)}`, color: '#fff', border: 'none', borderRadius: '14px', fontSize: '11px', fontWeight: 600, cursor: chatInput.trim() ? 'pointer' : 'not-allowed' }}>Send</button>
+                                            <button type="submit" disabled={!chatInput.trim()} style={{ padding: '6px 12px', background: chatInput.trim() ? C.primary : `${withAlpha(C.primary, 0x40)}`, color: 'var(--c-surface-lowest)', border: 'none', borderRadius: '14px', fontSize: '11px', fontWeight: 600, cursor: chatInput.trim() ? 'pointer' : 'not-allowed' }}>Send</button>
                                           </form>
                                         </div>
 
@@ -4332,7 +4332,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             ].map((item, i) => (
                                               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 0', fontSize: '11px', color: C.text }}>
                                                 <div style={{ width: 12, height: 12, borderRadius: 3, background: C.success, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--c-surface-lowest)" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                                                 </div>
                                                 {item}
                                               </div>
@@ -4401,7 +4401,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     setPurchaseToast(`Deal completed — earnings released to ${brandName}`);
                                                     setTimeout(() => setPurchaseToast(null), 3000);
                                                   }
-                                                }} style={{ flex: 1, background: C.success, border: 'none', padding: '10px', borderRadius: '8px', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '12px' }}>
+                                                }} style={{ flex: 1, background: C.success, border: 'none', padding: '10px', borderRadius: '8px', color: 'var(--c-surface-lowest)', fontWeight: 700, cursor: 'pointer', fontSize: '12px' }}>
                                                   Approve & Complete Deal
                                                 </button>
                                               </div>
@@ -4459,7 +4459,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 setPurchaseToast(`Counter sent: ₹${creatorAsk.toLocaleString()}`);
                                                 setTimeout(() => setPurchaseToast(null), 2000);
                                               }}
-                                              style={{ width: '100%', background: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? C.primary : C.border, border: 'none', padding: '6px', borderRadius: '6px', color: '#fff', fontWeight: 600, fontSize: '11px', cursor: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 'pointer' : 'not-allowed', opacity: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 1 : 0.5 }}
+                                              style={{ width: '100%', background: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? C.primary : C.border, border: 'none', padding: '6px', borderRadius: '6px', color: 'var(--c-surface-lowest)', fontWeight: 600, fontSize: '11px', cursor: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 'pointer' : 'not-allowed', opacity: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 1 : 0.5 }}
                                             >
                                               Send Counter
                                             </button>
@@ -4517,7 +4517,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               setPurchaseToast('Deal declined — brand notified');
                                               setTimeout(() => setPurchaseToast(null), 3000);
                                             }}
-                                            style={{ width: '100%', background: 'none', border: `1px solid rgba(239,68,68,0.3)`, padding: '7px', borderRadius: '6px', color: 'rgba(239,68,68,0.85)', fontWeight: 600, fontSize: '10px', cursor: 'pointer', marginTop: '4px' }}
+                                            style={{ width: '100%', background: 'none', border: `1px solid rgba(176, 65, 62,0.3)`, padding: '7px', borderRadius: '6px', color: 'rgba(176, 65, 62,0.85)', fontWeight: 600, fontSize: '10px', cursor: 'pointer', marginTop: '4px' }}
                                           >
                                             Reject Brand
                                           </button>
@@ -4548,7 +4548,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             setPurchaseToast('Deal accepted');
                                             setTimeout(() => setPurchaseToast(null), 2000);
                                           }}
-                                          style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
+                                          style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: 'var(--c-surface-lowest)', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
                                         >
                                           Accept ${parseInt(dealOfferAmount || '0').toLocaleString()}
                                         </button>
@@ -4566,7 +4566,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             setPurchaseToast('Deal declined');
                                             setTimeout(() => setPurchaseToast(null), 2000);
                                           }}
-                                          style={{ flex: 1, background: 'none', border: `1px solid rgba(239,68,68,0.4)`, padding: '9px', borderRadius: '8px', color: 'rgba(239,68,68,0.85)', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
+                                          style={{ flex: 1, background: 'none', border: `1px solid rgba(176, 65, 62,0.4)`, padding: '9px', borderRadius: '8px', color: 'rgba(176, 65, 62,0.85)', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
                                         >
                                           Decline
                                         </button>
@@ -4577,8 +4577,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   {/* Creator sees brand withdrawal */}
                                   {dealRoomPhase === 'rejected' && (
                                     <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(239,68,68,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(176, 65, 62,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(176, 65, 62,0.7)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                       </div>
                                       <div style={{ fontSize: '14px', fontWeight: 700, color: C.text, marginBottom: '4px' }}>Deal Ended</div>
                                       <div style={{ fontSize: '12px', color: C.textSecondary, marginBottom: '16px' }}>The other party has withdrawn from this deal.</div>
@@ -4605,7 +4605,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                       ].map((item, ci) => (
                                         <div key={ci} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', borderBottom: `1px solid ${C.border}` }}>
                                           <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: C.success, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--c-surface-lowest)" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                                           </div>
                                           <span style={{ fontSize: '12px', color: C.text, flex: 1 }}>{item.key}</span>
                                           {item.req && <span style={{ fontSize: '9px', color: C.primary, fontWeight: 700, textTransform: 'uppercase' }}>Required</span>}
@@ -4649,7 +4649,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             const advanceAmt = Math.round(agreedPrice * 0.3);
                                             return (
                                               <div style={{ textAlign:'center', padding:'16px 0' }}>
-                                                <div style={{ width:'44px', height:'44px', borderRadius:'50%', background:'rgba(0,212,106,0.1)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
+                                                <div style={{ width:'44px', height:'44px', borderRadius:'50%', background:'rgba(200, 184, 154,0.1)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
                                                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.success} strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                                                 </div>
                                                 <div style={{ fontSize:'14px', fontWeight:700, color:C.success, marginBottom:'4px' }}>Escrow Funded</div>
@@ -4664,7 +4664,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           return (
                                             <div style={{ padding:'8px 0 16px' }}>
                                               {/* Phase status bar — creator view */}
-                                              <div style={{ display:'flex', alignItems:'center', gap:'4px', marginBottom:'16px', padding:'8px 10px', background:'rgba(0,149,246,0.06)', borderRadius:'8px', border:'1px solid rgba(0,149,246,0.2)' }}>
+                                              <div style={{ display:'flex', alignItems:'center', gap:'4px', marginBottom:'16px', padding:'8px 10px', background:'rgba(200, 184, 154,0.06)', borderRadius:'8px', border:'1px solid rgba(200, 184, 154,0.2)' }}>
                                                 {[
                                                   { label:'Offer', done: true },
                                                   { label:'Accepted', done: true },
@@ -4673,7 +4673,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 ].map((s, i) => (
                                                   <div key={i} style={{ display:'flex', alignItems:'center', gap:'4px', flex: i < 3 ? 'none' : 1 }}>
                                                     <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'2px' }}>
-                                                      <div style={{ width:'18px', height:'18px', borderRadius:'50%', background: s.done ? C.success : s.active ? C.primary : C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'9px', color:'#fff', fontWeight:700 }}>
+                                                      <div style={{ width:'18px', height:'18px', borderRadius:'50%', background: s.done ? C.success : s.active ? C.primary : C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'9px', color:'var(--c-surface-lowest)', fontWeight:700 }}>
                                                         {s.done ? '✓' : i + 1}
                                                       </div>
                                                       <div style={{ fontSize:'8px', color: s.done ? C.success : s.active ? C.primary : C.textMuted, fontWeight: s.active ? 700 : 400, whiteSpace:'nowrap' }}>{s.label}</div>
@@ -4724,13 +4724,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 Provide a link to your work. Use a <strong>Google Drive link</strong> for the draft/sample, or paste a <strong>social media upload link</strong> for the final published content.
                                               </div>
                                               {deadlineStr && (
-                                                <div style={{ background: daysLeft !== null && daysLeft <= 3 ? 'rgba(239,68,68,0.08)' : C.bg, border: `1px solid ${daysLeft !== null && daysLeft <= 3 ? 'rgba(239,68,68,0.3)' : C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'12px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                                                <div style={{ background: daysLeft !== null && daysLeft <= 3 ? 'rgba(176, 65, 62,0.08)' : C.bg, border: `1px solid ${daysLeft !== null && daysLeft <= 3 ? 'rgba(176, 65, 62,0.3)' : C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'12px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                                                   <div>
                                                     <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px' }}>Deadline</div>
                                                     <div style={{ fontSize:'13px', fontWeight:600, color:C.text }}>{deadlineStr}</div>
                                                   </div>
                                                   {daysLeft !== null && (
-                                                    <div style={{ fontSize:'12px', fontWeight:700, color: daysLeft <= 3 ? '#ef4444' : daysLeft <= 7 ? '#f59e0b' : C.success }}>
+                                                    <div style={{ fontSize:'12px', fontWeight:700, color: daysLeft <= 3 ? 'var(--c-error)' : daysLeft <= 7 ? 'var(--c-warning)' : C.success }}>
                                                       {daysLeft <= 0 ? 'Overdue' : `${daysLeft}d left`}
                                                     </div>
                                                   )}
@@ -4748,12 +4748,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   {hasGoogleDriveLink ? (
                                                     <div style={{ display:'flex', alignItems:'center', gap:'8px', padding:'8px 10px', background:C.surfaceAlt, borderRadius:'6px' }}>
                                                       <a href={deliverableLinks[0]} target="_blank" rel="noopener noreferrer" style={{ flex:1, fontSize:'11px', color:C.primary, textDecoration:'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{deliverableLinks[0]}</a>
-                                                      <div style={{ fontSize:'9px', fontWeight:700, color:C.success, background:'rgba(0,212,106,0.1)', padding:'2px 7px', borderRadius:'6px', flexShrink:0 }}>Submitted</div>
+                                                      <div style={{ fontSize:'9px', fontWeight:700, color:C.success, background:'rgba(200, 184, 154,0.1)', padding:'2px 7px', borderRadius:'6px', flexShrink:0 }}>Submitted</div>
                                                     </div>
                                                   ) : (
                                                     <div style={{ display:'flex', gap:'6px' }}>
                                                       <input type="text" value={googleDriveVal} onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, [0]: e.target.value }))} placeholder="https://drive.google.com/..." style={{ flex:1, background:C.surfaceAlt, border:`1px solid ${isValidUrl(googleDriveVal) ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'11px', fontFamily:'inherit', outline:'none' }} />
-                                                      <button disabled={!isValidUrl(googleDriveVal)} onClick={() => { setDeliverableLinks(prev => ({ ...prev, [0]: googleDriveVal })); setDeliverableLinkInputs(prev => ({ ...prev, [0]: '' })); setDeliverableStatuses(prev => ({ ...prev, [0]: 'uploaded' })); }} style={{ background: isValidUrl(googleDriveVal) ? C.success : C.border, border:'none', borderRadius:'6px', padding:'7px 12px', color:'#fff', fontSize:'11px', fontWeight:700, cursor: isValidUrl(googleDriveVal) ? 'pointer' : 'not-allowed', opacity: isValidUrl(googleDriveVal) ? 1 : 0.5, flexShrink:0 }}>Confirm</button>
+                                                      <button disabled={!isValidUrl(googleDriveVal)} onClick={() => { setDeliverableLinks(prev => ({ ...prev, [0]: googleDriveVal })); setDeliverableLinkInputs(prev => ({ ...prev, [0]: '' })); setDeliverableStatuses(prev => ({ ...prev, [0]: 'uploaded' })); }} style={{ background: isValidUrl(googleDriveVal) ? C.success : C.border, border:'none', borderRadius:'6px', padding:'7px 12px', color:'var(--c-surface-lowest)', fontSize:'11px', fontWeight:700, cursor: isValidUrl(googleDriveVal) ? 'pointer' : 'not-allowed', opacity: isValidUrl(googleDriveVal) ? 1 : 0.5, flexShrink:0 }}>Confirm</button>
                                                     </div>
                                                   )}
                                                 </div>
@@ -4762,12 +4762,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   {hasSocialLink ? (
                                                     <div style={{ display:'flex', alignItems:'center', gap:'8px', padding:'8px 10px', background:C.surfaceAlt, borderRadius:'6px' }}>
                                                       <a href={deliverableLinks[1]} target="_blank" rel="noopener noreferrer" style={{ flex:1, fontSize:'11px', color:C.primary, textDecoration:'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{deliverableLinks[1]}</a>
-                                                      <div style={{ fontSize:'9px', fontWeight:700, color:C.success, background:'rgba(0,212,106,0.1)', padding:'2px 7px', borderRadius:'6px', flexShrink:0 }}>Submitted</div>
+                                                      <div style={{ fontSize:'9px', fontWeight:700, color:C.success, background:'rgba(200, 184, 154,0.1)', padding:'2px 7px', borderRadius:'6px', flexShrink:0 }}>Submitted</div>
                                                     </div>
                                                   ) : (
                                                     <div style={{ display:'flex', gap:'6px' }}>
                                                       <input type="text" value={socialLinkVal} onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, [1]: e.target.value }))} placeholder="https://instagram.com/..." style={{ flex:1, background:C.surfaceAlt, border:`1px solid ${isValidUrl(socialLinkVal) ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'11px', fontFamily:'inherit', outline:'none' }} />
-                                                      <button disabled={!isValidUrl(socialLinkVal)} onClick={() => { setDeliverableLinks(prev => ({ ...prev, [1]: socialLinkVal })); setDeliverableLinkInputs(prev => ({ ...prev, [1]: '' })); setDeliverableStatuses(prev => ({ ...prev, [1]: 'uploaded' })); }} style={{ background: isValidUrl(socialLinkVal) ? C.success : C.border, border:'none', borderRadius:'6px', padding:'7px 12px', color:'#fff', fontSize:'11px', fontWeight:700, cursor: isValidUrl(socialLinkVal) ? 'pointer' : 'not-allowed', opacity: isValidUrl(socialLinkVal) ? 1 : 0.5, flexShrink:0 }}>Confirm</button>
+                                                      <button disabled={!isValidUrl(socialLinkVal)} onClick={() => { setDeliverableLinks(prev => ({ ...prev, [1]: socialLinkVal })); setDeliverableLinkInputs(prev => ({ ...prev, [1]: '' })); setDeliverableStatuses(prev => ({ ...prev, [1]: 'uploaded' })); }} style={{ background: isValidUrl(socialLinkVal) ? C.success : C.border, border:'none', borderRadius:'6px', padding:'7px 12px', color:'var(--c-surface-lowest)', fontSize:'11px', fontWeight:700, cursor: isValidUrl(socialLinkVal) ? 'pointer' : 'not-allowed', opacity: isValidUrl(socialLinkVal) ? 1 : 0.5, flexShrink:0 }}>Confirm</button>
                                                     </div>
                                                   )}
                                                 </div>
@@ -4776,7 +4776,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>Payment Milestones</div>
                                                 {[
                                                   { key: 'advance' as const, label: 'Advance', pct: advancePercent, color: C.success },
-                                                  { key: 'approval' as const, label: 'On approval', pct: approvalPercent, color: '#f59e0b' },
+                                                  { key: 'approval' as const, label: 'On approval', pct: approvalPercent, color: 'var(--c-warning)' },
                                                 ].map(m => (
                                                   <div key={m.key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 0', borderBottom:`1px solid ${C.border}` }}>
                                                     <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
@@ -4811,16 +4811,16 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   }
                                                   setPurchaseToast(`Submitted for review — ₹${Math.round(agreedAmt * advancePercent / 100).toLocaleString()} released, ₹${Math.round(agreedAmt * approvalPercent / 100).toLocaleString()} pending approval`);
                                                   setTimeout(() => setPurchaseToast(null), 4000);
-                                                }} style={{ width:'100%', background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'#fff', fontWeight:600, cursor:'pointer', fontSize:'13px', marginBottom:'8px' }}>
+                                                }} style={{ width:'100%', background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'var(--c-surface-lowest)', fontWeight:600, cursor:'pointer', fontSize:'13px', marginBottom:'8px' }}>
                                                   Submit for Review
                                                 </button>
                                               )}
                                               {atLeastOneSubmitted && (submittedForReview || activeDeal?.creatorDealLifecycle === 'submitted') && activeDeal?.creatorDealLifecycle !== 'approved' && (
-                                                <div style={{ width:'100%', padding:'10px', background:'rgba(0,149,246,0.08)', border:`1px solid rgba(0,149,246,0.25)`, borderRadius:'8px', color:C.primary, fontWeight:600, fontSize:'13px', textAlign:'center', marginBottom:'8px' }}>
+                                                <div style={{ width:'100%', padding:'10px', background:'rgba(200, 184, 154,0.08)', border:`1px solid rgba(200, 184, 154,0.25)`, borderRadius:'8px', color:C.primary, fontWeight:600, fontSize:'13px', textAlign:'center', marginBottom:'8px' }}>
                                                   ⏳ Waiting for brand&apos;s approval
                                                 </div>
                                               )}
-                                              <button onClick={() => setShowCancelDealModal(true)} style={{ width:'100%', background:'none', border:`1px solid rgba(239,68,68,0.3)`, padding:'8px', borderRadius:'8px', color:'#ef4444', fontSize:'11px', cursor:'pointer', fontWeight:500 }}>
+                                              <button onClick={() => setShowCancelDealModal(true)} style={{ width:'100%', background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, padding:'8px', borderRadius:'8px', color:'var(--c-error)', fontSize:'11px', cursor:'pointer', fontWeight:500 }}>
                                                 Cancel Deal
                                               </button>
                                             </>
@@ -4835,7 +4835,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Deliverables Submitted</div>
                                                   <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Waiting for brand approval — typically within 48h.</div>
                                                   <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'2px' }}>Advance: <span style={{ color:C.success, fontWeight:600 }}>Paid</span></div>
-                                                  <div style={{ fontSize:'10px', color:C.textMuted }}>Approval milestone: <span style={{ color:'#f59e0b', fontWeight:600 }}>Pending brand approval</span></div>
+                                                  <div style={{ fontSize:'10px', color:C.textMuted }}>Approval milestone: <span style={{ color:'var(--c-warning)', fontWeight:600 }}>Pending brand approval</span></div>
                                                 </div>
                                                 <button onClick={() => {
                                                   const earnedAmount = parseInt(dealCounterAmount || dealOfferAmount || '5000');
@@ -4864,7 +4864,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                       paymentMilestones: { advance: 'released', approval: 'released' },
                                                     });
                                                   }
-                                                }} style={{ width:'100%', background:C.success, border:'none', padding:'10px', borderRadius:'8px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'12px', marginBottom:'8px' }}>
+                                                }} style={{ width:'100%', background:C.success, border:'none', padding:'10px', borderRadius:'8px', color:'var(--c-surface-lowest)', fontWeight:700, cursor:'pointer', fontSize:'12px', marginBottom:'8px' }}>
                                                   Complete Deal & Update Level
                                                 </button>
                                               </>
@@ -4889,7 +4889,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   </button>
                                                   <button
                                                     onClick={() => { if (activeDealKey) downloadDealReport(activeDealKey); }}
-                                                    style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'9px', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:'12px', marginBottom:'12px' }}
+                                                    style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'9px', color:'var(--c-surface-lowest)', fontWeight:700, cursor:'pointer', fontSize:'12px', marginBottom:'12px' }}
                                                   >
                                                     Download Deal Report (.pdf)
                                                   </button>
@@ -4903,13 +4903,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>Rate this brand</div>
                                                     <div style={{ display:'flex', gap:'6px', marginBottom:'10px', justifyContent:'center' }}>
                                                       {[1,2,3,4,5].map(star => (
-                                                        <button key={star} onClick={() => setDealRating(star)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:'24px', color: star <= dealRating ? '#f59e0b' : C.border, transition:'color 0.1s', padding:'2px' }}>
+                                                        <button key={star} onClick={() => setDealRating(star)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:'24px', color: star <= dealRating ? 'var(--c-warning)' : C.border, transition:'color 0.1s', padding:'2px' }}>
                                                           {star <= dealRating ? '\u2605' : '\u2606'}
                                                         </button>
                                                       ))}
                                                     </div>
                                                     <textarea value={dealRatingComment} onChange={e => setDealRatingComment(e.target.value)} placeholder="How was working with this brand?" rows={2} style={{ width:'100%', background:C.card, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'8px', fontSize:'12px', color:C.text, resize:'none', boxSizing:'border-box' }} />
-                                                    <button onClick={() => { setRatingSubmitted(true); if (activeDealKey) { updateDeal(activeDealKey, { creatorRating: dealRating, creatorRatingComment: dealRatingComment, displayCreatorRating: false }); } setPurchaseToast('Rating submitted'); setTimeout(() => setPurchaseToast(null), 3000); }} disabled={dealRating === 0} style={{ width:'100%', background: dealRating > 0 ? C.primary : C.border, border:'none', padding:'8px', borderRadius:'6px', color:'#fff', fontWeight:600, fontSize:'12px', cursor: dealRating > 0 ? 'pointer' : 'not-allowed', marginTop:'8px', opacity: dealRating > 0 ? 1 : 0.5 }}>
+                                                    <button onClick={() => { setRatingSubmitted(true); if (activeDealKey) { updateDeal(activeDealKey, { creatorRating: dealRating, creatorRatingComment: dealRatingComment, displayCreatorRating: false }); } setPurchaseToast('Rating submitted'); setTimeout(() => setPurchaseToast(null), 3000); }} disabled={dealRating === 0} style={{ width:'100%', background: dealRating > 0 ? C.primary : C.border, border:'none', padding:'8px', borderRadius:'6px', color:'var(--c-surface-lowest)', fontWeight:600, fontSize:'12px', cursor: dealRating > 0 ? 'pointer' : 'not-allowed', marginTop:'8px', opacity: dealRating > 0 ? 1 : 0.5 }}>
                                                       Submit Rating
                                                     </button>
                                                   </div>
@@ -4947,7 +4947,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     {opp.exclusivity && opp.exclusivity !== 'None' && (
                                                       <div style={{ fontSize:'11px', color:C.text }}>
                                                         Exclusivity: <strong>{opp.exclusivity}</strong>
-                                                        <span style={{ color:'#f59e0b' }}> — do not accept competing deals</span>
+                                                        <span style={{ color:'var(--c-warning)' }}> — do not accept competing deals</span>
                                                       </div>
                                                     )}
                                                   </div>
@@ -4958,10 +4958,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   </div>
                                                 )}
                                                 <div style={{ display:'flex', gap:'8px' }}>
-                                                  <button onClick={() => { if (activeDealKey) { setDealStates(prev => { const next = {...prev}; delete next[activeDealKey]; return next; }); } setNegotiatingOpp(null); setCreatorDealLifecycle('checklist'); setDealUploadSimulated(false); setDeliverableStatuses({}); setDeliverableLinks({}); setDeliverableLinkInputs({}); setPaymentMilestones({ advance:'pending', upload:'pending', approval:'pending' }); setDealRating(0); setDealRatingComment(''); setRatingSubmitted(false); setContractChecks({}); setContractSignature(''); setEscrowFunded(false); setEscrowFundingInProgress(false); }} style={{ flex:2, background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'#fff', fontWeight:600, cursor:'pointer', fontSize:'13px' }}>
+                                                  <button onClick={() => { if (activeDealKey) { setDealStates(prev => { const next = {...prev}; delete next[activeDealKey]; return next; }); } setNegotiatingOpp(null); setCreatorDealLifecycle('checklist'); setDealUploadSimulated(false); setDeliverableStatuses({}); setDeliverableLinks({}); setDeliverableLinkInputs({}); setPaymentMilestones({ advance:'pending', upload:'pending', approval:'pending' }); setDealRating(0); setDealRatingComment(''); setRatingSubmitted(false); setContractChecks({}); setContractSignature(''); setEscrowFunded(false); setEscrowFundingInProgress(false); }} style={{ flex:2, background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'var(--c-surface-lowest)', fontWeight:600, cursor:'pointer', fontSize:'13px' }}>
                                                     Withdraw to Bank
                                                   </button>
-                                                  <button onClick={() => setShowDisputeModal(Date.now())} style={{ flex:1, background:'none', border:`1px solid rgba(239,68,68,0.3)`, padding:'10px', borderRadius:'8px', color:'#ef4444', fontSize:'11px', cursor:'pointer', fontWeight:500 }}>
+                                                  <button onClick={() => setShowDisputeModal(Date.now())} style={{ flex:1, background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, padding:'10px', borderRadius:'8px', color:'var(--c-error)', fontSize:'11px', cursor:'pointer', fontWeight:500 }}>
                                                     Dispute
                                                   </button>
                                                 </div>
@@ -4986,7 +4986,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               </div>
                                             )}
                                             {status === 'goods_shipped' && (
-                                              <div style={{ background:'rgba(34,197,94,0.06)', border:`1px solid rgba(34,197,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
+                                              <div style={{ background:'rgba(200, 184, 154,0.06)', border:`1px solid rgba(200, 184, 154,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Your Product is On The Way</div>
                                                 <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>
                                                   Tracking: <strong>{trackingInput || 'Tracking info shown by brand'}</strong>
@@ -4998,13 +4998,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   }
                                                   setPurchaseToast('Marked as received');
                                                   setTimeout(() => setPurchaseToast(null), 3000);
-                                                }} style={{ width:'100%', background:C.primary, border:'none', padding:'8px', borderRadius:'6px', color:'#fff', fontWeight:600, cursor:'pointer', fontSize:'11px' }}>
+                                                }} style={{ width:'100%', background:C.primary, border:'none', padding:'8px', borderRadius:'6px', color:'var(--c-surface-lowest)', fontWeight:600, cursor:'pointer', fontSize:'11px' }}>
                                                   Mark as Received
                                                 </button>
                                               </div>
                                             )}
                                             {status === 'goods_delivered' && (
-                                              <div style={{ background:'rgba(34,197,94,0.06)', border:`1px solid rgba(34,197,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
+                                              <div style={{ background:'rgba(200, 184, 154,0.06)', border:`1px solid rgba(200, 184, 154,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Product Received</div>
                                                 <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Great! Now create content featuring this product. You have until the deadline to submit.</div>
                                                 <button onClick={() => {
@@ -5014,7 +5014,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   }
                                                   setPurchaseToast('Ready to create content');
                                                   setTimeout(() => setPurchaseToast(null), 3000);
-                                                }} style={{ width:'100%', background:C.primary, border:'none', padding:'8px', borderRadius:'6px', color:'#fff', fontWeight:600, cursor:'pointer', fontSize:'11px' }}>
+                                                }} style={{ width:'100%', background:C.primary, border:'none', padding:'8px', borderRadius:'6px', color:'var(--c-surface-lowest)', fontWeight:600, cursor:'pointer', fontSize:'11px' }}>
                                                   Start Creating
                                                 </button>
                                               </div>
@@ -5042,7 +5042,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     setPurchaseToast('Content submitted for review');
                                                     setTimeout(() => setPurchaseToast(null), 3000);
                                                   }}
-                                                  style={{ width:'100%', background: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.primary : C.border, border:'none', borderRadius:'6px', padding:'8px', color:'#fff', fontWeight:600, cursor: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 'pointer' : 'not-allowed', opacity: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 1 : 0.5, fontSize:'11px' }}
+                                                  style={{ width:'100%', background: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.primary : C.border, border:'none', borderRadius:'6px', padding:'8px', color:'var(--c-surface-lowest)', fontWeight:600, cursor: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 'pointer' : 'not-allowed', opacity: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 1 : 0.5, fontSize:'11px' }}
                                                 >
                                                   Submit Content
                                                 </button>
@@ -5062,7 +5062,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 <div style={{ fontSize:'15px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Approved and Deal Completed</div>
                                                 <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'16px' }}>Brand approved your content. Barter deal finished.</div>
                                                 <div style={{ display:'flex', gap:'8px' }}>
-                                                  <button onClick={() => { if (activeDealKey) { setDealStates(prev => { const next = {...prev}; delete next[activeDealKey]; return next; }); } setNegotiatingOpp(null); }} style={{ flex:1, background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'#fff', fontWeight:600, cursor:'pointer', fontSize:'12px' }}>
+                                                  <button onClick={() => { if (activeDealKey) { setDealStates(prev => { const next = {...prev}; delete next[activeDealKey]; return next; }); } setNegotiatingOpp(null); }} style={{ flex:1, background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'var(--c-surface-lowest)', fontWeight:600, cursor:'pointer', fontSize:'12px' }}>
                                                     Close
                                                   </button>
                                                 </div>
@@ -5101,7 +5101,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     setPurchaseToast('Content submitted');
                                                     setTimeout(() => setPurchaseToast(null), 3000);
                                                   }}
-                                                  style={{ width:'100%', background: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.primary : C.border, border:'none', borderRadius:'6px', padding:'8px', color:'#fff', fontWeight:600, cursor: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 'pointer' : 'not-allowed', opacity: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 1 : 0.5, fontSize:'11px' }}
+                                                  style={{ width:'100%', background: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.primary : C.border, border:'none', borderRadius:'6px', padding:'8px', color:'var(--c-surface-lowest)', fontWeight:600, cursor: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 'pointer' : 'not-allowed', opacity: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 1 : 0.5, fontSize:'11px' }}
                                                 >
                                                   Submit
                                                 </button>
@@ -5120,7 +5120,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 </div>
                                                 <div style={{ fontSize:'15px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Collaboration Complete</div>
                                                 <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'16px' }}>Collaborator approved. Deal finished.</div>
-                                                <button onClick={() => { if (activeDealKey) { setDealStates(prev => { const next = {...prev}; delete next[activeDealKey]; return next; }); } setNegotiatingOpp(null); }} style={{ width:'100%', background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'#fff', fontWeight:600, cursor:'pointer', fontSize:'12px' }}>
+                                                <button onClick={() => { if (activeDealKey) { setDealStates(prev => { const next = {...prev}; delete next[activeDealKey]; return next; }); } setNegotiatingOpp(null); }} style={{ width:'100%', background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'var(--c-surface-lowest)', fontWeight:600, cursor:'pointer', fontSize:'12px' }}>
                                                   Close
                                                 </button>
                                               </div>
@@ -5205,7 +5205,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             opacity: refreshing ? 0.5 : 1,
                           }}
                         >
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: realtimeConnected ? '#00D46A' : '#9ca3af', flexShrink: 0 }} title={realtimeConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: realtimeConnected ? 'var(--c-accent)' : 'var(--c-text-variant)', flexShrink: 0 }} title={realtimeConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
                           {refreshing ? '↻' : '⟳'} Refresh
                         </button>
                         <button
@@ -5359,7 +5359,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               </>)})()}
                             </div>
                             {(() => { const c = INR_CURRENCY; return (
-                            <div style={{ marginTop:'10px', padding:'10px', background:'rgba(0,212,106,0.06)', border:'1px solid rgba(0,212,106,0.2)', borderRadius:'8px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                            <div style={{ marginTop:'10px', padding:'10px', background:'rgba(200, 184, 154,0.06)', border:'1px solid rgba(200, 184, 154,0.2)', borderRadius:'8px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                               <span style={{ fontSize:'12px', color:C.textSecondary, fontWeight:600 }}>Total escrow deposit</span>
                               <span style={{ fontSize:'20px', fontWeight:800, color:C.success }}>{c.symbol}{(pendingCampaignForEscrow.escrowPool||0).toLocaleString()}</span>
                             </div>
@@ -5385,10 +5385,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             <div style={{ marginBottom:'14px' }}>
                               <div style={{ display:'flex', justifyContent:'space-between', fontSize:'11px', color:C.textMuted, marginBottom:'6px' }}>
                                 <span>Processing deposit...</span>
-                                <span style={{ color:'#f59e0b', fontWeight:600 }}>Verifying</span>
+                                <span style={{ color:'var(--c-warning)', fontWeight:600 }}>Verifying</span>
                               </div>
                               <div style={{ width:'100%', height:'6px', background:C.card, borderRadius:'3px', overflow:'hidden' }}>
-                                <div style={{ width:'70%', height:'100%', background:'#f59e0b', borderRadius:'3px', transition:'width 1.5s ease' }} />
+                                <div style={{ width:'70%', height:'100%', background:'var(--c-warning)', borderRadius:'3px', transition:'width 1.5s ease' }} />
                               </div>
                             </div>
                           )}
@@ -5425,7 +5425,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 setTimeout(() => setPurchaseToast(null), 4000);
                               }, 2000);
                             }}
-                            style={{ width:'100%', background: escrowFundingInProgress2 ? C.border : C.primary, border:'none', borderRadius:'10px', padding:'13px', color:'#fff', fontWeight:700, fontSize:'14px', cursor: escrowFundingInProgress2 ? 'not-allowed' : 'pointer', opacity: escrowFundingInProgress2 ? 0.6 : 1, marginBottom:'8px' }}
+                            style={{ width:'100%', background: escrowFundingInProgress2 ? C.border : C.primary, border:'none', borderRadius:'10px', padding:'13px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'14px', cursor: escrowFundingInProgress2 ? 'not-allowed' : 'pointer', opacity: escrowFundingInProgress2 ? 0.6 : 1, marginBottom:'8px' }}
                           >
                             {escrowFundingInProgress2 ? 'Finding matching creators...' : `Deposit ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} into Escrow`}
                           </button>
@@ -5510,7 +5510,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                           <div style={{ display:'flex', gap:'8px' }}>
                             <button onClick={() => { setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'11px', color:C.text, fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
-                            <button onClick={() => { batchSendCreatorIds.forEach(idx => { const match = batchMatches[idx]; const campaign = campaigns.find(c => c.id === lastCreatedCampaignId); const oppIdx = activeOpportunities.findIndex(o => o.brand === campaign?.title); if (campaign) { const app: SharedApplication = { id:Date.now() + idx, campaignId:lastCreatedCampaignId ?? 0, campaignTitle:campaign.title || 'Campaign', creatorProfession:match.creatorProfession || '', creatorHandle:match.creatorHandle || '', creatorName:match.creatorName, status:'invited' as SharedApplication['status'], appliedAt:new Date().toISOString(), opportunityIndex: oppIdx >= 0 ? oppIdx : 0 }; sharedCreateApplication(app); sharedSendNotification(match.creatorHandle || '', 'campaign', `${profileName} invited you to: ${campaign.title || 'Campaign'}`); } }); setPurchaseToast(`Invitations sent to ${batchSendCreatorIds.size} creator${batchSendCreatorIds.size !== 1 ? 's' : ''}`); setTimeout(() => setPurchaseToast(null), 3000); setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:batchSendCreatorIds.size > 0 ? C.primary : C.border, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'13px', cursor: batchSendCreatorIds.size > 0 ? 'pointer' : 'not-allowed', opacity: batchSendCreatorIds.size > 0 ? 1 : 0.5 }}>Send to {batchSendCreatorIds.size} Creator{batchSendCreatorIds.size !== 1 ? 's' : ''}</button>
+                            <button onClick={() => { batchSendCreatorIds.forEach(idx => { const match = batchMatches[idx]; const campaign = campaigns.find(c => c.id === lastCreatedCampaignId); const oppIdx = activeOpportunities.findIndex(o => o.brand === campaign?.title); if (campaign) { const app: SharedApplication = { id:Date.now() + idx, campaignId:lastCreatedCampaignId ?? 0, campaignTitle:campaign.title || 'Campaign', creatorProfession:match.creatorProfession || '', creatorHandle:match.creatorHandle || '', creatorName:match.creatorName, status:'invited' as SharedApplication['status'], appliedAt:new Date().toISOString(), opportunityIndex: oppIdx >= 0 ? oppIdx : 0 }; sharedCreateApplication(app); sharedSendNotification(match.creatorHandle || '', 'campaign', `${profileName} invited you to: ${campaign.title || 'Campaign'}`); } }); setPurchaseToast(`Invitations sent to ${batchSendCreatorIds.size} creator${batchSendCreatorIds.size !== 1 ? 's' : ''}`); setTimeout(() => setPurchaseToast(null), 3000); setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:batchSendCreatorIds.size > 0 ? C.primary : C.border, border:'none', borderRadius:'8px', padding:'11px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'13px', cursor: batchSendCreatorIds.size > 0 ? 'pointer' : 'not-allowed', opacity: batchSendCreatorIds.size > 0 ? 1 : 0.5 }}>Send to {batchSendCreatorIds.size} Creator{batchSendCreatorIds.size !== 1 ? 's' : ''}</button>
                           </div>
                         </div>
                       </div>
@@ -5531,7 +5531,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           ))}
                           <div style={{ display:'flex', gap:'8px', marginTop:'14px' }}>
                             <button onClick={() => { setShowCancelDealModal(false); setCancelReason(''); }} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', color:C.text, fontWeight:600, fontSize:'13px', cursor:'pointer' }}>Keep Deal</button>
-                            <button onClick={() => { if (activeDealKey) { setDealStates(prev => { const next = {...prev}; delete next[activeDealKey]; return next; }); } setNegotiatingOpp(null); setCreatorDealLifecycle('checklist'); setDealUploadSimulated(false); setDeliverableStatuses({}); setDeliverableLinks({}); setDeliverableLinkInputs({}); setPaymentMilestones({ advance:'pending', upload:'pending', approval:'pending' }); setShowCancelDealModal(false); setCancelReason(''); setPurchaseToast('Deal cancelled'); setTimeout(() => setPurchaseToast(null), 3000); }} disabled={!cancelReason} style={{ flex:1, background: cancelReason ? '#ef4444' : C.border, border:'none', borderRadius:'8px', padding:'10px', color:'#fff', fontWeight:600, fontSize:'13px', cursor: cancelReason ? 'pointer' : 'not-allowed', opacity: cancelReason ? 1 : 0.5 }}>Cancel Deal</button>
+                            <button onClick={() => { if (activeDealKey) { setDealStates(prev => { const next = {...prev}; delete next[activeDealKey]; return next; }); } setNegotiatingOpp(null); setCreatorDealLifecycle('checklist'); setDealUploadSimulated(false); setDeliverableStatuses({}); setDeliverableLinks({}); setDeliverableLinkInputs({}); setPaymentMilestones({ advance:'pending', upload:'pending', approval:'pending' }); setShowCancelDealModal(false); setCancelReason(''); setPurchaseToast('Deal cancelled'); setTimeout(() => setPurchaseToast(null), 3000); }} disabled={!cancelReason} style={{ flex:1, background: cancelReason ? 'var(--c-error)' : C.border, border:'none', borderRadius:'8px', padding:'10px', color:'var(--c-surface-lowest)', fontWeight:600, fontSize:'13px', cursor: cancelReason ? 'pointer' : 'not-allowed', opacity: cancelReason ? 1 : 0.5 }}>Cancel Deal</button>
                           </div>
                         </div>
                       </div>
@@ -5561,7 +5561,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               setPurchaseToast('Dispute filed — under review');
                               setTimeout(() => setPurchaseToast(null), 3000);
                               setShowDisputeModal(null); setDisputeReason(''); setDisputeEvidence('');
-                            }} disabled={!disputeReason} style={{ flex:1, background: disputeReason ? '#ef4444' : C.border, border:'none', borderRadius:'8px', padding:'10px', color:'#fff', fontWeight:600, fontSize:'13px', cursor: disputeReason ? 'pointer' : 'not-allowed', opacity: disputeReason ? 1 : 0.5 }}>File Dispute</button>
+                            }} disabled={!disputeReason} style={{ flex:1, background: disputeReason ? 'var(--c-error)' : C.border, border:'none', borderRadius:'8px', padding:'10px', color:'var(--c-surface-lowest)', fontWeight:600, fontSize:'13px', cursor: disputeReason ? 'pointer' : 'not-allowed', opacity: disputeReason ? 1 : 0.5 }}>File Dispute</button>
                           </div>
                         </div>
                       </div>
@@ -5619,7 +5619,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>Share Profile</div>
                             <div style={{ display:'flex', gap:'8px', alignItems:'center' }}>
                               <div style={{ flex:1, fontSize:'12px', color:C.primary, background:C.card, padding:'10px 12px', borderRadius:'8px', border:`1px solid ${C.border}`, fontFamily:'monospace', wordBreak:'break-all' }}>valueskins.com/@{selectedProfileCreator.handle.replace('@','')}</div>
-                              <button onClick={() => { navigator.clipboard.writeText(`valueskins.com/@${selectedProfileCreator.handle.replace('@','')}`); setProfileLinkCopied(true); setTimeout(() => setProfileLinkCopied(false), 2000); }} style={{ padding:'10px 12px', background:profileLinkCopied ? C.success : C.primary, border:'none', borderRadius:'8px', color:'#fff', fontWeight:700, fontSize:'12px', cursor:'pointer', transition:'all 0.2s', flexShrink:0 }}>
+                              <button onClick={() => { navigator.clipboard.writeText(`valueskins.com/@${selectedProfileCreator.handle.replace('@','')}`); setProfileLinkCopied(true); setTimeout(() => setProfileLinkCopied(false), 2000); }} style={{ padding:'10px 12px', background:profileLinkCopied ? C.success : C.primary, border:'none', borderRadius:'8px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'12px', cursor:'pointer', transition:'all 0.2s', flexShrink:0 }}>
                                 {profileLinkCopied ? 'Copied' : 'Copy'}
                               </button>
                             </div>
@@ -5648,7 +5648,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               ))}
                             </div>
                           </div>
-                          <button onClick={() => { setShowCreatorProfileModal(false); setSelectedProfileCreator(null); }} style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'11px', color:'#fff', fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Close</button>
+                          <button onClick={() => { setShowCreatorProfileModal(false); setSelectedProfileCreator(null); }} style={{ width:'100%', background:C.primary, border:'none', borderRadius:'8px', padding:'11px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Close</button>
                         </div>
                       </div>
                     )}
@@ -5697,7 +5697,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'8px' }}>Your Brand Identity</div>
                           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                             <div style={{ fontSize:'12px', color:C.textMuted }}>Purchase a ValueSkin to start contacting creators</div>
-                            <button onClick={() => setActiveView('store')} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'6px 12px', fontSize:'11px', fontWeight:700, color:'#fff', cursor:'pointer' }}>Get ValueSkin</button>
+                            <button onClick={() => setActiveView('store')} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'6px 12px', fontSize:'11px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}>Get ValueSkin</button>
                           </div>
                         </div>
                       )
@@ -5725,7 +5725,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   {c.requiredProfessions.map(p => <span key={p} style={{ fontSize:'10px', fontWeight:600, color:C.primary, background:`${withAlpha(C.primary, 0x12)}`, padding:'2px 7px', borderRadius:'6px', border:`1px solid ${withAlpha(C.primary, 0x30)}` }}>{p}</span>)}
                                 </div>
                                 {!preferenceMatch.matches && preferenceMatch.reason && (
-                                  <div style={{ fontSize:'10px', color:'#F59E0B', background:'rgba(245, 158, 11, 0.12)', border:'1px solid rgba(245, 158, 11, 0.3)', padding:'6px 8px', borderRadius:'6px', marginBottom:'8px' }}>
+                                  <div style={{ fontSize:'10px', color:'var(--c-warning)', background:'rgba(200, 184, 154, 0.12)', border:'1px solid rgba(200, 184, 154, 0.3)', padding:'6px 8px', borderRadius:'6px', marginBottom:'8px' }}>
                                     ⚠️ {preferenceMatch.reason} but you can still apply if you want.
                                   </div>
                                 )}
@@ -5756,9 +5756,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       if (applicantDeals.length === 0) return null;
                       const statusOf = (d: any) => {
                         if (d.phase === 'accepted') return { label: 'Accepted', color: C.success };
-                        if (d.phase === 'rejected') return { label: 'Rejected', color: '#ef4444' };
+                        if (d.phase === 'rejected') return { label: 'Rejected', color: 'var(--c-error)' };
                         if (d.phase === 'formal_offer') return { label: 'Final offer — awaiting your approval', color: C.primary };
-                        if (d.phase === 'counter' || d.phase === 'brand_countered' || d.phase === 'chatroom' || d.phase === 'pending') return { label: 'Negotiating', color: '#f59e0b' };
+                        if (d.phase === 'counter' || d.phase === 'brand_countered' || d.phase === 'chatroom' || d.phase === 'pending') return { label: 'Negotiating', color: 'var(--c-warning)' };
                         if (d.phase === 'checklist' || d.phase === 'softhold') return { label: 'In progress', color: C.success };
                         return { label: 'Applied', color: C.textSecondary };
                       };
@@ -5810,7 +5810,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           setPurchaseToast(`${creatorName} has been notified of your approval`);
                                           setTimeout(() => setPurchaseToast(null), 3000);
                                         }}
-                                        style={{ background:C.success, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:700, color:'#fff', cursor:'pointer' }}
+                                        style={{ background:C.success, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}
                                       >Approve</button>
                                       <button
                                         onClick={() => {
@@ -5819,7 +5819,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           setPurchaseToast(`${creatorName} has been notified of your decision`);
                                           setTimeout(() => setPurchaseToast(null), 3000);
                                         }}
-                                        style={{ background:'none', border:`1px solid rgba(239,68,68,0.3)`, borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:700, color:'#ef4444', cursor:'pointer' }}
+                                        style={{ background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:700, color:'var(--c-error)', cursor:'pointer' }}
                                       >Reject</button>
                                     </div>
                                   )}
@@ -5852,7 +5852,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   style={{ fontSize:'13px', fontWeight:600, color:C.text, cursor:'pointer' }}>{d.creatorName}</div>
                                 <div style={{ fontSize:'10px', color:C.textSecondary }}>{d.creatorSkin} · Completed</div>
                               </div>
-                              <button onClick={() => downloadDealReport(d.key)} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:600, color:'#fff', cursor:'pointer' }}>Download the final report</button>
+                              <button onClick={() => downloadDealReport(d.key)} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:600, color:'var(--c-surface-lowest)', cursor:'pointer' }}>Download the final report</button>
                             </div>
                           ))}
                         </div>
@@ -5870,7 +5870,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           >
                             <span style={{ fontSize:'12px', fontWeight:700, color:C.text, textTransform:'uppercase', letterSpacing:'0.5px', display:'flex', alignItems:'center', gap:'6px' }}>
                               Past Campaigns
-                              {expiredCampaigns.length > 0 && <span style={{ fontSize:'10px', background:C.textMuted, color:'#fff', padding:'1px 5px', borderRadius:'8px' }}>{expiredCampaigns.length}</span>}
+                              {expiredCampaigns.length > 0 && <span style={{ fontSize:'10px', background:C.textMuted, color:'var(--c-surface-lowest)', padding:'1px 5px', borderRadius:'8px' }}>{expiredCampaigns.length}</span>}
                             </span>
                           </button>
                           <div style={{ display:'flex', flexDirection:'column', gap:'10px', marginTop:'10px' }}>
@@ -5896,7 +5896,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 </div>
                                 {c.nonNegotiables && c.nonNegotiables.length > 0 && (
                                   <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'8px' }}>
-                                    {c.nonNegotiables.map(n=><span key={n} style={{ fontSize:'10px', color:C.textMuted, background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)', padding:'2px 7px', borderRadius:'6px' }}>{n}</span>)}
+                                    {c.nonNegotiables.map(n=><span key={n} style={{ fontSize:'10px', color:C.textMuted, background:'rgba(176, 65, 62,0.08)', border:'1px solid rgba(176, 65, 62,0.2)', padding:'2px 7px', borderRadius:'6px' }}>{n}</span>)}
                                   </div>
                                 )}
                                 {c.creatorCount && (
@@ -5906,7 +5906,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 )}
                                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                                   <span style={{ fontSize:'10px', color:C.textMuted }}>{c.deadline?`Expired ${c.deadline}`:''}</span>
-                                  <span style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, background:'rgba(239,68,68,0.1)', padding:'2px 8px', borderRadius:'6px', textTransform:'uppercase' }}>Expired</span>
+                                  <span style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, background:'rgba(176, 65, 62,0.1)', padding:'2px 8px', borderRadius:'6px', textTransform:'uppercase' }}>Expired</span>
                                 </div>
                               </div>
                             ))}
@@ -5969,7 +5969,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           position: 'relative', transition: 'background 0.2s', flexShrink: 0, marginLeft: '12px',
                         }}>
                           <div style={{
-                            width: '20px', height: '20px', borderRadius: '50%', background: '#fff',
+                            width: '20px', height: '20px', borderRadius: '50%', background: 'var(--c-surface-lowest)',
                             position: 'absolute', top: '2px',
                             left: visibleInsights[key] ? '22px' : '2px',
                             transition: 'left 0.2s',
@@ -6070,7 +6070,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           borderRadius: '6px',
                           border: 'none',
                           background: commissionPaidBy === 'brand' ? C.primary : C.surface,
-                          color: commissionPaidBy === 'brand' ? '#fff' : C.textSecondary,
+                          color: commissionPaidBy === 'brand' ? 'var(--c-surface-lowest)' : C.textSecondary,
                           fontSize: '12px',
                           fontWeight: 600,
                           cursor: 'pointer',
@@ -6087,7 +6087,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           borderRadius: '6px',
                           border: 'none',
                           background: commissionPaidBy === 'creator' ? C.primary : C.surface,
-                          color: commissionPaidBy === 'creator' ? '#fff' : C.textSecondary,
+                          color: commissionPaidBy === 'creator' ? 'var(--c-surface-lowest)' : C.textSecondary,
                           fontSize: '12px',
                           fontWeight: 600,
                           cursor: 'pointer',
@@ -6197,7 +6197,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       padding: '12px',
-                      backgroundColor: 'rgba(239,68,68,0.06)',
+                      backgroundColor: 'rgba(176, 65, 62,0.06)',
                       borderRadius: '8px',
                       marginBottom: '8px',
                       fontSize: '13px',
@@ -6209,7 +6209,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         {' | '}
                         <span style={{
                           padding: '2px 6px',
-                          backgroundColor: signal.severity === 'high' ? C.textMuted : signal.severity === 'medium' ? '#f59e0b' : C.textSecondary,
+                          backgroundColor: signal.severity === 'high' ? C.textMuted : signal.severity === 'medium' ? 'var(--c-warning)' : C.textSecondary,
                           color: 'white',
                           borderRadius: '4px',
                           fontSize: '11px',
@@ -6318,7 +6318,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       {[1, 2, 3, 5, 10].map(n => (
                         <button key={n} onClick={() => setSafetyReportThreshold(n)}
                           style={{ padding: '4px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
-                            background: safetyReportThreshold === n ? 'rgba(239,68,68,0.15)' : C.bg,
+                            background: safetyReportThreshold === n ? 'rgba(176, 65, 62,0.15)' : C.bg,
                             color: safetyReportThreshold === n ? C.textMuted : C.textMuted,
                             border: `1px solid ${safetyReportThreshold === n ? C.textMuted : C.border}`,
                           }}>{n}</button>
@@ -6355,7 +6355,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     </div>
                     <button onClick={() => setSafetyNewBrandWarmIntro(p => !p)}
                       style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', backgroundColor: safetyNewBrandWarmIntro ? C.primary : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background-color 0.2s' }}>
-                      <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: '#fff', position: 'absolute', top: '2px', left: safetyNewBrandWarmIntro ? '22px' : '2px', transition: 'left 0.2s' }} />
+                      <div style={{ width: '20px', height: '20px', borderRadius: '50%', backgroundColor: 'var(--c-surface-lowest)', position: 'absolute', top: '2px', left: safetyNewBrandWarmIntro ? '22px' : '2px', transition: 'left 0.2s' }} />
                     </button>
                   </div>
                   {safetyNewBrandWarmIntro && (
@@ -6391,7 +6391,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       </div>
                       <button onClick={() => set((p: boolean) => !p)}
                         style={{ width: '40px', height: '22px', borderRadius: '11px', border: 'none', backgroundColor: value ? C.primary : 'rgba(255,255,255,0.12)', cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background-color 0.2s' }}>
-                        <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#fff', position: 'absolute', top: '2px', left: value ? '20px' : '2px', transition: 'left 0.2s' }} />
+                        <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: 'var(--c-surface-lowest)', position: 'absolute', top: '2px', left: value ? '20px' : '2px', transition: 'left 0.2s' }} />
                       </button>
                     </div>
                   ))}
@@ -6454,7 +6454,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     </div>
                     <button onClick={() => set((p: boolean) => !p)}
                       style={{ width: '40px', height: '22px', borderRadius: '11px', border: 'none', backgroundColor: value ? C.primary : 'rgba(255,255,255,0.1)', cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background-color 0.2s' }}>
-                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: '#fff', position: 'absolute', top: '2px', left: value ? '20px' : '2px', transition: 'left 0.2s' }} />
+                      <div style={{ width: '18px', height: '18px', borderRadius: '50%', backgroundColor: 'var(--c-surface-lowest)', position: 'absolute', top: '2px', left: value ? '20px' : '2px', transition: 'left 0.2s' }} />
                     </button>
                   </div>
                 ))}
@@ -6530,8 +6530,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 {/* Non-negotiable security notice */}
                 <div style={{ background: 'rgba(211,47,47,0.06)', border: '1px solid rgba(211,47,47,0.2)', borderRadius: '10px', padding: '14px 16px', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#d32f2f' }}>Non-negotiable — applies to both modes</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-error)" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--c-error)' }}>Non-negotiable — applies to both modes</span>
                   </div>
                   <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.6 }}>
                     Regardless of communication mode, the following security features are enforced on every deal message and cannot be disabled:
@@ -6546,7 +6546,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       { label: 'Exportable transcript', desc: 'Full deal history exportable as a legally defensible PDF at any time by either party.' },
                     ].map(item => (
                       <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '6px 0' }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" strokeWidth="2.5" strokeLinecap="round" style={{ marginTop: 2, flexShrink: 0 }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--c-error)" strokeWidth="2.5" strokeLinecap="round" style={{ marginTop: 2, flexShrink: 0 }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                         <div>
                           <div style={{ fontSize: '11px', fontWeight: 700, color: C.text }}>{item.label}</div>
                           <div style={{ fontSize: '10px', color: C.textMuted, lineHeight: 1.4 }}>{item.desc}</div>
@@ -7001,7 +7001,7 @@ function NavItem({ label, active, onClick, badgeCount }: { label: string; active
     >
       <span>{label}</span>
       {badgeCount !== undefined && badgeCount > 0 && (
-        <span style={{ minWidth: '18px', height: '18px', borderRadius: '9px', background: C.danger, color: '#fff', fontSize: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{badgeCount}</span>
+        <span style={{ minWidth: '18px', height: '18px', borderRadius: '9px', background: C.danger, color: 'var(--c-surface-lowest)', fontSize: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{badgeCount}</span>
       )}
     </button>
   );

@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import BrandProfile from '@/features/profiles/BrandProfile';
 import ProfileView, { type ProfileData } from '@/features/profiles/ProfileView';
+import LoadingState from '@/components/LoadingState';
 
 // Auth + data wrapper. The page itself is ProfileView, built to
 // ui-specs/phase-2/Profile page.md. Brand accounts keep the BrandProfile editor.
@@ -40,13 +41,7 @@ export default function ProfileMePage() {
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#0A0A0A', color: '#8A867E',
-        fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
-      }}>
-        Loading…
-      </div>
+      <LoadingState />
     );
   }
   if (!account) return null;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import LoadingState from '@/components/LoadingState';
 
 interface PayoutAccount {
   id: string;
@@ -118,13 +119,13 @@ export default function PayoutOnboardingPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: 32, color: '#fff', background: '#0b0e1a', minHeight: '100vh' }}>Loading...</div>;
+    return <LoadingState />;
   }
 
   return (
-    <div style={{ padding: 32, maxWidth: 640, margin: '0 auto', color: '#E0E0DA', background: '#0b0e1a', minHeight: '100vh' }}>
+    <div style={{ padding: 32, maxWidth: 640, margin: '0 auto', color: '#E0E0DA', background: 'var(--c-bg)', minHeight: '100vh' }}>
       <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4, color: '#fff' }}>Payout Settings</h1>
-      <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>
+      <p style={{ fontSize: 14, color: 'var(--c-text-variant)', marginBottom: 24 }}>
         Link your bank account to receive payouts for completed deals.
         Your account details are sent directly to Razorpay — ValueSkins stores only a reference ID.
       </p>
@@ -154,9 +155,9 @@ export default function PayoutOnboardingPage() {
                 <div style={{ fontWeight: 600, fontSize: 14 }}>
                   {acc.beneficiary_name || 'Account'} (••••{acc.last_four_digits})
                 </div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>
+                <div style={{ fontSize: 12, color: 'var(--c-text-variant)' }}>
                   {acc.payment_provider} — {acc.verification_status}
-                  {acc.is_default && <span style={{ color: '#22c55e', marginLeft: 8 }}>Default</span>}
+                  {acc.is_default && <span style={{ color: 'var(--c-accent)', marginLeft: 8 }}>Default</span>}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -169,7 +170,7 @@ export default function PayoutOnboardingPage() {
                   </button>
                 )}
                 <button onClick={() => handleDelete(acc.id)} style={{
-                  padding: '4px 12px', background: 'transparent', color: '#ef4444', border: '1px solid #ef4444',
+                  padding: '4px 12px', background: 'transparent', color: 'var(--c-error)', border: '1px solid var(--c-error)',
                   borderRadius: 6, fontSize: 12, cursor: 'pointer',
                 }}>
                   Remove
@@ -185,7 +186,7 @@ export default function PayoutOnboardingPage() {
         <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 16, color: '#fff' }}>Link a Bank Account</h2>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 13, color: '#6b7280', display: 'block', marginBottom: 4 }}>Account Holder Name *</label>
+            <label style={{ fontSize: 13, color: 'var(--c-text-variant)', display: 'block', marginBottom: 4 }}>Account Holder Name *</label>
             <input
               value={form.accountHolderName}
               onChange={e => setForm(f => ({ ...f, accountHolderName: e.target.value }))}
@@ -195,7 +196,7 @@ export default function PayoutOnboardingPage() {
             />
           </div>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 13, color: '#6b7280', display: 'block', marginBottom: 4 }}>Account Number *</label>
+            <label style={{ fontSize: 13, color: 'var(--c-text-variant)', display: 'block', marginBottom: 4 }}>Account Number *</label>
             <input
               value={form.accountNumber}
               onChange={e => setForm(f => ({ ...f, accountNumber: e.target.value }))}
@@ -205,7 +206,7 @@ export default function PayoutOnboardingPage() {
             />
           </div>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 13, color: '#6b7280', display: 'block', marginBottom: 4 }}>IFSC Code *</label>
+            <label style={{ fontSize: 13, color: 'var(--c-text-variant)', display: 'block', marginBottom: 4 }}>IFSC Code *</label>
             <input
               value={form.ifsc}
               onChange={e => setForm(f => ({ ...f, ifsc: e.target.value.toUpperCase() }))}
@@ -215,7 +216,7 @@ export default function PayoutOnboardingPage() {
             />
           </div>
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 13, color: '#6b7280', display: 'block', marginBottom: 4 }}>
+            <label style={{ fontSize: 13, color: 'var(--c-text-variant)', display: 'block', marginBottom: 4 }}>
               Beneficiary Name (optional — shown to brands)
             </label>
             <input
@@ -226,7 +227,7 @@ export default function PayoutOnboardingPage() {
             />
           </div>
           <button type="submit" disabled={submitting} style={{
-            width: '100%', padding: '12px', background: submitting ? '#4b5563' : '#6366f1',
+            width: '100%', padding: '12px', background: submitting ? '#4b5563' : 'var(--c-accent)',
             color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 15,
             cursor: submitting ? 'not-allowed' : 'pointer',
           }}>
@@ -235,7 +236,7 @@ export default function PayoutOnboardingPage() {
         </form>
       </div>
 
-      <div style={{ marginTop: 24, fontSize: 12, color: '#6b7280', lineHeight: 1.6 }}>
+      <div style={{ marginTop: 24, fontSize: 12, color: 'var(--c-text-variant)', lineHeight: 1.6 }}>
         <p>Your bank details are encrypted and sent directly to Razorpay (PCI-DSS compliant).
         ValueSkins stores only a reference ID and the last 4 digits of your account number.</p>
         <p style={{ marginTop: 8 }}>
@@ -248,6 +249,6 @@ export default function PayoutOnboardingPage() {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: '#0b0e1a', border: '1px solid #1A1A1A',
+  width: '100%', padding: '10px 12px', background: 'var(--c-bg)', border: '1px solid #1A1A1A',
   borderRadius: 8, color: '#E0E0DA', fontSize: 14, outline: 'none', boxSizing: 'border-box',
 };

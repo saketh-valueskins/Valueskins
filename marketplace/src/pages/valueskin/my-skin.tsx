@@ -4,6 +4,7 @@ import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import LoadingState from '@/components/LoadingState';
 
 const C = {
   bg: '#0A0A0A',
@@ -12,8 +13,8 @@ const C = {
   text: '#F5F5F0',
   textSecondary: '#D6D2C8',
   primary: '#0066CC',
-  success: '#22c55e',
-  warning: '#f59e0b',
+  success: 'var(--c-accent)',
+  warning: 'var(--c-warning)',
 };
 
 interface ValueSkin {
@@ -60,11 +61,7 @@ export default function MyValueSkinPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: C.bg, padding: '40px 20px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', paddingTop: '60px', color: C.textSecondary }}>
-          Loading your ValueSkin...
-        </div>
-      </div>
+      <LoadingState />
     );
   }
 
@@ -74,9 +71,9 @@ export default function MyValueSkinPage() {
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             padding: '16px',
-            background: 'rgba(239, 68, 68, 0.1)',
+            background: 'rgba(176, 65, 62, 0.1)',
             color: '#fca5a5',
-            border: '1px solid #dc2626',
+            border: '1px solid var(--c-error)',
             borderRadius: '8px',
             marginBottom: '20px',
           }}>

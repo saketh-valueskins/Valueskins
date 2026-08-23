@@ -5,11 +5,11 @@ const C = {
   primary: '#0A0A0A',
   bg: '#ffffff',
   surface: '#f9fafb',
-  text: '#1f2937',
-  textSecondary: '#6b7280',
+  text: 'var(--c-text)',
+  textSecondary: 'var(--c-text-variant)',
   border: '#e5e7eb',
-  error: '#ef4444',
-  success: '#22c55e',
+  error: 'var(--c-error)',
+  success: 'var(--c-accent)',
 };
 
 interface Review {
@@ -43,7 +43,7 @@ const StarDisplay: React.FC<{ rating: number }> = ({ rating }) => {
           key={num}
           style={{
             fontSize: '16px',
-            color: num <= stars ? '#fbbf24' : C.border,
+            color: num <= stars ? 'var(--c-warning)' : C.border,
           }}
         >
           

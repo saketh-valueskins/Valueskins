@@ -18,7 +18,7 @@ const C = {
   textMuted: '#B8B4AC',
   textSecondary: '#D6D2C8',
   primary: '#C8B89A',
-  success: '#22c55e',
+  success: 'var(--c-accent)',
   border: '#2D2D2D',
 };
 
@@ -109,8 +109,8 @@ export default function BrandReviewForm({ dealId, creatorId, creatorName, onSubm
       {error && (
         <div style={{
           padding: '8px 12px',
-          background: '#ef444420',
-          border: '1px solid #ef4444',
+          background: 'rgba(176, 65, 62, 0.13)',
+          border: '1px solid var(--c-error)',
           borderRadius: '8px',
           color: '#fca5a5',
           fontSize: '12px',

@@ -277,7 +277,7 @@ export function ValueSkinEditModal({
               border: '1px solid #fca5a5',
               borderRadius: '8px',
               fontSize: '13px',
-              color: '#991b1b',
+              color: 'var(--c-error)',
               marginBottom: '16px',
             }}
           >

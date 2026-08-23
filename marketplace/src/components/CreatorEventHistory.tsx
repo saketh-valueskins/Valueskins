@@ -9,8 +9,8 @@ const C = {
   text: '#F5F5F0',
   textSecondary: '#D6D2C8',
   primary: '#0066CC',
-  success: '#22c55e',
-  warning: '#f59e0b',
+  success: 'var(--c-accent)',
+  warning: 'var(--c-warning)',
   accent: '#C8B89A',
 };
 

@@ -37,13 +37,13 @@ export default function FilterSidebar({ onFilterChange }: FilterSidebarProps) {
       padding: '20px',
       height: 'fit-content',
     }}>
-      <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: '#1f2937' }}>
+      <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '16px', color: 'var(--c-text)' }}>
         Filters
       </h3>
 
       {/* Budget */}
       <div style={{ marginBottom: '20px' }}>
-        <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: '8px' }}>
+        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--c-text-variant)', display: 'block', marginBottom: '8px' }}>
           Budget Range
         </label>
         <div style={{ display: 'flex', gap: '8px' }}>
@@ -74,14 +74,14 @@ export default function FilterSidebar({ onFilterChange }: FilterSidebarProps) {
             placeholder="Max"
           />
         </div>
-        <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '6px' }}>
+        <div style={{ fontSize: '10px', color: 'var(--c-text-variant)', marginTop: '6px' }}>
           ${budgetMin.toLocaleString()} - ${budgetMax.toLocaleString()}
         </div>
       </div>
 
       {/* Deal Type */}
       <div style={{ marginBottom: '20px' }}>
-        <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: '8px' }}>
+        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--c-text-variant)', display: 'block', marginBottom: '8px' }}>
           Deal Type
         </label>
         {dealTypeOptions.map((type) => (
@@ -98,14 +98,14 @@ export default function FilterSidebar({ onFilterChange }: FilterSidebarProps) {
               }}
               style={{ cursor: 'pointer' }}
             />
-            <span style={{ fontSize: '12px', color: '#1f2937' }}>{type}</span>
+            <span style={{ fontSize: '12px', color: 'var(--c-text)' }}>{type}</span>
           </label>
         ))}
       </div>
 
       {/* Professions */}
       <div>
-        <label style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: '8px' }}>
+        <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--c-text-variant)', display: 'block', marginBottom: '8px' }}>
           Professions
         </label>
         {professionOptions.map((prof) => (
@@ -122,7 +122,7 @@ export default function FilterSidebar({ onFilterChange }: FilterSidebarProps) {
               }}
               style={{ cursor: 'pointer' }}
             />
-            <span style={{ fontSize: '12px', color: '#1f2937' }}>{prof}</span>
+            <span style={{ fontSize: '12px', color: 'var(--c-text)' }}>{prof}</span>
           </label>
         ))}
       </div>

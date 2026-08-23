@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 
 const C = {
-  bg: '#0b0e1a', surface: '#111827', surfaceAlt: '#1A1A1A',
-  text: '#E0E0DA', textMuted: '#6b7280', primary: '#6366f1',
-  success: '#22c55e', warning: '#f59e0b', danger: '#ef4444', border: '#1A1A1A',
+  bg: 'var(--c-bg)', surface: '#111827', surfaceAlt: '#1A1A1A',
+  text: '#E0E0DA', textMuted: 'var(--c-text-variant)', primary: 'var(--c-accent)',
+  success: 'var(--c-accent)', warning: 'var(--c-warning)', danger: 'var(--c-error)', border: '#1A1A1A',
 };
 
 export default function AdminDashboard() {

@@ -5,15 +5,22 @@ import Link from 'next/link';
 import { cookieConsent } from '@/lib/cookie-consent';
 import type { ConsentChoice, CookiePreferences } from '@/lib/cookie-consent';
 
-// ValueSkins dark treatment — near-black surface, off-white text, warm sand accent
+// Themed, not pinned. This was hardcoded to the dark treatment, so on the
+// light product it rendered as a near-black slab across the bottom of every
+// page. `success` was '#22C55E' — a startup green, which BRANDING §4 bans
+// outright; sand carries positive/active state everywhere else in the product.
 const C = {
-  bg: '#0A0A0A',
-  surface: 'rgba(10, 10, 10, 0.95)',
-  border: 'rgba(200, 184, 154, 0.25)',
-  text: '#F5F5F0',
-  textSecondary: '#B8B4AC',
-  accent: '#C8B89A',
-  success: '#22C55E',
+  bg: 'var(--c-bg)',
+  surface: 'var(--c-surface)',
+  border: 'var(--c-border)',
+  text: 'var(--c-text)',
+  textSecondary: 'var(--c-text-muted)',
+  accent: 'var(--c-accent)',
+  success: 'var(--c-accent)',
+  // Primary action: solid near-black on light / off-white on dark. G5 rule 4
+  // and BRANDING §4 both rule out a large sand fill, which is what these were.
+  primary: 'var(--c-primary)',
+  onPrimary: 'var(--c-on-primary)',
 };
 
 export default function CookieConsent() {
@@ -47,7 +54,9 @@ export default function CookieConsent() {
     <div
       style={{
         position: 'fixed',
-        bottom: 0,
+        // sits above the tab bar where there is one, flush to the floor where
+        // there isn't (BottomTabBar publishes --vs-tabbar-height)
+        bottom: 'var(--vs-tabbar-height, 0px)',
         left: 0,
         right: 0,
         background: C.surface,
@@ -65,13 +74,11 @@ export default function CookieConsent() {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'auto 1fr auto',
-              gap: '20px',
+              gridTemplateColumns: '1fr auto',
+              gap: '24px',
               alignItems: 'center',
             }}
           >
-            <div style={{ fontSize: '24px' }}>🍪</div>
-
             <div>
               <div style={{ fontWeight: 700, marginBottom: '8px', color: C.text }}>
                 Cookie Settings
@@ -134,9 +141,9 @@ export default function CookieConsent() {
                 style={{
                   padding: '10px 20px',
                   borderRadius: '6px',
-                  background: C.accent,
+                  background: C.primary,
                   border: 'none',
-                  color: '#0A0A0A',
+                  color: C.onPrimary,
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: 600,
@@ -223,9 +230,9 @@ export default function CookieConsent() {
                   flex: 1,
                   padding: '12px 20px',
                   borderRadius: '6px',
-                  background: C.accent,
+                  background: C.primary,
                   border: 'none',
-                  color: '#0A0A0A',
+                  color: C.onPrimary,
                   cursor: 'pointer',
                   fontSize: '14px',
                   fontWeight: 600,

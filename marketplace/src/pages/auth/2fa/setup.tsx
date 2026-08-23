@@ -7,11 +7,11 @@ const C = {
   onPrimary: 'var(--c-on-primary)', // correct foreground on C.primary in BOTH themes
   primary: '#0A0A0A',
   bg: '#ffffff',
-  text: '#1f2937',
-  textSecondary: '#6b7280',
+  text: 'var(--c-text)',
+  textSecondary: 'var(--c-text-variant)',
   border: '#e5e7eb',
-  error: '#ef4444',
-  success: '#22c55e',
+  error: 'var(--c-error)',
+  success: 'var(--c-accent)',
 };
 
 export default function TwoFactorSetup() {

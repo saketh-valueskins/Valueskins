@@ -80,7 +80,7 @@ export default function TopNav({
                 position: 'absolute',
                 top: '-6px',
                 right: '-6px',
-                background: '#ef4444',
+                background: 'var(--c-error)',
                 color: '#ffffff',
                 borderRadius: '50%',
                 width: '18px',
@@ -116,7 +116,7 @@ export default function TopNav({
                 position: 'absolute',
                 top: '-6px',
                 right: '-6px',
-                background: '#ef4444',
+                background: 'var(--c-error)',
                 color: '#ffffff',
                 borderRadius: '50%',
                 width: '18px',
@@ -143,7 +143,7 @@ export default function TopNav({
             borderRadius: '6px',
             fontSize: '13px',
             fontWeight: 600,
-            color: '#1f2937',
+            color: 'var(--c-text)',
             cursor: 'pointer',
           }}
         >

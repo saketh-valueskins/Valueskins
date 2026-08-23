@@ -1,5 +1,5 @@
 import { getSupabase } from './supabase';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { RealtimeChannel } from './supabase';
 
 export type RealtimeEventType =
   | 'state_updated'

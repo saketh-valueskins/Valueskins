@@ -9,10 +9,10 @@ const C = {
   text: '#f1f5f9',
   muted: '#B8B4AC',
   accent: '#C8B89A',
-  success: '#4ade80',
+  success: 'var(--c-accent)',
   warning: '#facc15',
   error: '#f87171',
-  gold: '#fbbf24',
+  gold: 'var(--c-warning)',
 };
 
 interface LedgerEntry {
@@ -133,7 +133,7 @@ export default function FakeBankPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #C8B89A, #4ade80)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#0a0e1a' }}>V</div>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #C8B89A, var(--c-accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#0a0e1a' }}>V</div>
               <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Fake Bank</h1>
             </div>
             <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0' }}>Payment Simulation Dashboard — all amounts are test/simulated</p>

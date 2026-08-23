@@ -3,9 +3,9 @@ import { useState, useEffect } from 'react';
 
 const C = {
   primary: '#0066CC',
-  success: '#22c55e',
-  warning: '#f59e0b',
-  error: '#ef4444',
+  success: 'var(--c-accent)',
+  warning: 'var(--c-warning)',
+  error: 'var(--c-error)',
   bg: '#0A0A0A',
   surface: '#1A1A1A',
   text: '#F5F5F0',
@@ -163,7 +163,7 @@ export default function DealAgencyExtensions({
             <div
               style={{
                 padding: '12px 16px',
-                background: 'rgba(34, 197, 94, 0.1)',
+                background: 'rgba(200, 184, 154, 0.1)',
                 border: `1px solid ${C.success}`,
                 borderRadius: '8px',
                 marginBottom: '16px',
@@ -220,7 +220,7 @@ export default function DealAgencyExtensions({
             <div
               style={{
                 padding: '12px 16px',
-                background: 'rgba(239, 68, 68, 0.1)',
+                background: 'rgba(176, 65, 62, 0.1)',
                 border: `1px solid ${C.error}`,
                 borderRadius: '8px',
                 marginBottom: '16px',
@@ -249,7 +249,7 @@ export default function DealAgencyExtensions({
                 <div
                   style={{
                     padding: '12px 16px',
-                    background: 'rgba(34, 197, 94, 0.1)',
+                    background: 'rgba(200, 184, 154, 0.1)',
                     border: `1px solid ${C.success}`,
                     borderRadius: '8px',
                     fontSize: '13px',
