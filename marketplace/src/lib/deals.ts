@@ -222,11 +222,11 @@ export function getOpportunityStatusInfo(status: OpportunityStatus): {
   description: string;
 } {
   const statusMap: Record<OpportunityStatus, { label: string; color: string; bgColor: string; description: string }> = {
-    open:        { label: 'Open',        color: '#10b981', bgColor: '#10b98120', description: 'Accepting applications' },
-    closed:      { label: 'Closed',      color: '#737373', bgColor: '#26262620', description: 'No longer accepting applications' },
-    in_progress: { label: 'In Progress', color: '#0095f6', bgColor: '#0095f620', description: 'Work underway' },
-    completed:   { label: 'Completed',   color: '#10b981', bgColor: '#10b98120', description: 'Campaign complete' },
-    cancelled:   { label: 'Cancelled',   color: '#ef4444', bgColor: '#ef444420', description: 'Campaign cancelled' },
+    open:        { label: 'Open',        color: '#C8B89A', bgColor: '#C8B89A20', description: 'Accepting applications' },
+    closed:      { label: 'Closed',      color: '#B8B4AC', bgColor: '#2D2D2D20', description: 'No longer accepting applications' },
+    in_progress: { label: 'In Progress', color: '#A08A5E', bgColor: '#A08A5E20', description: 'Work underway' },
+    completed:   { label: 'Completed',   color: '#C8B89A', bgColor: '#C8B89A20', description: 'Campaign complete' },
+    cancelled:   { label: 'Cancelled',   color: '#B0413E', bgColor: '#B0413E20', description: 'Campaign cancelled' },
   };
   return statusMap[status];
 }
@@ -238,18 +238,18 @@ export function getDealStatusInfo(status: DealStatus): {
   description: string;
 } {
   const statusMap: Record<DealStatus, { label: string; color: string; bgColor: string; description: string }> = {
-    draft: { label: 'Draft', color: '#737373', bgColor: '#26262620', description: 'Campaign is being created' },
-    active: { label: 'Open', color: '#10b981', bgColor: '#10b98120', description: 'Accepting applications' },
-    pending: { label: 'Applied', color: '#f59e0b', bgColor: '#f59e0b20', description: 'Awaiting brand decision' },
-    accepted: { label: 'Accepted', color: '#0095f6', bgColor: '#0095f620', description: 'You\'ve been selected!' },
-    funded: { label: 'Funded', color: '#8b5cf6', bgColor: '#8b5cf620', description: 'Payment in escrow' },
-    in_progress: { label: 'In Progress', color: '#0095f6', bgColor: '#0095f620', description: 'Working on deliverables' },
-    submitted: { label: 'Submitted', color: '#f59e0b', bgColor: '#f59e0b20', description: 'Awaiting brand approval' },
-    revision: { label: 'Revision', color: '#ef4444', bgColor: '#ef444420', description: 'Changes requested' },
-    approved: { label: 'Approved', color: '#10b981', bgColor: '#10b98120', description: 'Deliverables approved' },
-    completed: { label: 'Completed', color: '#10b981', bgColor: '#10b98120', description: 'Payment released' },
-    disputed: { label: 'Disputed', color: '#ef4444', bgColor: '#ef444420', description: 'In dispute resolution' },
-    cancelled: { label: 'Cancelled', color: '#737373', bgColor: '#26262620', description: 'Deal was cancelled' },
+    draft: { label: 'Draft', color: '#B8B4AC', bgColor: '#2D2D2D20', description: 'Campaign is being created' },
+    active: { label: 'Open', color: '#C8B89A', bgColor: '#C8B89A20', description: 'Accepting applications' },
+    pending: { label: 'Applied', color: '#A08A5E', bgColor: '#A08A5E20', description: 'Awaiting brand decision' },
+    accepted: { label: 'Accepted', color: '#A08A5E', bgColor: '#A08A5E20', description: 'You\'ve been selected!' },
+    funded: { label: 'Funded', color: '#A08A5E', bgColor: '#A08A5E20', description: 'Payment in escrow' },
+    in_progress: { label: 'In Progress', color: '#A08A5E', bgColor: '#A08A5E20', description: 'Working on deliverables' },
+    submitted: { label: 'Submitted', color: '#A08A5E', bgColor: '#A08A5E20', description: 'Awaiting brand approval' },
+    revision: { label: 'Revision', color: '#B0413E', bgColor: '#B0413E20', description: 'Changes requested' },
+    approved: { label: 'Approved', color: '#C8B89A', bgColor: '#C8B89A20', description: 'Deliverables approved' },
+    completed: { label: 'Completed', color: '#C8B89A', bgColor: '#C8B89A20', description: 'Payment released' },
+    disputed: { label: 'Disputed', color: '#B0413E', bgColor: '#B0413E20', description: 'In dispute resolution' },
+    cancelled: { label: 'Cancelled', color: '#B8B4AC', bgColor: '#2D2D2D20', description: 'Deal was cancelled' },
   };
 
   return statusMap[status];

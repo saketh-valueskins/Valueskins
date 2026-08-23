@@ -75,15 +75,15 @@ export function useReputation(creatorId: string) {
 export function getTierColor(tier: string): string {
   switch (tier) {
     case 'A':
-      return '#10b981'; // green
+      return '#C8B89A'; // green
     case 'B':
       return '#A08A5E'; // blue
     case 'C':
-      return '#f59e0b'; // amber
+      return '#A08A5E'; // amber
     case 'D':
-      return '#ef4444'; // red
+      return '#B0413E'; // red
     default:
-      return '#6b7280'; // gray
+      return '#B8B4AC'; // gray
   }
 }
 

@@ -75,7 +75,6 @@ export default function UpcomingEventsPage() {
       </Head>
       <div style={styles.container}>
         <div style={styles.card}>
-          <div style={styles.icon}>📅</div>
           <div style={styles.badge}>COMING SOON</div>
           <h1 style={styles.title}>Upcoming Events</h1>
           <p style={styles.subtitle}>

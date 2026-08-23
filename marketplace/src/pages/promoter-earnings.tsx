@@ -64,7 +64,6 @@ export default function PromoterEarningsPage() {
       </Head>
       <div style={styles.container}>
         <div style={styles.card}>
-          <div style={styles.icon}>📊</div>
           <div style={styles.badge}>COMING SOON</div>
           <h1 style={styles.title}>Promoter Earnings</h1>
           <p style={styles.subtitle}>
