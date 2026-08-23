@@ -23,16 +23,16 @@ module.exports = {
         'inverse-on-surface': '#404040',
         'background': '#000',
         'on-background': '#e5e5e5',
-        'primary': '#3b82f6',
+        'primary': '#0A0A0A',
         'primary-dim': '#2563eb',
         'primary-fixed': '#60a5fa',
-        'primary-fixed-dim': '#3b82f6',
+        'primary-fixed-dim': '#2D2D2D',
         'primary-container': '#1d4ed8',
         'on-primary': '#fff',
         'on-primary-fixed': '#000',
         'on-primary-fixed-variant': '#fff',
         'on-primary-container': '#bfdbfe',
-        'inverse-primary': '#3b82f6',
+        'inverse-primary': '#F5F5F0',
         'secondary': '#a78bfa',
         'secondary-dim': '#8b5cf6',
         'secondary-fixed': '#c4b5fd',
@@ -58,7 +58,7 @@ module.exports = {
         'on-error-container': '#fecaca',
         'outline': '#262626',
         'outline-variant': '#1a1a1a',
-        'surface-tint': '#3b82f6',
+        'surface-tint': '#C8B89A',
       },
       borderRadius: {
         DEFAULT: '0.125rem',
@@ -68,22 +68,27 @@ module.exports = {
         '3xl': '1rem',
       },
       fontFamily: {
+        // `sans` overrides Tailwind's own default stack. Without it, preflight
+        // sets ui-sans-serif on html and anything not explicitly styled fell
+        // back to the OS UI font — so the app was rendering in two typefaces.
+        // G2: Inter is the only one, and it is the wordmark's face.
+        sans: ['Inter', "'Helvetica Neue'", 'Arial', 'sans-serif'],
         'headline': ['Inter', 'sans-serif'],
         'body': ['Inter', 'sans-serif'],
         'label': ['Inter', 'sans-serif'],
       },
       boxShadow: {
-        'glow': '0 0 32px rgba(59, 130, 246, 0.15)',
-        'glow-fuchsia': '0 8px 32px rgba(59, 130, 246, 0.08)',
-        'neon': '0 0 20px rgba(59, 130, 246, 0.1)',
+        'glow': '0 0 32px rgba(200, 184, 154, 0.15)',
+        'glow-fuchsia': '0 8px 32px rgba(200, 184, 154, 0.08)',
+        'neon': '0 0 20px rgba(200, 184, 154, 0.1)',
       },
       animation: {
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
       },
       keyframes: {
         'pulse-glow': {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.1)' },
-          '50%': { boxShadow: '0 0 40px rgba(59, 130, 246, 0.2)' },
+          '0%, 100%': { boxShadow: '0 0 20px rgba(200, 184, 154, 0.1)' },
+          '50%': { boxShadow: '0 0 40px rgba(200, 184, 154, 0.2)' },
         },
       },
     },

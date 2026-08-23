@@ -11,7 +11,7 @@ export default function NotFound() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '20px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{

@@ -102,7 +102,7 @@ export default function CampaignList({ initialCampaigns = [], initialPagination 
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', color: C.text, fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto', color: C.text, fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: 700 }}>Campaigns</h1>
         <button onClick={toggleCreate}

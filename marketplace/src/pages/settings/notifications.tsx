@@ -39,7 +39,7 @@ export default function NotificationSettingsPage() {
 
   return (
     <MarketplaceLayout title="Notifications" hideBottomNav>
-      <div style={{ padding: '16px', color: C.text, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ padding: '16px', color: C.text, fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}>
         <h1 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Notification Preferences</h1>
         <p style={{ fontSize: '13px', color: C.textMuted, marginBottom: '20px' }}>Choose how you receive updates from ValueSkins.</p>
 

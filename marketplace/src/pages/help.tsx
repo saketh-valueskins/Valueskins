@@ -56,7 +56,7 @@ export default function HelpPage() {
 
   return (
     <MarketplaceLayout title="Help Center" hideBottomNav>
-      <div style={{ padding: '16px', color: C.text, fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ padding: '16px', color: C.text, fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}>
         <h1 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '4px' }}>Help Center</h1>
         <p style={{ fontSize: '13px', color: C.textMuted, marginBottom: '20px' }}>Frequently asked questions about using ValueSkins.</p>
 

@@ -128,7 +128,7 @@ export default function LocationsSettings() {
         <title>Manage Locations - ValueSkins</title>
       </Head>
 
-      <div style={{ minHeight: '100vh', background: C.surface, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+      <div style={{ minHeight: '100vh', background: C.surface, fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', padding: '32px 20px' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: C.text, marginBottom: '24px' }}>
             📍 Your Locations
