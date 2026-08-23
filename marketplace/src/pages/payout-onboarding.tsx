@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import LoadingState from '@/components/LoadingState';
 
 interface PayoutAccount {
   id: string;
@@ -118,7 +119,7 @@ export default function PayoutOnboardingPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: 32, color: '#fff', background: '#0b0e1a', minHeight: '100vh' }}>Loading...</div>;
+    return <LoadingState />;
   }
 
   return (

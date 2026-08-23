@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { C } from '@/theme/colors';
 import ValueSkinsLogo from '@/components/ValueSkinsLogo';
 import DriftingSkins from '@/components/DriftingSkins';
+import LoadingState from '@/components/LoadingState';
 
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
@@ -145,6 +146,7 @@ export default function HomePage() {
     }
   }, [account, loading, router]);
 
+  if (loading) return <LoadingState />;
   if (account && account.onboarding_stage === 'complete') return null;
 
   // Hero parallax + fade as you leave it (spec §2). Transform/opacity only.

@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useEffect, useState } from 'react';
 import MarketplaceDemoPage from '@/features/marketplace/demo/MarketplaceDemoPage';
 import ValueSkinsLogo from '@/components/ValueSkinsLogo';
+import LoadingState from '@/components/LoadingState';
 
 // ValueSkins dark treatment
 const C = {
@@ -67,9 +68,7 @@ export default function DemoWrapper({ initialCampaigns = [], initialDealStates =
 
   if (!mounted || loading) {
     return (
-      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-        Loading...
-      </div>
+      <LoadingState />
     );
   }
 
@@ -77,10 +76,9 @@ export default function DemoWrapper({ initialCampaigns = [], initialDealStates =
   if (isLocalhost && !account) {
     return (
       <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', flexDirection: 'column', gap: '20px' }}>
-        <ValueSkinsLogo theme="dark" size={22} />
         <button
           onClick={() => router.push('/auth/login')}
-          style={{ padding: '12px 24px', background: C.accent, border: 'none', borderRadius: '8px', color: '#000', fontWeight: '600', cursor: 'pointer', fontSize: '16px' }}
+          style={{ padding: '12px 24px', background: C.primary, border: 'none', borderRadius: '8px', color: C.onPrimary, fontWeight: 600, cursor: 'pointer', fontSize: '1rem' }}
         >
           Login
         </button>

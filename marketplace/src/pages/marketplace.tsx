@@ -5,6 +5,7 @@ import Head from 'next/head';
 import { CSSProperties } from 'react';
 import { C } from '@/theme/colors';
 import { useAuth } from '@/context/AuthContext';
+import LoadingState from '@/components/LoadingState';
 
 export default function MarketplacePage() {
   const router = useRouter();
@@ -147,9 +148,7 @@ export default function MarketplacePage() {
     return (
       <div style={containerStyle}>
         <div style={innerStyle}>
-          <div style={{ textAlign: 'center', paddingTop: '60px', color: C.textSecondary }}>
-            Loading...
-          </div>
+          <LoadingState fullScreen={false} />
         </div>
       </div>
     );

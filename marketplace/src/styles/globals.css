@@ -444,17 +444,6 @@ body {
     color: #737373;
   }
 
-  .animate-skeleton {
-    background: linear-gradient(90deg, #0a0a0a 25%, #141414 50%, #0a0a0a 75%);
-    background-size: 200% 100%;
-    animation: skeleton-shimmer 1.5s ease-in-out infinite;
-    border-radius: 4px;
-  }
-
-  @keyframes skeleton-shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
 }
 
 .material-symbols-outlined {

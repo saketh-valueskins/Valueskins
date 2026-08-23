@@ -4,6 +4,7 @@ import { withAlpha } from '@/theme/colors';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import LoadingState from '@/components/LoadingState';
 
 const C = {
   bg: '#0A0A0A',
@@ -60,11 +61,7 @@ export default function MyValueSkinPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', background: C.bg, padding: '40px 20px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', paddingTop: '60px', color: C.textSecondary }}>
-          Loading your ValueSkin...
-        </div>
-      </div>
+      <LoadingState />
     );
   }
 

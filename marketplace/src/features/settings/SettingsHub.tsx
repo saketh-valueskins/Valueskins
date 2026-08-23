@@ -10,6 +10,7 @@ import Link from 'next/link';
 // Inlines the real Account + Notifications + Privacy APIs; links out to the
 // existing rich editors (Profile & Skins, Payouts, Data) so no feature is lost.
 import { C } from '@/theme/colors';
+import LoadingState from '@/components/LoadingState';
 
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 const T = {
@@ -209,12 +210,7 @@ export default function SettingsHub({
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: embedded ? '200px' : '100vh',
-        background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT,
-      }}>
-        <div style={{ color: T.muted }}>Loading…</div>
-      </div>
+      <LoadingState fullScreen={!embedded} />
     );
   }
 

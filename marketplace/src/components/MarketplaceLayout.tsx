@@ -105,7 +105,7 @@ export default function MarketplaceLayout({
                     <NavItem href="/explore" active={pathname === '/explore'} label="Explore">
                         <SearchIcon filled={pathname === '/explore'} />
                     </NavItem>
-                    <NavItem href="/demo/marketplace" active={pathname === '/demo/marketplace'} label="Deals" badge={activePlatform === 'across' ? '🌐' : undefined}>
+                    <NavItem href="/demo/marketplace" active={pathname === '/demo/marketplace'} label="Deals" badge={activePlatform === 'across' ? 'all platforms' : undefined}>
                         <MarketplaceIcon filled={pathname === '/demo/marketplace'} />
                     </NavItem>
                     <NavItem href="/profile/me" active={!!pathname?.startsWith('/profile')} label="Profile">
@@ -142,21 +142,18 @@ function NavItem({ href, active, label, children, badge }: {
         >
             {children}
             {badge && (
-                <div style={{
-                    position: 'absolute',
-                    top: -2,
-                    right: -2,
-                    fontSize: 12,
-                    background: '#8b5cf6',
-                    borderRadius: '50%',
-                    width: 18,
-                    height: 18,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}>
-                    {badge}
-                </div>
+                <div
+                    aria-hidden="true"
+                    style={{
+                        position: 'absolute',
+                        top: 2,
+                        right: 6,
+                        background: 'var(--c-accent)',
+                        borderRadius: '50%',
+                        width: 5,
+                        height: 5,
+                    }}
+                />
             )}
         </Link>
     );

@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { getCurrencySymbol } from '@/lib/currency';
 import { C as TH } from '@/theme/colors';
+import LoadingState from '@/components/LoadingState';
 
 // Creator Profile Preferences — per ui-specs/Creator Profile Preferences.md.
 // Tabbed editor (was accordion), live completion bar, reputation read-only,
@@ -166,9 +167,7 @@ export default function CreatorProfile({
 
   if (!account) {
     return (
-      <div style={{ minHeight: embedded ? '240px' : '100vh', background: embedded ? undefined : C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text, fontFamily: FONT }}>
-        <div>Loading...</div>
-      </div>
+      <LoadingState fullScreen={!embedded} />
     );
   }
 
