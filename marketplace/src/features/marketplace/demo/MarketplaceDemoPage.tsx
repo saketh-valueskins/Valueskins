@@ -42,6 +42,7 @@ import ExploreView from '@/features/marketplace/demo/views/ExploreView';
 import SettingsView from '@/features/marketplace/demo/views/SettingsView';
 import MessagesView from '@/features/marketplace/demo/views/MessagesView';
 import { HoverCard, type HoverProfile } from '@/features/marketplace/demo/components/ProfileHoverCard';
+import AppHeader, { type AppView } from '@/features/marketplace/demo/components/AppHeader';
 
 /** Resolve badge from either map — brand categories OR creator professions */
 function getBadge(name: string) {
@@ -2508,10 +2509,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
   return (
     <div style={{ background: C.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', overflowX: 'clip' }}>
 
-      {/* Top header removed. The bottom tab spine (Profile · Market · Store ·
-          Settings) is the only nav, and Log out + Delete account live in
-          Settings > Danger Zone — so nothing here is orphaned. Removing it also
-          kills the wordmark that was colliding with the global one top-left. */}
+      {/* The spine lives up here now, beside the wordmark, rather than as a
+          fixed bar on the floor. Sticky, so it stays reachable on long pages —
+          which only works because the overflow:auto scroll container that used
+          to wrap main content is gone. */}
+      {activeView !== 'events' && (
+        <AppHeader activeView={activeView} onSelect={(v: AppView) => setActiveView(v)} />
+      )}
 
       {/* ── MAIN CONTENT ──────────────────────────── */}
       {/* NOT `overflow:auto`. This wrapper has no height constraint, so it
@@ -3109,7 +3113,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
               {/* Layer 2: Role selection */}
               {roleNotSet && marketplaceRole === 'none' && (
                 <>
-                  <div style={{ padding: '12px 16px 0', position: 'sticky', top: 0, background: C.bg, zIndex: 10 }}>
+                  <div style={{ padding: '12px 16px 0', position: 'sticky', top: 'var(--vs-header-h, 0px)', background: C.bg, zIndex: 10 }}>
                     <span style={{ fontSize: '22px', fontWeight: 700, color: C.text }}>Marketplace</span>
                   </div>
                   <div style={{ padding: '40px 16px' }}>
@@ -3165,7 +3169,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 return (
                 <>
                   {/* Marketplace header */}
-                  <div style={{ padding: '12px 16px 0', position: 'sticky', top: 0, background: C.bg, zIndex: 10 }}>
+                  <div style={{ padding: '12px 16px 0', position: 'sticky', top: 'var(--vs-header-h, 0px)', background: C.bg, zIndex: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                       <span style={{ fontSize: '22px', fontWeight: 700, color: C.text }}>Marketplace</span>
                     </div>
@@ -5220,7 +5224,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
               {hasAnySkin && marketplaceRole === 'brand' && (
                 <>
                   <div style={{
-                    padding: '20px 16px 0', position: 'sticky', top: 0, zIndex: 10,
+                    padding: '20px 16px 0', position: 'sticky', top: 'var(--vs-header-h, 0px)', zIndex: 10,
                     // §2a: tonal wash, not decoration — a single-family depth
                     // gradient with a faint deep-sand glow top-right. Layered
                     // over the theme background so light mode is unaffected.
@@ -6672,7 +6676,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
             return (
             <>
-              <div style={{ padding: '12px 16px 0', position: 'sticky', top: 0, background: C.bg, zIndex: 10 }}>
+              <div style={{ padding: '12px 16px 0', position: 'sticky', top: 'var(--vs-header-h, 0px)', background: C.bg, zIndex: 10 }}>
                 <span style={{ fontSize: '22px', fontWeight: 700, color: C.text, display: 'block', marginBottom: '4px' }}>ValueSkins Closet</span>
                 <span style={{ fontSize: '13px', color: C.textSecondary, display: 'block', marginBottom: '14px' }}>Pick a profession to see its skins.</span>
                 <div style={{ position: 'relative', marginBottom: '14px' }}>
@@ -7048,37 +7052,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
         </div>
       )}
 
-      {/* Bottom Tab Bar */}
-      {activeView !== 'events' && (
-        <div style={{
-          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
-          background: C.surface, borderTop: `1px solid ${C.border}`,
-          display: 'flex', alignItems: 'stretch',
-        }}>
-          {([
-            { label: 'Profile', view: 'profile' as const },
-            { label: 'Market', view: 'mim' as const },
-            { label: 'Store', view: 'store' as const },
-            { label: 'Settings', view: 'settings' as const },
-          ]).map(({ label, view }) => (
-            <button
-              key={view}
-              onClick={() => setActiveView(view)}
-              style={{
-                flex: 1, minHeight: '44px', background: 'none', border: 'none',
-                color: activeView === view ? C.primary : C.textMuted,
-                fontSize: '10px', fontWeight: activeView === view ? 700 : 500,
-                cursor: 'pointer', display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center', gap: '2px',
-                padding: '6px 2px',
-              }}
-            >
-              <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: activeView === view ? C.primary : 'transparent' }} />
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* The bottom tab bar was retired when the spine moved into AppHeader.
+          Keeping both would have meant two navs competing, and the floor bar
+          was also where the consent banner kept colliding with navigation. */}
       </div>
     </div>
   );
