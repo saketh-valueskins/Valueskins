@@ -122,7 +122,7 @@ export default function AnalyticsPage() {
   const tabs = role === 'creator' ? creatorTabs : brandTabs;
 
   return (
-    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, padding: '32px 24px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: C.bg, color: C.text, padding: '32px 24px', fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }}>
       {/* Header */}
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>

@@ -75,7 +75,7 @@ export default function DemoWrapper({ initialCampaigns = [], initialDealStates =
   // On localhost: show skip button if not logged in, else go straight to marketplace
   if (isLocalhost && !account) {
     return (
-      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text, fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif", flexDirection: 'column', gap: '20px' }}>
         <button
           onClick={() => router.push('/auth/login')}
           style={{ padding: '12px 24px', background: C.primary, border: 'none', borderRadius: '8px', color: C.onPrimary, fontWeight: 600, cursor: 'pointer', fontSize: '1rem' }}

@@ -16,7 +16,7 @@ const containerStyle: CSSProperties = {
   minHeight: '100vh',
   background: `linear-gradient(135deg, ${C.bg} 0%, rgba(30, 41, 59, 0.8) 100%)`,
   padding: '40px 20px',
-  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
 };
 
 const contentStyle: CSSProperties = {

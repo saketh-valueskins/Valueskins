@@ -2507,7 +2507,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   };
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', overflowX: 'clip' }}>
+    <div style={{ background: C.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', color: C.text, fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif", overflowX: 'clip' }}>
 
       {/* The spine lives up here now, beside the wordmark, rather than as a
           fixed bar on the floor. Sticky, so it stays reachable on long pages —
@@ -5940,43 +5940,36 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               {expiredCampaigns.length > 0 && <span style={{ fontSize:'10px', background:C.textMuted, color:'var(--c-surface-lowest)', padding:'1px 5px', borderRadius:'8px' }}>{expiredCampaigns.length}</span>}
                             </span>
                           </button>
-                          <div style={{ display:'flex', flexDirection:'column', gap:'10px', marginTop:'10px' }}>
-                            {expiredCampaigns.map((c,i) => (
-                              <div key={i} style={{ background:C.card, borderRadius:'12px', padding:'14px', marginBottom:'10px', border:`1px solid ${C.border}`, opacity:0.7 }}>
-                                <div style={{ display:'flex', justifyContent:'space-between', marginBottom:'6px', flexWrap:'wrap', gap:'4px' }}>
-                                  <span style={{ fontSize:'13px', fontWeight:700, color:C.text }}>{c.title}</span>
-                                  <span style={{ fontSize:'12px', fontWeight:700, color:C.success }}>${parseInt(c.budget||'0').toLocaleString()}</span>
-                                </div>
-                                {c.brandName && <div
-                                  onMouseEnter={(e) => showHoverCard(buildBrandHover(c.brandName), e)}
-                                  onMouseMove={updateHoverPosition}
-                                  onMouseLeave={hideHoverCard}
-                                  style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'4px', cursor:'pointer' }}>by {c.brandName}</div>}
-                                <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px', lineHeight:1.4 }}>{c.description}</div>
-                                <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'6px' }}>
-                                  {c.requiredProfessions.map(p => <span key={p} style={{ fontSize:'10px', fontWeight:600, color:C.primary, background:`${withAlpha(C.primary, 0x12)}`, padding:'2px 7px', borderRadius:'6px', border:`1px solid ${withAlpha(C.primary, 0x30)}` }}>{p}</span>)}
-                                </div>
-                                <div style={{ display:'flex', gap:'12px', flexWrap:'wrap', fontSize:'10px', color:C.textMuted, marginBottom: c.nonNegotiables?.length ? '6px':'8px' }}>
-                                  <span>Level: L{c.minLevel||1}{(c.maxLevel && c.maxLevel !== c.minLevel) ? `–L${c.maxLevel}` : ''}</span>
-                                  {c.location && <span>{c.location}</span>}
-                                  {c.deliverables && <span>{c.deliverables}</span>}
-                                </div>
-                                {c.nonNegotiables && c.nonNegotiables.length > 0 && (
-                                  <div style={{ display:'flex', gap:'5px', flexWrap:'wrap', marginBottom:'8px' }}>
-                                    {c.nonNegotiables.map(n=><span key={n} style={{ fontSize:'10px', color:C.textMuted, background:'rgba(176, 65, 62,0.08)', border:'1px solid rgba(176, 65, 62,0.2)', padding:'2px 7px', borderRadius:'6px' }}>{n}</span>)}
+                          {/* Same .stub treatment as the open campaigns above —
+                              app-merged-sample.html. This block was still the
+                              old dense card: eight stacked rows at 10-13px with
+                              profession pills, level, deliverables and two
+                              badges. It also printed the budget with a dollar
+                              sign while the open campaigns above used rupees;
+                              F1 says INR for V1, so both are rupees now. */}
+                          <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:'14px', marginTop:'10px' }}>
+                            {expiredCampaigns.map((c,i) => {
+                              const meta = [
+                                c.brandName,
+                                c.budget ? `₹${parseInt(c.budget || '0').toLocaleString()}` : null,
+                                c.requiredProfessions?.length ? c.requiredProfessions.join(', ') : null,
+                                `Level L${c.minLevel || 1}${(c.maxLevel && c.maxLevel !== c.minLevel) ? `–L${c.maxLevel}` : ''}`,
+                                c.creatorCount ? `Hired ${c.creatorCount}` : null,
+                                c.deadline ? `Expired ${c.deadline}` : null,
+                              ].filter(Boolean).join(' · ');
+                              return (
+                                <div key={i} style={{
+                                  background: C.card, border: `1px solid ${C.border}`,
+                                  borderRadius: '14px', padding: '22px', opacity: 0.72,
+                                }}>
+                                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', gap:'12px' }}>
+                                    <h3 style={{ fontSize:'16px', fontWeight:700, color:C.text, margin:0 }}>{c.title}</h3>
+                                    <span style={{ fontSize:'11px', fontWeight:600, letterSpacing:'0.08em', textTransform:'uppercase', color:C.textMuted, flex:'none' }}>Expired</span>
                                   </div>
-                                )}
-                                {c.creatorCount && (
-                                  <div style={{ display:'flex', gap:'8px', marginBottom:'6px', flexWrap:'wrap' }}>
-                                    <span style={{ fontSize:'10px', color:C.textSecondary, background:C.surfaceAlt, padding:'2px 8px', borderRadius:'6px' }}>Hired {c.creatorCount} creator{c.creatorCount!==1?'s':''}</span>
-                                  </div>
-                                )}
-                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                                  <span style={{ fontSize:'10px', color:C.textMuted }}>{c.deadline?`Expired ${c.deadline}`:''}</span>
-                                  <span style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, background:'rgba(176, 65, 62,0.1)', padding:'2px 8px', borderRadius:'6px', textTransform:'uppercase' }}>Expired</span>
+                                  <p style={{ fontSize:'14px', color:C.textSecondary, margin:'6px 0 0', lineHeight:1.5 }}>{meta}</p>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       ) : null;

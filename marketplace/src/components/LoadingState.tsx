@@ -30,12 +30,19 @@ export default function LoadingState({
       role="status"
       aria-live="polite"
       style={{
+        // Consistent placement everywhere. It used to centre inside 100dvh when
+        // full-screen and inside 160px when inline, so the same indicator sat
+        // mid-viewport on most pages and near the top in Settings. It now sits
+        // a fixed distance below the top of its container in both cases, which
+        // is the Settings behaviour and the one that does not jump as the page
+        // grows.
         minHeight: fullScreen ? '100dvh' : '160px',
         width: '100%',
         background: fullScreen ? 'var(--c-bg)' : 'transparent',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'center',
+        paddingTop: '96px',
       }}
     >
       <span
