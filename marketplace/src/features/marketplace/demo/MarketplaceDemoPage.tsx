@@ -2568,12 +2568,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         <div style={{ flex: 1, height: '4px', borderRadius: '2px', background: C.border, overflow: 'hidden', maxWidth: '120px' }}>
                           <div style={{ width: `${skinProgress}%`, height: '100%', background: skinColor, borderRadius: '2px', transition: 'width 0.3s' }} />
                         </div>
-                        <span style={{ fontSize: '10px', color: C.textMuted }}>{metrics.dealsCompleted} deals</span>
+                        <span style={{ fontSize: '0.75rem', color: C.textMuted }}>{metrics.dealsCompleted} deals</span>
                       </div>
                     </div>
                   </div>
                   {ownedSkins.length === 1 && (
-                    <div style={{ fontSize: '10px', color: C.textMuted, marginBottom: '12px', padding: '6px 10px', background: C.surfaceAlt, borderRadius: '6px' }}>
+                    <div style={{ fontSize: '0.75rem', color: C.textMuted, marginBottom: '12px', padding: '6px 10px', background: C.surfaceAlt, borderRadius: '6px' }}>
                       Followers contribute to XP with a single skin equipped
                     </div>
                   )}
@@ -2602,8 +2602,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
               <>
                 {/* Video upload section */}
                 <div style={{ marginBottom:16 }}>
-                  <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:8 }}>Pitch Video</div>
-                  <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:8 }}>Record a short video explaining why brands should work with you. This plays when they click your skin.</div>
+                  <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:8 }}>Pitch Video</div>
+                  <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:8 }}>Record a short video explaining why brands should work with you. This plays when they click your skin.</div>
 
                   {!creatorPitchVideoUrl ? (
                     <label style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'24px', background:C.bg, border:`2px dashed ${C.border}`, borderRadius:10, cursor:'pointer', transition:'border-color 0.2s' }}>
@@ -2649,7 +2649,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                 {/* Text pitch */}
                 <div style={{ marginBottom:16 }}>
-                  <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:6 }}>Written Pitch</div>
+                  <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:6 }}>Written Pitch</div>
                   <textarea
                     value={creatorPitchText}
                     onChange={e => setCreatorPitchText(e.target.value)}
@@ -2719,13 +2719,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
             {/* About */}
             <div style={{ marginBottom: '18px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>About this campaign</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>About this campaign</div>
               <div style={{ fontSize: '13px', color: C.text, lineHeight: 1.6 }}>{askModalOpp.about}</div>
             </div>
 
             {/* Deliverables */}
             <div style={{ marginBottom: '18px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Deliverables</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Deliverables</div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {askModalOpp.deliverables.map((d, idx) => (
                   <div key={idx} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '8px 14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -2739,27 +2739,27 @@ export default function MarketplaceDemoPage(initialDealData?: {
             {/* Key details grid */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '18px' }}>
               <div style={{ background: C.bg, borderRadius: '10px', padding: '12px', border: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Budget</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Budget</div>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: C.textSecondary }}>{askModalOpp.budget}</div>
               </div>
               <div style={{ background: C.bg, borderRadius: '10px', padding: '12px', border: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Deliver by</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Deliver by</div>
                 <div style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{askModalOpp.deadline ? new Date(askModalOpp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set'}</div>
                 {askModalOpp.applicationDeadline && <div style={{ fontSize:'9px', color:C.textMuted, marginTop:'4px' }}>Apply by: {new Date(askModalOpp.applicationDeadline).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</div>}
               </div>
               <div style={{ background: C.bg, borderRadius: '10px', padding: '12px', border: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Compensation</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Compensation</div>
                 <div style={{ fontSize: '13px', fontWeight: 600, color: C.text }}>{askModalOpp.compensationType}</div>
               </div>
               <div style={{ background: C.bg, borderRadius: '10px', padding: '12px', border: `1px solid ${C.border}` }}>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Location</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Location</div>
                 <div style={{ fontSize: '13px', fontWeight: 600, color: C.text }}>{askModalOpp.location}</div>
               </div>
             </div>
 
             {/* Terms */}
             <div style={{ marginBottom: '18px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Terms</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Terms</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '6px 0', borderBottom: `1px solid ${C.border}` }}>
                   <span style={{ color: C.textSecondary }}>Exclusivity</span>
@@ -2794,7 +2794,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
             {/* Requirements */}
             <div style={{ marginBottom: '20px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Requirements</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Requirements</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {askModalOpp.requirements.map((req, idx) => (
                   <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '12px', color: C.text, lineHeight: 1.5 }}>
@@ -2834,12 +2834,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
             <div style={{ display:'flex', justifyContent:'center', gap:'32px', marginBottom:'28px' }}>
               <div style={{ textAlign:'center' }}>
                 <div style={{ fontSize:'28px', fontWeight:800, color:'#CCC' }}>{levelUpFrom}</div>
-                <div style={{ fontSize:'11px', color:'#999', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.5px', marginTop:'2px' }}>Before</div>
+                <div style={{ fontSize:'0.75rem', color:'#999', fontWeight:600, textTransform:'uppercase', letterSpacing:'0.5px', marginTop:'2px' }}>Before</div>
               </div>
               <div style={{ display:'flex', alignItems:'center', color:C.primary, fontSize:'20px' }}>&rarr;</div>
               <div style={{ textAlign:'center' }}>
                 <div style={{ fontSize:'28px', fontWeight:800, color:C.primary }}>{levelUpTo}</div>
-                <div style={{ fontSize:'11px', color:C.primary, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.5px', marginTop:'2px' }}>After</div>
+                <div style={{ fontSize:'0.75rem', color:C.primary, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.5px', marginTop:'2px' }}>After</div>
               </div>
             </div>
             <button onClick={() => { setShowLevelUpModal(false); setPurchaseToast('Deal complete — earnings added to your balance'); setTimeout(() => setPurchaseToast(null), 3000); }} style={{ width:'100%', background:C.primary, border:'none', borderRadius:'12px', padding:'14px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'15px', cursor:'pointer' }}>
@@ -3035,15 +3035,15 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', paddingTop: '16px', borderTop: profileBio && !editingProfile ? `1px solid ${C.border}` : undefined, marginTop: profileBio && !editingProfile ? '0' : '16px' }}>
                     <div style={{ textAlign: 'center', padding: '12px', background: C.bg, borderRadius: '10px' }}>
                       <div style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>{completedDeals.length}</div>
-                      <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '2px' }}>Deals Done</div>
+                      <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '2px' }}>Deals Done</div>
                     </div>
                     <div style={{ textAlign: 'center', padding: '12px', background: C.bg, borderRadius: '10px' }}>
                       <div style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>{(metrics.brandRating || 0).toFixed(1)} ★</div>
-                      <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '2px' }}>Rating</div>
+                      <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '2px' }}>Rating</div>
                     </div>
                     <div style={{ textAlign: 'center', padding: '12px', background: C.bg, borderRadius: '10px' }}>
                       <div style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>${(completedDeals.reduce((s, d) => s + d.amount, 0) / 1000).toFixed(1)}K</div>
-                      <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '2px' }}>{isBrand ? 'Spent' : 'Earned'}</div>
+                      <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '2px' }}>{isBrand ? 'Spent' : 'Earned'}</div>
                     </div>
                   </div>
                 </div>
@@ -3065,7 +3065,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               <div style={{ fontSize: '28px' }}>{badge?.emoji ?? '⭐'}</div>
                               <div style={{ flex: 1 }}>
                                 <div style={{ fontSize: '14px', fontWeight: 700, color: C.text, textTransform: 'capitalize' }}>{profession}</div>
-                                <div style={{ fontSize: '11px', color: C.textMuted }}>Level {level} · {slot}</div>
+                                <div style={{ fontSize: '0.75rem', color: C.textMuted }}>Level {level} · {slot}</div>
                               </div>
                               <div style={{ padding: '4px 10px', borderRadius: '20px', background: C.primary + '22', color: C.primary, fontSize: '12px', fontWeight: 700 }}>Lv.{level}</div>
                             </div>
@@ -3177,19 +3177,19 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     {/* Available for deals toggle + tab selector */}
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px', gap:'8px' }}>
                       <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
-                        <span style={{ fontSize:'11px', fontWeight:700, color:C.textMuted }}>Available for deals</span>
+                        <span style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted }}>Available for deals</span>
                         <button onClick={() => setAvailableForDeals(!availableForDeals)} style={{ width:36, height:20, borderRadius:20, border:'none', background: availableForDeals ? C.success : C.border, cursor:'pointer', display:'flex', alignItems:'center', padding: availableForDeals ? '0 2px 0 16px' : '0 16px 0 2px', transition:'all 0.2s' }}>
                           <div style={{ width:16, height:16, borderRadius:'50%', background:'var(--c-surface-lowest)', transition:'all 0.2s' }} />
                         </button>
-                        {availableForDeals && <span style={{ fontSize:'10px', fontWeight:700, color:C.success, background:'rgba(200, 184, 154,0.1)', padding:'2px 8px', borderRadius:'12px' }}>Taking deals</span>}
+                        {availableForDeals && <span style={{ fontSize:'0.75rem', fontWeight:700, color:C.success, background:'rgba(200, 184, 154,0.1)', padding:'2px 8px', borderRadius:'12px' }}>Taking deals</span>}
                       </div>
                       <div style={{ display:'flex', gap:'6px', alignItems:'center' }}>
                         {(['opportunities','pipeline'] as const).map(tab => (
-                          <button key={tab} onClick={() => setCreatorMarketplaceTab(tab)} style={{ padding:'4px 10px', fontSize:'10px', fontWeight:700, borderRadius:'6px', border:`1px solid ${creatorMarketplaceTab === tab ? C.primary : C.border}`, background: creatorMarketplaceTab === tab ? C.primary : 'transparent', color: creatorMarketplaceTab === tab ? 'var(--c-surface-lowest)' : C.textSecondary, cursor:'pointer' }}>
+                          <button key={tab} onClick={() => setCreatorMarketplaceTab(tab)} style={{ padding:'4px 10px', fontSize:'0.75rem', fontWeight:700, borderRadius:'6px', border:`1px solid ${creatorMarketplaceTab === tab ? C.primary : C.border}`, background: creatorMarketplaceTab === tab ? C.primary : 'transparent', color: creatorMarketplaceTab === tab ? 'var(--c-surface-lowest)' : C.textSecondary, cursor:'pointer' }}>
                             {tab === 'opportunities' ? 'Opportunities' : 'My Pipeline'}
                           </button>
                         ))}
-                        <button onClick={handleRefresh} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 10px', display:'flex', alignItems:'center', gap:'4px', color:C.textMuted, fontSize:'11px', fontWeight:600, opacity: refreshing ? 0.5 : 1 }}>
+                        <button onClick={handleRefresh} title="Refresh campaigns and creator pool" style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', cursor:'pointer', padding:'4px 10px', display:'flex', alignItems:'center', gap:'4px', color:C.textMuted, fontSize:'0.75rem', fontWeight:600, opacity: refreshing ? 0.5 : 1 }}>
                           <span style={{ width:6, height:6, borderRadius:'50%', background: realtimeConnected ? 'var(--c-accent)' : 'var(--c-text-variant)', flexShrink:0 }} title={realtimeConnected ? 'Real-time connected' : 'Offline — data refreshes on reload'} />
                           {refreshing ? '↻' : '⟳'} Refresh
                         </button>
@@ -3259,12 +3259,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
                             {Object.entries(columns).map(([colName, deals]) => (
                               <div key={colName} style={{ background: C.card, borderRadius: '12px', padding: '14px', border: `1px solid ${C.border}` }}>
-                                <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                   {colName}
-                                  <span style={{ background: C.surfaceAlt, padding: '2px 7px', borderRadius: '10px', fontSize: '10px', color: C.textSecondary }}>{deals.length}</span>
+                                  <span style={{ background: C.surfaceAlt, padding: '2px 7px', borderRadius: '10px', fontSize: '0.75rem', color: C.textSecondary }}>{deals.length}</span>
                                 </div>
                                 {deals.length === 0 ? (
-                                  <div style={{ fontSize: '11px', color: C.textMuted, textAlign: 'center', padding: '20px 0' }}>No deals</div>
+                                  <div style={{ fontSize: '0.75rem', color: C.textMuted, textAlign: 'center', padding: '20px 0' }}>No deals</div>
                                 ) : (
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     {deals.map((deal, idx) => {
@@ -3280,11 +3280,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             onMouseLeave={hideHoverCard}
                                             style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '3px', cursor: 'pointer' }}
                                           >{brandName}</div>
-                                          <div style={{ fontSize: '10px', color: C.textSecondary, marginBottom: '4px' }}>{opp?.budget || 'N/A'}</div>
+                                          <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '4px' }}>{opp?.budget || 'N/A'}</div>
                                           <div style={{ fontSize: '9px', color: C.textMuted, background: `${withAlpha(C.primary, 0x15)}`, padding: '2px 6px', borderRadius: '4px', display: 'inline-block' }}>
                                             Completed
                                           </div>
-                                          <button onClick={e => { e.stopPropagation(); downloadDealReport(deal.key); }} style={{ width:'100%', marginTop:'8px', background:C.primary, border:'none', borderRadius:'6px', padding:'5px 8px', color:'var(--c-surface-lowest)', fontSize:'10px', fontWeight:600, cursor:'pointer' }}>
+                                          <button onClick={e => { e.stopPropagation(); downloadDealReport(deal.key); }} style={{ width:'100%', marginTop:'8px', background:C.primary, border:'none', borderRadius:'6px', padding:'5px 8px', color:'var(--c-surface-lowest)', fontSize:'0.75rem', fontWeight:600, cursor:'pointer' }}>
                                             Download the final report
                                           </button>
                                         </div>
@@ -3370,7 +3370,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 ))}
                                 {opp.willingToBarter && <span style={{ fontSize: '12px', fontWeight: 600, color: C.success, background: `${withAlpha(C.success, 0x15)}`, padding: '4px 10px', borderRadius: '20px' }}>Barter</span>}
                                 {opp.contentReview && (
-                                  <span style={{ fontSize:'11px', fontWeight:600, color: opp.contentReview==='review_required'?C.warning:C.success, background: opp.contentReview==='review_required'?`${withAlpha(C.warning, 0x12)}`:`${withAlpha(C.success, 0x15)}`, padding:'4px 10px', borderRadius:'20px' }}>
+                                  <span style={{ fontSize:'0.75rem', fontWeight:600, color: opp.contentReview==='review_required'?C.warning:C.success, background: opp.contentReview==='review_required'?`${withAlpha(C.warning, 0x12)}`:`${withAlpha(C.success, 0x15)}`, padding:'4px 10px', borderRadius:'20px' }}>
                                     {opp.contentReview==='review_required' ? '📋 Review' : '✅ Direct'}
                                   </span>
                                 )}
@@ -3487,7 +3487,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           return (
                                             <React.Fragment key={step}>
                                               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:'4px' }}>
-                                                <div style={{ width:'28px', height:'28px', borderRadius:'50%', background: dealRoomPhase === 'rejected' || dealRoomPhase === 'brand_rejected' ? C.danger : isCompleted ? C.success : !isActive && current < stepPos && current !== -1 ? C.border : isActive ? C.primary : C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'11px', fontWeight:700, color: isCompleted || isActive ? 'var(--c-surface-lowest)' : C.textMuted, transition:'all 0.2s' }}>
+                                                <div style={{ width:'28px', height:'28px', borderRadius:'50%', background: dealRoomPhase === 'rejected' || dealRoomPhase === 'brand_rejected' ? C.danger : isCompleted ? C.success : !isActive && current < stepPos && current !== -1 ? C.border : isActive ? C.primary : C.border, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.75rem', fontWeight:700, color: isCompleted || isActive ? 'var(--c-surface-lowest)' : C.textMuted, transition:'all 0.2s' }}>
                                                   {dealRoomPhase === 'rejected' || dealRoomPhase === 'brand_rejected' ? '✕' : isCompleted ? '✓' : idx + 1}
                                                 </div>
                                                 <div style={{ fontSize:'8px', color: isActive ? C.primary : C.textMuted, fontWeight: isActive ? 700 : 400, textAlign:'center', minWidth:'40px' }}>{LABELS[step]}</div>
@@ -3505,11 +3505,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   {/* Audit trail notice */}
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '8px 12px', background: `${withAlpha(C.primary, 0x08)}`, borderRadius: '10px' }}>
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                    <span style={{ fontSize: '11px', color: C.textSecondary }}>All messages logged with UTC timestamps</span>
+                                    <span style={{ fontSize: '0.75rem', color: C.textSecondary }}>All messages logged with UTC timestamps</span>
                                   </div>
 
                                   {/* Brand identity + intent */}
-                                  <div style={{ fontSize: '11px', color: C.textMuted, marginBottom: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                  <div style={{ fontSize: '0.75rem', color: C.textMuted, marginBottom: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                     <span
                                       onMouseEnter={() => setHoveredTooltip('intent')}
                                       onMouseLeave={() => setHoveredTooltip(null)}
@@ -3549,12 +3549,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   {(dealRoomPhase === 'pending' || dealRoomPhase === 'brief') && (
                                     <>
                                       <div style={{ background: 'rgba(200, 184, 154,0.06)', borderRadius: '8px', padding: '12px', marginBottom: '12px', border: `1px solid rgba(200, 184, 154,0.2)` }}>
-                                        <div style={{ fontSize: '11px', fontWeight: 700, color: C.primary, marginBottom: '6px' }}>Brand Offer Received</div>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.primary, marginBottom: '6px' }}>Brand Offer Received</div>
                                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>
                                           <span style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}</span>
                                           <span style={{ fontSize: '12px', color: C.textMuted }}>/post</span>
                                         </div>
-                                        {activeDeal?.briefTitle && <div style={{ fontSize: '11px', color: C.textSecondary, marginTop: '4px' }}>Campaign: {activeDeal.briefTitle}</div>}
+                                        {activeDeal?.briefTitle && <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '4px' }}>Campaign: {activeDeal.briefTitle}</div>}
                                       </div>
                                       <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                                         <button
@@ -3604,16 +3604,16 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   {/* Creator has sent counter, waiting for brand response */}
                                   {dealRoomPhase === 'counter' && (
                                     <div style={{ background: 'rgba(255,193,7,0.06)', borderRadius: '8px', padding: '12px', border: `1px solid rgba(255,193,7,0.2)` }}>
-                                      <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--c-warning)', marginBottom: '6px' }}>Counter Offer Sent</div>
+                                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--c-warning)', marginBottom: '6px' }}>Counter Offer Sent</div>
                                       <div style={{ fontSize: '12px', color: C.text, marginBottom: '8px' }}>Your counter-offer of <strong>${parseInt(dealCounterAmount || '0').toLocaleString()}</strong> has been sent to the brand.</div>
-                                      <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.5 }}>Waiting for their response — they can accept, reject, or send a counter-offer back.</div>
+                                      <div style={{ fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.5 }}>Waiting for their response — they can accept, reject, or send a counter-offer back.</div>
                                     </div>
                                   )}
 
                                   {/* Brand has accepted creator's counter-offer */}
                                   {dealRoomPhase === 'pending' && dealCounterAmount && parseInt(dealOfferAmount || '0') === parseInt(dealCounterAmount) && (
                                     <div style={{ background: 'rgba(76,175,80,0.06)', borderRadius: '8px', padding: '12px', border: `1px solid rgba(76,175,80,0.2)` }}>
-                                      <div style={{ fontSize: '11px', fontWeight: 700, color: C.success, marginBottom: '6px' }}>Counter-Offer Accepted!</div>
+                                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.success, marginBottom: '6px' }}>Counter-Offer Accepted!</div>
                                       <div style={{ fontSize: '12px', color: C.text, marginBottom: '8px' }}>{opp.brand} accepted your counter-offer of <strong>${parseInt(dealCounterAmount).toLocaleString()}/post</strong></div>
                                       <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                                         <button
@@ -3666,7 +3666,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             Your offer of <strong>${totalPrice.toLocaleString()}</strong> has been sent to {opp.brand}.<br />
                                             Waiting for them to review and approve.
                                           </div>
-                                          <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', fontSize: '11px', color: C.textMuted }}>
+                                          <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', fontSize: '0.75rem', color: C.textMuted }}>
                                             You cannot edit terms at this stage. If the brand rejects, you can renegotiate.
                                           </div>
                                         </div>
@@ -3679,36 +3679,36 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     const hasSensitiveContent = isSensitiveContent(briefText) || isSensitiveContent(opp.brand);
                                     return (
                                       <>
-                                        <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Formal Offer — Review &amp; Accept</div>
-                                        <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '14px', lineHeight: 1.5 }}>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Formal Offer — Review &amp; Accept</div>
+                                        <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '14px', lineHeight: 1.5 }}>
                                           The brand has submitted their final offer based on your chat negotiation. This document is the binding record of what was agreed.
                                         </div>
                                         {/* Sensitive content disclaimer */}
                                         {hasSensitiveContent && (
                                           <div style={{ background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.3)', borderRadius: '8px', padding: '10px', marginBottom: '12px' }}>
-                                            <div style={{ fontSize: '10px', fontWeight: 700, color: '#ff9800', marginBottom: '4px', textTransform: 'uppercase' }}>⚠️ Content Disclaimer Required</div>
-                                            <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.5 }}>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#ff9800', marginBottom: '4px', textTransform: 'uppercase' }}>⚠️ Content Disclaimer Required</div>
+                                            <div style={{ fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.5 }}>
                                               This campaign involves regulated or sensitive topics (healthcare, skincare, legal, financial, etc.). <strong>You must include clear disclaimers</strong> in your content such as:
                                               <ul style={{ margin: '6px 0 0 16px', paddingLeft: 0 }}>
-                                                <li style={{ fontSize: '10px', marginBottom: '3px' }}>"This is my personal opinion/experience—not professional advice"</li>
-                                                <li style={{ fontSize: '10px', marginBottom: '3px' }}>"Based on advice from my [doctor/lawyer/specialist]"</li>
-                                                <li style={{ fontSize: '10px' }}>"Consult a qualified professional before acting on this"</li>
+                                                <li style={{ fontSize: '0.75rem', marginBottom: '3px' }}>"This is my personal opinion/experience—not professional advice"</li>
+                                                <li style={{ fontSize: '0.75rem', marginBottom: '3px' }}>"Based on advice from my [doctor/lawyer/specialist]"</li>
+                                                <li style={{ fontSize: '0.75rem' }}>"Consult a qualified professional before acting on this"</li>
                                               </ul>
                                             </div>
-                                            <div style={{ fontSize: '10px', color: C.warning, marginTop: '6px' }}>Failure to include disclaimers may result in account penalties. See <a href="/terms" style={{ color: C.warning, textDecoration: 'underline' }}>Terms &amp; Conditions</a> for details.</div>
+                                            <div style={{ fontSize: '0.75rem', color: C.warning, marginTop: '6px' }}>Failure to include disclaimers may result in account penalties. See <a href="/terms" style={{ color: C.warning, textDecoration: 'underline' }}>Terms &amp; Conditions</a> for details.</div>
                                           </div>
                                         )}
 
                                         {/* Price */}
                                         <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '12px', marginBottom: '10px' }}>
-                                          <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Agreed Total</div>
+                                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Agreed Total</div>
                                           <div style={{ fontSize: '24px', fontWeight: 800, color: C.text }}>${totalPrice.toLocaleString()}</div>
-                                          <div style={{ fontSize: '11px', color: C.textSecondary, marginTop: '2px' }}>{opp.type}</div>
+                                          <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '2px' }}>{opp.type}</div>
                                         </div>
 
                                         {/* Payment split */}
                                         <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '12px', marginBottom: '10px' }}>
-                                          <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Payment Schedule (your terms)</div>
+                                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Payment Schedule (your terms)</div>
                                           {[
                                             { label: 'Advance', desc: 'Paid before work begins', pct: advPct, color: C.success },
                                             { label: 'On approval', desc: 'Paid after brand signs off', pct: approvalPct, color: C.warning },
@@ -3718,23 +3718,23 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               <div style={{ flex: 1 }}>
                                                 <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{row.label} <span style={{ color: C.textMuted, fontWeight: 400 }}>· {row.desc}</span></div>
                                               </div>
-                                              <div style={{ fontSize: '13px', fontWeight: 700, color: row.color }}>{row.pct}% <span style={{ fontSize: '11px', color: C.textMuted, fontWeight: 400 }}>(${Math.round(totalPrice * row.pct / 100).toLocaleString()})</span></div>
+                                              <div style={{ fontSize: '13px', fontWeight: 700, color: row.color }}>{row.pct}% <span style={{ fontSize: '0.75rem', color: C.textMuted, fontWeight: 400 }}>(${Math.round(totalPrice * row.pct / 100).toLocaleString()})</span></div>
                                             </div>
                                           ))}
                                         </div>
 
                                         {/* Deliverables */}
                                         <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '12px', marginBottom: '10px' }}>
-                                          <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Deliverables</div>
+                                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Deliverables</div>
                                           {opp.deliverables.map((d, di) => (
                                             <div key={di} style={{ fontSize: '12px', color: C.text, marginBottom: '3px' }}>{d.count}x {d.format}</div>
                                           ))}
-                                          {opp.deadline && <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '4px' }}>Deliver by: {new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>}
-                                          {opp.applicationDeadline && <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'2px' }}>Apply by: {new Date(opp.applicationDeadline).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</div>}
+                                          {opp.deadline && <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '4px' }}>Deliver by: {new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>}
+                                          {opp.applicationDeadline && <div style={{ fontSize:'0.75rem', color:C.textMuted, marginTop:'2px' }}>Apply by: {new Date(opp.applicationDeadline).toLocaleDateString('en-US', { month:'short', day:'numeric' })}</div>}
                                         </div>
 
                                         {/* Ref + timestamp */}
-                                        <div style={{ fontSize: '10px', color: C.textMuted, marginBottom: '14px', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                        <div style={{ fontSize: '0.75rem', color: C.textMuted, marginBottom: '14px', display: 'flex', gap: '6px', alignItems: 'center' }}>
                                           <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                                           <span style={{ fontFamily: 'monospace' }}>{refId}</span>
                                           <span>· Submitted {new Date().toISOString().replace('T', ' ').slice(0, 19)} UTC</span>
@@ -3743,8 +3743,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         {/* Exclusivity conflict warning */}
                                         {activeExclusivities.some(d => d.exclusivitySkin === (selectedMarketplaceSkin || '')) && (
                                           <div style={{ background:'rgba(176, 65, 62,0.08)', border:'1px solid rgba(176, 65, 62,0.3)', borderRadius:'8px', padding:'10px', marginBottom:'10px' }}>
-                                            <div style={{ fontSize:'11px', fontWeight:700, color:'var(--c-error)', marginBottom:'3px' }}>Exclusivity Conflict</div>
-                                            <div style={{ fontSize:'11px', color:C.textSecondary, lineHeight:1.4 }}>
+                                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:'var(--c-error)', marginBottom:'3px' }}>Exclusivity Conflict</div>
+                                            <div style={{ fontSize:'0.75rem', color:C.textSecondary, lineHeight:1.4 }}>
                                               You have an active exclusivity agreement with <strong>{activeExclusivities.find(d => d.exclusivitySkin === selectedMarketplaceSkin)?.brand}</strong> for this skin.
                                               Accepting this deal may violate that agreement.
                                             </div>
@@ -3753,7 +3753,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                                         {/* Contract agreement */}
                                         <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'12px', marginBottom:'10px' }}>
-                                          <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'8px' }}>Contract Terms</div>
+                                          <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:'8px' }}>Contract Terms</div>
                                           {[
                                             { key: 'deliverables', label: `I agree to deliver ${opp.deliverables.map(d => `${d.count}x ${d.format}`).join(', ')} by ${opp.deadline ? new Date(opp.deadline).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : 'agreed date'}` },
                                             { key: 'payment', label: `Payment of ₹${totalPrice.toLocaleString()} split as: ${advPct}% advance, ${approvalPct}% on approval` },
@@ -3761,7 +3761,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             { key: 'exclusivity', label: `Exclusivity: ${opp.exclusivity || 'None'} — I will not promote competing brands during this period` },
                                             { key: 'revisions', label: `Up to ${opp.revisionLimit} revision round${opp.revisionLimit !== 1 ? 's' : ''} included at no extra cost` },
                                           ].map(term => (
-                                            <div key={term.key} onClick={() => setContractChecks(prev => ({ ...prev, [term.key]: !prev[term.key] }))} style={{ display:'flex', alignItems:'flex-start', gap:'10px', padding:'8px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', fontSize:'11px', color: contractChecks[term.key] ? C.text : C.textSecondary, lineHeight:1.4, transition:'color 0.15s' }}>
+                                            <div key={term.key} onClick={() => setContractChecks(prev => ({ ...prev, [term.key]: !prev[term.key] }))} style={{ display:'flex', alignItems:'flex-start', gap:'10px', padding:'8px 0', borderBottom:`1px solid ${C.border}`, cursor:'pointer', fontSize:'0.75rem', color: contractChecks[term.key] ? C.text : C.textSecondary, lineHeight:1.4, transition:'color 0.15s' }}>
                                               <div style={{ width:18, height:18, borderRadius:4, border: contractChecks[term.key] ? `2px solid ${C.success}` : `2px solid ${C.border}`, background: contractChecks[term.key] ? C.success : 'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1, transition:'all 0.15s' }}>
                                                 {contractChecks[term.key] && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--c-surface-lowest)" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
                                               </div>
@@ -3769,8 +3769,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             </div>
                                           ))}
                                           <div style={{ marginTop:'10px' }}>
-                                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'4px' }}>Signature jurisdiction</div>
-                                            <select value={signatureJurisdiction} onChange={e => setSignatureJurisdiction(e.target.value)} style={{ width:'100%', background:C.card, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'7px 8px', fontSize:'11px', color:C.text, boxSizing:'border-box', marginBottom:'8px', cursor:'pointer' }}>
+                                            <div style={{ fontSize:'0.75rem', color:C.textMuted, marginBottom:'4px' }}>Signature jurisdiction</div>
+                                            <select value={signatureJurisdiction} onChange={e => setSignatureJurisdiction(e.target.value)} style={{ width:'100%', background:C.card, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'7px 8px', fontSize:'0.75rem', color:C.text, boxSizing:'border-box', marginBottom:'8px', cursor:'pointer' }}>
                                               {[
                                                 { code:'US', label:'United States (E-SIGN Act)' },
                                                 { code:'EU', label:'European Union (eIDAS)' },
@@ -3786,7 +3786,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 { code:'OTHER', label:'Other jurisdiction' },
                                               ].map(j => <option key={j.code} value={j.code}>{j.label}</option>)}
                                             </select>
-                                            <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'4px' }}>Type your full name to sign</div>
+                                            <div style={{ fontSize:'0.75rem', color:C.textMuted, marginBottom:'4px' }}>Type your full name to sign</div>
                                             <input value={contractSignature} onChange={e => setContractSignature(e.target.value)} placeholder={profileName || 'Your Name'} style={{ width:'100%', background:C.card, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'8px', fontSize:'12px', color:C.text, boxSizing:'border-box', fontStyle:'italic' }} />
                                           </div>
                                         </div>
@@ -3799,12 +3799,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           return (
                                         <>
                                         {!canAccept && (
-                                          <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'6px' }}>
+                                          <div style={{ fontSize:'0.75rem', color:C.textMuted, marginBottom:'6px' }}>
                                             {!allChecked && <span>{checkedCount}/5 terms checked. </span>}
                                             {!signed && <span>Sign your name to continue.</span>}
                                           </div>
                                         )}
-                                        <div style={{ background: 'rgba(200, 184, 154,0.06)', border: '1px solid rgba(200, 184, 154,0.2)', borderRadius: '8px', padding: '10px', marginBottom: '10px', fontSize: '11px', color: C.textSecondary, lineHeight: 1.5 }}>
+                                        <div style={{ background: 'rgba(200, 184, 154,0.06)', border: '1px solid rgba(200, 184, 154,0.2)', borderRadius: '8px', padding: '10px', marginBottom: '10px', fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.5 }}>
                                           ⚠️ Once you accept, terms are locked. Check all details carefully — no edits after signing.
                                         </div>
                                         <div style={{ display: 'flex', gap: '8px' }}>
@@ -3868,20 +3868,20 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         <>
                                           {activeDeal?.isInternationalDeal && (
                                             <div style={{ background: C.warningBg, border: `1px solid ${C.warningBorder}`, borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
-                                              <div style={{ fontSize: '11px', fontWeight: 700, color: C.warning, marginBottom: '4px' }}>Cross-border deal</div>
-                                              <div style={{ fontSize: '10px', color: C.textSecondary, lineHeight: 1.5 }}>
+                                              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.warning, marginBottom: '4px' }}>Cross-border deal</div>
+                                              <div style={{ fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.5 }}>
                                                 This is a cross-border deal. Ensure compliance with your local tax authority. ValueSkins does not provide legal advice.
                                               </div>
                                             </div>
                                           )}
                                           <div style={{ padding: '12px', background: 'rgba(76,175,80,0.08)', borderRadius: '10px', marginBottom: '10px', border: '1px solid rgba(76,175,80,0.2)' }}>
                                             <div style={{ fontSize: '13px', fontWeight: 700, color: C.success, marginBottom: '4px' }}>Deal confirmed — product incoming</div>
-                                            <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '8px' }}>Terms are locked and recorded. Chat remains open for coordination.</div>
+                                            <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '8px' }}>Terms are locked and recorded. Chat remains open for coordination.</div>
                                             <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>{opp.brand} will send product</div>
                                             {opp.deadline && (
-                                              <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '3px' }}>Deliver by: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
+                                              <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '3px' }}>Deliver by: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
                                             )}
-                                            <div style={{ fontSize: '11px', color: C.textSecondary }}>Exclusivity: <strong>{opp.exclusivity || 'None'}</strong></div>
+                                            <div style={{ fontSize: '0.75rem', color: C.textSecondary }}>Exclusivity: <strong>{opp.exclusivity || 'None'}</strong></div>
                                           </div>
                                           {/* POC Card */}
                                           {activeDeal?.poc && (
@@ -3892,8 +3892,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 onMouseMove={updateHoverPosition}
                                                 onMouseLeave={hideHoverCard}
                                                 style={{ fontSize: '12px', fontWeight: 600, color: C.text, cursor: 'pointer' }}>{activeDeal.poc.name}</div>
-                                              <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
-                                              <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
+                                              <div style={{ fontSize: '0.75rem', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
+                                              <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
                                             </div>
                                           )}
                                           <div style={{ display: 'flex', gap: '8px' }}>
@@ -3912,22 +3912,22 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         <>
                                           <div style={{ padding: '12px', background: 'rgba(200, 184, 154,0.08)', borderRadius: '10px', marginBottom: '10px', border: '1px solid rgba(200, 184, 154,0.2)' }}>
                                             <div style={{ fontSize: '13px', fontWeight: 700, color: C.accent, marginBottom: '4px' }}>Collaboration confirmed</div>
-                                            <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '8px' }}>You're ready to create content together. Terms are locked and recorded.</div>
+                                            <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '8px' }}>You're ready to create content together. Terms are locked and recorded.</div>
                                             <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>Collaborating with {opp.brand}</div>
                                             {opp.deadline && (
-                                              <div style={{ fontSize: '11px', color: C.textSecondary }}>Deliver by: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
+                                              <div style={{ fontSize: '0.75rem', color: C.textSecondary }}>Deliver by: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
                                             )}
                                           </div>
                                           {/* Script editor */}
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
-                                            <button onClick={() => setShowScriptEditorCreator(v => !v)} style={{ width:'100%', background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'5px 6px', fontSize:'10px', fontWeight:700, color:C.text, cursor:'pointer', marginBottom:'6px' }}>
+                                            <button onClick={() => setShowScriptEditorCreator(v => !v)} style={{ width:'100%', background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'5px 6px', fontSize:'0.75rem', fontWeight:700, color:C.text, cursor:'pointer', marginBottom:'6px' }}>
                                               Script {showScriptEditorCreator ? '▲' : '▼'} {scriptStatus === 'approved' && <span style={{color:C.success}}>✓</span>}
                                             </button>
                                             {showScriptEditorCreator && (
                                               <>
                                                 <div style={{ fontSize:'9px', color:C.textMuted, marginBottom:'4px' }}>{scriptMode === 'non_negotiable' ? 'Non-negotiable (locked)' : scriptMode === 'discussion' ? 'Discussion' : 'Creator freedom'}</div>
                                                 {scriptMode === 'non_negotiable' ? (
-                                                  <div style={{ fontSize:'10px', color:C.text, background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', marginBottom:'6px', whiteSpace:'pre-wrap', lineHeight:1.4, maxHeight:'100px', overflowY:'auto' }}>
+                                                  <div style={{ fontSize:'0.75rem', color:C.text, background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', marginBottom:'6px', whiteSpace:'pre-wrap', lineHeight:1.4, maxHeight:'100px', overflowY:'auto' }}>
                                                     {brandScriptText || 'No script provided'}
                                                   </div>
                                                 ) : (
@@ -3940,7 +3940,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                       }}
                                                       rows={4}
                                                       placeholder="Draft script..."
-                                                      style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'10px', color:C.text, fontFamily:'inherit', resize:'none', boxSizing:'border-box', marginBottom:'4px' }}
+                                                      style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'0.75rem', color:C.text, fontFamily:'inherit', resize:'none', boxSizing:'border-box', marginBottom:'4px' }}
                                                     />
                                                     <div style={{ fontSize:'8px', color:C.textMuted, marginBottom:'4px' }}>{scriptDraft.length} chars · {scriptDraft.split('\n').length} lines</div>
                                                     <input type="text" value={scriptEditReason} onChange={(e) => setScriptEditReason(e.target.value)} placeholder="Reason for change (optional)" style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'4px', padding:'4px 6px', fontSize:'9px', color:C.text, marginBottom:'4px', boxSizing:'border-box' }} />
@@ -3979,14 +3979,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     {!creatorScriptApproved ? (
                                                       <button
                                                         onClick={handleScriptApprove}
-                                                        style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'6px', fontSize:'10px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
+                                                        style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'6px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
                                                       >
                                                         I Approve Script
                                                       </button>
                                                     ) : (
                                                       <button
                                                         onClick={handleScriptRevoke}
-                                                        style={{ width:'100%', background:'transparent', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'10px', fontWeight:700, color:C.textSecondary, cursor:'pointer', marginBottom:'4px' }}
+                                                        style={{ width:'100%', background:'transparent', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'0.75rem', fontWeight:700, color:C.textSecondary, cursor:'pointer', marginBottom:'4px' }}
                                                       >
                                                         Revoke Approval
                                                       </button>
@@ -4017,14 +4017,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           </div>
                                           {/* Checklist */}
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
-                                            <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Checklist</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Checklist</div>
                                             {[
                                               'Deliverables',
                                               'Timeline',
                                               'Payment terms',
                                               'Contract',
                                             ].map((item, i) => (
-                                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 0', fontSize: '11px', color: C.text }}>
+                                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 0', fontSize: '0.75rem', color: C.text }}>
                                                 <div style={{ width: 12, height: 12, borderRadius: 3, background: C.success, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                   <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--c-surface-lowest)" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                                                 </div>
@@ -4041,8 +4041,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 onMouseMove={updateHoverPosition}
                                                 onMouseLeave={hideHoverCard}
                                                 style={{ fontSize: '12px', fontWeight: 600, color: C.text, cursor: 'pointer' }}>{activeDeal.poc.name}</div>
-                                              <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
-                                              <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
+                                              <div style={{ fontSize: '0.75rem', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
+                                              <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
                                             </div>
                                           )}
                                           <div style={{ display: 'flex', gap: '8px' }}>
@@ -4067,21 +4067,21 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         <>
                                           {activeDeal?.isInternationalDeal && (
                                             <div style={{ background: C.warningBg, border: `1px solid ${C.warningBorder}`, borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
-                                              <div style={{ fontSize: '11px', fontWeight: 700, color: C.warning, marginBottom: '4px' }}>Cross-border deal</div>
-                                              <div style={{ fontSize: '10px', color: C.textSecondary, lineHeight: 1.5 }}>
+                                              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.warning, marginBottom: '4px' }}>Cross-border deal</div>
+                                              <div style={{ fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.5 }}>
                                                 This is a cross-border deal. Ensure compliance with your local tax authority. ValueSkins does not provide legal advice.
                                               </div>
                                             </div>
                                           )}
                                           <div style={{ padding: '12px', background: 'rgba(46,125,50,0.08)', borderRadius: '10px', marginBottom: '10px', border: '1px solid rgba(46,125,50,0.2)' }}>
                                             <div style={{ fontSize: '13px', fontWeight: 700, color: C.success, marginBottom: '4px' }}>Deal accepted</div>
-                                            <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '8px' }}>Terms are locked and recorded. Chat remains open for coordination.</div>
+                                            <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '8px' }}>Terms are locked and recorded. Chat remains open for coordination.</div>
                                             <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>${totalPrice.toLocaleString()} total</div>
                                             {[
                                               { label: 'Advance', pct: advPct },
                                               { label: 'On approval', pct: approvalPct },
                                             ].map(r => (
-                                              <div key={r.label} style={{ fontSize: '11px', color: C.textSecondary, display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                                              <div key={r.label} style={{ fontSize: '0.75rem', color: C.textSecondary, display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
                                                 <span>{r.label}</span>
                                                 <span style={{ color: C.text, fontWeight: 600 }}>{r.pct}% (${Math.round(totalPrice * r.pct / 100).toLocaleString()})</span>
                                               </div>
@@ -4094,14 +4094,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                                           {/* Script editor */}
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
-                                            <button onClick={() => setShowScriptEditorCreator(v => !v)} style={{ width:'100%', background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'5px 6px', fontSize:'10px', fontWeight:700, color:C.text, cursor:'pointer', marginBottom:'6px' }}>
+                                            <button onClick={() => setShowScriptEditorCreator(v => !v)} style={{ width:'100%', background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'5px 6px', fontSize:'0.75rem', fontWeight:700, color:C.text, cursor:'pointer', marginBottom:'6px' }}>
                                               Script {showScriptEditorCreator ? '▲' : '▼'} {scriptStatus === 'approved' && <span style={{color:C.success}}>✓</span>}
                                             </button>
                                             {showScriptEditorCreator && (
                                               <>
                                                 <div style={{ fontSize:'9px', color:C.textMuted, marginBottom:'4px' }}>{scriptMode === 'non_negotiable' ? 'Non-negotiable (locked)' : scriptMode === 'discussion' ? 'Discussion' : 'Creator freedom'}</div>
                                                 {scriptMode === 'non_negotiable' ? (
-                                                  <div style={{ fontSize:'10px', color:C.text, background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', marginBottom:'6px', whiteSpace:'pre-wrap', lineHeight:1.4, maxHeight:'100px', overflowY:'auto' }}>
+                                                  <div style={{ fontSize:'0.75rem', color:C.text, background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', marginBottom:'6px', whiteSpace:'pre-wrap', lineHeight:1.4, maxHeight:'100px', overflowY:'auto' }}>
                                                     {brandScriptText || 'No script provided'}
                                                   </div>
                                                 ) : (
@@ -4114,7 +4114,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                       }}
                                                       rows={4}
                                                       placeholder="Draft script..."
-                                                      style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'10px', color:C.text, fontFamily:'inherit', resize:'none', boxSizing:'border-box', marginBottom:'4px' }}
+                                                      style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'0.75rem', color:C.text, fontFamily:'inherit', resize:'none', boxSizing:'border-box', marginBottom:'4px' }}
                                                     />
                                                     <div style={{ fontSize:'8px', color:C.textMuted, marginBottom:'4px' }}>{scriptDraft.length} chars · {scriptDraft.split('\n').length} lines</div>
                                                     <input type="text" value={scriptEditReason} onChange={(e) => setScriptEditReason(e.target.value)} placeholder="Reason for change (optional)" style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'4px', padding:'4px 6px', fontSize:'9px', color:C.text, marginBottom:'4px', boxSizing:'border-box' }} />
@@ -4153,14 +4153,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     {!creatorScriptApproved ? (
                                                       <button
                                                         onClick={handleScriptApprove}
-                                                        style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'6px', fontSize:'10px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
+                                                        style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'6px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
                                                       >
                                                         I Approve Script
                                                       </button>
                                                     ) : (
                                                       <button
                                                         onClick={handleScriptRevoke}
-                                                        style={{ width:'100%', background:'transparent', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'10px', fontWeight:700, color:C.textSecondary, cursor:'pointer', marginBottom:'4px' }}
+                                                        style={{ width:'100%', background:'transparent', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'0.75rem', fontWeight:700, color:C.textSecondary, cursor:'pointer', marginBottom:'4px' }}
                                                       >
                                                         Revoke Approval
                                                       </button>
@@ -4191,14 +4191,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           </div>
                                           {/* Checklist */}
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
-                                            <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Checklist</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Checklist</div>
                                             {[
                                               'Deliverables',
                                               'Timeline',
                                               'Payment terms',
                                               'Contract',
                                             ].map((item, i) => (
-                                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 0', fontSize: '11px', color: C.text }}>
+                                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 0', fontSize: '0.75rem', color: C.text }}>
                                                 <div style={{ width: 12, height: 12, borderRadius: 3, background: C.success, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                   <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--c-surface-lowest)" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                                                 </div>
@@ -4209,12 +4209,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           {/* Deadline & Rights summary */}
                                           <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
                                             {opp.deadline && (
-                                              <div style={{ fontSize: '11px', color: C.text, marginBottom: '3px' }}>Deliver by: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
+                                              <div style={{ fontSize: '0.75rem', color: C.text, marginBottom: '3px' }}>Deliver by: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
                                             )}
-                                            <div style={{ fontSize: '11px', color: C.text, marginBottom: '3px' }}>Usage rights: <strong>{opp.usageRights || `${opp.revisionLimit * 30} days`}</strong></div>
-                                            <div style={{ fontSize: '11px', color: C.text, marginBottom: '3px' }}>Exclusivity: <strong>{opp.exclusivity || 'None'}</strong></div>
+                                            <div style={{ fontSize: '0.75rem', color: C.text, marginBottom: '3px' }}>Usage rights: <strong>{opp.usageRights || `${opp.revisionLimit * 30} days`}</strong></div>
+                                            <div style={{ fontSize: '0.75rem', color: C.text, marginBottom: '3px' }}>Exclusivity: <strong>{opp.exclusivity || 'None'}</strong></div>
                                             {opp.contentReview && (
-                                              <div style={{ marginTop:'4px', fontSize:'10px', padding:'4px 6px', borderRadius:'4px', background:opp.contentReview==='review_required'?`${withAlpha(C.warning, 0x15)}`:C.success+'20', color:opp.contentReview==='review_required'?C.warning:C.success, fontWeight:600 }}>
+                                              <div style={{ marginTop:'4px', fontSize:'0.75rem', padding:'4px 6px', borderRadius:'4px', background:opp.contentReview==='review_required'?`${withAlpha(C.warning, 0x15)}`:C.success+'20', color:opp.contentReview==='review_required'?C.warning:C.success, fontWeight:600 }}>
                                                 {opp.contentReview==='review_required' ? '📋 Content review required before publish' : '✅ Direct upload — no review needed'}
                                               </div>
                                             )}
@@ -4228,8 +4228,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 onMouseMove={updateHoverPosition}
                                                 onMouseLeave={hideHoverCard}
                                                 style={{ fontSize: '12px', fontWeight: 600, color: C.text, cursor: 'pointer' }}>{activeDeal.poc.name}</div>
-                                              <div style={{ fontSize: '11px', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
-                                              <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
+                                              <div style={{ fontSize: '0.75rem', color: C.primary, marginTop: '2px' }}>{activeDeal.poc.workEmail}</div>
+                                              <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '2px' }}>{activeDeal.poc.role}</div>
                                             </div>
                                           )}
                                           <div style={{ display: 'flex', gap: '8px' }}>
@@ -4251,7 +4251,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                       <div style={{ display: 'flex', gap: '8px', minHeight: '340px' }}>
                                         {/* Chat area */}
                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, overflow: 'hidden' }}>
-                                          <div style={{ padding: '8px 10px', borderBottom: `1px solid ${C.border}`, fontSize: '11px', fontWeight: 700, color: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                          <div style={{ padding: '8px 10px', borderBottom: `1px solid ${C.border}`, fontSize: '0.75rem', fontWeight: 700, color: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                               <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.success, animation: 'pulse 2s ease-in-out infinite' }} />
                                               Deal Room Chat
@@ -4327,7 +4327,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               placeholder="Type a message..."
                                               style={{ flex: 1, padding: '6px 10px', background: C.surfaceAlt, border: `1px solid ${C.border}`, borderRadius: '14px', color: C.text, fontSize: '12px', outline: 'none' }}
                                             />
-                                            <button type="submit" disabled={!chatInput.trim()} style={{ padding: '6px 12px', background: chatInput.trim() ? C.primary : `${withAlpha(C.primary, 0x40)}`, color: 'var(--c-surface-lowest)', border: 'none', borderRadius: '14px', fontSize: '11px', fontWeight: 600, cursor: chatInput.trim() ? 'pointer' : 'not-allowed' }}>Send</button>
+                                            <button type="submit" disabled={!chatInput.trim()} style={{ padding: '6px 12px', background: chatInput.trim() ? C.primary : `${withAlpha(C.primary, 0x40)}`, color: 'var(--c-surface-lowest)', border: 'none', borderRadius: '14px', fontSize: '0.75rem', fontWeight: 600, cursor: chatInput.trim() ? 'pointer' : 'not-allowed' }}>Send</button>
                                           </form>
                                         </div>
 
@@ -4335,16 +4335,16 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         <div style={{ width: '160px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                           {/* Campaign brief */}
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
-                                            <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Campaign Brief</div>
-                                            <div style={{ fontSize: '11px', fontWeight: 700, color: C.text, marginBottom: '3px', lineHeight: 1.3 }}>{opp.type || opp.brand}</div>
-                                            <div style={{ fontSize: '10px', color: C.textSecondary, marginBottom: '5px', lineHeight: 1.4 }}>{opp.about ? opp.about.slice(0, 80) + (opp.about.length > 80 ? '…' : '') : ''}</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Campaign Brief</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.text, marginBottom: '3px', lineHeight: 1.3 }}>{opp.type || opp.brand}</div>
+                                            <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '5px', lineHeight: 1.4 }}>{opp.about ? opp.about.slice(0, 80) + (opp.about.length > 80 ? '…' : '') : ''}</div>
                                             {opp.deliverables?.length > 0 && (
-                                              <div style={{ fontSize: '10px', color: C.textMuted, marginBottom: '3px' }}>
+                                              <div style={{ fontSize: '0.75rem', color: C.textMuted, marginBottom: '3px' }}>
                                                 {opp.deliverables.map((d: {count:number;format:string}) => `${d.count}x ${d.format}`).join(', ')}
                                               </div>
                                             )}
                                             <div style={{ display:'flex', justifyContent:'space-between', marginTop:'4px' }}>
-                                              <span style={{ fontSize:'10px', color:C.success, fontWeight:700 }}>{opp.budget}</span>
+                                              <span style={{ fontSize:'0.75rem', color:C.success, fontWeight:700 }}>{opp.budget}</span>
                                               {opp.deadline && <span style={{ fontSize:'9px', color:C.textMuted }}>{new Date(opp.deadline).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>}
                                             </div>
                                             {opp.contentReview && (
@@ -4355,14 +4355,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           </div>
                                           {/* Checklist */}
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
-                                            <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Checklist</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Checklist</div>
                                             {[
                                               'Deliverables',
                                               'Timeline',
                                               'Payment terms',
                                               'Contract',
                                             ].map((item, i) => (
-                                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 0', fontSize: '11px', color: C.text }}>
+                                              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 0', fontSize: '0.75rem', color: C.text }}>
                                                 <div style={{ width: 12, height: 12, borderRadius: 3, background: C.success, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                   <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="var(--c-surface-lowest)" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
                                                 </div>
@@ -4392,11 +4392,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           {creatorDealLifecycle === 'submitted' && brandApprovalPhase === 'reviewing' && (
                                             <div style={{ background: C.card, border: `1px solid ${C.success}`, borderRadius: '10px', padding: '14px', marginBottom: '12px' }}>
                                               <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>Deliverables Ready for Review</div>
-                                              <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '10px', lineHeight: 1.5 }}>
+                                              <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '10px', lineHeight: 1.5 }}>
                                                 The creator has submitted their deliverables. Review and approve to complete the deal and release the approval milestone.
                                               </div>
                                               {activeDeal?.deliverableLinks && Object.entries(activeDeal.deliverableLinks).map(([key, url]) => (
-                                                <div key={key} style={{ fontSize: '11px', marginBottom: '4px' }}>
+                                                <div key={key} style={{ fontSize: '0.75rem', marginBottom: '4px' }}>
                                                   <span style={{ color: C.textMuted }}>{key === '0' ? 'Google Drive' : 'Social Media'}: </span>
                                                   <a href={url as string} target="_blank" rel="noopener noreferrer" style={{ color: C.primary }}>{(url as string).slice(0, 40)}...</a>
                                                 </div>
@@ -4457,8 +4457,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                                           {/* Counter-offer — hidden once deal is past negotiation */}
                                           {dealRoomPhase !== 'accepted' && dealRoomPhase !== 'softhold' && dealRoomPhase !== 'checklist' && !activeDeal?.formalOfferSentByCreator && <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
-                                            <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Your Counter</div>
-                                            <div style={{ fontSize: '10px', color: C.textSecondary, marginBottom: '4px' }}>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Your Counter</div>
+                                            <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '4px' }}>
                                               Brand offer: <strong style={{ color: C.text }}>${parseInt(dealOfferAmount || opp.budget.replace(/[^0-9]/g, '') || '0').toLocaleString()}</strong>
                                             </div>
 
@@ -4491,7 +4491,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 setPurchaseToast(`Counter sent: ₹${creatorAsk.toLocaleString()}`);
                                                 setTimeout(() => setPurchaseToast(null), 2000);
                                               }}
-                                              style={{ width: '100%', background: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? C.primary : C.border, border: 'none', padding: '6px', borderRadius: '6px', color: 'var(--c-surface-lowest)', fontWeight: 600, fontSize: '11px', cursor: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 'pointer' : 'not-allowed', opacity: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 1 : 0.5 }}
+                                              style={{ width: '100%', background: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? C.primary : C.border, border: 'none', padding: '6px', borderRadius: '6px', color: 'var(--c-surface-lowest)', fontWeight: 600, fontSize: '0.75rem', cursor: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 'pointer' : 'not-allowed', opacity: dealCounterAmount && parseInt(dealCounterAmount) > 0 ? 1 : 0.5 }}
                                             >
                                               Send Counter
                                             </button>
@@ -4499,13 +4499,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                                           {!['deliverables','submitted','approved'].includes(creatorDealLifecycle) && dealRoomPhase !== 'accepted' && dealRoomPhase !== 'softhold' && dealRoomPhase !== 'checklist' && (
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
-                                            <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Payment Plan</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Payment Plan</div>
                                             {[
                                               { label: 'Advance', value: advancePercent, color: C.success, key: 'advance' as const },
                                               { label: 'On approval', value: approvalPercent, color: C.warning, key: 'approval' as const },
                                             ].map(s => (
                                               <div key={s.key} style={{ marginBottom: '6px' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginBottom: '2px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '2px' }}>
                                                   <span style={{ color: s.color, fontWeight: 600 }}>{s.label}</span>
                                                   <span style={{ color: C.text, fontWeight: 700 }}>{s.value}%</span>
                                                 </div>
@@ -4525,14 +4525,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           {/* Brand submits formal offer — hidden once submitted */}
                                           {!activeDeal?.formalOfferSentByCreator && (
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
-                                            <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Finalize</div>
+                                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Finalize</div>
                                             <button
                                               onClick={() => {
                                                 if (activeDealKey) {
                                                   updateDeal(activeDealKey, { phase: 'formal_offer' as DealRoomPhase, formalOfferSentByCreator: true });
                                                 }
                                               }}
-                                              style={{ width: '100%', background: C.primary, border: 'none', padding: '7px', borderRadius: '6px', color: C.onPrimary, fontWeight: 600, fontSize: '11px', cursor: 'pointer', lineHeight: 1.3 }}
+                                              style={{ width: '100%', background: C.primary, border: 'none', padding: '7px', borderRadius: '6px', color: C.onPrimary, fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer', lineHeight: 1.3 }}
                                             >
                                               Submit Formal Offer
                                             </button>
@@ -4549,7 +4549,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               setPurchaseToast('Deal declined — brand notified');
                                               setTimeout(() => setPurchaseToast(null), 3000);
                                             }}
-                                            style={{ width: '100%', background: 'none', border: `1px solid rgba(176, 65, 62,0.3)`, padding: '7px', borderRadius: '6px', color: 'rgba(176, 65, 62,0.85)', fontWeight: 600, fontSize: '10px', cursor: 'pointer', marginTop: '4px' }}
+                                            style={{ width: '100%', background: 'none', border: `1px solid rgba(176, 65, 62,0.3)`, padding: '7px', borderRadius: '6px', color: 'rgba(176, 65, 62,0.85)', fontWeight: 600, fontSize: '0.75rem', cursor: 'pointer', marginTop: '4px' }}
                                           >
                                             Reject Brand
                                           </button>
@@ -4562,9 +4562,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   {dealRoomPhase === 'last_offer' && (
                                     <>
                                       <div style={{ background: 'rgba(230,81,0,0.06)', borderRadius: '8px', padding: '12px', marginBottom: '12px', border: `1px solid rgba(230,81,0,0.2)` }}>
-                                        <div style={{ fontSize: '11px', fontWeight: 700, color: C.warning, marginBottom: '6px' }}>Final Offer from Brand</div>
+                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.warning, marginBottom: '6px' }}>Final Offer from Brand</div>
                                         <div style={{ fontSize: '22px', fontWeight: 800, color: C.text, marginBottom: '4px' }}>${parseInt(dealOfferAmount || '0').toLocaleString()}<span style={{ fontSize: '12px', color: C.textMuted, fontWeight: 400 }}>/post</span></div>
-                                        <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.4 }}>The brand has indicated this is their final offer. You can accept or decline.</div>
+                                        <div style={{ fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.4 }}>The brand has indicated this is their final offer. You can accept or decline.</div>
                                       </div>
                                       <div style={{ display: 'flex', gap: '8px' }}>
                                         <button
@@ -4625,7 +4625,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                                   {dealRoomPhase === 'checklist' && (
                                     <>
-                                      <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px' }}>Expectation Checklist</div>
+                                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '10px' }}>Expectation Checklist</div>
                                       {[
                                         { key: 'Content format (posts / reels / stories)', req: true },
                                         { key: 'Maximum revision rounds', req: true },
@@ -4688,7 +4688,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'8px' }}>Brand deposited ${agreedPrice.toLocaleString()} into escrow.</div>
                                                 <div style={{ background:'rgba(46,125,50,0.06)', border:'1px solid rgba(46,125,50,0.2)', borderRadius:'8px', padding:'10px', marginBottom:'8px' }}>
                                                   <div style={{ fontSize:'13px', fontWeight:700, color:C.success }}>Advance paid: ${advanceAmt.toLocaleString()}</div>
-                                                  <div style={{ fontSize:'11px', color:C.textSecondary, marginTop:'2px' }}>30% advance deposited to your account. Begin deliverables to unlock remaining milestones.</div>
+                                                  <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginTop:'2px' }}>30% advance deposited to your account. Begin deliverables to unlock remaining milestones.</div>
                                                 </div>
                                               </div>
                                             );
@@ -4724,13 +4724,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               </div>
                                               <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'12px' }}>
                                                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'6px' }}>
-                                                  <span style={{ fontSize:'11px', color:C.textMuted }}>Escrow account</span>
+                                                  <span style={{ fontSize:'0.75rem', color:C.textMuted }}>Escrow account</span>
                                                   <span style={{ fontSize:'12px', fontWeight:700, color:C.textMuted }}>Awaiting brand deposit</span>
                                                 </div>
                                                 <div style={{ width:'100%', height:'6px', background:C.card, borderRadius:'3px', overflow:'hidden' }}>
                                                   <div style={{ width:'0%', height:'100%', background:C.border, borderRadius:'3px' }} />
                                                 </div>
-                                                <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'6px' }}>
+                                                <div style={{ fontSize:'0.75rem', color:C.textMuted, marginTop:'6px' }}>
                                                   ₹0 / ₹${agreedPrice.toLocaleString()} deposited
                                                 </div>
                                               </div>
@@ -4752,13 +4752,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           return (
                                             <>
                                               <div style={{ fontSize:'13px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'6px' }}>Submit Deliverable Links</div>
-                                              <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'12px', lineHeight:1.5 }}>
+                                              <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'12px', lineHeight:1.5 }}>
                                                 Provide a link to your work. Use a <strong>Google Drive link</strong> for the draft/sample, or paste a <strong>social media upload link</strong> for the final published content.
                                               </div>
                                               {deadlineStr && (
                                                 <div style={{ background: daysLeft !== null && daysLeft <= 3 ? 'rgba(176, 65, 62,0.08)' : C.bg, border: `1px solid ${daysLeft !== null && daysLeft <= 3 ? 'rgba(176, 65, 62,0.3)' : C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'12px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                                                   <div>
-                                                    <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px' }}>Deadline</div>
+                                                    <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px' }}>Deadline</div>
                                                     <div style={{ fontSize:'13px', fontWeight:600, color:C.text }}>{deadlineStr}</div>
                                                   </div>
                                                   {daysLeft !== null && (
@@ -4769,43 +4769,43 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 </div>
                                               )}
                                               <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'12px' }}>
-                                                <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'6px' }}>Rights & Exclusivity</div>
-                                                <div style={{ fontSize:'11px', color:C.text, marginBottom:'3px' }}>Usage rights: <strong>{opp.usageRights || `${opp.revisionLimit * 30} days`}</strong></div>
-                                                <div style={{ fontSize:'11px', color:C.text, marginBottom:'3px' }}>Exclusivity: <strong>{opp.exclusivity || 'None'}</strong></div>
-                                                <div style={{ fontSize:'11px', color:C.text }}>Revision limit: <strong>{opp.revisionLimit} round{opp.revisionLimit !== 1 ? 's' : ''}</strong></div>
+                                                <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'6px' }}>Rights & Exclusivity</div>
+                                                <div style={{ fontSize:'0.75rem', color:C.text, marginBottom:'3px' }}>Usage rights: <strong>{opp.usageRights || `${opp.revisionLimit * 30} days`}</strong></div>
+                                                <div style={{ fontSize:'0.75rem', color:C.text, marginBottom:'3px' }}>Exclusivity: <strong>{opp.exclusivity || 'None'}</strong></div>
+                                                <div style={{ fontSize:'0.75rem', color:C.text }}>Revision limit: <strong>{opp.revisionLimit} round{opp.revisionLimit !== 1 ? 's' : ''}</strong></div>
                                               </div>
                                               <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'16px', marginBottom:'12px' }}>
                                                 <div style={{ marginBottom:'14px' }}>
-                                                  <div style={{ fontSize:'11px', fontWeight:600, color:C.text, marginBottom:'6px' }}>Google Drive link (sample / draft)</div>
+                                                  <div style={{ fontSize:'0.75rem', fontWeight:600, color:C.text, marginBottom:'6px' }}>Google Drive link (sample / draft)</div>
                                                   {hasGoogleDriveLink ? (
                                                     <div style={{ display:'flex', alignItems:'center', gap:'8px', padding:'8px 10px', background:C.surfaceAlt, borderRadius:'6px' }}>
-                                                      <a href={deliverableLinks[0]} target="_blank" rel="noopener noreferrer" style={{ flex:1, fontSize:'11px', color:C.primary, textDecoration:'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{deliverableLinks[0]}</a>
+                                                      <a href={deliverableLinks[0]} target="_blank" rel="noopener noreferrer" style={{ flex:1, fontSize:'0.75rem', color:C.primary, textDecoration:'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{deliverableLinks[0]}</a>
                                                       <div style={{ fontSize:'9px', fontWeight:700, color:C.success, background:'rgba(200, 184, 154,0.1)', padding:'2px 7px', borderRadius:'6px', flexShrink:0 }}>Submitted</div>
                                                     </div>
                                                   ) : (
                                                     <div style={{ display:'flex', gap:'6px' }}>
-                                                      <input type="text" value={googleDriveVal} onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, [0]: e.target.value }))} placeholder="https://drive.google.com/..." style={{ flex:1, background:C.surfaceAlt, border:`1px solid ${isValidUrl(googleDriveVal) ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'11px', fontFamily:'inherit', outline:'none' }} />
-                                                      <button disabled={!isValidUrl(googleDriveVal)} onClick={() => { setDeliverableLinks(prev => ({ ...prev, [0]: googleDriveVal })); setDeliverableLinkInputs(prev => ({ ...prev, [0]: '' })); setDeliverableStatuses(prev => ({ ...prev, [0]: 'uploaded' })); }} style={{ background: isValidUrl(googleDriveVal) ? C.success : C.border, border:'none', borderRadius:'6px', padding:'7px 12px', color:'var(--c-surface-lowest)', fontSize:'11px', fontWeight:700, cursor: isValidUrl(googleDriveVal) ? 'pointer' : 'not-allowed', opacity: isValidUrl(googleDriveVal) ? 1 : 0.5, flexShrink:0 }}>Confirm</button>
+                                                      <input type="text" value={googleDriveVal} onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, [0]: e.target.value }))} placeholder="https://drive.google.com/..." style={{ flex:1, background:C.surfaceAlt, border:`1px solid ${isValidUrl(googleDriveVal) ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'0.75rem', fontFamily:'inherit', outline:'none' }} />
+                                                      <button disabled={!isValidUrl(googleDriveVal)} onClick={() => { setDeliverableLinks(prev => ({ ...prev, [0]: googleDriveVal })); setDeliverableLinkInputs(prev => ({ ...prev, [0]: '' })); setDeliverableStatuses(prev => ({ ...prev, [0]: 'uploaded' })); }} style={{ background: isValidUrl(googleDriveVal) ? C.success : C.border, border:'none', borderRadius:'6px', padding:'7px 12px', color:'var(--c-surface-lowest)', fontSize:'0.75rem', fontWeight:700, cursor: isValidUrl(googleDriveVal) ? 'pointer' : 'not-allowed', opacity: isValidUrl(googleDriveVal) ? 1 : 0.5, flexShrink:0 }}>Confirm</button>
                                                     </div>
                                                   )}
                                                 </div>
                                                 <div>
-                                                  <div style={{ fontSize:'11px', fontWeight:600, color:C.text, marginBottom:'6px' }}>Social media upload link (final)</div>
+                                                  <div style={{ fontSize:'0.75rem', fontWeight:600, color:C.text, marginBottom:'6px' }}>Social media upload link (final)</div>
                                                   {hasSocialLink ? (
                                                     <div style={{ display:'flex', alignItems:'center', gap:'8px', padding:'8px 10px', background:C.surfaceAlt, borderRadius:'6px' }}>
-                                                      <a href={deliverableLinks[1]} target="_blank" rel="noopener noreferrer" style={{ flex:1, fontSize:'11px', color:C.primary, textDecoration:'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{deliverableLinks[1]}</a>
+                                                      <a href={deliverableLinks[1]} target="_blank" rel="noopener noreferrer" style={{ flex:1, fontSize:'0.75rem', color:C.primary, textDecoration:'none', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{deliverableLinks[1]}</a>
                                                       <div style={{ fontSize:'9px', fontWeight:700, color:C.success, background:'rgba(200, 184, 154,0.1)', padding:'2px 7px', borderRadius:'6px', flexShrink:0 }}>Submitted</div>
                                                     </div>
                                                   ) : (
                                                     <div style={{ display:'flex', gap:'6px' }}>
-                                                      <input type="text" value={socialLinkVal} onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, [1]: e.target.value }))} placeholder="https://instagram.com/..." style={{ flex:1, background:C.surfaceAlt, border:`1px solid ${isValidUrl(socialLinkVal) ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'11px', fontFamily:'inherit', outline:'none' }} />
-                                                      <button disabled={!isValidUrl(socialLinkVal)} onClick={() => { setDeliverableLinks(prev => ({ ...prev, [1]: socialLinkVal })); setDeliverableLinkInputs(prev => ({ ...prev, [1]: '' })); setDeliverableStatuses(prev => ({ ...prev, [1]: 'uploaded' })); }} style={{ background: isValidUrl(socialLinkVal) ? C.success : C.border, border:'none', borderRadius:'6px', padding:'7px 12px', color:'var(--c-surface-lowest)', fontSize:'11px', fontWeight:700, cursor: isValidUrl(socialLinkVal) ? 'pointer' : 'not-allowed', opacity: isValidUrl(socialLinkVal) ? 1 : 0.5, flexShrink:0 }}>Confirm</button>
+                                                      <input type="text" value={socialLinkVal} onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, [1]: e.target.value }))} placeholder="https://instagram.com/..." style={{ flex:1, background:C.surfaceAlt, border:`1px solid ${isValidUrl(socialLinkVal) ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'0.75rem', fontFamily:'inherit', outline:'none' }} />
+                                                      <button disabled={!isValidUrl(socialLinkVal)} onClick={() => { setDeliverableLinks(prev => ({ ...prev, [1]: socialLinkVal })); setDeliverableLinkInputs(prev => ({ ...prev, [1]: '' })); setDeliverableStatuses(prev => ({ ...prev, [1]: 'uploaded' })); }} style={{ background: isValidUrl(socialLinkVal) ? C.success : C.border, border:'none', borderRadius:'6px', padding:'7px 12px', color:'var(--c-surface-lowest)', fontSize:'0.75rem', fontWeight:700, cursor: isValidUrl(socialLinkVal) ? 'pointer' : 'not-allowed', opacity: isValidUrl(socialLinkVal) ? 1 : 0.5, flexShrink:0 }}>Confirm</button>
                                                     </div>
                                                   )}
                                                 </div>
                                               </div>
                                               <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'10px' }}>
-                                                <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>Payment Milestones</div>
+                                                <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>Payment Milestones</div>
                                                 {[
                                                   { key: 'advance' as const, label: 'Advance', pct: advancePercent, color: C.success },
                                                   { key: 'approval' as const, label: 'On approval', pct: approvalPercent, color: 'var(--c-warning)' },
@@ -4813,7 +4813,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   <div key={m.key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 0', borderBottom:`1px solid ${C.border}` }}>
                                                     <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
                                                       <div style={{ width:'8px', height:'8px', borderRadius:'50%', background: paymentMilestones[m.key] === 'released' ? C.success : m.color, opacity: paymentMilestones[m.key] === 'released' ? 1 : 0.4 }} />
-                                                      <span style={{ fontSize:'11px', color:C.text, fontWeight:500 }}>{m.label}</span>
+                                                      <span style={{ fontSize:'0.75rem', color:C.text, fontWeight:500 }}>{m.label}</span>
                                                     </div>
                                                     <div style={{ display:'flex', alignItems:'center', gap:'6px' }}>
                                                       <span style={{ fontSize:'12px', fontWeight:700, color: paymentMilestones[m.key] === 'released' ? C.success : C.text }}>${Math.round(agreedPrice * m.pct / 100).toLocaleString()}</span>
@@ -4822,7 +4822,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   </div>
                                                 ))}
                                               </div>
-                                              <div style={{ background:'rgba(46,125,50,0.06)', border:'1px solid rgba(46,125,50,0.2)', borderRadius:'8px', padding:'10px', marginBottom:'12px', fontSize:'11px', color:C.textSecondary }}>
+                                              <div style={{ background:'rgba(46,125,50,0.06)', border:'1px solid rgba(46,125,50,0.2)', borderRadius:'8px', padding:'10px', marginBottom:'12px', fontSize:'0.75rem', color:C.textSecondary }}>
                                                 Brand payment on-hold: ${agreedPrice.toLocaleString()} — released per milestones above
                                               </div>
                                               {atLeastOneSubmitted && !submittedForReview && activeDeal?.creatorDealLifecycle !== 'submitted' && activeDeal?.creatorDealLifecycle !== 'approved' && (
@@ -4852,7 +4852,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   ⏳ Waiting for brand&apos;s approval
                                                 </div>
                                               )}
-                                              <button onClick={() => setShowCancelDealModal(true)} style={{ width:'100%', background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, padding:'8px', borderRadius:'8px', color:'var(--c-error)', fontSize:'11px', cursor:'pointer', fontWeight:500 }}>
+                                              <button onClick={() => setShowCancelDealModal(true)} style={{ width:'100%', background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, padding:'8px', borderRadius:'8px', color:'var(--c-error)', fontSize:'0.75rem', cursor:'pointer', fontWeight:500 }}>
                                                 Cancel Deal
                                               </button>
                                             </>
@@ -4865,9 +4865,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               <>
                                                 <div style={{ background:'rgba(0,102,204,0.06)', border:`1px solid rgba(0,102,204,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                   <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Deliverables Submitted</div>
-                                                  <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Waiting for brand approval — typically within 48h.</div>
-                                                  <div style={{ fontSize:'10px', color:C.textMuted, marginBottom:'2px' }}>Advance: <span style={{ color:C.success, fontWeight:600 }}>Paid</span></div>
-                                                  <div style={{ fontSize:'10px', color:C.textMuted }}>Approval milestone: <span style={{ color:'var(--c-warning)', fontWeight:600 }}>Pending brand approval</span></div>
+                                                  <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'8px' }}>Waiting for brand approval — typically within 48h.</div>
+                                                  <div style={{ fontSize:'0.75rem', color:C.textMuted, marginBottom:'2px' }}>Advance: <span style={{ color:C.success, fontWeight:600 }}>Paid</span></div>
+                                                  <div style={{ fontSize:'0.75rem', color:C.textMuted }}>Approval milestone: <span style={{ color:'var(--c-warning)', fontWeight:600 }}>Pending brand approval</span></div>
                                                 </div>
                                                 <button onClick={() => {
                                                   const earnedAmount = parseInt(dealCounterAmount || dealOfferAmount || '5000');
@@ -4915,7 +4915,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                 <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'16px' }}>All deliverables approved. All milestones paid.</div>
                                                   <button
                                                     onClick={() => { if (activeDealKey && activeDeal) downloadDealSummary(activeDealKey, activeDeal); }}
-                                                    style={{ width:'100%', background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'7px', color:C.textSecondary, fontWeight:600, cursor:'pointer', fontSize:'11px', marginBottom:'6px' }}
+                                                    style={{ width:'100%', background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'7px', color:C.textSecondary, fontWeight:600, cursor:'pointer', fontSize:'0.75rem', marginBottom:'6px' }}
                                                   >
                                                     Download Legal Deal Summary (.txt) (.txt)
                                                   </button>
@@ -4926,13 +4926,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     Download Deal Report (.pdf)
                                                   </button>
                                                 <div style={{ background:'rgba(46,125,50,0.06)', border:'1px solid rgba(46,125,50,0.2)', borderRadius:'8px', padding:'12px', marginBottom:'14px' }}>
-                                                  <div style={{ fontSize:'11px', color:C.textMuted, marginBottom:'2px' }}>Total Earnings</div>
+                                                  <div style={{ fontSize:'0.75rem', color:C.textMuted, marginBottom:'2px' }}>Total Earnings</div>
                                                   <div style={{ fontSize:'22px', fontWeight:800, color:C.success }}>${parseInt(dealCounterAmount || '5000').toLocaleString()}</div>
-                                                  <div style={{ fontSize:'10px', color:C.textMuted, marginTop:'4px' }}>Advance + Approval milestones</div>
+                                                  <div style={{ fontSize:'0.75rem', color:C.textMuted, marginTop:'4px' }}>Advance + Approval milestones</div>
                                                 </div>
                                                 {!ratingSubmitted ? (
                                                   <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'14px', marginBottom:'14px', textAlign:'left' }}>
-                                                    <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>Rate this brand</div>
+                                                    <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>Rate this brand</div>
                                                     <div style={{ display:'flex', gap:'6px', marginBottom:'10px', justifyContent:'center' }}>
                                                       {[1,2,3,4,5].map(star => (
                                                         <button key={star} onClick={() => setDealRating(star)} style={{ background:'none', border:'none', cursor:'pointer', fontSize:'24px', color: star <= dealRating ? 'var(--c-warning)' : C.border, transition:'color 0.1s', padding:'2px' }}>
@@ -4957,27 +4957,27 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   </div>
                                                 )}
                                                 <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'10px', textAlign:'left' }}>
-                                                  <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'6px' }}>Escrow Release</div>
+                                                  <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'6px' }}>Escrow Release</div>
                                                   {[
                                                     { label:'Advance', status:'Released on deal acceptance' },
                                                     { label:'Approval milestone', status:'Released on brand approval' },
                                                   ].map(m => (
-                                                    <div key={m.label} style={{ display:'flex', alignItems:'center', gap:'6px', padding:'3px 0', fontSize:'11px' }}>
+                                                    <div key={m.label} style={{ display:'flex', alignItems:'center', gap:'6px', padding:'3px 0', fontSize:'0.75rem' }}>
                                                       <div style={{ width:'8px', height:'8px', borderRadius:'50%', background:C.success }} />
                                                       <span style={{ color:C.text, flex:1 }}>{m.label}</span>
-                                                      <span style={{ color:C.success, fontSize:'10px' }}>{m.status}</span>
+                                                      <span style={{ color:C.success, fontSize:'0.75rem' }}>{m.status}</span>
                                                     </div>
                                                   ))}
                                                 </div>
                                                 {opp && (
                                                   <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', marginBottom:'10px', textAlign:'left' }}>
-                                                    <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'6px' }}>Active Rights</div>
-                                                    <div style={{ fontSize:'11px', color:C.text, marginBottom:'3px' }}>
+                                                    <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'6px' }}>Active Rights</div>
+                                                    <div style={{ fontSize:'0.75rem', color:C.text, marginBottom:'3px' }}>
                                                       Content usage: <strong>{opp.usageRights || `${opp.revisionLimit * 30} days`}</strong>
                                                       <span style={{ color:C.textMuted }}> — expires {new Date(Date.now() + (opp.revisionLimit || 3) * 30 * 86400000).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</span>
                                                     </div>
                                                     {opp.exclusivity && opp.exclusivity !== 'None' && (
-                                                      <div style={{ fontSize:'11px', color:C.text }}>
+                                                      <div style={{ fontSize:'0.75rem', color:C.text }}>
                                                         Exclusivity: <strong>{opp.exclusivity}</strong>
                                                         <span style={{ color:'var(--c-warning)' }}> — do not accept competing deals</span>
                                                       </div>
@@ -4985,7 +4985,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   </div>
                                                 )}
                                                 {contractSignature && (
-                                                  <div style={{ background:'rgba(0,102,204,0.04)', border:`1px solid rgba(0,102,204,0.15)`, borderRadius:'8px', padding:'8px 10px', marginBottom:'10px', fontSize:'10px', color:C.textMuted, textAlign:'left' }}>
+                                                  <div style={{ background:'rgba(0,102,204,0.04)', border:`1px solid rgba(0,102,204,0.15)`, borderRadius:'8px', padding:'8px 10px', marginBottom:'10px', fontSize:'0.75rem', color:C.textMuted, textAlign:'left' }}>
                                                     Contract signed by <strong style={{ color:C.text, fontStyle:'italic' }}>{contractSignature}</strong> on {new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}
                                                   </div>
                                                 )}
@@ -4993,7 +4993,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   <button onClick={() => { if (activeDealKey) { setDealStates(prev => { const next = {...prev}; delete next[activeDealKey]; return next; }); } setNegotiatingOpp(null); setCreatorDealLifecycle('checklist'); setDealUploadSimulated(false); setDeliverableStatuses({}); setDeliverableLinks({}); setDeliverableLinkInputs({}); setPaymentMilestones({ advance:'pending', upload:'pending', approval:'pending' }); setDealRating(0); setDealRatingComment(''); setRatingSubmitted(false); setContractChecks({}); setContractSignature(''); setEscrowFunded(false); setEscrowFundingInProgress(false); }} style={{ flex:2, background:C.primary, border:'none', padding:'10px', borderRadius:'8px', color:'var(--c-surface-lowest)', fontWeight:600, cursor:'pointer', fontSize:'13px' }}>
                                                     Withdraw to Bank
                                                   </button>
-                                                  <button onClick={() => setShowDisputeModal(Date.now())} style={{ flex:1, background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, padding:'10px', borderRadius:'8px', color:'var(--c-error)', fontSize:'11px', cursor:'pointer', fontWeight:500 }}>
+                                                  <button onClick={() => setShowDisputeModal(Date.now())} style={{ flex:1, background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, padding:'10px', borderRadius:'8px', color:'var(--c-error)', fontSize:'0.75rem', cursor:'pointer', fontWeight:500 }}>
                                                     Dispute
                                                   </button>
                                                 </div>
@@ -5010,17 +5010,17 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         const trackingInput = goodsTrackingInput;
                                         return (
                                           <>
-                                            <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>Goods Tracking</div>
+                                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>Goods Tracking</div>
                                             {status === 'goods_preparing' && (
                                               <div style={{ background:'rgba(160,138,94,0.06)', border:`1px solid rgba(160,138,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Brand is Preparing Your Product</div>
-                                                <div style={{ fontSize:'11px', color:C.textSecondary }}>Your product is being selected and packaged. You will receive tracking information once it ships.</div>
+                                                <div style={{ fontSize:'0.75rem', color:C.textSecondary }}>Your product is being selected and packaged. You will receive tracking information once it ships.</div>
                                               </div>
                                             )}
                                             {status === 'goods_shipped' && (
                                               <div style={{ background:'rgba(200, 184, 154,0.06)', border:`1px solid rgba(200, 184, 154,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Your Product is On The Way</div>
-                                                <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>
+                                                <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'8px' }}>
                                                   Tracking: <strong>{trackingInput || 'Tracking info shown by brand'}</strong>
                                                 </div>
                                                 <button onClick={() => {
@@ -5030,7 +5030,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   }
                                                   setPurchaseToast('Marked as received');
                                                   setTimeout(() => setPurchaseToast(null), 3000);
-                                                }} style={{ width:'100%', background:C.primary, border:'none', padding:'8px', borderRadius:'6px', color:'var(--c-surface-lowest)', fontWeight:600, cursor:'pointer', fontSize:'11px' }}>
+                                                }} style={{ width:'100%', background:C.primary, border:'none', padding:'8px', borderRadius:'6px', color:'var(--c-surface-lowest)', fontWeight:600, cursor:'pointer', fontSize:'0.75rem' }}>
                                                   Mark as Received
                                                 </button>
                                               </div>
@@ -5038,7 +5038,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             {status === 'goods_delivered' && (
                                               <div style={{ background:'rgba(200, 184, 154,0.06)', border:`1px solid rgba(200, 184, 154,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Product Received</div>
-                                                <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Great! Now create content featuring this product. You have until the deadline to submit.</div>
+                                                <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'8px' }}>Great! Now create content featuring this product. You have until the deadline to submit.</div>
                                                 <button onClick={() => {
                                                   setGoodsTrackerStatus('content_due');
                                                   if (activeDealKey) {
@@ -5046,7 +5046,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                   }
                                                   setPurchaseToast('Ready to create content');
                                                   setTimeout(() => setPurchaseToast(null), 3000);
-                                                }} style={{ width:'100%', background:C.primary, border:'none', padding:'8px', borderRadius:'6px', color:'var(--c-surface-lowest)', fontWeight:600, cursor:'pointer', fontSize:'11px' }}>
+                                                }} style={{ width:'100%', background:C.primary, border:'none', padding:'8px', borderRadius:'6px', color:'var(--c-surface-lowest)', fontWeight:600, cursor:'pointer', fontSize:'0.75rem' }}>
                                                   Start Creating
                                                 </button>
                                               </div>
@@ -5054,13 +5054,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             {status === 'content_due' && (
                                               <div style={{ background:'rgba(160,138,94,0.06)', border:`1px solid rgba(160,138,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Create Content</div>
-                                                <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Submit a link to your published content featuring the product</div>
+                                                <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'8px' }}>Submit a link to your published content featuring the product</div>
                                                 <input
                                                   type="text"
                                                   value={deliverableLinkInputs[0] || ''}
                                                   onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, 0: e.target.value }))}
                                                   placeholder="https://www.portfolio.valueskins.com/p/..."
-                                                  style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${/instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'11px', fontFamily:'inherit', outline:'none', marginBottom:'8px', boxSizing:'border-box' }}
+                                                  style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${/instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'0.75rem', fontFamily:'inherit', outline:'none', marginBottom:'8px', boxSizing:'border-box' }}
                                                 />
                                                 <button
                                                   disabled={!/instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '')}
@@ -5074,7 +5074,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     setPurchaseToast('Content submitted for review');
                                                     setTimeout(() => setPurchaseToast(null), 3000);
                                                   }}
-                                                  style={{ width:'100%', background: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.primary : C.border, border:'none', borderRadius:'6px', padding:'8px', color:'var(--c-surface-lowest)', fontWeight:600, cursor: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 'pointer' : 'not-allowed', opacity: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 1 : 0.5, fontSize:'11px' }}
+                                                  style={{ width:'100%', background: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.primary : C.border, border:'none', borderRadius:'6px', padding:'8px', color:'var(--c-surface-lowest)', fontWeight:600, cursor: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 'pointer' : 'not-allowed', opacity: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 1 : 0.5, fontSize:'0.75rem' }}
                                                 >
                                                   Submit Content
                                                 </button>
@@ -5083,7 +5083,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             {status === 'content_submitted' && (
                                               <div style={{ background:'rgba(160,138,94,0.06)', border:`1px solid rgba(160,138,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Content Submitted</div>
-                                                <div style={{ fontSize:'11px', color:C.textSecondary }}>Your content is awaiting brand approval. This typically takes 24-48 hours.</div>
+                                                <div style={{ fontSize:'0.75rem', color:C.textSecondary }}>Your content is awaiting brand approval. This typically takes 24-48 hours.</div>
                                               </div>
                                             )}
                                             {status === 'content_approved' && (
@@ -5109,17 +5109,17 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         const status = c2cContentStatus;
                                         return (
                                           <>
-                                            <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>Content Collaboration</div>
+                                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>Content Collaboration</div>
                                             {status === 'content_creating' && (
                                               <div style={{ background:'rgba(160,138,94,0.06)', border:`1px solid rgba(160,138,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>In Progress</div>
-                                                <div style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'8px' }}>Submit your content link when ready</div>
+                                                <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'8px' }}>Submit your content link when ready</div>
                                                 <input
                                                   type="text"
                                                   value={deliverableLinkInputs[0] || ''}
                                                   onChange={e => setDeliverableLinkInputs(prev => ({ ...prev, 0: e.target.value }))}
                                                   placeholder="https://www.portfolio.valueskins.com/p/..."
-                                                  style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${/instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'11px', fontFamily:'inherit', outline:'none', marginBottom:'8px', boxSizing:'border-box' }}
+                                                  style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${/instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.success : C.border}`, borderRadius:'6px', color:C.text, padding:'7px 10px', fontSize:'0.75rem', fontFamily:'inherit', outline:'none', marginBottom:'8px', boxSizing:'border-box' }}
                                                 />
                                                 <button
                                                   disabled={!/instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '')}
@@ -5133,7 +5133,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                                     setPurchaseToast('Content submitted');
                                                     setTimeout(() => setPurchaseToast(null), 3000);
                                                   }}
-                                                  style={{ width:'100%', background: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.primary : C.border, border:'none', borderRadius:'6px', padding:'8px', color:'var(--c-surface-lowest)', fontWeight:600, cursor: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 'pointer' : 'not-allowed', opacity: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 1 : 0.5, fontSize:'11px' }}
+                                                  style={{ width:'100%', background: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? C.primary : C.border, border:'none', borderRadius:'6px', padding:'8px', color:'var(--c-surface-lowest)', fontWeight:600, cursor: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 'pointer' : 'not-allowed', opacity: /instagram\.com\/(p|reels?|tv)\/[A-Za-z0-9_-]+/.test(deliverableLinkInputs[0] || '') ? 1 : 0.5, fontSize:'0.75rem' }}
                                                 >
                                                   Submit
                                                 </button>
@@ -5142,7 +5142,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             {status === 'content_submitted' && (
                                               <div style={{ background:'rgba(160,138,94,0.06)', border:`1px solid rgba(160,138,94,0.2)`, borderRadius:'8px', padding:'12px', marginBottom:'12px' }}>
                                                 <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Submitted</div>
-                                                <div style={{ fontSize:'11px', color:C.textSecondary }}>Waiting for collaborator approval</div>
+                                                <div style={{ fontSize:'0.75rem', color:C.textSecondary }}>Waiting for collaborator approval</div>
                                               </div>
                                             )}
                                             {status === 'content_approved' && (
@@ -5180,8 +5180,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             onMouseMove={updateHoverPosition}
                                             onMouseLeave={hideHoverCard}
                                             style={{ fontSize: '12px', fontWeight: 600, color: C.text, cursor: 'pointer' }}>{activeDeal.poc.name}</div>
-                                          <div style={{ fontSize: '11px', color: C.primary, marginTop: '1px' }}>{activeDeal.poc.workEmail}</div>
-                                          {activeDeal.poc.role && <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '1px' }}>{activeDeal.poc.role}</div>}
+                                          <div style={{ fontSize: '0.75rem', color: C.primary, marginTop: '1px' }}>{activeDeal.poc.workEmail}</div>
+                                          {activeDeal.poc.role && <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '1px' }}>{activeDeal.poc.role}</div>}
                                         </div>
                                         <button
                                           onClick={() => {
@@ -5192,7 +5192,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             setPurchaseToast(`Contacting ${activeDeal.poc?.name || 'POC'} via email`);
                                             setTimeout(() => setPurchaseToast(null), 2000);
                                           }}
-                                          style={{ background: C.primary, border: 'none', borderRadius: '6px', padding: '5px 12px', color: C.onPrimary, fontSize: '10px', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
+                                          style={{ background: C.primary, border: 'none', borderRadius: '6px', padding: '5px 12px', color: C.onPrimary, fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
                                         >
                                           Message
                                         </button>
@@ -5382,7 +5382,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           </div>
                           <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'20px', lineHeight:1.5 }}>
                             Deposit funds upfront to cover all creators in this campaign. Funds are held securely and released per each creator's agreed payment milestones. Unused funds are returned if fewer creators are hired.
-                            <div style={{ marginTop:'8px', fontSize:'11px', color:C.success, fontWeight:600 }}>Any applicants will be notified.</div>
+                            <div style={{ marginTop:'8px', fontSize:'0.75rem', color:C.success, fontWeight:600 }}>Any applicants will be notified.</div>
                           </div>
 
                           {/* Campaign summary */}
@@ -5395,7 +5395,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 { label:'Creators hiring', value:`${pendingCampaignForEscrow.creatorCount || 1}` },
                               ].map(row => (
                                 <div key={row.label} style={{ background:C.surfaceAlt, borderRadius:'6px', padding:'8px 10px' }}>
-                                  <div style={{ fontSize:'10px', color:C.textMuted, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'3px' }}>{row.label}</div>
+                                  <div style={{ fontSize:'0.75rem', color:C.textMuted, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'3px' }}>{row.label}</div>
                                   <div style={{ fontSize:'14px', fontWeight:700, color:C.text }}>{row.value}</div>
                                 </div>
                               ))}
@@ -5411,14 +5411,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                           {/* Payment milestone breakdown */}
                           <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'12px', marginBottom:'16px' }}>
-                            <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>How funds are released per creator</div>
+                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>How funds are released per creator</div>
                             {[
                               { label:'Advance (on deal acceptance)', pct:advancePercent },
                               { label:'On brand approval', pct:approvalPercent },
                             ].map(m => (
                               <div key={m.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 0', borderBottom:`1px solid ${C.border}` }}>
-                                <span style={{ fontSize:'11px', color:C.textSecondary }}>{m.label}</span>
-                                <span style={{ fontSize:'11px', fontWeight:700, color:C.text }}>{m.pct}%</span>
+                                <span style={{ fontSize:'0.75rem', color:C.textSecondary }}>{m.label}</span>
+                                <span style={{ fontSize:'0.75rem', fontWeight:700, color:C.text }}>{m.pct}%</span>
                               </div>
                             ))}
                           </div>
@@ -5426,7 +5426,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           {/* Escrow progress bar */}
                           {escrowFundingInProgress2 && (
                             <div style={{ marginBottom:'14px' }}>
-                              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'11px', color:C.textMuted, marginBottom:'6px' }}>
+                              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.75rem', color:C.textMuted, marginBottom:'6px' }}>
                                 <span>Processing deposit...</span>
                                 <span style={{ color:'var(--c-warning)', fontWeight:600 }}>Verifying</span>
                               </div>
@@ -5472,7 +5472,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           >
                             {escrowFundingInProgress2 ? 'Finding matching creators...' : `Deposit ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} into Escrow`}
                           </button>
-                          <div style={{ fontSize:'10px', color:C.textMuted, textAlign:'center', lineHeight:1.5 }}>
+                          <div style={{ fontSize:'0.75rem', color:C.textMuted, textAlign:'center', lineHeight:1.5 }}>
                             Funds are non-transferable until released per milestone. Unused funds return within 5 business days.
                           </div>
                         </div>
@@ -5533,10 +5533,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         onMouseEnter={(e) => showHoverCard(buildCreatorHover(match.creatorName, match.creatorProfession), e)}
                                         onMouseMove={updateHoverPosition}
                                         onMouseLeave={hideHoverCard}
-                                        style={{ fontSize:'11px', color:C.textSecondary, marginBottom:'6px', cursor:'pointer' }}>{match.creatorProfession} · {match.creatorName}</div>
+                                        style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'6px', cursor:'pointer' }}>{match.creatorProfession} · {match.creatorName}</div>
                                       <div style={{ display:'flex', flexWrap:'wrap', gap:'6px' }}>
                                         {match.reasons.map((reason, i) => (
-                                          <div key={i} style={{ fontSize:'10px', background:C.card, color:C.textMuted, padding:'3px 8px', borderRadius:'4px' }}>{reason}</div>
+                                          <div key={i} style={{ fontSize:'0.75rem', background:C.card, color:C.textMuted, padding:'3px 8px', borderRadius:'4px' }}>{reason}</div>
                                         ))}
                                       </div>
                                     </div>
@@ -5548,7 +5548,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                           <div style={{ marginBottom:'16px', padding:'10px 12px', background:`${withAlpha(C.primary, 0x08)}`, border:`1px solid ${withAlpha(C.primary, 0x30)}`, borderRadius:'8px' }}>
                             <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>{batchSendCreatorIds.size} selected</div>
-                            <div style={{ fontSize:'11px', color:C.textSecondary }}>Each selected creator will receive an invitation</div>
+                            <div style={{ fontSize:'0.75rem', color:C.textSecondary }}>Each selected creator will receive an invitation</div>
                           </div>
 
                           <div style={{ display:'flex', gap:'8px' }}>
@@ -5566,7 +5566,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         <div style={{ background:C.surface, borderRadius:'14px', padding:'20px', maxWidth:'380px', width:'100%', border:`1px solid ${C.border}` }}>
                           <div style={{ fontSize:'15px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Cancel this deal?</div>
                           <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'14px' }}>This action cannot be undone. The brand will be notified.</div>
-                          <div style={{ fontSize:'11px', fontWeight:600, color:C.textMuted, marginBottom:'6px' }}>Reason</div>
+                          <div style={{ fontSize:'0.75rem', fontWeight:600, color:C.textMuted, marginBottom:'6px' }}>Reason</div>
                           {['Scheduling conflict', 'Terms changed after agreement', 'Found better opportunity', 'Brand unresponsive', 'Personal reasons', 'Other'].map(reason => (
                             <button key={reason} onClick={() => setCancelReason(reason)} style={{ display:'block', width:'100%', textAlign:'left', background: cancelReason === reason ? `${withAlpha(C.primary, 0x12)}` : C.card, border: `1px solid ${cancelReason === reason ? C.primary : C.border}`, borderRadius:'8px', padding:'9px 12px', fontSize:'12px', color:C.text, cursor:'pointer', marginBottom:'4px', fontWeight: cancelReason === reason ? 600 : 400 }}>
                               {reason}
@@ -5587,14 +5587,14 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         <div style={{ background:C.surface, borderRadius:'14px', padding:'20px', maxWidth:'400px', width:'100%', border:`1px solid ${C.border}` }}>
                           <div style={{ fontSize:'15px', fontWeight:700, color:C.text, marginBottom:'4px' }}>File a Dispute</div>
                           <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'14px' }}>Disputes are reviewed within 48 hours. Provide evidence to support your claim.</div>
-                          <div style={{ fontSize:'11px', fontWeight:600, color:C.textMuted, marginBottom:'6px' }}>Reason</div>
+                          <div style={{ fontSize:'0.75rem', fontWeight:600, color:C.textMuted, marginBottom:'6px' }}>Reason</div>
                           {['Brand did not pay after approval', 'Brand used content beyond agreed rights', 'Brand violated exclusivity terms', 'Content was used without credit', 'Payment amount was incorrect', 'Other'].map(reason => (
                             <button key={reason} onClick={() => setDisputeReason(reason)} style={{ display:'block', width:'100%', textAlign:'left', background: disputeReason === reason ? `${withAlpha(C.primary, 0x12)}` : C.card, border: `1px solid ${disputeReason === reason ? C.primary : C.border}`, borderRadius:'8px', padding:'9px 12px', fontSize:'12px', color:C.text, cursor:'pointer', marginBottom:'4px', fontWeight: disputeReason === reason ? 600 : 400 }}>
                               {reason}
                             </button>
                           ))}
                           <div style={{ marginTop:'10px' }}>
-                            <div style={{ fontSize:'11px', fontWeight:600, color:C.textMuted, marginBottom:'4px' }}>Evidence (describe or paste links)</div>
+                            <div style={{ fontSize:'0.75rem', fontWeight:600, color:C.textMuted, marginBottom:'4px' }}>Evidence (describe or paste links)</div>
                             <textarea value={disputeEvidence} onChange={e => setDisputeEvidence(e.target.value)} placeholder="Describe what happened, include screenshots or links..." rows={3} style={{ width:'100%', background:C.card, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'8px', fontSize:'12px', color:C.text, resize:'none', boxSizing:'border-box' }} />
                           </div>
                           <div style={{ display:'flex', gap:'8px', marginTop:'14px' }}>
@@ -5617,12 +5617,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ fontSize:'15px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Send a Tip 💰</div>
                           <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'14px' }}>Thank this creator for excellent work. Tips go directly to them with zero platform fees.</div>
                           <div style={{ marginBottom:'14px' }}>
-                            <div style={{ fontSize:'11px', fontWeight:600, color:C.textMuted, marginBottom:'6px' }}>Tip amount ($) *</div>
+                            <div style={{ fontSize:'0.75rem', fontWeight:600, color:C.textMuted, marginBottom:'6px' }}>Tip amount ($) *</div>
                             <input type="number" value={tipAmount} onChange={e => setTipAmount(e.target.value)} placeholder="Enter amount" min="1" style={{ width:'100%', background:C.card, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px 12px', fontSize:'13px', color:C.text, boxSizing:'border-box' }} />
                           </div>
                           <div style={{ marginBottom:'14px', padding:'10px 12px', background:`${withAlpha(C.warning, 0x12)}`, border:`1px solid ${withAlpha(C.warning, 0x30)}`, borderRadius:'8px' }}>
-                            <div style={{ fontSize:'11px', color:C.warning, fontWeight:600 }}>Direct payout</div>
-                            <div style={{ fontSize:'10px', color:C.textSecondary, marginTop:'2px' }}>${tipAmount ? parseInt(tipAmount).toLocaleString() : '0'}.00 will go straight to the creator. No commission, no fees.</div>
+                            <div style={{ fontSize:'0.75rem', color:C.warning, fontWeight:600 }}>Direct payout</div>
+                            <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginTop:'2px' }}>${tipAmount ? parseInt(tipAmount).toLocaleString() : '0'}.00 will go straight to the creator. No commission, no fees.</div>
                           </div>
                           <div style={{ display:'flex', gap:'8px' }}>
                             <button onClick={() => { setShowTipModal(false); setTipAmount(''); setTipForDealId(null); }} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px', color:C.text, fontWeight:600, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
@@ -5641,11 +5641,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             <div style={{ flex:1 }}>
                               <div style={{ fontSize:'16px', fontWeight:700, color:C.text, marginBottom:'4px' }}>{selectedProfileCreator.name}</div>
                               <a href={`https://portfolio.valueskins.com/${selectedProfileCreator.handle.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ fontSize:'12px', color:C.primary, textDecoration:'none' }}>{selectedProfileCreator.handle}</a>
-                              <div style={{ fontSize:'11px', color:C.textSecondary, marginTop:'4px' }}>4.8★ rating from {(selectedProfileCreator.name.charCodeAt(0) % 15) + 5} deals</div>
+                              <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginTop:'4px' }}>4.8★ rating from {(selectedProfileCreator.name.charCodeAt(0) % 15) + 5} deals</div>
                             </div>
                           </div>
                           <div style={{ marginBottom:'16px', padding:'10px 12px', background:C.card, borderRadius:'10px', border:`1px solid ${C.border}` }}>
-                            <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>Quick Stats</div>
+                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>Quick Stats</div>
                             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' }}>
                               <div><div style={{ fontSize:'12px', fontWeight:700, color:C.text }}>{selectedProfileCreator.followers}</div><div style={{ fontSize:'9px', color:C.textMuted }}>Followers</div></div>
                               <div><div style={{ fontSize:'12px', fontWeight:700, color:C.text }}>{selectedProfileCreator.engagement}</div><div style={{ fontSize:'9px', color:C.textMuted }}>Engagement</div></div>
@@ -5654,12 +5654,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             </div>
                           </div>
                           <div style={{ marginBottom:'16px' }}>
-                            <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>ValueSkin</div>
+                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>ValueSkin</div>
                             <div style={{ fontSize:'13px', fontWeight:700, color:C.text, background:C.card, padding:'10px 12px', borderRadius:'8px', border:`1px solid ${C.border}` }}>{selectedProfileCreator.valueSkin}</div>
                           </div>
                           {/* Feature 7: Public Profile Link */}
                           <div style={{ marginBottom:'16px' }}>
-                            <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>Share Profile</div>
+                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>Share Profile</div>
                             <div style={{ display:'flex', gap:'8px', alignItems:'center' }}>
                               <div style={{ flex:1, fontSize:'12px', color:C.primary, background:C.card, padding:'10px 12px', borderRadius:'8px', border:`1px solid ${C.border}`, fontFamily:'monospace', wordBreak:'break-all' }}>valueskins.com/@{selectedProfileCreator.handle.replace('@','')}</div>
                               <button onClick={() => { navigator.clipboard.writeText(`valueskins.com/@${selectedProfileCreator.handle.replace('@','')}`); setProfileLinkCopied(true); setTimeout(() => setProfileLinkCopied(false), 2000); }} style={{ padding:'10px 12px', background:profileLinkCopied ? C.success : C.primary, border:'none', borderRadius:'8px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'12px', cursor:'pointer', transition:'all 0.2s', flexShrink:0 }}>
@@ -5668,26 +5668,26 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             </div>
                           </div>
                           <div style={{ marginBottom:'16px' }}>
-                            <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>Audience</div>
+                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>Audience</div>
                             <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
-                              <span style={{ fontSize:'10px', padding:'4px 8px', background:C.card, borderRadius:'6px', border:`1px solid ${C.border}`, color:C.textSecondary }}>{selectedProfileCreator.audienceAgeRange}</span>
-                              <span style={{ fontSize:'10px', padding:'4px 8px', background:C.card, borderRadius:'6px', border:`1px solid ${C.border}`, color:C.textSecondary }}>{selectedProfileCreator.audienceLocation}</span>
-                              <span style={{ fontSize:'10px', padding:'4px 8px', background:C.card, borderRadius:'6px', border:`1px solid ${C.border}`, color:C.textSecondary }}>{selectedProfileCreator.audienceLang}</span>
+                              <span style={{ fontSize:'0.75rem', padding:'4px 8px', background:C.card, borderRadius:'6px', border:`1px solid ${C.border}`, color:C.textSecondary }}>{selectedProfileCreator.audienceAgeRange}</span>
+                              <span style={{ fontSize:'0.75rem', padding:'4px 8px', background:C.card, borderRadius:'6px', border:`1px solid ${C.border}`, color:C.textSecondary }}>{selectedProfileCreator.audienceLocation}</span>
+                              <span style={{ fontSize:'0.75rem', padding:'4px 8px', background:C.card, borderRadius:'6px', border:`1px solid ${C.border}`, color:C.textSecondary }}>{selectedProfileCreator.audienceLang}</span>
                             </div>
                           </div>
                           <div style={{ marginBottom:'16px' }}>
-                            <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>Deal Types</div>
+                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>Deal Types</div>
                             <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
                               {selectedProfileCreator.dealTypes.map(dt => (
-                                <span key={dt} style={{ fontSize:'10px', fontWeight:600, padding:'4px 8px', background:C.card, borderRadius:'6px', border:`1px solid ${C.border}`, color:C.textSecondary }}>{dt}</span>
+                                <span key={dt} style={{ fontSize:'0.75rem', fontWeight:600, padding:'4px 8px', background:C.card, borderRadius:'6px', border:`1px solid ${C.border}`, color:C.textSecondary }}>{dt}</span>
                               ))}
                             </div>
                           </div>
                           <div style={{ marginBottom:'16px' }}>
-                            <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>Portfolio</div>
+                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px' }}>Portfolio</div>
                             <div style={{ display:'flex', flexDirection:'column', gap:'6px' }}>
                               {selectedProfileCreator.portfolio.map((p, idx) => (
-                                <div key={idx} style={{ fontSize:'11px', color:C.text, padding:'6px 8px', background:C.card, borderRadius:'6px', border:`1px solid ${C.border}` }}>▶ {p}</div>
+                                <div key={idx} style={{ fontSize:'0.75rem', color:C.text, padding:'6px 8px', background:C.card, borderRadius:'6px', border:`1px solid ${C.border}` }}>▶ {p}</div>
                               ))}
                             </div>
                           </div>
@@ -5696,14 +5696,21 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       </div>
                     )}
 
-                    {/* Brand Identity — skin selector or redirect to store */}
+                    {/* Brand Identity — skin selector or redirect to store.
+                        The selector only earns its space when there is more
+                        than one skin to switch between. With exactly one it
+                        rendered a large bordered panel offering no choice, which
+                        is the "ACTIVE VALUESKIN" box. The zero-skin prompt still
+                        shows, because that one has something to say.
+                        Its border was rgba(230,81,0,0.3) — an orange, which §4
+                        does not contain. */}
                     {campaigns.length > 0 && (
-                      brandValueSkins.length > 0 ? (
-                        <div style={{ background:C.card, border:`1px solid rgba(230,81,0,0.3)`, borderRadius:'12px', padding:'14px 16px', marginBottom:'14px' }}>
+                      brandValueSkins.length > 1 ? (
+                        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:'12px', padding:'14px 16px', marginBottom:'14px' }}>
                           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px' }}>
-                            <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px' }}>Active ValueSkin</div>
+                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px' }}>Active ValueSkin</div>
                             {brandValueSkins.length < 1 && (
-                              <button onClick={() => setActiveView('store')} style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'4px 10px', fontSize:'10px', color:C.textSecondary, cursor:'pointer', fontWeight:600 }}>+ Add Skin</button>
+                              <button onClick={() => setActiveView('store')} style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'4px 10px', fontSize:'0.75rem', color:C.textSecondary, cursor:'pointer', fontWeight:600 }}>+ Add Skin</button>
                             )}
                           </div>
                           <div style={{ display:'flex', gap:'8px', marginBottom:'10px' }}>
@@ -5723,11 +5730,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   {getStickerForProfession(skin) ? (
                                     <img src={getStickerForProfession(skin)!} alt={skin} style={{ width:'32px', height:'32px', objectFit:'contain', margin:'0 auto 4px' }} />
                                   ) : (
-                                    <div style={{ fontSize:'10px', fontWeight:700, letterSpacing:'0.5px', textTransform:'uppercase', color: badge?.color ?? C.primary, marginBottom:'3px' }}>
+                                    <div style={{ fontSize:'0.75rem', fontWeight:700, letterSpacing:'0.5px', textTransform:'uppercase', color: badge?.color ?? C.primary, marginBottom:'3px' }}>
                                       {badge?.abbreviation ?? skin.slice(0,3).toUpperCase()}
                                     </div>
                                   )}
-                                  <div style={{ fontSize:'11px', color: isActive ? C.text : C.textSecondary, fontWeight: isActive ? 600 : 400, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                                  <div style={{ fontSize:'0.75rem', color: isActive ? C.text : C.textSecondary, fontWeight: isActive ? 600 : 400, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                                     {skin}
                                   </div>
                                 </button>
@@ -5735,15 +5742,15 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             })}
                           </div>
                         </div>
-                      ) : (
+                      ) : brandValueSkins.length === 0 ? (
                         <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:'12px', padding:'14px 16px', marginBottom:'14px' }}>
-                          <div style={{ fontSize:'10px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'8px' }}>Your Brand Identity</div>
+                          <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'8px' }}>Your Brand Identity</div>
                           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                             <div style={{ fontSize:'12px', color:C.textMuted }}>Purchase a ValueSkin to start contacting creators</div>
-                            <button onClick={() => setActiveView('store')} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'6px 12px', fontSize:'11px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}>Get ValueSkin</button>
+                            <button onClick={() => setActiveView('store')} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'6px 12px', fontSize:'0.75rem', fontWeight:700, color:C.onPrimary, cursor:'pointer' }}>Get ValueSkin</button>
                           </div>
                         </div>
-                      )
+                      ) : null
                     )}
 
                     {/* Active Campaigns — campaigns with status 'open' */}
@@ -5844,10 +5851,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       };
                       return (
                         <div style={{ background:C.card, borderRadius:'12px', padding:'14px', marginBottom:'14px', border:`1px solid ${C.border}` }}>
-                          <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'4px' }}>
+                          <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'4px' }}>
                             Applicants ({applicantDeals.length})
                           </div>
-                          <div style={{ fontSize:'10px', color:C.textSecondary, marginBottom:'10px' }}>Any applicants will be notified.</div>
+                          <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'10px' }}>Any applicants will be notified.</div>
                           {applicantDeals.map((d: any, i: number) => {
                             const creatorName = d.creatorName || d.key.split('|')[0];
                             const creatorSkin = d.creatorSkin || d.key.split('|')[1];
@@ -5863,11 +5870,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     onMouseLeave={hideHoverCard}
                                     style={{ fontSize:'13px', fontWeight:600, color:C.text, cursor:'pointer' }}
                                   >{creatorName}</div>
-                                  <div style={{ fontSize:'10px', color:C.textSecondary, marginTop:'2px' }}>{creatorSkin}</div>
-                                  <div style={{ fontSize:'11px', color:C.text, marginTop:'4px' }}>Offer: <strong>₹{parseInt(String(offer).replace(/[^0-9]/g, '')) ? parseInt(String(offer).replace(/[^0-9]/g, '')).toLocaleString() : offer}</strong></div>
+                                  <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginTop:'2px' }}>{creatorSkin}</div>
+                                  <div style={{ fontSize:'0.75rem', color:C.text, marginTop:'4px' }}>Offer: <strong>₹{parseInt(String(offer).replace(/[^0-9]/g, '')) ? parseInt(String(offer).replace(/[^0-9]/g, '')).toLocaleString() : offer}</strong></div>
                                 </div>
                                 <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'6px' }}>
-                                  <span style={{ fontSize:'10px', fontWeight:600, color:st.color, background:`${withAlpha(st.color, 0x12)}`, padding:'2px 8px', borderRadius:'10px', border:`1px solid ${withAlpha(st.color, 0x30)}` }}>{st.label}</span>
+                                  <span style={{ fontSize:'0.75rem', fontWeight:600, color:st.color, background:`${withAlpha(st.color, 0x12)}`, padding:'2px 8px', borderRadius:'10px', border:`1px solid ${withAlpha(st.color, 0x30)}` }}>{st.label}</span>
                                   {actionable && (
                                     <div style={{ display:'flex', gap:'6px' }}>
                                       <button
@@ -5877,7 +5884,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           setPurchaseToast(`${creatorName} has been notified of your approval`);
                                           setTimeout(() => setPurchaseToast(null), 3000);
                                         }}
-                                        style={{ background:C.success, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}
+                                        style={{ background:C.success, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}
                                       >Approve</button>
                                       <button
                                         onClick={() => {
@@ -5886,7 +5893,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           setPurchaseToast(`${creatorName} has been notified of your decision`);
                                           setTimeout(() => setPurchaseToast(null), 3000);
                                         }}
-                                        style={{ background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:700, color:'var(--c-error)', cursor:'pointer' }}
+                                        style={{ background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-error)', cursor:'pointer' }}
                                       >Reject</button>
                                     </div>
                                   )}
@@ -5906,7 +5913,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       if (brandPastDeals.length === 0) return null;
                       return (
                         <div style={{ background:C.card, borderRadius:'12px', padding:'14px', marginBottom:'14px', border:`1px solid ${C.border}` }}>
-                          <div style={{ fontSize:'11px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>
+                          <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>
                             Past Deals ({brandPastDeals.length})
                           </div>
                           {brandPastDeals.map((d, i) => (
@@ -5917,9 +5924,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   onMouseMove={updateHoverPosition}
                                   onMouseLeave={hideHoverCard}
                                   style={{ fontSize:'13px', fontWeight:600, color:C.text, cursor:'pointer' }}>{d.creatorName}</div>
-                                <div style={{ fontSize:'10px', color:C.textSecondary }}>{d.creatorSkin} · Completed</div>
+                                <div style={{ fontSize:'0.75rem', color:C.textSecondary }}>{d.creatorSkin} · Completed</div>
                               </div>
-                              <button onClick={() => downloadDealReport(d.key)} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'10px', fontWeight:600, color:'var(--c-surface-lowest)', cursor:'pointer' }}>Download the final report</button>
+                              <button onClick={() => downloadDealReport(d.key)} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:600, color:'var(--c-surface-lowest)', cursor:'pointer' }}>Download the final report</button>
                             </div>
                           ))}
                         </div>
@@ -5937,7 +5944,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           >
                             <span style={{ fontSize:'12px', fontWeight:700, color:C.text, textTransform:'uppercase', letterSpacing:'0.5px', display:'flex', alignItems:'center', gap:'6px' }}>
                               Past Campaigns
-                              {expiredCampaigns.length > 0 && <span style={{ fontSize:'10px', background:C.textMuted, color:'var(--c-surface-lowest)', padding:'1px 5px', borderRadius:'8px' }}>{expiredCampaigns.length}</span>}
+                              {expiredCampaigns.length > 0 && <span style={{ fontSize:'0.75rem', background:C.textMuted, color:'var(--c-surface-lowest)', padding:'1px 5px', borderRadius:'8px' }}>{expiredCampaigns.length}</span>}
                             </span>
                           </button>
                           {/* Same .stub treatment as the open campaigns above —
@@ -5964,7 +5971,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 }}>
                                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', gap:'12px' }}>
                                     <h3 style={{ fontSize:'16px', fontWeight:700, color:C.text, margin:0 }}>{c.title}</h3>
-                                    <span style={{ fontSize:'11px', fontWeight:600, letterSpacing:'0.08em', textTransform:'uppercase', color:C.textMuted, flex:'none' }}>Expired</span>
+                                    <span style={{ fontSize:'0.75rem', fontWeight:600, letterSpacing:'0.08em', textTransform:'uppercase', color:C.textMuted, flex:'none' }}>Expired</span>
                                   </div>
                                   <p style={{ fontSize:'14px', color:C.textSecondary, margin:'6px 0 0', lineHeight:1.5 }}>{meta}</p>
                                 </div>
@@ -5988,7 +5995,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
             <>
               <div style={{ height: '60px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', paddingLeft: '20px', fontWeight: 'bold', fontSize: '16px', background: C.surface }}>
                 Admin Panel
-                <span style={{ fontSize: '11px', fontWeight: 600, color: C.primary, background: `rgba(0,102,204,0.1)`, padding: '3px 8px', borderRadius: '6px', marginLeft: '10px' }}>Meta</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: C.primary, background: `rgba(0,102,204,0.1)`, padding: '3px 8px', borderRadius: '6px', marginLeft: '10px' }}>Meta</span>
               </div>
               <div style={{ padding: '20px' }}>
                 <div style={{ marginBottom: '24px' }}>
@@ -6021,7 +6028,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       >
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: '14px', fontWeight: 600, color: C.text, marginBottom: '2px' }}>{label}</div>
-                          <div style={{ fontSize: '11px', color: C.textMuted }}>{description}</div>
+                          <div style={{ fontSize: '0.75rem', color: C.textMuted }}>{description}</div>
                         </div>
                         <div style={{
                           width: '44px', height: '24px', borderRadius: '12px',
@@ -6041,7 +6048,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 </div>
 
                 <div style={{ padding: '14px', background: 'rgba(0,102,204,0.06)', borderRadius: '10px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.5 }}>
+                  <div style={{ fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.5 }}>
                     Changes are applied instantly to the Insights tab on all creator profiles. Visit Profile → Insights tab to preview.
                   </div>
                 </div>
@@ -6069,7 +6076,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       >
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: '14px', fontWeight: 600, color: C.text, marginBottom: '2px' }}>{label}</div>
-                          <div style={{ fontSize: '11px', color: C.textMuted }}>{desc}</div>
+                          <div style={{ fontSize: '0.75rem', color: C.textMuted }}>{desc}</div>
                         </div>
                         <input
                           type="number"
@@ -6118,7 +6125,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   </p>
                   {/* Commission Payer Toggle */}
                   <div style={{ marginBottom: '16px', padding: '12px 14px', background: C.card, borderRadius: '10px', border: `1px solid ${C.border}` }}>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '10px' }}>
                       Commission Paid By
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -6162,7 +6169,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                       <div>
                         <div style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>Commission rate</div>
-                        <div style={{ fontSize: '11px', color: C.textMuted }}>Applied to all deal types (paid, c2c_paid)</div>
+                        <div style={{ fontSize: '0.75rem', color: C.textMuted }}>Applied to all deal types (paid, c2c_paid)</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <input
@@ -6185,40 +6192,40 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       onChange={(e) => setPlatformCommissionPct(parseInt(e.target.value))}
                       style={{ width: '100%', cursor: 'pointer' }}
                     />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: C.textMuted, marginTop: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: C.textMuted, marginTop: '4px' }}>
                       <span>0%</span>
                       <span>25%</span>
                       <span>50%</span>
                     </div>
                     {/* Example calculation */}
                     <div style={{ marginTop: '12px', padding: '10px', background: C.bg, borderRadius: '6px', border: `1px solid ${C.border}` }}>
-                      <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '8px' }}>Example: ₹10,000 deal @ {platformCommissionPct}%</div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', marginBottom: '8px' }}>Example: ₹10,000 deal @ {platformCommissionPct}%</div>
                       {commissionPaidBy === 'brand' ? (
                         <>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '3px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '3px' }}>
                             <span style={{ color: C.textSecondary }}>Creator receives</span>
                             <span style={{ color: C.success, fontWeight: 700 }}>₹10,000</span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
                             <span style={{ color: C.textSecondary }}>Brand pays (total)</span>
                             <span style={{ color: C.primary, fontWeight: 700 }}>₹{(10000 + 10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '3px', paddingTop: '3px', borderTop: `1px solid ${C.border}`, color: C.textMuted }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginTop: '3px', paddingTop: '3px', borderTop: `1px solid ${C.border}`, color: C.textMuted }}>
                             <span>ValueSkins revenue</span>
                             <span>₹{(10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                         </>
                       ) : (
                         <>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '3px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '3px' }}>
                             <span style={{ color: C.textSecondary }}>Creator receives</span>
                             <span style={{ color: C.success, fontWeight: 700 }}>₹{(10000 - 10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
                             <span style={{ color: C.textSecondary }}>Brand pays (total)</span>
                             <span style={{ color: C.primary, fontWeight: 700 }}>₹10,000</span>
                           </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '3px', paddingTop: '3px', borderTop: `1px solid ${C.border}`, color: C.textMuted }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginTop: '3px', paddingTop: '3px', borderTop: `1px solid ${C.border}`, color: C.textMuted }}>
                             <span>ValueSkins revenue</span>
                             <span>₹{(10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
@@ -6272,7 +6279,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           backgroundColor: signal.severity === 'high' ? C.textMuted : signal.severity === 'medium' ? 'var(--c-warning)' : C.textSecondary,
                           color: 'white',
                           borderRadius: '4px',
-                          fontSize: '11px',
+                          fontSize: '0.75rem',
                           fontWeight: 'bold',
                         }}>
                           {signal.severity.toUpperCase()}
@@ -6324,7 +6331,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>Creator Safety Controls</div>
                 </div>
-                <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '18px', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '18px', lineHeight: 1.5 }}>
                   Platform-level rules enforced on all outreach. Creators cannot override these — they set the floor. Brands that violate are throttled or suspended.
                 </div>
 
@@ -6333,7 +6340,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>Brand Outreach Rate Limit</div>
-                      <div style={{ fontSize: '11px', color: C.textSecondary, marginTop: '2px' }}>Max proposals a brand can send per day across all creators</div>
+                      <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '2px' }}>Max proposals a brand can send per day across all creators</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <button onClick={() => setSafetyDmRateLimit(Math.max(1, safetyDmRateLimit - 1))} style={{ width: '24px', height: '24px', borderRadius: '4px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, cursor: 'pointer', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
@@ -6342,7 +6349,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     </div>
                   </div>
                   <input type="range" min={1} max={50} value={safetyDmRateLimit} onChange={e => setSafetyDmRateLimit(Number(e.target.value))} style={{ width: '100%', accentColor: C.primary }} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: C.textMuted, marginTop: '2px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: C.textMuted, marginTop: '2px' }}>
                     <span>1 (strict)</span><span>25 (standard)</span><span>50 (open)</span>
                   </div>
                 </div>
@@ -6352,12 +6359,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>Re-contact Cooldown</div>
-                      <div style={{ fontSize: '11px', color: C.textSecondary, marginTop: '2px' }}>Days a brand is blocked from re-contacting a creator after decline</div>
+                      <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '2px' }}>Days a brand is blocked from re-contacting a creator after decline</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {[7, 14, 30, 60, 90].map(d => (
                         <button key={d} onClick={() => setSafetyRecontactCooldown(d)}
-                          style={{ padding: '4px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+                          style={{ padding: '4px 7px', borderRadius: '5px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
                             background: safetyRecontactCooldown === d ? `${withAlpha(C.primary, 0x20)}` : C.bg,
                             color: safetyRecontactCooldown === d ? C.primary : C.textMuted,
                             border: `1px solid ${safetyRecontactCooldown === d ? C.primary : C.border}`,
@@ -6372,12 +6379,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>Auto-Throttle Threshold</div>
-                      <div style={{ fontSize: '11px', color: C.textSecondary, marginTop: '2px' }}>Reports needed from creators before brand outreach is auto-suspended</div>
+                      <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '2px' }}>Reports needed from creators before brand outreach is auto-suspended</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {[1, 2, 3, 5, 10].map(n => (
                         <button key={n} onClick={() => setSafetyReportThreshold(n)}
-                          style={{ padding: '4px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+                          style={{ padding: '4px 7px', borderRadius: '5px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
                             background: safetyReportThreshold === n ? 'rgba(176, 65, 62,0.15)' : C.bg,
                             color: safetyReportThreshold === n ? C.textMuted : C.textMuted,
                             border: `1px solid ${safetyReportThreshold === n ? C.textMuted : C.border}`,
@@ -6390,7 +6397,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 {/* Min brand trust score to contact */}
                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '14px 16px', marginBottom: '10px' }}>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: C.text, marginBottom: '4px' }}>Minimum Brand Trust Score to Contact</div>
-                  <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '10px' }}>Brands below this score see creator profiles but cannot initiate contact</div>
+                  <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '10px' }}>Brands below this score see creator profiles but cannot initiate contact</div>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     {[1, 2, 3, 4, 5].map(n => (
                       <button key={n} onClick={() => setSafetyMinBrandTrust(n)}
@@ -6401,7 +6408,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         }}>{'★'.repeat(n)}</button>
                     ))}
                   </div>
-                  <div style={{ fontSize: '10px', color: C.textMuted, marginTop: '6px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '6px', textAlign: 'center' }}>
                     Current: min {safetyMinBrandTrust}★ — brands below are read-only
                   </div>
                 </div>
@@ -6411,7 +6418,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <div>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>New Brand Warm Intro Gate</div>
-                      <div style={{ fontSize: '11px', color: C.textSecondary, marginTop: '2px' }}>Brands with fewer than N completed deals must be vouched before cold outreach</div>
+                      <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '2px' }}>Brands with fewer than N completed deals must be vouched before cold outreach</div>
                     </div>
                     <button onClick={() => setSafetyNewBrandWarmIntro(p => !p)}
                       style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', backgroundColor: safetyNewBrandWarmIntro ? C.primary : 'rgba(255,255,255,0.15)', cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background-color 0.2s' }}>
@@ -6420,25 +6427,25 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   </div>
                   {safetyNewBrandWarmIntro && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '11px', color: C.textSecondary }}>Gate brands with fewer than</span>
+                      <span style={{ fontSize: '0.75rem', color: C.textSecondary }}>Gate brands with fewer than</span>
                       <div style={{ display: 'flex', gap: '4px' }}>
                         {[0, 1, 3, 5, 10].map(n => (
                           <button key={n} onClick={() => setSafetyNewBrandDealCount(n)}
-                            style={{ padding: '3px 7px', borderRadius: '5px', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+                            style={{ padding: '3px 7px', borderRadius: '5px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
                               background: safetyNewBrandDealCount === n ? `${withAlpha(C.primary, 0x20)}` : C.bg,
                               color: safetyNewBrandDealCount === n ? C.primary : C.textMuted,
                               border: `1px solid ${safetyNewBrandDealCount === n ? C.primary : C.border}`,
                             }}>{n}</button>
                         ))}
                       </div>
-                      <span style={{ fontSize: '11px', color: C.textSecondary }}>completed deals</span>
+                      <span style={{ fontSize: '0.75rem', color: C.textSecondary }}>completed deals</span>
                     </div>
                   )}
                 </div>
 
                 {/* Toggle switches row */}
                 <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '14px 16px', marginBottom: '16px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Platform-Wide Enforcement</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.6px', marginBottom: '12px' }}>Platform-Wide Enforcement</div>
                   {([
                     { label: 'Require verified Brand ValueSkin to contact', desc: 'Unverified brands cannot initiate any outreach', value: safetyRequireVerifiedBrand, set: setSafetyRequireVerifiedBrand },
                     { label: 'Proposal form required (no free-text cold DMs)', desc: 'All contact must be a structured brief — not a message', value: safetyRequireBrief, set: setSafetyRequireBrief },
@@ -6447,7 +6454,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '8px 0', borderTop: `1px solid ${C.border}` }}>
                       <div style={{ flex: 1, paddingRight: '12px' }}>
                         <div style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{label}</div>
-                        <div style={{ fontSize: '10px', color: C.textSecondary, marginTop: '1px' }}>{desc}</div>
+                        <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '1px' }}>{desc}</div>
                       </div>
                       <button onClick={() => set((p: boolean) => !p)}
                         style={{ width: '40px', height: '22px', borderRadius: '11px', border: 'none', backgroundColor: value ? C.primary : 'rgba(255,255,255,0.12)', cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background-color 0.2s' }}>
@@ -6466,7 +6473,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 </button>
 
                 {/* Live policy summary */}
-                <div style={{ marginTop: '12px', padding: '12px 14px', background: 'rgba(0,102,204,0.05)', border: `1px solid rgba(0,102,204,0.15)`, borderRadius: '8px', fontSize: '11px', color: C.textSecondary, lineHeight: 1.7 }}>
+                <div style={{ marginTop: '12px', padding: '12px 14px', background: 'rgba(0,102,204,0.05)', border: `1px solid rgba(0,102,204,0.15)`, borderRadius: '8px', fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.7 }}>
                   <strong style={{ color: C.text, display: 'block', marginBottom: '4px' }}>Current Policy Summary</strong>
                   • Brands can send max <strong style={{ color: C.text }}>{safetyDmRateLimit}</strong> proposals/day<br/>
                   • Declined brand locked out for <strong style={{ color: C.text }}>{safetyRecontactCooldown} days</strong><br/>
@@ -6486,9 +6493,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
                     <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>Feature Flags</div>
                   </div>
-                  <span style={{ fontSize: '10px', color: C.textMuted }}>Toggle any feature platform-wide</span>
+                  <span style={{ fontSize: '0.75rem', color: C.textMuted }}>Toggle any feature platform-wide</span>
                 </div>
-                <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '16px' }}>
+                <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '16px' }}>
                   All features are on by default. Turn off to hide from all creators and brands instantly.
                 </div>
 
@@ -6510,7 +6517,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '10px 0', borderTop: `1px solid ${C.border}` }}>
                     <div style={{ flex: 1, paddingRight: '12px' }}>
                       <div style={{ fontSize: '12px', fontWeight: 700, color: value ? C.text : C.textMuted }}>{label}</div>
-                      <div style={{ fontSize: '10px', color: C.textMuted, marginTop: '1px' }}>{desc}</div>
+                      <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '1px' }}>{desc}</div>
                     </div>
                     <button onClick={() => set((p: boolean) => !p)}
                       style={{ width: '40px', height: '22px', borderRadius: '11px', border: 'none', backgroundColor: value ? C.primary : 'rgba(255,255,255,0.1)', cursor: 'pointer', position: 'relative', flexShrink: 0, transition: 'background-color 0.2s' }}>
@@ -6533,7 +6540,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>Deal Communication Mode</div>
                 </div>
-                <div style={{ fontSize: '11px', color: C.textSecondary, marginBottom: '16px', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '16px', lineHeight: 1.5 }}>
                   Choose how brand deals and negotiations happen on the platform. This is a platform-level decision that affects all users.
                 </div>
 
@@ -6552,7 +6559,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       {dealCommMode === 'valueskins_chatroom' && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: C.primary }} />}
                     </div>
                   </div>
-                  <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.6 }}>
                     Separate deal room environment purpose-built for negotiations. Offers, counters, contracts, and chat happen inside ValueSkins. Isolated from personal DMs.
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
@@ -6577,7 +6584,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       {dealCommMode === 'platform_dms' && <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: C.primary }} />}
                     </div>
                   </div>
-                  <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.6 }}>
                     Route deal conversations through the platform's existing DM system. Creators and brands communicate in the same inbox they already use. ValueSkins injects a compliance layer on top.
                   </div>
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
@@ -6593,7 +6600,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-error)" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                     <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--c-error)' }}>Non-negotiable — applies to both modes</span>
                   </div>
-                  <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.6 }}>
                     Regardless of communication mode, the following security features are enforced on every deal message and cannot be disabled:
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '10px' }}>
@@ -6608,8 +6615,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '6px 0' }}>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--c-error)" strokeWidth="2.5" strokeLinecap="round" style={{ marginTop: 2, flexShrink: 0 }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                         <div>
-                          <div style={{ fontSize: '11px', fontWeight: 700, color: C.text }}>{item.label}</div>
-                          <div style={{ fontSize: '10px', color: C.textMuted, lineHeight: 1.4 }}>{item.desc}</div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.text }}>{item.label}</div>
+                          <div style={{ fontSize: '0.75rem', color: C.textMuted, lineHeight: 1.4 }}>{item.desc}</div>
                         </div>
                       </div>
                     ))}
@@ -6619,7 +6626,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 {dealCommMode === 'platform_dms' && (
                   <div style={{ background: 'rgba(230,81,0,0.06)', border: '1px solid rgba(230,81,0,0.2)', borderRadius: '10px', padding: '14px 16px' }}>
                     <div style={{ fontSize: '12px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>Integration requirements for Instagram DMs</div>
-                    <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.6 }}>
+                    <div style={{ fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.6 }}>
                       If DMs are chosen as the communication channel, the platform must expose the following hooks to ValueSkins:
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
@@ -6631,7 +6638,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         'Moderation override: platform moderators can freeze a deal thread on abuse reports',
                         'Export API: full thread exportable via API with all metadata for legal compliance',
                       ].map((req, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', fontSize: '10px', color: C.text, lineHeight: 1.5 }}>
+                        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', fontSize: '0.75rem', color: C.text, lineHeight: 1.5 }}>
                           <span style={{ color: C.primary, fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>
                           {req}
                         </div>
@@ -6691,7 +6698,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                 {/* LEFT — numbered profession list */}
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.textSecondary, margin: '4px 0 6px' }}>Browse professions</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.textSecondary, margin: '4px 0 6px' }}>Browse professions</div>
                   {cats.map((prof, i) => {
                     const active = prof.name === selectedName;
                     const owns = isBrandRole
@@ -6721,11 +6728,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           opacity: active ? 1 : 0,
                           transition: 'opacity 160ms cubic-bezier(0.16,1,0.3,1)',
                         }} />
-                        <span style={{ fontSize: '11px', color: C.textMuted, minWidth: '18px' }}>{String(i + 1).padStart(2, '0')}</span>
+                        <span style={{ fontSize: '0.75rem', color: C.textMuted, minWidth: '18px' }}>{String(i + 1).padStart(2, '0')}</span>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: '15px', fontWeight: 600, color: C.text }}>{prof.name}</div>
                           {creatorCount > 0 && (
-                            <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '2px' }}>
+                            <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '2px' }}>
                               {creatorCount} {creatorCount === 1 ? 'creator' : 'creators'}
                             </div>
                           )}
@@ -6747,7 +6754,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '18px', padding: '20px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                       <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, margin: 0 }}>{selected.name}</h2>
-                      <span style={{ fontSize: '11px', color: C.textSecondary, border: `1px solid ${C.border}`, borderRadius: '13px', padding: '5px 14px' }}>
+                      <span style={{ fontSize: '0.75rem', color: C.textSecondary, border: `1px solid ${C.border}`, borderRadius: '13px', padding: '5px 14px' }}>
                         {selected.subProfessions.length} skins · {ownedCount}/1 owned
                       </span>
                     </div>
@@ -6803,9 +6810,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             )}
                             <span style={{ fontSize: '13px', fontWeight: 600, textAlign: 'center', lineHeight: 1.3 }}>{sub}</span>
                             {(isActiveHere || isOwned) ? (
-                              <span style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.accent }}>Equipped</span>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: C.accent }}>Equipped</span>
                             ) : isFull ? (
-                              <span style={{ fontSize: '11px', color: C.textMuted }}>Max skins (1/1)</span>
+                              <span style={{ fontSize: '0.75rem', color: C.textMuted }}>Max skins (1/1)</span>
                             ) : (
                               /* Mock: a full-width Acquire button per card, solid
                                  primary — off-white on dark, near-black on light
@@ -6926,8 +6933,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
           <div style={{ background: C.primary, borderRadius: '12px', padding: '16px', marginTop: '20px', textAlign: 'center', color: C.onPrimary }}>
             <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '4px' }}>Highest Skin Level</div>
             <div style={{ fontSize: '32px', fontWeight: 'bold' }}>LEVEL {currentLevel}</div>
-            {ownedSkins.length === 0 && <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>No ValueSkin equipped — purchase one from the Closet</div>}
-            {ownedSkins.length === 1 && <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>Followers contribute to XP with 1 skin</div>}
+            {ownedSkins.length === 0 && <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '4px' }}>No ValueSkin equipped — purchase one from the Closet</div>}
+            {ownedSkins.length === 1 && <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '4px' }}>Followers contribute to XP with 1 skin</div>}
           </div>
         </Modal>
       )}
@@ -6949,13 +6956,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
           <Modal onClose={() => setShowReputationModal(false)}>
             {/* Score header */}
             <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Reputation Score</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>Reputation Score</div>
               <div style={{ fontSize: '42px', fontWeight: 800, color: C.primary, lineHeight: 1 }}>{score}</div>
               <div style={{ fontSize: '13px', color: C.textSecondary, marginTop: '4px' }}>out of {totalMax} possible points</div>
               <div style={{ height: '6px', background: C.border, borderRadius: '3px', overflow: 'hidden', margin: '14px 0 0' }}>
                 <div style={{ height: '100%', width: `${pct}%`, background: C.primary, borderRadius: '3px', transition: 'width 0.3s' }} />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: C.textMuted, marginTop: '4px', fontWeight: 600 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: C.textMuted, marginTop: '4px', fontWeight: 600 }}>
                 <span>0</span>
                 <span style={{ color: pct >= 80 ? C.success : C.textSecondary }}>Top {100 - pct + 3}% of creators</span>
                 <span>{totalMax}</span>
@@ -6971,7 +6978,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
               ].map(s => (
                 <div key={s.label} style={{ textAlign: 'center', padding: '12px 8px', background: C.surfaceAlt, borderRadius: '10px' }}>
                   <div style={{ fontSize: '18px', fontWeight: 800, color: C.text, lineHeight: 1 }}>{s.value}</div>
-                  <div style={{ fontSize: '10px', color: C.textMuted, marginTop: '4px' }}>{s.sub}</div>
+                  <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '4px' }}>{s.sub}</div>
                   <div style={{ fontSize: '9px', fontWeight: 700, color: C.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '2px' }}>{s.label}</div>
                 </div>
               ))}
@@ -6990,7 +6997,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '12px' }}>
                       <span style={{ fontSize: '15px', fontWeight: 800, color: fillPct >= 90 ? C.success : fillPct >= 70 ? C.primary : C.warning }}>{earned}</span>
-                      <span style={{ fontSize: '11px', color: C.textMuted }}>/{factor.maxPoints}</span>
+                      <span style={{ fontSize: '0.75rem', color: C.textMuted }}>/{factor.maxPoints}</span>
                     </div>
                   </div>
                   <div style={{ height: '4px', background: C.border, borderRadius: '2px', overflow: 'hidden' }}>
@@ -7002,7 +7009,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
             {/* Footer */}
             <div style={{ marginTop: '16px', padding: '12px', background: 'rgba(0,102,204,0.06)', borderRadius: '10px', textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', color: C.textSecondary, lineHeight: 1.5 }}>
+              <div style={{ fontSize: '0.75rem', color: C.textSecondary, lineHeight: 1.5 }}>
                 Scores are computed from verified engagement data, transaction history, and peer attestations. Updated every 24 hours.
               </div>
             </div>
@@ -7063,7 +7070,7 @@ function NavItem({ label, active, onClick, badgeCount }: { label: string; active
     >
       <span>{label}</span>
       {badgeCount !== undefined && badgeCount > 0 && (
-        <span style={{ minWidth: '18px', height: '18px', borderRadius: '9px', background: C.danger, color: 'var(--c-surface-lowest)', fontSize: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{badgeCount}</span>
+        <span style={{ minWidth: '18px', height: '18px', borderRadius: '9px', background: C.danger, color: 'var(--c-surface-lowest)', fontSize: '0.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{badgeCount}</span>
       )}
     </button>
   );

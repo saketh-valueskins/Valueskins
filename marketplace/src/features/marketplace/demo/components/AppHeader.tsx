@@ -158,7 +158,7 @@ export default function AppHeader({
           aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
           style={{
             display: 'inline-flex', alignItems: 'center', gap: '8px',
-            minHeight: '36px', padding: '0 12px', flex: 'none',
+            minHeight: '44px', padding: '0 14px', flex: 'none',
             borderRadius: '20px', border: `1px solid ${C.border}`,
             background: 'transparent', color: C.textMuted,
             fontSize: '0.75rem', fontWeight: 500,
