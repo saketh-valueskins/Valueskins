@@ -2506,7 +2506,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   };
 
   return (
-    <div style={{ background: C.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', overflowX: 'hidden' }}>
+    <div style={{ background: C.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', color: C.text, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif', overflowX: 'clip' }}>
 
       {/* Top header removed. The bottom tab spine (Profile · Market · Store ·
           Settings) is the only nav, and Log out + Delete account live in
@@ -2514,7 +2514,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
           kills the wordmark that was colliding with the global one top-left. */}
 
       {/* ── MAIN CONTENT ──────────────────────────── */}
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      {/* NOT `overflow:auto`. This wrapper has no height constraint, so it
+          never actually scrolled — it just grew to fit its content. But per
+          spec `auto` still establishes a scroll container, and position:sticky
+          resolves against its nearest scrolling ancestor. That made every
+          sticky header and rail in the app stick to this div (which does not
+          scroll) instead of the viewport, so they silently did nothing. */}
+      <div style={{ flex: 1 }}>
 
       {/* Delete Account Confirmation Modal */}
       {showDeleteConfirm && (
@@ -2856,7 +2862,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       )}
 
       {/* Main Content */}
-      <div style={{ display: activeView === 'events' ? 'none' : 'flex', flex: 1, justifyContent: 'center', overflowX: 'hidden', paddingBottom: '60px' }}>
+      <div style={{ display: activeView === 'events' ? 'none' : 'flex', flex: 1, justifyContent: 'center', overflowX: 'clip', paddingBottom: '60px' }}>
         {/* Content column. It used to be pinned to 600px (900px for a few views),
             which left most of a desktop screen as empty margin. Store and Market
             are dense, two-pane layouts and get the full width; reading views stay
@@ -2868,7 +2874,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
           // the viewport minus a margin, capped so the panes do not stretch
           // absurdly on an ultrawide. Reading views stay measured, because line
           // length past ~860px gets uncomfortable.
-          maxWidth: (activeView === 'store' || activeView === 'mim' || activeView === 'admin')
+          // Settings joins store/market/admin: since the rail came back it is a
+          // two-pane layout too, and at 860px it rendered ~705px of content
+          // with ~375px of dead gutter either side.
+          maxWidth: (activeView === 'store' || activeView === 'mim' || activeView === 'admin' || activeView === 'settings')
             ? 'min(1760px, calc(100vw - 48px))'
             // Profile is an identity page, not a reading column: the sample and
             // Profile page.md §0 both put it at 900px, so the shell has to let
@@ -2882,7 +2891,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
           // "breathing room over density", borders "thin, quiet").
           
           background: C.bg,
-          overflowX: 'hidden',
+          overflowX: 'clip',
         }}>
 
           {/* ── PROFILE VIEW ──────────────────────────────────── */}

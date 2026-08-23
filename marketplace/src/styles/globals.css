@@ -201,8 +201,12 @@ body {
     line-height: 1.6;
     /* dvh, never vh — mobile browser chrome makes 100vh overflow */
     min-height: 100dvh;
-    /* no horizontal scroll, ever */
-    overflow-x: hidden;
+    /* No horizontal scroll, ever — but `clip` rather than `hidden`.
+       `hidden` establishes a scroll container, and a scroll container clips
+       position:sticky to itself, which silently broke every sticky header and
+       rail nested inside the app. `clip` blocks the same overflow without
+       becoming a scroll container. */
+    overflow-x: clip;
   }
 
   /* G3: sand selection, never pink */
