@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@prisma/client": "^7.8.0",
+    "@sentry/nextjs": "10.70.0",
     "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
     "dompurify": "^3.0.0",

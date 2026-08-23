@@ -1,6 +1,6 @@
 import { getSupabase } from './supabase';
 import { logger } from './logger';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { RealtimeChannel } from './supabase';
 
 export type SharedCollections = 'deals' | 'campaigns' | 'messages' | 'applications' | 'notifications' | 'events';
 
