@@ -388,7 +388,7 @@ export default function ProfileView({
 
           {/* §4 — section label + trailing hairline */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '28px 0 14px' }}>
-            <span style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: t.muted2 }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: t.muted2 }}>
               Track record
             </span>
             <span style={{ flex: 1, height: 1, background: t.divider }} />
@@ -453,7 +453,7 @@ function StatTile({ stat, t, reduced, shown, delay }: { stat: StatCard; t: Token
       transform: shown ? 'translateY(0)' : 'translateY(12px)',
       transition: reduced ? 'none' : `opacity 0.6s ${EASE} ${delay}s, transform 0.6s ${EASE} ${delay}s`,
     }}>
-      <div style={{ fontSize: '0.6875rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: t.muted2 }}>
+      <div style={{ fontSize: '0.75rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: t.muted2 }}>
         {stat.label}
       </div>
       <div style={{ fontSize: '1.875rem', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1, marginTop: 8, color: stat.sand ? DEEP_SAND : t.head }}>
