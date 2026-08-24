@@ -28,7 +28,12 @@ export async function getSessionUserId(cookie: string): Promise<string | null> {
   );
   if (result.rows.length === 0) return null;
 
-  await touchSession(sessionToken);
+  // Sliding-expiry renewal is best-effort and its result does not affect this
+  // response, so it must not sit in the critical path. Awaiting it added a full
+  // database round trip to EVERY authenticated request — measured at ~75ms
+  // against this database, on top of the lookup above. Access is still gated by
+  // the SELECT; this only extends the window.
+  void touchSession(sessionToken);
   return result.rows[0].user_id;
 }
 

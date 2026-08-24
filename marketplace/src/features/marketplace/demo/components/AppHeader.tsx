@@ -1,7 +1,6 @@
 'use client';
 
 import ValueSkinsLogo from '@/components/ValueSkinsLogo';
-import { useTheme } from '@/theme/ThemeContext';
 import { C } from '@/theme/colors';
 
 // The app spine, moved from the floor to the top and sat beside the wordmark.
@@ -77,9 +76,6 @@ export default function AppHeader({
   activeView: string;
   onSelect: (v: AppView) => void;
 }) {
-  const { theme, setPreference } = useTheme();
-  const dark = theme === 'dark';
-
   return (
     <>
     {/* Published so the store's search bar and the market's header — both
@@ -152,33 +148,9 @@ export default function AppHeader({
           })}
         </nav>
 
-        {/* Theme control, as the samples carry top-right. */}
-        <button
-          onClick={() => setPreference(dark ? 'light' : 'dark')}
-          aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: '8px',
-            minHeight: '44px', padding: '0 14px', flex: 'none',
-            borderRadius: '20px', border: `1px solid ${C.border}`,
-            background: 'transparent', color: C.textMuted,
-            fontSize: '0.75rem', fontWeight: 500,
-            fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
-            cursor: 'pointer',
-          }}
-        >
-          {dark ? 'Dark' : 'Light'}
-          <span style={{
-            width: '26px', height: '14px', borderRadius: '8px', position: 'relative',
-            background: dark ? C.accent : C.outline, transition: 'background 300ms',
-          }}>
-            <span style={{
-              position: 'absolute', top: '1px', left: '1px', width: '12px', height: '12px',
-              borderRadius: '50%', background: 'var(--c-surface-lowest)',
-              transform: dark ? 'translateX(12px)' : 'none',
-              transition: 'transform 300ms cubic-bezier(0.16,1,0.3,1)',
-            }} />
-          </span>
-        </button>
+        {/* The theme control used to sit here. Removed on request — light and
+            dark both still work and the switch lives in Settings > Appearance,
+            which is where a preference that persists per user belongs. */}
       </div>
     </header>
     </>
