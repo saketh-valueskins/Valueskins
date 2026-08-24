@@ -17,20 +17,35 @@ const sslConfig = isLocal ? false : { rejectUnauthorized: false };
 // an API route fires, while leaving room for ~20 instances inside the limit.
 // min:0 means an idle instance holds nothing, and the shorter idle timeout
 // returns connections quickly so other instances can have them.
-const pool = new Pool({
+// The pool is pinned to globalThis, not to this module.
+//
+// Next bundles each API route separately, so `import { query } from '@/lib/db'`
+// gave every route its OWN module instance and therefore its own Pool. Measured
+// against this database: a warm query is ~75ms but connect+TLS is ~2200ms, and
+// routes were paying the connect cost repeatedly instead of reusing a
+// connection — /api/profile/stats took ~1350ms for a single indexed SELECT.
+//
+// One pool per process also means the max:5 cap is actually a per-process cap
+// rather than per-route, which matters against max_connections = 103.
+const globalForPg = globalThis as unknown as { __vsPool?: Pool };
+
+const pool = globalForPg.__vsPool ?? new Pool({
   connectionString: dbUrl,
   ssl: sslConfig,
   max: isLocal ? 20 : 5,
   min: 0,
-  idleTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 10000,
   statement_timeout: 15000,
   query_timeout: 15000,
 });
 
-pool.on('error', (err) => {
-  console.error('Unexpected pool error:', err);
-});
+if (!globalForPg.__vsPool) {
+  globalForPg.__vsPool = pool;
+  pool.on('error', (err) => {
+    console.error('Unexpected pool error:', err);
+  });
+}
 
 export async function query(text: string, params?: any[]) {
   const result = await pool.query(text, params);

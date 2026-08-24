@@ -3092,7 +3092,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                   <div style={{ height: '60px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', paddingLeft: '20px', fontWeight: 'bold', fontSize: '16px', background: C.surface }}>Marketplace</div>
                   <div style={{ padding: '60px 20px', textAlign: 'center' }}>
                     <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      {/* stroke was C.textMuted -> --c-outline -> #2D2D2D, which
+                          on the dark surface (#171716) is ~1.2:1 and disappeared
+                          entirely. C.textSecondary reads on both themes. */}
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={C.textSecondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
                       </svg>
                     </div>
@@ -6696,8 +6699,18 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
               <div style={{ padding: '0 16px 24px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(280px, 360px) 1fr', gap: '28px', alignItems: 'start' }}>
 
-                {/* LEFT — numbered profession list */}
-                <div>
+                {/* LEFT — numbered profession list. Sticky, the same way the
+                    Settings rail is: this is the navigation for the pane on the
+                    right, and scrolling a long skin grid should not scroll the
+                    thing you use to change what is in it. Offset below the app
+                    header plus the store's own sticky title block. */}
+                <div style={{
+                  position: 'sticky',
+                  top: 'calc(var(--vs-header-h, 0px) + 148px)',
+                  alignSelf: 'start',
+                  maxHeight: 'calc(100dvh - var(--vs-header-h, 0px) - 168px)',
+                  overflowY: 'auto',
+                }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.textSecondary, margin: '4px 0 6px' }}>Browse professions</div>
                   {cats.map((prof, i) => {
                     const active = prof.name === selectedName;
