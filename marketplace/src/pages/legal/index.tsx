@@ -87,9 +87,9 @@ export default function LegalHub() {
         <div style={{ marginTop: '48px', padding: '20px', background: C.surface, border: `1px solid ${C.border}`, borderRadius: '12px' }}>
           <p style={{ fontSize: '13px', color: C.textSecondary, lineHeight: 1.6, margin: 0 }}>
             <strong style={{ color: C.text }}>Questions?</strong> Contact us at{' '}
-            <a href="mailto:founder@valueskins.com" style={{ color: C.primary }}>founder@valueskins.com</a>
+            <a href="mailto:valueskinsfounder@gmail.com" style={{ color: C.primary }}>valueskinsfounder@gmail.com</a>
             {' '}or call{' '}
-            <a href="tel:+918805695324" style={{ color: C.primary }}>+91 88056 95324</a>.
+            .
             We respond within 24 hours.
           </p>
         </div>

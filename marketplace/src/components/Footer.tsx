@@ -158,19 +158,12 @@ export default function Footer() {
               }}>
                 Contact Us
               </Link>
-              <a href="mailto:founder@valueskins.com" style={{
+              <a href="mailto:valueskinsfounder@gmail.com" style={{
                 fontSize: '13px',
                 color: C.textSecondary,
                 textDecoration: 'none',
               }}>
-                founder@valueskins.com
-              </a>
-              <a href="tel:+918805695324" style={{
-                fontSize: '13px',
-                color: C.textSecondary,
-                textDecoration: 'none',
-              }}>
-                +91 88056 95324
+                valueskinsfounder@gmail.com
               </a>
             </div>
           </div>

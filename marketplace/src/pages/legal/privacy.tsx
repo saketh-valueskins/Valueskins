@@ -84,7 +84,7 @@ export default function Privacy() {
           <p>• <strong>Right to Delete:</strong> Request deletion of your personal information</p>
           <p>• <strong>Right to Opt-Out:</strong> Opt out of the sale of your personal information (we do not sell data)</p>
           <p>• <strong>Right to Non-Discrimination:</strong> We will not discriminate against you for exercising these rights</p>
-          <p><strong>To Exercise Your Rights:</strong> Contact us at <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a>. We will respond to your request within the timeframes required by applicable law (generally 30 days). We may need to verify your identity before processing your request.</p>
+          <p><strong>To Exercise Your Rights:</strong> Contact us at <a href="mailto:valueskinsfounder@gmail.com" style={{color: C.primary}}>valueskinsfounder@gmail.com</a>. We will respond to your request within the timeframes required by applicable law (generally 30 days). We may need to verify your identity before processing your request.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>9. Data Security</h2>
           <p>We implement robust security measures to protect your data:</p>
@@ -131,25 +131,36 @@ export default function Privacy() {
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>15. Grievance Officer (India)</h2>
           <p>In compliance with the Information Technology Act, 2000 and the DPDP Act, 2023, we have appointed a Grievance Officer to address your concerns regarding data processing and privacy:</p>
-          <p><strong>Grievance Officer:</strong> [Name]<br/>
+          <p><strong>Grievance Officer:</strong> Saketh Velamuri<br/>
           <strong>Company:</strong> Valueskins Pvt. Ltd.<br/>
-          <strong>Email:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a><br/>
-          <strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 88056 95324</a></p>
+          <strong>Email:</strong> <a href="mailto:valueskinsfounder@gmail.com" style={{color: C.primary}}>valueskinsfounder@gmail.com</a></p>
           <p>We will acknowledge your complaint within 24 hours and resolve it within 30 days as required by law.</p>
 
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>16. Data Protection Officer (GDPR)</h2>
-          <p>          For users in the European Economic Area, you may contact our Data Protection Officer at <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a>. You also have the right to lodge a complaint with your local data protection supervisory authority.</p>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>16. Accessibility and Data Processing for Persons with Disabilities</h2>
+          <p>Valueskins is committed to ensuring that our Platform is accessible to all users, including persons with disabilities. We process personal data for persons with disabilities in accordance with applicable accessibility laws and standards:</p>
+          <p><strong>Accessibility Commitments:</strong></p>
+          <p>• We strive to comply with Web Content Accessibility Guidelines (WCAG) 2.1 Level AA standards</p>
+          <p>• The Platform supports assistive technologies including screen readers, keyboard navigation, and text scaling</p>
+          <p>• All images include descriptive alt text for users relying on screen readers</p>
+          <p>• Color contrast ratios meet accessibility standards to support users with visual impairments</p>
+          <p>• We provide captions or transcripts where relevant for multimedia content</p>
+          <p>• Keyboard navigation is fully supported as an alternative to mouse-based interaction</p>
+          <p><strong>Data Processing for Accessibility:</strong> We may process additional data related to accessibility features you use (e.g., screen reader detection, accessibility preferences, assistive technology information) solely to enhance your experience and ensure the Platform functions correctly with your accessibility tools. This data is never shared with third parties for marketing or profiling purposes.</p>
+          <p><strong>Accessibility Feedback:</strong> If you encounter accessibility barriers or have suggestions for improvement, please contact us at <a href="mailto:valueskinsfounder@gmail.com" style={{color: C.primary}}>valueskinsfounder@gmail.com</a>. We welcome your feedback and will respond promptly.</p>
 
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>17. Changes to This Policy</h2>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>17. Data Protection Officer (GDPR)</h2>
+          <p>          For users in the European Economic Area, you may contact our Data Protection Officer at <a href="mailto:valueskinsfounder@gmail.com" style={{color: C.primary}}>valueskinsfounder@gmail.com</a>. You also have the right to lodge a complaint with your local data protection supervisory authority.</p>
+
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>18. Changes to This Policy</h2>
           <p>We may update this Privacy Policy from time to time. We will notify you of material changes by email or through a prominent notice on the Platform. The "Last updated" date at the top of this Policy indicates when it was last revised. Your continued use of the Platform after the changes take effect constitutes your acceptance of the updated Policy.</p>
 
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>18. Contact Us</h2>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>19. Contact Us</h2>
           <p>If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:</p>
           <p><strong>Registered Entity:</strong> Valueskins Pvt. Ltd.</p>
-          <p><strong>Email:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a></p>
-          <p><strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 88056 95324</a></p>
-          <p><strong>Support:</strong> <a href="mailto:founder@valueskins.com" style={{color: C.primary}}>founder@valueskins.com</a></p>
-          <p><strong>Phone:</strong> <a href="tel:+918805695324" style={{color: C.primary}}>+91 88056 95324</a></p>
+          <p><strong>Email:</strong> <a href="mailto:valueskinsfounder@gmail.com" style={{color: C.primary}}>valueskinsfounder@gmail.com</a></p>
+          
+          <p><strong>Support:</strong> <a href="mailto:valueskinsfounder@gmail.com" style={{color: C.primary}}>valueskinsfounder@gmail.com</a></p>
+          
 
         </div>
       </div>
