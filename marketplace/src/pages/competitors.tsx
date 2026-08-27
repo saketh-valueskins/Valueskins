@@ -20,7 +20,7 @@ const reasons = [
   {
     number: '03',
     title: 'Founders Who Actually Respond',
-    description: 'We\'re founders with virtually no social life. Try to contact us at +91 8805695324 or valueskinsfounder@gmail.com and we\'re most likely to reply and address your problems ASAP.'
+    description: 'We\'re founders with virtually no social life. Try to contact us at valueskinsfounder@gmail.com and we\'re most likely to reply and address your problems ASAP.'
   },
   {
     number: '04',
@@ -128,7 +128,7 @@ export default function WhyUsPage() {
       <div style={{ borderTop: `1px solid ${C.border}`, padding: '40px 24px', textAlign: 'center', color: C.textSecondary, fontSize: '0.9375rem' }}>
         <p style={{ margin: '0 0 8px' }}>Questions? We're always here.</p>
         <p style={{ margin: 0 }}>
-          <a href="tel:+918805695324" style={{ color: C.accent, textDecoration: 'none' }}>+91 8805695324</a> or{' '}
+           or{' '}
           <a href="mailto:valueskinsfounder@gmail.com" style={{ color: C.accent, textDecoration: 'none' }}>valueskinsfounder@gmail.com</a>
         </p>
       </div>
