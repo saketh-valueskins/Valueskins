@@ -17,6 +17,7 @@ export default function Privacy() {
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>2. Information We Collect</h2>
           <p><strong>Account Information:</strong> When you create an account, we collect your name, email address, phone number, password (stored as a bcrypt hash, never in plaintext), and profile information such as display name, avatar, and biography.</p>
+          <p><strong>Tax Compliance Information:</strong> For tax-compliant payouts and invoice generation, we collect Permanent Account Number (PAN) for Creators and Goods and Services Tax Identification Number (GSTIN) for Brands. This information is used solely for tax compliance, invoice generation, and TDS purposes.</p>
           <p><strong>Profile & Listing Data:</strong> Creators may provide professional information including portfolio samples, pricing, profession categories, social media links, and credentials. Brands may provide company information, industry, and campaign preferences.</p>
           <p><strong>Deal & Transaction Data:</strong> We collect information related to Deals you create or participate in, including deal terms, deliverables, messages, offers, counter-offers, reviews, ratings, and payment transaction records (note: full payment card details are handled by Razorpay and are not stored by us).</p>
           <p><strong>Communication Data:</strong> Messages sent through the Platform, support inquiries, and communications with other Users are recorded and stored with tamper-evident protections.</p>
@@ -60,6 +61,7 @@ export default function Privacy() {
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>7. Data Retention</h2>
           <p><strong>Active Accounts:</strong> We retain your information for as long as your account is active and as needed to provide you with services.</p>
           <p><strong>Deleted Accounts:</strong> When you request account deletion, a 30-day grace period begins during which you may cancel the deletion. After 30 days, your personal data is permanently deleted by our automated deletion system. Deal messages are retained for 90 days after deletion for dispute resolution purposes, then permanently deleted.</p>
+          <p><strong>Deal Records and Tax Documents:</strong> Deal records, transaction history, invoices, payment status, and associated audit logs are retained for a minimum of seven years as required by Indian tax law, accounting standards, and legal obligations. This is because a deal is a binding agreement between two parties and one party cannot erase the shared record of it.</p>
           <p><strong>Logs:</strong> Server logs containing IP addresses and technical data are retained for 30 days.</p>
           <p><strong>Anonymized Data:</strong> Aggregated, anonymized data that cannot identify you may be retained indefinitely for analytics and platform improvement.</p>
           <p><strong>Legal Holds:</strong> Data may be retained longer if required by applicable law, regulatory obligations, or legal proceedings.</p>
@@ -98,10 +100,11 @@ export default function Privacy() {
           <p>• <strong>Incident Response:</strong> Documented incident response plan with breach notification procedures</p>
           <p>Despite these measures, no method of transmission or storage is 100% secure. We cannot guarantee absolute security.</p>
 
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>10. Cookie Policy</h2>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>10. Cookie Policy and Analytics</h2>
           <p>We use cookies and similar technologies to enhance your experience. Here is what we use:</p>
           <p><strong>Essential Cookies:</strong> Required for the Platform to function (session management, CSRF protection, authentication). No consent required. These cannot be disabled.</p>
-          <p><strong>Analytics Cookies:</strong> Help us understand how you use the Platform (pages visited, features used). We use Google Analytics and Mixpanel. These are only set with your consent where required by law.</p>
+          <p><strong>Analytics Cookies:</strong> Help us understand how you use the Platform (pages visited, features used). We use PostHog for product analytics and session replay. These are only set with your consent where required by law.</p>
+          <p><strong>Session Replay:</strong> With your consent, PostHog records session replays showing how pages were used, including clicks and navigation. Personal information is masked: passwords, one-time codes, email and phone fields are never captured, and screens containing personal details are hidden from recordings. Session replays are stored and used only to diagnose problems and improve the platform. You can withdraw analytics consent at any time.</p>
           <p><strong>Preference Cookies:</strong> Remember your settings and preferences.</p>
           <p><strong>Managing Cookies:</strong> You can control cookies through your browser settings. Disabling essential cookies may affect Platform functionality. You can also use our cookie consent banner to manage your preferences.</p>
 
@@ -135,6 +138,9 @@ export default function Privacy() {
           <strong>Company:</strong> Valueskins Pvt. Ltd.<br/>
           <strong>Email:</strong> <a href="mailto:valueskinsfounder@gmail.com" style={{color: C.primary}}>valueskinsfounder@gmail.com</a></p>
           <p>We will acknowledge your complaint within 24 hours and resolve it within 30 days as required by law.</p>
+
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>17A. Payment Processing</h2>
+          <p><strong>Payment Processor:</strong> All payments are processed through our payment processor (currently Razorpay). ValueSkins does not store, process, or have access to payment card details, bank account information, or UPI IDs. All payment security and storage is handled exclusively by our payment processor.</p>
 
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>16. Accessibility and Data Processing for Persons with Disabilities</h2>
           <p>Valueskins is committed to ensuring that our Platform is accessible to all users, including persons with disabilities. We process personal data for persons with disabilities in accordance with applicable accessibility laws and standards:</p>
