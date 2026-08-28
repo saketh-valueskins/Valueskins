@@ -119,30 +119,41 @@ export default function CalendarPage({ userId, displayName, googleAccountId, dea
       {/* Main Content */}
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 24px' }}>
         {!isConnected ? (
-          <div style={{ textAlign: 'center', paddingTop: '60px' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
-              Connect Your Google Calendar
+          <div style={{ textAlign: 'center', paddingTop: '40px' }}>
+            <h1 style={{ fontSize: '32px', fontWeight: 700, color: C.text, margin: '0 0 20px' }}>
+              ValueSkins Syncs to Google Calendar
             </h1>
-            <p style={{ fontSize: '15px', color: C.textMuted, margin: '0 0 32px', maxWidth: '450px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
-              ValueSkins syncs all your shoot dates and deadlines to Google Calendar. This way, you can see everything in one place and never miss a deadline.
-            </p>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, padding: '32px', borderRadius: '12px', maxWidth: '600px', margin: '0 auto 40px', textAlign: 'left' }}>
+              <p style={{ fontSize: '15px', color: C.text, margin: '0 0 16px', lineHeight: 1.8 }}>
+                When you accept a deal that requires a shoot on location, ValueSkins automatically adds it to your Google Calendar with all the details:
+              </p>
+              <ul style={{ fontSize: '14px', color: C.textMuted, margin: '0 0 16px', paddingLeft: '20px', lineHeight: 1.8 }}>
+                <li>Shoot date and time</li>
+                <li>Location</li>
+                <li>Brand name and compensation</li>
+                <li>Submission and approval deadlines</li>
+              </ul>
+              <p style={{ fontSize: '15px', color: C.text, margin: '0', lineHeight: 1.8 }}>
+                <strong>To use this feature, you must connect your Google Calendar account.</strong> We'll only access your calendar to add shoot dates — nothing else.
+              </p>
+            </div>
             <button
               onClick={handleConnectGoogle}
               style={{
                 background: C.accent,
                 color: C.bg,
                 border: 'none',
-                padding: '12px 32px',
+                padding: '14px 40px',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                fontSize: '15px',
+                fontSize: '16px',
                 fontWeight: 600,
                 transition: 'opacity 0.2s',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
             >
-              Connect Google Calendar
+              Connect Google Calendar Now
             </button>
           </div>
         ) : !isConnected ? (

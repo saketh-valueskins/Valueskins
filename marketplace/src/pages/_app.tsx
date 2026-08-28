@@ -5,7 +5,6 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Footer from '@/components/Footer';
 import CookieConsent from '@/components/CookieConsent';
 import BottomTabBar from '@/components/BottomTabBar';
-import DiagnosticsPanel from '@/components/DiagnosticsPanel';
 import { ThemeProvider } from '@/theme/ThemeContext';
 import '@/styles/globals.css';
 
@@ -34,7 +33,6 @@ export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   const hideFooter = ROUTES_WITHOUT_GLOBAL_FOOTER.includes(router.pathname);
   const showTabBar = ROUTES_WITH_TAB_BAR.includes(router.pathname);
-  const isDev = process.env.NODE_ENV === 'development';
 
   return (
     <ErrorBoundary>
@@ -44,7 +42,6 @@ export default function App({ Component, pageProps }: AppProps) {
       {!hideFooter && <Footer />}
       {showTabBar && <BottomTabBar />}
       <CookieConsent />
-      {isDev && <DiagnosticsPanel />}
     </AuthProvider>
     </ThemeProvider>
     </ErrorBoundary>
