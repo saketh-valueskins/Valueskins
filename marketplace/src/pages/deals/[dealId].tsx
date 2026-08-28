@@ -10,6 +10,7 @@ export default function DealPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [agreementPhase, setAgreementPhase] = useState(false);
+  const [syncNotification, setSyncNotification] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   useEffect(() => {
     if (!dealId) return;
@@ -26,14 +27,39 @@ export default function DealPage() {
   const handleAgree = async () => {
     if (!deal) return;
 
-    const res = await fetch('/api/deals/agree-with-escrow', {
+    setSyncNotification(null);
+
+    const res = await fetch('/api/deals/accept-and-sync-calendar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dealId, amount: deal.budget }),
+      body: JSON.stringify({ dealId }),
     });
+
+    const data = await res.json();
 
     if (res.ok) {
       setAgreementPhase(true);
+      if (data.calendarEventId) {
+        setSyncNotification({
+          type: 'success',
+          text: 'Deal accepted! Synced to your Google Calendar.',
+        });
+      } else if (data.calendarError) {
+        setSyncNotification({
+          type: 'info',
+          text: data.calendarError,
+        });
+      } else {
+        setSyncNotification({
+          type: 'success',
+          text: 'Deal accepted!',
+        });
+      }
+    } else {
+      setSyncNotification({
+        type: 'error',
+        text: data.error || 'Failed to accept deal',
+      });
     }
   };
 
@@ -56,6 +82,7 @@ export default function DealPage() {
       body: JSON.stringify({ message: text }),
     });
   };
+
 
   if (loading) return <div>Loading...</div>;
   if (!deal) return <div>Deal not found</div>;
@@ -95,6 +122,62 @@ export default function DealPage() {
                 {deal.value_skin}
               </div>
             </div>
+
+            {deal.requires_shoot_on_location && ['accepted', 'softhold', 'checklist', 'approved'].includes(deal.phase) && (
+              <>
+                <div style={{ borderTop: '1px solid var(--c-border)', paddingTop: '16px' }}>
+                  <div style={{ fontSize: '12px', color: 'var(--c-text-variant)', fontWeight: 600, marginBottom: '12px' }}>
+                    SHOOT DETAILS
+                  </div>
+                  {deal.shoot_date && (
+                    <div style={{ fontSize: '13px', marginBottom: '8px' }}>
+                      <span style={{ color: 'var(--c-text-variant)' }}>Date:</span> {new Date(deal.shoot_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                  )}
+                  {deal.shoot_time && (
+                    <div style={{ fontSize: '13px', marginBottom: '8px' }}>
+                      <span style={{ color: 'var(--c-text-variant)' }}>Time:</span> {deal.shoot_time}
+                    </div>
+                  )}
+                  {deal.location && (
+                    <div style={{ fontSize: '13px', marginBottom: '12px' }}>
+                      <span style={{ color: 'var(--c-text-variant)' }}>Location:</span> {deal.location}
+                    </div>
+                  )}
+                  {deal.google_calendar_event_id && (
+                    <div style={{ fontSize: '12px', color: 'var(--c-accent)', fontWeight: 600, padding: '10px', background: 'rgba(200, 184, 154, 0.1)', borderRadius: '6px', textAlign: 'center', marginTop: '12px' }}>
+                      Synced to Google Calendar
+                    </div>
+                  )}
+                </div>
+
+                {deal.submission_deadline && (
+                  <div style={{ borderTop: '1px solid var(--c-border)', paddingTop: '16px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--c-text-variant)', fontWeight: 600, marginBottom: '8px' }}>
+                      DEADLINES
+                    </div>
+                    <div style={{ fontSize: '13px', marginBottom: '6px' }}>
+                      <span style={{ color: 'var(--c-text-variant)' }}>Submit by:</span> {new Date(deal.submission_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </div>
+                    {deal.approval_deadline && (
+                      <div style={{ fontSize: '13px', marginBottom: '6px' }}>
+                        <span style={{ color: 'var(--c-text-variant)' }}>Approval by:</span> {new Date(deal.approval_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </div>
+                    )}
+                    {deal.posting_deadline && (
+                      <div style={{ fontSize: '13px', marginBottom: '6px' }}>
+                        <span style={{ color: 'var(--c-text-variant)' }}>Post by:</span> {new Date(deal.posting_deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </div>
+                    )}
+                    {deal.payment_due_date && (
+                      <div style={{ fontSize: '13px' }}>
+                        <span style={{ color: 'var(--c-text-variant)' }}>Payment due:</span> {new Date(deal.payment_due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
 
             <div>
               <div style={{ fontSize: '12px', color: 'var(--c-text-variant)', fontWeight: 600 }}>
