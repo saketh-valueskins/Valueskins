@@ -21,10 +21,11 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
     const userId = await getSessionUserId(cookie);
     if (!userId) return { redirect: { destination: '/auth/login', permanent: false } };
 
-    const userResult = await query('SELECT id, display_name, email, google_account_id FROM accounts WHERE id = $1', [userId]);
+    const userResult = await query('SELECT id, display_name, email, google_access_token FROM accounts WHERE id = $1', [userId]);
     if (!userResult.rows[0]) return { redirect: { destination: '/auth/login', permanent: false } };
 
     const user = userResult.rows[0];
+    const isGoogleConnected = !!user.google_access_token;
 
     const dealsResult = await query(
       `SELECT id, title, shoot_date, shoot_time, location, phase, requires_shoot_on_location
@@ -40,7 +41,7 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
       props: {
         userId,
         displayName: user.display_name,
-        googleAccountId: user.google_account_id,
+        googleAccountId: isGoogleConnected ? 'connected' : null,
         deals: dealsResult.rows || [],
       },
     };
@@ -118,6 +119,33 @@ export default function CalendarPage({ userId, displayName, googleAccountId, dea
       {/* Main Content */}
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 24px' }}>
         {!isConnected ? (
+          <div style={{ textAlign: 'center', paddingTop: '60px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
+              Connect Your Google Calendar
+            </h1>
+            <p style={{ fontSize: '15px', color: C.textMuted, margin: '0 0 32px', maxWidth: '450px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
+              ValueSkins syncs all your shoot dates and deadlines to Google Calendar. This way, you can see everything in one place and never miss a deadline.
+            </p>
+            <button
+              onClick={handleConnectGoogle}
+              style={{
+                background: C.accent,
+                color: C.bg,
+                border: 'none',
+                padding: '12px 32px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: 600,
+                transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+            >
+              Connect Google Calendar
+            </button>
+          </div>
+        ) : !isConnected ? (
           <div style={{ textAlign: 'center', paddingTop: '60px' }}>
             <h1 style={{ fontSize: '28px', fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
               Connect Your Google Calendar
