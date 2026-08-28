@@ -17,7 +17,7 @@ import { C } from '@/theme/colors';
 // and §1 rules out emoji, so these are drawn to the same weight as the ones
 // already in MarketplaceLayout rather than pulled from a library.
 
-export type AppView = 'profile' | 'mim' | 'store' | 'settings';
+export type AppView = 'profile' | 'mim' | 'store' | 'settings' | 'calendar';
 
 const STROKE = {
   fill: 'none',
@@ -61,11 +61,21 @@ function IconSettings() {
     </svg>
   );
 }
+function IconCalendar() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" {...STROKE} aria-hidden="true">
+      <rect x="4" y="4" width="16" height="16" rx="2" />
+      <path d="M4 10h16" />
+      <path d="M8 4v-2M16 4v-2" />
+    </svg>
+  );
+}
 
 const TABS: { view: AppView; label: string; Icon: () => JSX.Element }[] = [
   { view: 'profile',  label: 'Profile',  Icon: IconProfile },
   { view: 'mim',      label: 'Market',   Icon: IconMarket },
   { view: 'store',    label: 'Store',    Icon: IconStore },
+  { view: 'calendar', label: 'Calendar', Icon: IconCalendar },
   { view: 'settings', label: 'Settings', Icon: IconSettings },
 ];
 
