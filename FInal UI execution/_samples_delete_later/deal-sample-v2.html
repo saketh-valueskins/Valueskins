@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Deal room v2 (concept)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--near-black:#0A0A0A;--off-white:#F5F5F0;--warm-sand:#C8B89A;--charcoal:#2D2D2D;--deep-sand:#A08A5E;--muted:#B8B4AC;--ease:cubic-bezier(0.16,1,0.3,1);}
+  [data-theme="light"]{--bg:linear-gradient(150deg,#F4F3EE 0%,#EEE9DE 60%,#E6E0D2 100%);--head:#0A0A0A;--text:#3A362E;--muted2:#6E6A60;--card:#FFFFFF;--cardbrd:rgba(160,138,94,0.28);--field:#FBFAF6;--divider:rgba(160,138,94,0.20);--hair:rgba(45,45,45,0.10);--chrome:rgba(245,245,240,0.85);--cta-bg:#0A0A0A;--cta-text:#F5F5F0;}
+  [data-theme="dark"]{--bg:linear-gradient(150deg,#0A0A0A 0%,#141310 60%,#1C1B17 100%);--head:#F5F5F0;--text:#C9C5BC;--muted2:#8A867E;--card:#141310;--cardbrd:rgba(200,184,154,0.16);--field:rgba(245,245,240,0.03);--divider:rgba(245,245,240,0.10);--hair:rgba(245,245,240,0.08);--chrome:rgba(10,10,10,0.7);--cta-bg:#F5F5F0;--cta-text:#0A0A0A;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100dvh;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;color:var(--text);background:var(--bg);background-attachment:fixed;transition:color .3s;font-size:1rem;}
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:var(--chrome);backdrop-filter:blur(12px);border-bottom:1px solid var(--hair);}
+  .word{font-weight:700;font-size:20px;letter-spacing:.18em;color:var(--head);}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer;border:1px solid var(--divider);border-radius:20px;padding:6px 12px;}
+  .toggle .dw{width:26px;height:14px;border-radius:8px;background:var(--muted);position:relative;transition:background .3s;}
+  .toggle .kb{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--off-white);transition:transform .3s var(--ease);}
+  [data-theme="dark"] .toggle .dw{background:var(--deep-sand);}[data-theme="dark"] .toggle .kb{transform:translateX(12px);}
+
+  .wrap{max-width:1120px;margin:0 auto;padding:30px 28px 70px;}
+  .deal-grid{display:grid;grid-template-columns:1.35fr 0.85fr;gap:22px;align-items:start;}
+  .deal-grid .right{position:sticky;top:88px;}
+  .crumb{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+  .back{font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:8px 14px;border-radius:8px;border:1px solid var(--divider);background:transparent;color:var(--head);}
+  .back:hover{border-color:var(--cardbrd);}
+  .who{display:flex;align-items:center;gap:12px;}
+  .logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(155deg,#0A0A0A,#23221C);color:#F5F5F0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex:none;cursor:pointer;border:1px solid rgba(200,184,154,.25);}
+  .who .n{font-size:17px;font-weight:700;color:var(--head);letter-spacing:-.01em;}
+  .who .s{font-size:12px;color:var(--muted2);}
+  .who .online{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--deep-sand);margin-left:6px;}
+  .who .online .d{width:7px;height:7px;border-radius:50%;background:#7FB08A;box-shadow:0 0 0 0 rgba(127,176,138,.5);animation:pulse 2s var(--ease) infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(127,176,138,.5);}70%{box-shadow:0 0 0 7px rgba(127,176,138,0);}100%{box-shadow:0 0 0 0 rgba(127,176,138,0);}}
+
+  /* ===== DARK OFFER HERO — the anchor ===== */
+  .offer-hero{position:relative;overflow:hidden;border-radius:20px;padding:34px 36px;color:#F5F5F0;
+    background:linear-gradient(155deg,#0A0A0A 0%,#17150F 55%,#22201A 100%);border:1px solid rgba(200,184,154,0.22);
+    box-shadow:0 40px 80px -40px rgba(10,10,10,0.6);opacity:0;transform:translateY(16px);animation:rise .7s var(--ease) .05s forwards;}
+  .offer-hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(50% 80% at 88% -10%,rgba(160,138,94,0.22),transparent 65%);}
+  .oh-top{position:relative;z-index:1;display:flex;align-items:center;gap:12px;}
+  .oh-top .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);}
+  .oh-amt{position:relative;z-index:1;margin-top:14px;font-size:clamp(44px,7vw,62px);font-weight:700;letter-spacing:-.03em;line-height:1;color:#F5F5F0;}
+  .oh-amt .plus{font-size:.42em;font-weight:500;color:var(--warm-sand);letter-spacing:0;margin-left:6px;}
+  .oh-net{position:relative;z-index:1;margin-top:14px;font-size:14px;color:#C9C5BC;line-height:1.6;max-width:520px;}
+  .oh-net b{color:#F5F5F0;}
+  .oh-escrow{position:relative;z-index:1;margin-top:18px;display:flex;gap:11px;align-items:flex-start;font-size:13px;color:#D8D4CC;border-top:1px solid rgba(245,245,240,.1);padding-top:16px;}
+  .oh-escrow svg{flex:none;stroke:var(--warm-sand);}
+  .oh-act{position:relative;z-index:1;display:flex;gap:12px;margin-top:22px;}
+  .btn{font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:14px 26px;border-radius:10px;border:none;transition:transform .14s var(--ease);}
+  .btn:hover{transform:translateY(-1px);}.btn:active{transform:scale(.99);}
+  .btn.primary{background:var(--warm-sand);color:#0A0A0A;}
+  .btn.on-dark-ghost{background:transparent;border:1px solid rgba(245,245,240,.28);color:#F5F5F0;}
+  .btn.on-dark-ghost:hover{border-color:rgba(245,245,240,.6);}
+  .btn.decline{background:transparent;border:1px solid rgba(245,245,240,.2);color:var(--muted);}
+  .counter-box{position:relative;z-index:1;margin-top:16px;display:none;gap:10px;align-items:center;}
+  .counter-box.on{display:flex;animation:fade .3s var(--ease);}
+  .counter-box input{font-family:inherit;font-size:16px;padding:13px 15px;border:1px solid rgba(245,245,240,.22);border-radius:10px;background:rgba(245,245,240,.05);color:#F5F5F0;width:160px;}
+  .counter-box input:focus{outline:none;border-color:var(--warm-sand);}
+  .agreed{position:relative;z-index:1;margin-top:18px;display:none;align-items:center;gap:10px;font-size:15px;font-weight:600;color:var(--warm-sand);}
+  .agreed.on{display:flex;animation:fade .4s var(--ease);}
+
+  /* terms strip */
+  .terms{display:grid;grid-template-columns:repeat(4,1fr);margin-top:18px;border:1px solid var(--hair);border-radius:14px;overflow:hidden;background:var(--card);opacity:0;transform:translateY(12px);animation:rise .7s var(--ease) .2s forwards;}
+  .terms .t{padding:16px 18px;border-right:1px solid var(--hair);}
+  .terms .t:last-child{border-right:none;}
+  .terms .k{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);}
+  .terms .v{font-size:15px;font-weight:700;color:var(--head);margin-top:5px;letter-spacing:-.01em;}
+  .terms .v.sand{color:var(--deep-sand);}
+  .tag-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;opacity:0;animation:fade .7s ease .35s forwards;}
+  .tag{font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--muted2);border:1px solid var(--hair);border-radius:6px;padding:5px 10px;}
+  .tag b{color:var(--head);}
+
+  /* progression — thin, animated */
+  .prog{margin-top:26px;opacity:0;animation:fade .7s ease .3s forwards;}
+  .prog .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);margin-bottom:12px;}
+  .stepper{display:flex;align-items:center;}
+  .stepper .st{display:flex;flex-direction:column;align-items:center;gap:6px;flex:none;width:20%;}
+  .stepper .st .b{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:1.5px solid var(--divider);background:var(--card);color:var(--muted2);transition:all .4s var(--ease);}
+  .stepper .st.done .b{background:var(--deep-sand);border-color:var(--deep-sand);color:#fff;}
+  .stepper .st.active .b{background:var(--head);border-color:var(--head);color:var(--card);}
+  .stepper .st .l{font-size:11px;color:var(--muted2);}.stepper .st.active .l,.stepper .st.done .l{color:var(--head);font-weight:600;}
+  .stepper .line{flex:1;height:2px;background:var(--divider);position:relative;overflow:hidden;}
+  .stepper .line i{position:absolute;inset:0;width:0;background:var(--deep-sand);transition:width .6s var(--ease);}
+  .stepper .line.done i{width:100%;}
+
+  /* chat — separate, alive */
+  .chat{margin-top:0;border:1px solid var(--hair);border-radius:16px;background:var(--card);overflow:hidden;opacity:0;animation:fade .7s ease .4s forwards;}
+  .chat-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--hair);}
+  .chat-head .t{font-size:13px;font-weight:700;color:var(--head);display:flex;align-items:center;gap:8px;}
+  .chat-head .badge{font-size:11px;font-weight:500;color:var(--muted2);border:1px solid var(--hair);border-radius:20px;padding:3px 10px;}
+  .chat-body{padding:18px 20px;}
+  .chat-hint{font-size:12.5px;color:var(--muted2);line-height:1.5;margin-bottom:14px;}
+  .msgs{display:flex;flex-direction:column;gap:10px;min-height:80px;max-height:240px;overflow-y:auto;}
+  .msg{max-width:78%;padding:11px 14px;border-radius:13px;font-size:14px;line-height:1.45;background:var(--field);border:1px solid var(--hair);color:var(--text);animation:msgIn .35s var(--ease);}
+  .msg.me{align-self:flex-end;background:var(--near-black);color:#F5F5F0;border-color:var(--near-black);}
+  [data-theme="dark"] .msg.me{background:#F5F5F0;color:#0A0A0A;}
+  .msg .ts{display:block;margin-top:5px;font-size:10px;opacity:.55;}
+  @keyframes msgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .typing{display:none;align-self:flex-start;gap:4px;padding:12px 14px;}
+  .typing.on{display:flex;}
+  .typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite;}
+  .typing i:nth-child(2){animation-delay:.2s;}.typing i:nth-child(3){animation-delay:.4s;}
+  @keyframes blink{0%,60%,100%{opacity:.3;}30%{opacity:1;}}
+  .chat-in{display:flex;gap:8px;margin-top:14px;}
+  .chat-in input{flex:1;font-family:inherit;font-size:14px;padding:12px 15px;border:1px solid var(--divider);border-radius:22px;background:var(--field);color:var(--text);}
+  .chat-in input:focus{outline:none;border-color:var(--deep-sand);}
+  .chat-in button{font-family:inherit;font-weight:600;font-size:14px;padding:12px 20px;border-radius:22px;border:none;background:var(--cta-bg);color:var(--cta-text);cursor:pointer;}
+  .chat-locked{padding:22px;text-align:center;font-size:13px;color:var(--muted2);line-height:1.6;}
+  .audit{margin-top:12px;display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted2);}
+  .audit .d{width:6px;height:6px;border-radius:50%;background:var(--deep-sand);}
+
+  @keyframes rise{to{opacity:1;transform:none;}}
+  @keyframes fade{to{opacity:1;}}
+  @media(max-width:900px){.deal-grid{grid-template-columns:1fr;}.deal-grid .right{position:static;}}
+  @media(max-width:760px){.terms{grid-template-columns:1fr 1fr;}.terms .t:nth-child(2){border-right:none;}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}.offer-hero,.terms,.prog,.chat,.tag-row{opacity:1!important;transform:none!important;}}
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="word">VALUESKINS</div>
+    <div class="toggle" onclick="toggleTheme()"><span id="tl">Light</span><span class="dw"><span class="kb"></span></span></div>
+  </header>
+
+  <div class="wrap">
+    <div class="crumb">
+      <button class="back" onclick="alert('→ back to marketplace')">‹ Marketplace</button>
+      <div class="who">
+        <div class="logo">N</div>
+        <div><div class="n">Northwind Labs<span class="online"><span class="d"></span>online</span></div><div class="s">Spring Dev Tooling Launch · Bengaluru</div></div>
+      </div>
+    </div>
+
+    <div class="deal-grid">
+    <div class="left">
+    <!-- DARK OFFER HERO -->
+    <div class="offer-hero">
+      <div class="oh-top"><span class="lbl">Offer from Northwind Labs</span></div>
+      <div class="oh-amt"><span id="amt">0</span><span class="plus">+ product</span></div>
+      <div class="oh-net">After the <b>12% platform fee</b> you keep <b id="net">—</b>. TDS handled at payout, barter product shipped on agreement.</div>
+      <div class="oh-escrow">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.7"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/></svg>
+        <div>Funds sit in <b style="color:#F5F5F0">escrow</b> the moment you agree — released when you deliver and Northwind approves. You never chase payment.</div>
+      </div>
+      <div class="oh-act" id="acts">
+        <button class="btn primary" onclick="accept()">Accept offer</button>
+        <button class="btn on-dark-ghost" onclick="toggleCounter()">Counter</button>
+        <button class="btn decline" onclick="decline()">Decline</button>
+      </div>
+      <div class="counter-box" id="counterBox">
+        <input id="counterVal" type="number" placeholder="Your ask">
+        <button class="btn primary" onclick="sendCounter()">Send counter</button>
+      </div>
+      <div class="agreed" id="agreed">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg>
+        Agreed — escrow funded. Deliver by Jul 31, paid on approval.
+      </div>
+    </div>
+
+    <!-- terms strip -->
+    <div class="terms">
+      <div class="t"><div class="k">Deliverables</div><div class="v">2× Reels</div></div>
+      <div class="t"><div class="k">Compensation</div><div class="v sand">Paid + Barter</div></div>
+      <div class="t"><div class="k">Deliver by</div><div class="v">Jul 31, 2026</div></div>
+      <div class="t"><div class="k">Usage · Review</div><div class="v">30d social · review</div></div>
+    </div>
+    <div class="tag-row">
+      <span class="tag">Intent: <b>Campaign</b></span>
+      <span class="tag">Content: <b>Product Review</b></span>
+      <span class="tag">Match: <b>100%</b> · your ValueSkin, level &amp; language</span>
+    </div>
+
+    <!-- progression -->
+    <div class="prog">
+      <div class="lbl">Where this deal is</div>
+      <div class="stepper" id="stepper">
+        <div class="st done"><div class="b">✓</div><div class="l">Brief</div></div>
+        <div class="line done"><i></i></div>
+        <div class="st active" data-s="1"><div class="b">2</div><div class="l">Offer</div></div>
+        <div class="line" data-l="1"><i></i></div>
+        <div class="st" data-s="2"><div class="b">3</div><div class="l">Agreed</div></div>
+        <div class="line" data-l="2"><i></i></div>
+        <div class="st" data-s="3"><div class="b">4</div><div class="l">In progress</div></div>
+        <div class="line" data-l="3"><i></i></div>
+        <div class="st" data-s="4"><div class="b">5</div><div class="l">Paid</div></div>
+      </div>
+    </div>
+    </div><!-- /left -->
+
+    <div class="right">
+    <!-- chat -->
+    <div class="chat">
+      <div class="chat-head"><div class="t">Chat<span class="online"><span class="d"></span></span></div><span class="badge">questions & rapport — not terms</span></div>
+      <div class="chat-body">
+        <div class="chat-locked" id="chatLocked">Chat opens once you accept or counter the offer.<br>Terms are handled above, on the record — no cold DMs.</div>
+        <div id="chatLive" style="display:none">
+          <p class="chat-hint">Money and terms live in the offer above — one tap, logged. Use chat only to clarify.</p>
+          <div class="msgs" id="msgs"></div>
+          <div class="typing" id="typing"><i></i><i></i><i></i></div>
+          <div class="chat-in"><input id="chatInput" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendMsg()"><button onclick="sendMsg()">Send</button></div>
+          <div class="audit"><span class="d"></span> Every message logged with a UTC timestamp — your record and protection.</div>
+        </div>
+      </div>
+    </div>
+    </div><!-- /right -->
+    </div><!-- /deal-grid -->
+  </div>
+
+<script>
+  const DEAL=5000, FEE=0.12, NET=Math.round(DEAL*(1-FEE));
+  const fmt=n=>'₹'+Number(n).toLocaleString('en-IN');
+  // count-up the hero amount
+  (function(){const el=document.getElementById('amt');let t0=null;
+    function fr(t){if(!t0)t0=t;const p=Math.min((t-t0)/900,1);const e=1-Math.pow(1-p,3);el.textContent=fmt(Math.round(DEAL*e));if(p<1)requestAnimationFrame(fr);else{el.textContent=fmt(DEAL);document.getElementById('net').textContent=fmt(NET);}}
+    setTimeout(()=>requestAnimationFrame(fr),350);})();
+
+  function setStep(n){document.querySelectorAll('.st[data-s]').forEach(s=>{const i=+s.dataset.s;s.classList.toggle('done',i<n);s.classList.toggle('active',i===n);s.querySelector('.b').innerHTML=i<n?'&#10003;':(i+1);});
+    document.querySelectorAll('.line[data-l]').forEach(l=>l.classList.toggle('done',+l.dataset.l<n));}
+  function unlockChat(){document.getElementById('chatLocked').style.display='none';document.getElementById('chatLive').style.display='block';
+    setTimeout(()=>{const ty=document.getElementById('typing');ty.classList.add('on');document.getElementById('msgs').appendChild(ty);
+      setTimeout(()=>{ty.classList.remove('on');addMsg('Hey! Excited to work together on this. Any questions on the brief?',false);},1300);},400);}
+  function toggleCounter(){document.getElementById('counterBox').classList.toggle('on');}
+  function accept(){setStep(3);document.getElementById('acts').style.display='none';document.getElementById('counterBox').classList.remove('on');document.getElementById('agreed').classList.add('on');unlockChat();}
+  function sendCounter(){const v=document.getElementById('counterVal').value;setStep(2);document.getElementById('counterBox').classList.remove('on');
+    document.getElementById('amt').textContent=v?fmt(v):'—';unlockChat();}
+  function decline(){document.getElementById('acts').style.display='none';}
+  function addMsg(t,me){const box=document.getElementById('msgs');const m=document.createElement('div');m.className='msg'+(me?' me':'');const now=new Date().toISOString().slice(11,16);
+    m.innerHTML=t+`<span class="ts">${me?'You':'Northwind'} · logged ${now} UTC</span>`;box.appendChild(m);box.scrollTop=9999;}
+  function sendMsg(){const i=document.getElementById('chatInput');if(!i.value.trim())return;addMsg(i.value.trim(),true);i.value='';}
+  function toggleTheme(){const el=document.documentElement;const d=el.getAttribute('data-theme')==='dark';el.setAttribute('data-theme',d?'light':'dark');document.getElementById('tl').textContent=d?'Light':'Dark';}
+</script>
+</body>
+</html>

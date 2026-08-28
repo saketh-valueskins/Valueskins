@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Market / Dashboard (sample)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --vs-near-black:#0A0A0A;--vs-off-white:#F5F5F0;--vs-warm-sand:#C8B89A;
+    --vs-charcoal:#2D2D2D;--vs-deep-sand:#A08A5E;--vs-muted-grey:#B8B4AC;
+    --hair:rgba(160,138,94,0.28);--hair-soft:rgba(160,138,94,0.16);
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;min-height:100dvh;}
+
+  /* ===== Dashboard surface — tonal dark gradient ===== */
+  .dash{
+    min-height:100dvh;position:relative;
+    background:
+      radial-gradient(65% 55% at 88% 0%, rgba(200,184,154,0.30), transparent 70%),
+      linear-gradient(135deg,#F5F5F0 0%,#F0ECE2 55%,#E9E3D5 100%);
+    color:var(--vs-charcoal);
+  }
+  nav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:22px 40px;border-bottom:1px solid var(--hair-soft);
+  }
+  .nav-word{font-weight:700;font-size:22px;letter-spacing:0.16em;color:var(--vs-near-black);}
+  .nav-links{display:flex;align-items:center;gap:26px;}
+  .nav-links a{font-size:15px;font-weight:500;color:var(--vs-charcoal);text-decoration:none;}
+  .nav-links a:hover{color:var(--vs-near-black);}
+  .btn-logout{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:9px 18px;border-radius:6px;
+    border:1px solid var(--hair);background:transparent;color:var(--vs-near-black);}
+  .btn-del{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:9px 18px;border-radius:6px;
+    border:1px solid rgba(45,45,45,0.30);background:transparent;color:var(--vs-charcoal);}
+  .btn-del:hover{border-color:var(--vs-charcoal);}
+
+  .dash-content{max-width:1120px;margin:0 auto;padding:64px 40px;}
+  .dash h1{font-size:40px;font-weight:700;letter-spacing:-0.01em;color:var(--vs-near-black);text-align:left;}
+  .dash .sub{margin-top:10px;font-size:15px;color:var(--vs-charcoal);opacity:.7;}
+  .empty{
+    margin-top:72px;display:flex;flex-direction:column;align-items:flex-start;gap:20px;
+  }
+  .empty p{font-size:15px;color:var(--vs-charcoal);opacity:.7;}
+  .btn-create{
+    display:inline-flex;align-items:center;gap:10px;
+    font-family:inherit;font-size:18px;font-weight:600;cursor:pointer;
+    padding:18px 34px;border-radius:6px;border:none;
+    background:var(--vs-near-black);color:var(--vs-off-white);
+    transition:transform .18s var(--ease),box-shadow .18s var(--ease);
+    box-shadow:0 14px 30px -16px rgba(10,10,10,0.35);
+  }
+  .btn-create:hover{transform:translateY(-1px);}
+  .btn-create:active{transform:translateY(0) scale(.99);}
+  .btn-create svg{width:18px;height:18px;stroke:#F5F5F0;}
+
+  /* bottom tab bar */
+  .tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;
+    padding:14px 0;background:rgba(245,245,240,0.75);backdrop-filter:blur(8px);
+    border-top:1px solid var(--hair-soft);font-size:13px;}
+  .tabs span{color:var(--vs-muted-grey);}
+  .tabs .active{color:var(--vs-near-black);font-weight:600;}
+
+  /* ===== Modal ===== */
+  .backdrop{
+    position:fixed;inset:0;background:rgba(10,10,10,0.55);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .18s ease;z-index:50;
+  }
+  .backdrop.open{opacity:1;pointer-events:auto;}
+  .modal{
+    width:calc(100vw - 96px);max-width:1080px;max-height:calc(100dvh - 72px);
+    background:var(--vs-off-white);border:1px solid var(--hair);border-radius:14px;
+    box-shadow:0 30px 60px -20px rgba(10,10,10,0.45);
+    display:flex;flex-direction:column;overflow:hidden;color:var(--vs-charcoal);
+    opacity:0;transform:scale(.97) translateY(8px);transition:opacity .22s var(--ease),transform .22s var(--ease);
+  }
+  .backdrop.open .modal{opacity:1;transform:scale(1) translateY(0);}
+  .m-head{
+    position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;
+    padding:22px 32px;background:var(--vs-off-white);border-bottom:1px solid var(--hair-soft);z-index:2;
+  }
+  .m-head h2{font-size:22px;font-weight:700;color:var(--vs-near-black);}
+  .m-close{width:36px;height:36px;border-radius:6px;border:1px solid var(--hair-soft);background:transparent;
+    cursor:pointer;color:var(--vs-charcoal);font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;}
+  .m-close:hover{border-color:var(--hair);}
+  .m-body{padding:26px 32px 32px;overflow-y:auto;}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;column-gap:40px;row-gap:22px;}
+  .field{display:flex;flex-direction:column;gap:8px;}
+  .field.full{grid-column:1 / -1;}
+  label{font-size:14px;font-weight:600;color:var(--vs-charcoal);}
+  .help{font-size:13px;color:var(--vs-muted-grey);margin-top:-2px;line-height:1.45;}
+  input,select,textarea{
+    font-family:inherit;font-size:15px;color:var(--vs-charcoal);
+    padding:12px 14px;border:1px solid var(--hair);border-radius:6px;background:#FFFDF9;
+    transition:border-color .15s var(--ease),box-shadow .15s var(--ease);width:100%;
+  }
+  input::placeholder,textarea::placeholder{color:var(--vs-muted-grey);}
+  textarea{min-height:110px;resize:vertical;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--vs-deep-sand);
+    box-shadow:0 0 0 3px rgba(160,138,94,0.16);}
+
+  .sub-label{font-size:14px;font-weight:600;color:var(--vs-charcoal);margin-bottom:6px;}
+
+  /* segmented — level range */
+  .seg-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .seg-row .cap{width:34px;font-size:13px;color:var(--vs-muted-grey);}
+  .seg{flex:1;display:flex;gap:10px;}
+  .seg button{
+    flex:1;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:12px 0;
+    border:1px solid var(--hair);border-radius:6px;background:#FFFDF9;color:var(--vs-charcoal);
+    transition:background .15s var(--ease),border-color .15s var(--ease),transform .1s var(--ease);
+  }
+  .seg button:active{transform:scale(.98);}
+  .seg button.on{background:var(--vs-warm-sand);border-color:var(--vs-warm-sand);color:var(--vs-near-black);}
+  .accepting{font-size:14px;font-weight:600;color:var(--vs-near-black);margin-top:4px;}
+
+  /* pill segment — compensation */
+  .pills{display:flex;gap:10px;flex-wrap:wrap;}
+  .pills button{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:11px 20px;
+    border:1px solid var(--hair);border-radius:6px;background:#FFFDF9;color:var(--vs-charcoal);
+    transition:background .15s var(--ease),border-color .15s var(--ease),transform .1s var(--ease);}
+  .pills button:active{transform:scale(.98);}
+  .pills button.on{background:var(--vs-warm-sand);border-color:var(--vs-warm-sand);color:var(--vs-near-black);}
+
+  /* card choices — script / delivery */
+  .cards{display:flex;flex-direction:column;gap:12px;}
+  .choice{cursor:pointer;padding:16px 18px;border:1px solid var(--hair);border-radius:8px;background:#FFFDF9;
+    transition:background .15s var(--ease),border-color .15s var(--ease),transform .1s var(--ease);}
+  .choice:active{transform:scale(.995);}
+  .choice.on{border:1.5px solid var(--vs-near-black);background:rgba(200,184,154,0.14);}
+  .choice h4{font-size:15px;font-weight:700;color:var(--vs-near-black);margin-bottom:4px;}
+  .choice p{font-size:13px;color:var(--vs-muted-grey);}
+
+  .btn-launch{grid-column:1 / -1;margin-top:8px;font-family:inherit;font-size:17px;font-weight:700;cursor:pointer;
+    padding:17px;border-radius:8px;border:none;background:var(--vs-near-black);color:var(--vs-off-white);
+    transition:transform .16s var(--ease);}
+  .btn-launch:hover{transform:translateY(-1px);}
+  .btn-launch:active{transform:scale(.99);}
+
+  /* staggered field entrance */
+  .backdrop.open .m-body .field,
+  .backdrop.open .m-body .block{animation:rise .34s var(--ease) both;animation-delay:calc(var(--i,0) * 28ms);}
+  @keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  @media(max-width:760px){
+    .grid{grid-template-columns:1fr;}
+    .modal{width:calc(100vw - 32px);max-height:calc(100dvh - 32px);}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important;}
+    .backdrop .modal{transform:none;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="dash">
+    <nav>
+      <div class="nav-word">VALUESKINS</div>
+      <div class="nav-links">
+        <a href="#">Profile</a><a href="#">Settings</a>
+        <button class="btn-logout">Logout</button>
+        <button class="btn-del">Delete Account</button>
+      </div>
+    </nav>
+
+    <div class="dash-content">
+      <h1>Brand Dashboard</h1>
+      <p class="sub">Your campaigns, applicants, and deals.</p>
+
+      <div class="empty">
+        <p>No campaigns yet. Launch your first.</p>
+        <button class="btn-create" onclick="openM()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#F5F5F0" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Create Campaign
+        </button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <span>Profile</span><span class="active">Market</span><span>Store</span><span>Settings</span>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="backdrop" id="bd">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Create Campaign">
+      <div class="m-head">
+        <h2>Create Campaign</h2>
+        <button class="m-close" onclick="closeM()" aria-label="Close">✕</button>
+      </div>
+      <div class="m-body">
+        <div class="grid">
+          <div class="field" style="--i:0"><label>Brand name *</label><input value="Anshul"></div>
+          <div class="field" style="--i:1"><label>Target profession / niche *</label>
+            <select><option>Select a profession…</option><option>Tech / Dev</option><option>Beauty</option><option>Fitness</option></select></div>
+
+          <div class="field full" style="--i:2"><label>Campaign title *</label><input placeholder="e.g. Spring Product Launch"></div>
+
+          <div class="field full" style="--i:3"><label>About your product / campaign *</label>
+            <div class="help">Creators need to understand what they are promoting. Be specific — what is the product, who is it for, and what makes it worth their audience's trust.</div>
+            <textarea placeholder="e.g. We build CI/CD tooling for startups. 50K+ teams use our pipeline automation. Looking for authentic dev voices to demo our v3 launch features."></textarea></div>
+
+          <div class="field full" style="--i:4"><label>Campaign description *</label>
+            <textarea style="min-height:80px" placeholder="Briefly describe the type of content and goal of this campaign"></textarea></div>
+
+          <div class="field" style="--i:5"><label>Your country *</label>
+            <div class="help">Only creators in the same country are matched. Funds stay within this country.</div>
+            <select><option>Select your country…</option><option>India</option><option>United States</option></select></div>
+          <div class="field" style="--i:6"><label>Content language *</label>
+            <select><option>English</option><option>Hindi</option></select></div>
+
+          <!-- Level range -->
+          <div class="field full block" style="--i:7">
+            <div class="sub-label">Creator level range *</div>
+            <div class="help" style="margin-bottom:12px">Select min and max level. Only creators within this range can apply.</div>
+            <div class="seg-row"><span class="cap">Min</span>
+              <div class="seg" data-group="min">
+                <button class="on">L1</button><button>L2</button><button>L3</button><button>L4</button><button>L5</button>
+              </div></div>
+            <div class="seg-row"><span class="cap">Max</span>
+              <div class="seg" data-group="max">
+                <button>L1</button><button>L2</button><button>L3</button><button>L4</button><button class="on">L5</button>
+              </div></div>
+            <div class="accepting">Accepting Level 1 to 5</div>
+          </div>
+
+          <div class="field" style="--i:8"><label>Budget per creator ($) *</label><input value="5000"></div>
+          <div class="field" style="--i:9"><label>Creators to hire *</label><input value="1"></div>
+
+          <div class="field full block" style="--i:10">
+            <div class="sub-label">Compensation type *</div>
+            <div class="pills" data-single>
+              <button class="on">Paid</button><button>Paid + Barter</button><button>Barter only</button><button>Performance-based</button>
+            </div>
+          </div>
+
+          <div class="field full block" style="--i:11">
+            <div class="sub-label">Script negotiation mode *</div>
+            <div class="cards" data-single>
+              <div class="choice"><h4>Non-negotiable (Locked)</h4><p>You provide the exact script creators must use</p></div>
+              <div class="choice"><h4>Collaborative (Both Edit)</h4><p>Both parties negotiate and edit the script together</p></div>
+              <div class="choice on"><h4>Creator Freedom</h4><p>Creator has complete freedom; you only review and approve</p></div>
+            </div>
+          </div>
+
+          <div class="field full block" style="--i:12">
+            <div class="sub-label">Content delivery mode *</div>
+            <div class="cards" data-single>
+              <div class="choice on"><h4>Review content before publish</h4><p>Creator sends a Google Drive link for you to review before the final publish</p></div>
+              <div class="choice"><h4>Direct upload — no review needed</h4><p>Creator uploads the published content link directly; no pre-approval needed</p></div>
+            </div>
+          </div>
+
+          <div class="field" style="--i:13"><label>Exclusivity</label><select><option>None</option><option>Category exclusive</option></select></div>
+          <div class="field" style="--i:14"><label>Usage rights</label><select><option>30 days, social only</option><option>Perpetual</option></select></div>
+
+          <div class="field" style="--i:15"><label>Application deadline</label><input type="date"></div>
+          <div class="field" style="--i:16"><label>Delivery deadline</label><input type="date"></div>
+
+          <div class="field full block" style="--i:17">
+            <div class="sub-label">Point of Contact</div>
+            <div class="help" style="margin-bottom:12px">The person creators should reference for this campaign. Shown to both parties in the deal room.</div>
+            <div class="grid">
+              <div class="field"><input placeholder="Full name"></div>
+              <div class="field"><input placeholder="Role / title (e.g. Partnerships Manager)"></div>
+              <div class="field"><input placeholder="Work email (required)"></div>
+              <div class="field"><input placeholder="Phone (optional)"></div>
+            </div>
+          </div>
+
+          <button class="btn-launch">Launch Campaign</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const bd=document.getElementById('bd');
+  function openM(){bd.classList.add('open');}
+  function closeM(){bd.classList.remove('open');}
+  bd.addEventListener('click',e=>{if(e.target===bd)closeM();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
+
+  // single-select behaviour for segments/pills/cards
+  document.querySelectorAll('.seg').forEach(g=>{
+    g.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      g.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    }));
+  });
+  document.querySelectorAll('[data-single]').forEach(g=>{
+    g.querySelectorAll('button,.choice').forEach(b=>b.addEventListener('click',()=>{
+      g.querySelectorAll('button,.choice').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+    }));
+  });
+</script>
+</body>
+</html>

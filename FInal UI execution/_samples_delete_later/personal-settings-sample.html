@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Personal Settings (concept)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --near-black:#0A0A0A;--off-white:#F5F5F0;--warm-sand:#C8B89A;--charcoal:#2D2D2D;
+    --deep-sand:#A08A5E;--muted:#B8B4AC;--ease:cubic-bezier(0.16,1,0.3,1);
+    --hair:rgba(160,138,94,0.26);--hair-soft:rgba(160,138,94,0.15);
+  }
+  [data-theme="light"]{--bg:linear-gradient(135deg,#F5F5F0 0%,#F1EDE3 60%,#ECE6D9 100%);
+    --text:#2D2D2D;--head:#0A0A0A;--card:#FFFDF9;--field:#FFFDF9;--divider:rgba(160,138,94,0.18);--chrome:rgba(245,245,240,0.72);--tile-hover:rgba(200,184,154,0.10);--cta-bg:#0A0A0A;--cta-text:#F5F5F0;}
+  [data-theme="dark"]{--bg:radial-gradient(60% 50% at 88% 0%,rgba(160,138,94,0.15),transparent 70%),linear-gradient(135deg,#0A0A0A 0%,#1C1B18 58%,#2D2D2D 100%);
+    --text:#D8D4CC;--head:#F5F5F0;--card:rgba(245,245,240,0.03);--field:rgba(245,245,240,0.04);--divider:rgba(245,245,240,0.12);--chrome:rgba(10,10,10,0.6);--tile-hover:rgba(200,184,154,0.08);--cta-bg:#F5F5F0;--cta-text:#0A0A0A;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  html,body{min-height:100dvh;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;
+    background:var(--bg);background-attachment:fixed;color:var(--text);transition:background .4s var(--ease),color .3s;}
+
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+    padding:18px 40px;background:var(--chrome);backdrop-filter:blur(10px);border-bottom:1px solid var(--divider);}
+  .word{font-weight:700;font-size:22px;letter-spacing:.16em;color:var(--head);}
+  .nav{display:flex;align-items:center;gap:22px;}
+  .nav a{font-size:15px;font-weight:500;color:var(--text);text-decoration:none;}.nav a:hover{color:var(--head);}
+  .b-quiet{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:9px 16px;border-radius:6px;border:1px solid var(--divider);background:transparent;color:var(--head);}
+  .b-quiet:hover{border-color:var(--hair);}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none;border:1px solid var(--divider);border-radius:20px;padding:6px 12px;}
+  .toggle .dw{width:26px;height:14px;border-radius:8px;background:var(--muted);position:relative;transition:background .3s;}
+  .toggle .kb{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--off-white);transition:transform .3s var(--ease);}
+  [data-theme="dark"] .toggle .dw{background:var(--deep-sand);}[data-theme="dark"] .toggle .kb{transform:translateX(12px);}
+
+  /* ===== left-aligned two-column: nav rail + content ===== */
+  .shell{max-width:1180px;margin:0 auto;padding:40px 40px 60px;display:grid;grid-template-columns:236px 1fr;gap:56px;align-items:start;}
+
+  .rail{position:sticky;top:96px;}
+  .rail .page-title{font-size:22px;font-weight:700;color:var(--head);}
+  .rail .page-sub{font-size:13px;color:var(--muted);margin-top:4px;}
+  .saved{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--deep-sand);margin-top:14px;}
+  .saved .d{width:7px;height:7px;border-radius:50%;background:var(--warm-sand);animation:breathe 2.6s var(--ease) infinite;}
+  @keyframes breathe{0%,100%{opacity:.4;transform:scale(.8);}50%{opacity:1;transform:scale(1.2);}}
+  .rnav{margin-top:26px;display:flex;flex-direction:column;gap:2px;border-left:1px solid var(--divider);}
+  .rnav a{position:relative;font-size:14px;font-weight:500;color:var(--muted);text-decoration:none;padding:9px 0 9px 18px;margin-left:-1px;
+    border-left:2px solid transparent;transition:color .18s,border-color .18s;}
+  .rnav a:hover{color:var(--head);}
+  .rnav a.on{color:var(--head);font-weight:600;border-left-color:var(--warm-sand);}
+
+  .content{min-width:0;}
+  .sect{scroll-margin-top:92px;margin-bottom:44px;}
+  .sl{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:18px;display:flex;align-items:center;gap:12px;}
+  .sl::after{content:"";flex:1;height:1px;background:var(--divider);}
+
+  .notice{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;
+    border:1px solid var(--hair);background:rgba(200,184,154,0.12);color:var(--head);font-size:14px;font-weight:600;margin-bottom:24px;}
+  .notice .dot{width:8px;height:8px;border-radius:50%;background:var(--deep-sand);flex:none;}
+  .notice small{display:block;font-weight:400;color:var(--muted);margin-top:2px;font-size:13px;}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .f{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+  .f.full{grid-column:1/-1;}
+  label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  input,select{font-family:inherit;font-size:15px;color:var(--text);background:var(--field);border:1px solid var(--hair);border-radius:8px;padding:13px 14px;width:100%;
+    transition:border-color .15s,box-shadow .15s,background .3s;}
+  input::placeholder{color:var(--muted);}
+  input:focus,select:focus{outline:none;border-color:var(--deep-sand);box-shadow:0 0 0 3px rgba(160,138,94,0.16);}
+  select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%23A08A5E' fill='none' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:34px;}
+
+  .card{border:1px solid var(--divider);border-radius:14px;background:var(--card);padding:22px 24px;margin-bottom:16px;}
+  .bident{display:flex;align-items:center;gap:16px;}
+  .bident .av{width:52px;height:52px;image-rendering:pixelated;background:var(--field);border-radius:10px;padding:7px;border:1px solid var(--hair);}
+  .bident .nm{font-size:15px;font-weight:700;color:var(--head);}
+  .bident .skin{display:inline-block;margin-top:6px;font-size:12px;font-weight:600;color:var(--deep-sand);border:1px solid var(--hair);border-radius:20px;padding:4px 12px;}
+  .bident .active{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--deep-sand);}
+  .bident .active .d{width:7px;height:7px;border-radius:50%;background:var(--warm-sand);}
+
+  .acc-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+  .acc-head h3{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .acc-head .chev{color:var(--muted);transition:transform .25s var(--ease);}
+  .card.open .chev{transform:rotate(180deg);}
+  .acc-body{max-height:0;overflow:hidden;transition:max-height .32s var(--ease);}
+  .card.open .acc-body{max-height:420px;}
+  .acc-in{padding-top:18px;}
+  .help{font-size:13.5px;color:var(--muted);line-height:1.5;margin-bottom:16px;}
+  .mini-label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+  .pills{display:flex;flex-wrap:wrap;gap:9px;}
+  .pills button{font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;padding:9px 16px;border:1px solid var(--hair);border-radius:8px;background:var(--field);color:var(--text);
+    transition:background .15s,border-color .15s,color .15s,transform .1s;}
+  .pills button:active{transform:scale(.97);}
+  .pills button.on{background:var(--warm-sand);border-color:var(--warm-sand);color:#0A0A0A;}
+
+  .prow{display:flex;align-items:center;gap:16px;padding:18px 20px;border:1px solid var(--divider);border-radius:12px;margin-bottom:12px;cursor:pointer;background:transparent;transition:background .18s,border-color .18s,transform .1s;}
+  .prow:hover{background:var(--tile-hover);border-color:var(--hair);}
+  .prow:active{transform:scale(.996);}
+  .prow .ic{width:38px;height:38px;border-radius:9px;border:1px solid var(--hair);display:flex;align-items:center;justify-content:center;color:var(--deep-sand);flex:none;}
+  .prow .tx .t{font-size:15px;font-weight:600;color:var(--head);}
+  .prow .tx .s{font-size:13px;color:var(--muted);margin-top:2px;}
+  .prow .arw{margin-left:auto;color:var(--muted);}
+  .prow.danger .ic{border-color:rgba(45,45,45,0.3);color:var(--charcoal);}
+  [data-theme="dark"] .prow.danger .ic{border-color:rgba(245,245,240,0.28);color:var(--muted);}
+
+  .foot{border-top:1px solid var(--divider);margin-top:20px;padding:44px 40px 40px;}
+  .foot-in{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:1.6fr 1fr 1.2fr 1fr;gap:36px;}
+  .fword{font-weight:700;font-size:20px;letter-spacing:.14em;color:var(--head);}
+  .ftag{margin-top:8px;font-size:10px;font-weight:500;letter-spacing:.30em;color:var(--text);}
+  .ftag .dot{color:var(--deep-sand);}
+  .fdesc{margin-top:16px;font-size:13.5px;line-height:1.5;color:var(--muted);max-width:220px;}
+  .fcol h4{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--head);margin-bottom:14px;}
+  .fcol a{display:block;font-size:14px;color:var(--text);text-decoration:none;line-height:2.1;}.fcol a:hover{color:var(--head);}
+  .fbot{max-width:1180px;margin:34px auto 0;padding-top:20px;border-top:1px solid var(--divider);display:flex;justify-content:space-between;font-size:13px;color:var(--muted);}
+
+  .tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:14px 0;background:var(--chrome);backdrop-filter:blur(8px);border-top:1px solid var(--divider);font-size:13px;}
+  .tabs span{color:var(--muted);}.tabs .active{color:var(--head);font-weight:600;}
+
+  @media(max-width:900px){
+    .shell{grid-template-columns:1fr;gap:28px;}
+    .rail{position:static;}
+    .rnav{flex-direction:row;flex-wrap:wrap;border-left:none;gap:8px;}
+    .rnav a{border-left:none;border:1px solid var(--divider);border-radius:20px;padding:7px 14px;margin-left:0;}
+    .rnav a.on{border-color:var(--warm-sand);}
+    .grid2{grid-template-columns:1fr;}.foot-in{grid-template-columns:1fr;gap:26px;}.fbot{flex-direction:column;gap:8px;}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}html{scroll-behavior:auto;}}
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="word">VALUESKINS</div>
+    <div class="nav">
+      <a href="#">Profile</a><a href="#">Settings</a>
+      <button class="b-quiet">Logout</button>
+      <button class="b-quiet">Delete Account</button>
+      <div class="toggle" onclick="toggleTheme()"><span id="tl">Light</span><span class="dw"><span class="kb"></span></span></div>
+    </div>
+  </header>
+
+  <div class="shell">
+
+    <!-- LEFT RAIL -->
+    <aside class="rail">
+      <div class="page-title">Settings</div>
+      <div class="page-sub">ValueSkins preferences</div>
+      <div class="saved"><span class="d"></span> Auto-saved</div>
+      <nav class="rnav" id="rnav">
+        <a href="#s-profile" class="on">My Profile</a>
+        <a href="#s-brand">Brand Settings</a>
+        <a href="#s-bprofile">Brand Profile</a>
+        <a href="#s-privacy">Privacy &amp; Data</a>
+      </nav>
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <section class="sect" id="s-profile">
+        <div class="sl">My Profile</div>
+        <div class="notice"><span class="dot"></span><div>Profile incomplete<small>Complete these fields to access the marketplace.</small></div></div>
+        <div class="f full"><label>Full name *</label><input placeholder="Your full name"></div>
+        <div class="grid2">
+          <div class="f"><label>Age range *</label><select><option>Select age range</option><option>18–24</option><option>25–34</option><option>35–44</option><option>45+</option></select></div>
+          <div class="f"><label>Gender *</label><select><option>Select gender</option><option>Female</option><option>Male</option><option>Non-binary</option><option>Prefer not to say</option></select></div>
+          <div class="f"><label>Country *</label><input placeholder="Your country"></div>
+          <div class="f"><label>City *</label><input placeholder="Your city"></div>
+        </div>
+      </section>
+
+      <section class="sect" id="s-brand">
+        <div class="sl">Brand Settings</div>
+        <div class="card">
+          <div class="bident">
+            <svg class="av" viewBox="0 0 12 12" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" id="skin"></svg>
+            <div><div class="nm">Brand Identity</div><span class="skin">App Developer</span></div>
+            <span class="active"><span class="d"></span> Active</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="sect" id="s-bprofile">
+        <div class="sl">Brand Profile</div>
+        <div class="card open" id="bp">
+          <div class="acc-head" onclick="document.getElementById('bp').classList.toggle('open')">
+            <h3>Brand Profile</h3><span class="chev">▲</span>
+          </div>
+          <div class="acc-body"><div class="acc-in">
+            <p class="help">Define your brand profile so creators understand who you are. Select one option from each category.</p>
+            <div class="mini-label">Company Size</div>
+            <div class="pills" data-single>
+              <button>Startup</button><button>SMB</button><button>Mid-Market</button><button>Enterprise</button>
+              <button>Agency</button><button>Solo Brand</button><button>Non-Profit</button><button>Government</button>
+            </div>
+          </div></div>
+        </div>
+      </section>
+
+      <section class="sect" id="s-privacy">
+        <div class="sl">Privacy &amp; Data Controls</div>
+        <div class="prow">
+          <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></div>
+          <div class="tx"><div class="t">Download My Data</div><div class="s">Export all your data in JSON format</div></div>
+          <span class="arw">›</span>
+        </div>
+        <div class="prow danger">
+          <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m-8 0v12a2 2 0 002 2h6a2 2 0 002-2V7"/></svg></div>
+          <div class="tx"><div class="t">Request Data Deletion</div><div class="s">Permanently erase your account (GDPR Art. 17) — 30 day process</div></div>
+          <span class="arw">›</span>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="foot">
+    <div class="foot-in">
+      <div>
+        <div class="fword">VALUESKINS</div>
+        <div class="ftag">TRUST <span class="dot">·</span> EARNED <span class="dot">·</span> SERIOUS</div>
+        <p class="fdesc">Connect creators with brands. Build reputation. Complete deals.</p>
+      </div>
+      <div class="fcol"><h4>Legal</h4><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Cookie Policy</a></div>
+      <div class="fcol"><h4>Data &amp; Privacy</h4><a href="#">Data Access (GDPR/CCPA)</a><a href="#">Delete My Account</a><a href="#">Security &amp; Compliance</a></div>
+      <div class="fcol"><h4>Support</h4><a href="#">Email Support</a><a href="#">Report Issue</a></div>
+    </div>
+    <div class="fbot"><span>© 2026 ValueSkins. All rights reserved.</span><span>Made with care for creators &amp; brands</span></div>
+  </div>
+
+  <div class="tabs"><span>Profile</span><span>Market</span><span>Store</span><span class="active">Settings</span></div>
+
+<script>
+  function devSprite(fig,sec){return [[4,1,4,fig],[3,2,6,fig],[3,3,6,sec],[4,4,4,fig],[2,5,8,sec],[1,6,10,sec],[1,7,10,fig],[2,8,8,'#A08A5E'],[1,9,10,'#A08A5E'],[3,10,6,'#C8B89A']].map(([x,y,w,c])=>`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c}"/>`).join('');}
+  function paint(){const d=document.documentElement.getAttribute('data-theme')==='dark';document.getElementById('skin').innerHTML=devSprite(d?'#F5F5F0':'#0A0A0A',d?'#B8B4AC':'#2D2D2D');}
+  function toggleTheme(){const el=document.documentElement;const d=el.getAttribute('data-theme')==='dark';el.setAttribute('data-theme',d?'light':'dark');document.getElementById('tl').textContent=d?'Light':'Dark';paint();}
+  document.querySelectorAll('[data-single]').forEach(g=>g.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{g.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');})));
+
+  // scrollspy → active rail link (orientation)
+  const links=[...document.querySelectorAll('.rnav a')];
+  const map=Object.fromEntries(links.map(a=>[a.getAttribute('href').slice(1),a]));
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('on'));map[e.target.id]?.classList.add('on');}});},{rootMargin:'-40% 0px -55% 0px'});
+  document.querySelectorAll('.sect').forEach(s=>obs.observe(s));
+  paint();
+</script>
+</body>
+</html>

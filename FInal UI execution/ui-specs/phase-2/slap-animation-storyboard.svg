@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 560" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F3EE"/><stop offset="1" stop-color="#E6E0D2"/></linearGradient>
+    <linearGradient id="panel" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A0A0A"/><stop offset="0.55" stop-color="#17150F"/><stop offset="1" stop-color="#22201A"/></linearGradient>
+  </defs>
+  <rect width="1440" height="560" fill="url(#bg)"/>
+  <text x="80" y="52" fill="#6E6A60" font-size="12" font-weight="700" letter-spacing="1.6">SLAP-TO-PROFILE · KEY FRAMES  (transform + opacity only · reduced-motion skips the flight)</text>
+
+  <!-- arrows between panels -->
+  <text x="494" y="278" fill="#A08A5E" font-size="26">→</text>
+  <text x="934" y="278" fill="#A08A5E" font-size="26">→</text>
+
+  <!-- ===================== PANEL 1 — rise in ===================== -->
+  <rect x="80" y="90" width="400" height="360" rx="16" fill="url(#panel)" stroke="#C8B89A" stroke-opacity="0.22"/>
+  <text x="104" y="128" fill="#F5F5F0" font-size="16" font-weight="700">Anshul</text>
+  <text x="104" y="148" fill="#8A867E" font-size="11">Creator</text>
+  <!-- empty ValueSkin frame -->
+  <rect x="360" y="200" width="90" height="90" rx="14" fill="#F5F5F0" fill-opacity="0.04" stroke="#C8B89A" stroke-opacity="0.3" stroke-dasharray="4 4"/>
+  <text x="405" y="250" fill="#8A867E" font-size="10" text-anchor="middle">empty</text>
+  <!-- flying skin: large, faded, rotated, center -->
+  <g transform="rotate(-8 280 260)" opacity="0.55" shape-rendering="crispEdges">
+    <rect x="253" y="215" width="54" height="9" fill="#241C15"/>
+    <rect x="253" y="224" width="54" height="36" fill="#E8B98A"/>
+    <rect x="262" y="233" width="9" height="9" fill="#141414"/><rect x="289" y="233" width="9" height="9" fill="#141414"/>
+    <rect x="244" y="260" width="72" height="45" fill="#3B6FB0"/>
+  </g>
+  <text x="80" y="486" fill="#0A0A0A" font-size="15" font-weight="700">1 · Rises in</text>
+  <text x="80" y="508" fill="#6E6A60" font-size="13">220px clone at screen center · scale .3→1.15, rotate −8→3 · ~320ms ease-out</text>
+
+  <!-- ===================== PANEL 2 — slam ===================== -->
+  <rect x="520" y="90" width="400" height="360" rx="16" fill="url(#panel)" stroke="#C8B89A" stroke-opacity="0.22"/>
+  <text x="544" y="128" fill="#F5F5F0" font-size="16" font-weight="700">Anshul</text>
+  <text x="544" y="148" fill="#8A867E" font-size="11">Creator</text>
+  <rect x="800" y="200" width="90" height="90" rx="14" fill="#F5F5F0" fill-opacity="0.04" stroke="#C8B89A" stroke-opacity="0.3" stroke-dasharray="4 4"/>
+  <!-- motion streaks -->
+  <g stroke="#C8B89A" stroke-opacity="0.5" stroke-width="2" stroke-linecap="round">
+    <line x1="690" y1="250" x2="735" y2="243"/><line x1="700" y1="268" x2="745" y2="261"/><line x1="694" y1="286" x2="739" y2="279"/>
+  </g>
+  <!-- flying skin: smaller, heading to frame -->
+  <g transform="rotate(-3 770 245)" shape-rendering="crispEdges">
+    <rect x="755" y="220" width="30" height="5" fill="#241C15"/>
+    <rect x="755" y="225" width="30" height="20" fill="#E8B98A"/>
+    <rect x="760" y="230" width="5" height="5" fill="#141414"/><rect x="775" y="230" width="5" height="5" fill="#141414"/>
+    <rect x="750" y="245" width="40" height="25" fill="#3B6FB0"/>
+  </g>
+  <text x="520" y="486" fill="#0A0A0A" font-size="15" font-weight="700">2 · Slams</text>
+  <text x="520" y="508" fill="#6E6A60" font-size="13">FLIP to the frame · translate + scale(≈.53) · ~340ms ease-IN (accelerates = impact)</text>
+
+  <!-- ===================== PANEL 3 — lands + impact ===================== -->
+  <rect x="960" y="90" width="400" height="360" rx="16" fill="url(#panel)" stroke="#C8B89A" stroke-opacity="0.22"/>
+  <text x="984" y="128" fill="#F5F5F0" font-size="16" font-weight="700">Anshul</text>
+  <text x="984" y="148" fill="#8A867E" font-size="11">Creator · wearing App Developer</text>
+  <!-- impact rings -->
+  <circle cx="1285" cy="245" r="72" fill="none" stroke="#C8B89A" stroke-opacity="0.35" stroke-width="2"/>
+  <circle cx="1285" cy="245" r="58" fill="none" stroke="#C8B89A" stroke-opacity="0.2" stroke-width="3"/>
+  <!-- filled frame -->
+  <rect x="1240" y="200" width="90" height="90" rx="14" fill="#F5F5F0" fill-opacity="0.05" stroke="#C8B89A" stroke-opacity="0.5"/>
+  <g shape-rendering="crispEdges">
+    <rect x="1264" y="210" width="42" height="7" fill="#241C15"/>
+    <rect x="1264" y="217" width="42" height="28" fill="#E8B98A"/>
+    <rect x="1271" y="224" width="7" height="7" fill="#141414"/><rect x="1292" y="224" width="7" height="7" fill="#141414"/>
+    <rect x="1257" y="245" width="56" height="35" fill="#3B6FB0"/>
+  </g>
+  <!-- equipped toast -->
+  <rect x="1050" y="392" width="150" height="34" rx="17" fill="#0A0A0A" stroke="#C8B89A" stroke-opacity="0.4"/>
+  <circle cx="1074" cy="409" r="4" fill="#C8B89A"/><text x="1088" y="414" fill="#C8B89A" font-size="12" font-weight="700">Equipped</text>
+  <text x="960" y="486" fill="#0A0A0A" font-size="15" font-weight="700">3 · Lands + impact</text>
+  <text x="960" y="508" fill="#6E6A60" font-size="13">Skin drops in · sand ring pulse (500ms) + card shake (400ms) · Equipped toast ~3.2s</text>
+</svg>

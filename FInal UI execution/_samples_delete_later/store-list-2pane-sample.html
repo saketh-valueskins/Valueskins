@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Closet (list + detail)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--near-black:#0A0A0A;--off-white:#F5F5F0;--warm-sand:#C8B89A;--charcoal:#2D2D2D;--deep-sand:#A08A5E;--muted:#B8B4AC;--ease:cubic-bezier(0.16,1,0.3,1);}
+  [data-theme="light"]{--bg:linear-gradient(150deg,#F4F3EE 0%,#EEE9DE 60%,#E6E0D2 100%);--head:#0A0A0A;--text:#3A362E;--muted2:#6E6A60;--card:#FFFFFF;--cardbrd:rgba(160,138,94,0.28);--field:#FBFAF6;--divider:rgba(160,138,94,0.20);--hair:rgba(45,45,45,0.09);--chrome:rgba(245,245,240,0.85);--tile-hover:rgba(200,184,154,0.10);--soft:rgba(200,184,154,0.14);--cta-bg:#0A0A0A;--cta-text:#F5F5F0;}
+  [data-theme="dark"]{--bg:linear-gradient(150deg,#0A0A0A 0%,#141310 60%,#1C1B17 100%);--head:#F5F5F0;--text:#C9C5BC;--muted2:#8A867E;--card:#141310;--cardbrd:rgba(200,184,154,0.16);--field:rgba(245,245,240,0.04);--divider:rgba(245,245,240,0.10);--hair:rgba(245,245,240,0.07);--chrome:rgba(10,10,10,0.7);--tile-hover:rgba(200,184,154,0.07);--soft:rgba(200,184,154,0.10);--cta-bg:#F5F5F0;--cta-text:#0A0A0A;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100dvh;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;color:var(--text);background:var(--bg);background-attachment:fixed;transition:color .3s;font-size:1rem;padding-bottom:72px;}
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:var(--chrome);backdrop-filter:blur(12px);border-bottom:1px solid var(--hair);}
+  .word{font-weight:700;font-size:20px;letter-spacing:.18em;color:var(--head);}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer;border:1px solid var(--divider);border-radius:20px;padding:6px 12px;}
+  .toggle .dw{width:26px;height:14px;border-radius:8px;background:var(--muted);position:relative;transition:background .3s;}
+  .toggle .kb{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--off-white);transition:transform .3s var(--ease);}
+  [data-theme="dark"] .toggle .dw{background:var(--deep-sand);}[data-theme="dark"] .toggle .kb{transform:translateX(12px);}
+
+  .shell{max-width:1180px;margin:0 auto;padding:32px 40px;display:grid;grid-template-columns:380px 1fr;gap:32px;align-items:start;}
+
+  /* left — list */
+  h1{font-size:24px;font-weight:700;color:var(--head);letter-spacing:-.01em;}
+  .sub{margin-top:5px;font-size:14px;color:var(--muted2);}
+  .search{margin:18px 0 6px;position:relative;}
+  .search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:15px;height:15px;}
+  .search input{width:100%;font-family:inherit;font-size:14px;color:var(--text);background:var(--field);border:1px solid var(--cardbrd);border-radius:10px;padding:12px 14px 12px 40px;}
+  .search input:focus{outline:none;border-color:var(--deep-sand);box-shadow:0 0 0 3px rgba(160,138,94,0.16);}
+  .search input::placeholder{color:var(--muted);}
+  .sl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);margin:22px 0 4px;}
+  .list{border-top:1px solid var(--hair);}
+  .row{display:flex;align-items:center;gap:12px;padding:14px 8px;border-bottom:1px solid var(--hair);cursor:pointer;transition:background .16s var(--ease),padding-left .18s var(--ease),border-color .16s;}
+  .row:hover{background:var(--tile-hover);padding-left:14px;}
+  .row.on{background:var(--soft);border-left:2px solid var(--warm-sand);padding-left:14px;}
+  .row .idx{font-size:11px;font-variant-numeric:tabular-nums;color:var(--muted);width:22px;flex:none;}
+  .row .nm{font-size:15px;font-weight:600;color:var(--head);flex:1;letter-spacing:-.01em;}
+  .row .own{width:6px;height:6px;border-radius:50%;background:var(--warm-sand);flex:none;}
+  .row .ct{font-size:12px;color:var(--muted2);font-variant-numeric:tabular-nums;}
+  .row .chev{color:var(--muted);transition:transform .18s var(--ease);}
+  .row:hover .chev,.row.on .chev{transform:translateX(3px);color:var(--deep-sand);}
+
+  /* right — detail (fills the space) */
+  .detail{position:sticky;top:92px;border:1px solid var(--cardbrd);border-radius:18px;background:var(--card);padding:26px 28px;min-height:420px;}
+  .d-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:360px;color:var(--muted2);}
+  .d-empty .av{width:64px;height:64px;image-rendering:pixelated;background:var(--field);border:1px solid var(--hair);border-radius:14px;padding:9px;margin-bottom:16px;}
+  .d-empty .t{font-size:16px;font-weight:600;color:var(--head);}
+  .d-empty .s{font-size:14px;margin-top:6px;max-width:280px;line-height:1.5;}
+  .d-head{display:flex;align-items:center;gap:12px;padding-bottom:18px;border-bottom:1px solid var(--hair);margin-bottom:20px;}
+  .d-head .dn{font-size:20px;font-weight:700;color:var(--head);}
+  .d-head .dc{font-size:12px;color:var(--muted2);border:1px solid var(--hair);border-radius:20px;padding:4px 10px;margin-left:auto;}
+  .d-note{font-size:13px;color:var(--muted2);margin-bottom:18px;}
+  .skins{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .skin{border:1px solid var(--hair);border-radius:12px;padding:16px;text-align:center;background:var(--field);transition:border-color .15s,transform .1s;}
+  .skin:hover{border-color:var(--deep-sand);}
+  .skin .av{width:56px;height:56px;image-rendering:pixelated;margin:0 auto 10px;display:block;}
+  .skin .nm{font-size:14px;font-weight:600;color:var(--head);}
+  .skin .act{margin-top:12px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:8px 14px;border-radius:7px;border:none;background:var(--cta-bg);color:var(--cta-text);width:100%;}
+  .skin .eq{margin-top:12px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--deep-sand);}
+
+  .tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:12px 0;background:var(--chrome);backdrop-filter:blur(10px);border-top:1px solid var(--hair);z-index:30;font-size:13px;}
+  .tabs span{color:var(--muted2);}.tabs .active{color:var(--head);font-weight:600;}
+
+  @media(max-width:900px){.shell{grid-template-columns:1fr;gap:22px;}.detail{position:static;order:-1;}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="word">VALUESKINS</div>
+    <div class="toggle" onclick="toggleTheme()"><span id="tl">Light</span><span class="dw"><span class="kb"></span></span></div>
+  </header>
+
+  <div class="shell">
+    <!-- LEFT: list -->
+    <div class="left">
+      <h1>ValueSkins Closet</h1>
+      <p class="sub">Pick a profession to see its skins.</p>
+      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="#A08A5E" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="Search professions…" oninput="renderList()"></div>
+      <div class="sl">Browse professions</div>
+      <div class="list" id="list"></div>
+    </div>
+
+    <!-- RIGHT: detail -->
+    <div class="detail" id="detail"></div>
+  </div>
+
+  <div class="tabs"><span>Profile</span><span>Market</span><span class="active">Store</span><span>Settings</span></div>
+
+<script>
+  const P={off:'#F5F5F0',mut:'#B8B4AC',sand:'#A08A5E'};
+  function charSVG(shirt,skin,hair){const eye='#141414';const rows=[[4,1,4,hair],[3,2,6,hair],[3,3,6,skin],[3,4,6,skin],[4,5,4,skin],[3,6,6,shirt],[2,7,8,shirt],[2,8,8,shirt],[2,9,8,shirt],[1,7,1,skin],[10,7,1,skin],[5,10,2,'#C8B89A']];return rows.map(([x,y,w,c])=>`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c}"/>`).join('')+`<rect x="4" y="4" width="1" height="1" fill="${eye}"/><rect x="7" y="4" width="1" height="1" fill="${eye}"/>`;}
+  function wrap(inner,s){return `<svg viewBox="0 0 12 12" shape-rendering="crispEdges" width="${s}" height="${s}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;}
+  const SK=['#E8B98A','#C68642','#8D5524'],HR=['#241C15','#3A2A1A','#111111'];
+
+  const CATS=[
+    {n:'Technology',c:'#3B6FB0',owned:'App Developer',skins:['Software Engineer','App Developer','Data Scientist','Product Manager','DevOps Engineer','UX/UI Designer','AI/ML Specialist']},
+    {n:'Food & Beverage',c:'#C64B7A',skins:['Chef','Pastry Chef','Food Critic','Barista','Restaurant Owner','Sommelier','Home Baker','Food Photographer','Mixologist','Nutrition Chef']},
+    {n:'Retail & Shopping',c:'#B0873B',skins:['Boutique Owner','Reseller','Merchandiser','Buyer','Store Manager','Stylist','Curator','Personal Shopper']},
+    {n:'Health & Fitness',c:'#3BA05A',skins:['Personal Trainer','Yoga Instructor','Nutritionist','Physio','Athlete','Wellness Coach','Pilates']},
+    {n:'Beauty & Personal Care',c:'#B04FA0',skins:['MUA','Skincare Specialist','Hairstylist','Esthetician','Nail Artist','Barber']},
+    {n:'Travel & Hospitality',c:'#3B7AB0',skins:['Travel Creator','Hotelier','Tour Guide','Concierge','Pilot','Flight Attendant']},
+    {n:'Fashion & Apparel',c:'#9B4FB0',skins:['Stylist','Designer','Model','Tailor','Trend Forecaster','Costume Designer']},
+    {n:'Entertainment & Media',c:'#B0413B',skins:['Actor','Musician','Comedian','Producer','Director','Screenwriter','Voice Actor','Podcaster']},
+    {n:'Sports & Recreation',c:'#3BA05A',skins:['Pro Athlete','Coach','Referee','Sports Manager','Trainer','Commentator','Physio']},
+    {n:'Education',c:'#C0603B',skins:['Teacher','Professor','Tutor','Course Creator','EdTech Creator','Researcher','Counselor','Lecturer']},
+    {n:'Finance & Insurance',c:'#C8A24A',skins:['Financial Advisor','Investment Banker','Trader','Crypto Analyst','Accountant','Actuary']},
+    {n:'Real Estate',c:'#8A7A4A',skins:['Realtor','Developer','Broker','Appraiser','Property Manager']},
+    {n:'Professional Services',c:'#5A6B8A',skins:['Consultant','Lawyer','HR','Operations','Analyst','Recruiter','Auditor']},
+    {n:'Automotive',c:'#6B6B6B',skins:['Auto Reviewer','Mechanic','Designer','Racer','Detailer','Dealer']},
+    {n:'Home & Garden',c:'#5A8A5A',skins:['Interior Creator','Landscaper','Architect','DIY Creator','Florist','Organizer']},
+    {n:'Non-Profit & Community',c:'#7A6BA0',skins:['Advocate','Organizer','Fundraiser','Volunteer Lead','Educator','Activist']},
+  ];
+  let sel=null;
+
+  function renderList(){
+    const q=(document.getElementById('q').value||'').toLowerCase();
+    const el=document.getElementById('list');
+    el.innerHTML=CATS.filter(c=>c.n.toLowerCase().includes(q)).map((c)=>{
+      const i=CATS.indexOf(c);
+      return `<div class="row ${sel===i?'on':''}" onclick="pick(${i})">
+        <span class="idx">${String(i+1).padStart(2,'0')}</span>
+        <span class="nm">${c.n}</span>
+        ${c.owned?'<span class="own" title="owned"></span>':''}
+        <span class="ct">${c.skins.length} skins</span>
+        <span class="chev">›</span>
+      </div>`;}).join('');
+  }
+  function pick(i){sel=i;renderList();renderDetail();}
+  function renderDetail(){
+    const d=document.getElementById('detail');
+    if(sel===null){d.innerHTML=`<div class="d-empty"><div class="av">${wrap(charSVG('#3B6FB0','#E8B98A','#241C15'),46)}</div><div class="t">Your Closet</div><div class="s">You're wearing <b>App Developer</b>. Pick a profession on the left to browse and buy more skins.</div></div>`;return;}
+    const c=CATS[sel];
+    d.innerHTML=`<div class="d-head"><div class="dn">${c.n}</div><div class="dc">${c.skins.length} skins · 0/1 owned</div></div>
+      <div class="d-note">Tap a badge to purchase and instantly apply it as your ValueSkin. One active skin at a time.</div>
+      <div class="skins">${c.skins.map((s,k)=>{
+        const owned=c.owned===s;
+        return `<div class="skin">${wrap(charSVG(c.c,SK[k%3],HR[(k+1)%3]),56)}<div class="nm">${s}</div>${owned?'<div class="eq">Equipped</div>':'<button class="act">Acquire</button>'}</div>`;
+      }).join('')}</div>`;
+  }
+  function toggleTheme(){const el=document.documentElement;const d=el.getAttribute('data-theme')==='dark';el.setAttribute('data-theme',d?'light':'dark');document.getElementById('tl').textContent=d?'Light':'Dark';}
+  renderList();renderDetail();
+</script>
+</body>
+</html>

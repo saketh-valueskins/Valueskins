@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Login v2 (concept)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--near-black:#0A0A0A;--off-white:#F5F5F0;--warm-sand:#C8B89A;--charcoal:#2D2D2D;--deep-sand:#A08A5E;--muted:#B8B4AC;--ease:cubic-bezier(0.16,1,0.3,1);}
+  [data-theme="dark"]{--bg:radial-gradient(60% 45% at 84% -8%,rgba(160,138,94,0.18),transparent 60%),linear-gradient(155deg,#0A0A0A 0%,#161512 58%,#20201A 100%);--head:#F5F5F0;--text:#C9C5BC;--muted2:#8A867E;--divider:rgba(245,245,240,0.10);--drift:0.09;--btn-bg:#F5F5F0;--btn-tx:#0A0A0A;--field:rgba(245,245,240,0.05);}
+  [data-theme="light"]{--bg:radial-gradient(64% 45% at 84% -8%,rgba(160,138,94,0.22),transparent 60%),linear-gradient(155deg,#F4F3EE 0%,#EFEADF 58%,#E6E0D2 100%);--head:#0A0A0A;--text:#3A362E;--muted2:#6E6A60;--divider:rgba(160,138,94,0.20);--drift:0.10;--btn-bg:#0A0A0A;--btn-tx:#F5F5F0;--field:#FFFFFF;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100dvh;overflow:hidden;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;color:var(--text);
+    background:var(--bg);background-attachment:fixed;min-height:100dvh;display:flex;flex-direction:column;transition:color .3s;}
+
+  .field-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+  .drift{position:absolute;opacity:var(--drift);image-rendering:pixelated;animation:drift linear infinite;}
+  @keyframes drift{0%{transform:translateY(14px);}50%{transform:translateY(-14px);}100%{transform:translateY(14px);}}
+
+  .top{position:relative;z-index:3;display:flex;justify-content:flex-end;padding:20px 32px;}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer;border:1px solid var(--divider);border-radius:20px;padding:6px 12px;opacity:0;animation:rise .7s var(--ease) .15s forwards;}
+  .toggle .dw{width:26px;height:14px;border-radius:8px;background:var(--muted);position:relative;}
+  .toggle .kb{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--off-white);transition:transform .3s var(--ease);}
+  [data-theme="dark"] .toggle .dw{background:var(--deep-sand);}[data-theme="dark"] .toggle .kb{transform:translateX(12px);}
+  [data-theme="light"] .toggle .kb{transform:translateX(0);}
+
+  .auth{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px 40px;}
+  .wm{font-weight:700;font-size:clamp(30px,5vw,46px);letter-spacing:.16em;color:var(--head);opacity:0;transform:translateY(12px);animation:rise .8s var(--ease) .1s forwards;}
+  .tag{margin-top:12px;font-weight:500;font-size:clamp(9px,1.4vw,12px);letter-spacing:.34em;color:var(--muted2);opacity:0;transform:translateY(12px);animation:rise .8s var(--ease) .22s forwards;}
+  .tag .dot{color:var(--deep-sand);}
+  .line{margin-top:30px;font-size:clamp(16px,2.1vw,20px);font-weight:600;color:var(--head);letter-spacing:-.01em;max-width:460px;line-height:1.35;opacity:0;transform:translateY(12px);animation:rise .8s var(--ease) .36s forwards;}
+  .line .sand{color:var(--deep-sand);}
+
+  .gbtn{margin-top:34px;width:min(420px,100%);display:flex;align-items:center;justify-content:center;gap:12px;
+    background:var(--btn-bg);color:var(--btn-tx);border:none;border-radius:10px;padding:16px 22px;
+    font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;transition:transform .16s var(--ease),box-shadow .16s var(--ease);
+    box-shadow:0 18px 40px -20px rgba(0,0,0,.5);opacity:0;transform:translateY(12px);animation:rise .8s var(--ease) .5s forwards;}
+  .gbtn:hover{transform:translateY(-2px);}.gbtn:active{transform:scale(.99);}
+  .gbtn svg{width:20px;height:20px;flex:none;}
+
+  .signup{margin-top:22px;font-size:15px;color:var(--text);opacity:0;animation:fadeIn .8s ease .64s forwards;}
+  .signup a{color:var(--head);font-weight:600;text-decoration:none;cursor:pointer;}
+  .trust{margin-top:26px;font-size:12px;letter-spacing:.06em;color:var(--muted2);opacity:0;animation:fadeIn .9s ease .8s forwards;}
+  .trust .d{color:var(--deep-sand);margin:0 8px;}
+
+  footer{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-top:1px solid var(--divider);font-size:12.5px;color:var(--muted2);opacity:0;animation:fadeIn 1s ease .95s forwards;}
+  footer .links a{color:var(--muted2);text-decoration:none;margin-left:18px;}
+  footer .links a:hover{color:var(--head);}
+
+  @keyframes rise{to{opacity:1;transform:none;}}
+  @keyframes fadeIn{to{opacity:1;}}
+  @media(max-width:520px){footer{flex-direction:column;gap:8px;}footer .links a{margin:0 9px;}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}.wm,.tag,.line,.gbtn,.signup,.trust,.toggle,footer{opacity:1!important;transform:none!important;}}
+</style>
+</head>
+<body>
+
+  <div class="field-bg" id="field"></div>
+
+  <div class="top">
+    <div class="toggle" onclick="toggleTheme()"><span id="tl">Dark</span><span class="dw"><span class="kb"></span></span></div>
+  </div>
+
+  <main class="auth">
+    <div class="wm">VALUESKINS</div>
+    <div class="tag">TRUST <span class="dot">·</span> EARNED <span class="dot">·</span> SERIOUS</div>
+    <h1 class="line">Where creators and brands close deals on <span class="sand">earned trust</span>.</h1>
+
+    <button class="gbtn">
+      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continue with Google
+    </button>
+
+    <p class="signup">Don't have an account? <a>Sign up</a></p>
+    <p class="trust">Escrow-backed <span class="d">·</span> Verified identities <span class="d">·</span> Earned reputation</p>
+  </main>
+
+  <footer>
+    <span>© 2026 ValueSkins</span>
+    <span class="links"><a>Terms</a><a>Privacy</a><a>Cookies</a></span>
+  </footer>
+
+<script>
+  function charSVG(shirt){const F='#F5F5F0',S2='#B8B4AC',eye='#141414',skin='#E8B98A',hair='#241C15';
+    const rows=[[4,1,4,hair],[3,2,6,hair],[3,3,6,skin],[3,4,6,skin],[4,5,4,skin],[3,6,6,shirt],[2,7,8,shirt],[2,8,8,shirt],[2,9,8,shirt],[1,7,1,skin],[10,7,1,skin],[5,10,2,'#C8B89A']];
+    return `<svg viewBox="0 0 12 12" shape-rendering="crispEdges" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">${rows.map(([x,y,w,c])=>`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c}"/>`).join('')}<rect x="4" y="4" width="1" height="1" fill="${eye}"/><rect x="7" y="4" width="1" height="1" fill="${eye}"/></svg>`;}
+  const shirts=['#3B6FB0','#B0413B','#2E8B8B','#6B4FA0','#C8A24A','#3BA05A','#B04FA0'];
+  const f=document.getElementById('field');
+  for(let i=0;i<7;i++){const d=document.createElement('div');d.className='drift';
+    d.style.left=(8+Math.random()*84)+'%';d.style.top=(8+Math.random()*80)+'%';
+    const s=34+Math.random()*38;d.style.width=s+'px';d.style.height=s+'px';
+    d.style.animationDuration=(9+Math.random()*8)+'s';d.style.animationDelay=(-Math.random()*8)+'s';
+    d.innerHTML=charSVG(shirts[i%shirts.length]);f.appendChild(d);}
+  function toggleTheme(){const el=document.documentElement;const d=el.getAttribute('data-theme')==='dark';el.setAttribute('data-theme',d?'light':'dark');document.getElementById('tl').textContent=d?'Dark':'Light';}
+</script>
+</body>
+</html>

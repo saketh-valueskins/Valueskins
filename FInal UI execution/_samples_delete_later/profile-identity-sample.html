@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Profile identity (concept)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--near-black:#0A0A0A;--off-white:#F5F5F0;--warm-sand:#C8B89A;--charcoal:#2D2D2D;--deep-sand:#A08A5E;--muted:#B8B4AC;--ease:cubic-bezier(0.16,1,0.3,1);}
+  [data-theme="light"]{--bg:linear-gradient(150deg,#F4F3EE 0%,#EEE9DE 60%,#E6E0D2 100%);--head:#0A0A0A;--text:#3A362E;--muted2:#6E6A60;--card:#FFFFFF;--cardbrd:rgba(160,138,94,0.28);--field:#FBFAF6;--divider:rgba(160,138,94,0.20);--hair:rgba(45,45,45,0.10);--chrome:rgba(245,245,240,0.85);--cta-bg:#0A0A0A;--cta-text:#F5F5F0;}
+  [data-theme="dark"]{--bg:linear-gradient(150deg,#0A0A0A 0%,#141310 60%,#1C1B17 100%);--head:#F5F5F0;--text:#C9C5BC;--muted2:#8A867E;--card:#141310;--cardbrd:rgba(200,184,154,0.16);--field:rgba(245,245,240,0.03);--divider:rgba(245,245,240,0.10);--hair:rgba(245,245,240,0.08);--chrome:rgba(10,10,10,0.7);--cta-bg:#F5F5F0;--cta-text:#0A0A0A;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100dvh;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;color:var(--text);background:var(--bg);background-attachment:fixed;transition:color .3s;font-size:1rem;}
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:var(--chrome);backdrop-filter:blur(12px);border-bottom:1px solid var(--hair);}
+  .word{font-weight:700;font-size:20px;letter-spacing:.18em;color:var(--head);}
+  .hnav{display:flex;align-items:center;gap:14px;}
+  .b-out{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:9px 18px;border-radius:9px;border:1px solid var(--divider);background:transparent;color:var(--head);}
+  .b-out:hover{border-color:var(--cardbrd);}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer;border:1px solid var(--divider);border-radius:20px;padding:6px 12px;}
+  .toggle .dw{width:26px;height:14px;border-radius:8px;background:var(--muted);position:relative;transition:background .3s;}
+  .toggle .kb{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--off-white);transition:transform .3s var(--ease);}
+  [data-theme="dark"] .toggle .dw{background:var(--deep-sand);}[data-theme="dark"] .toggle .kb{transform:translateX(12px);}
+
+  .wrap{max-width:900px;margin:0 auto;padding:34px 28px 80px;}
+
+  /* IDENTITY HERO */
+  .hero{position:relative;overflow:hidden;border-radius:22px;padding:36px 38px;color:#F5F5F0;background:linear-gradient(155deg,#0A0A0A 0%,#17150F 55%,#22201A 100%);border:1px solid rgba(200,184,154,0.22);box-shadow:0 40px 80px -42px rgba(10,10,10,0.6);
+    display:flex;gap:34px;align-items:center;opacity:0;transform:translateY(16px);animation:rise .7s var(--ease) .05s forwards;}
+  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(48% 70% at 86% -12%,rgba(160,138,94,0.24),transparent 62%);}
+  .frame{position:relative;z-index:1;flex:none;width:160px;height:160px;border-radius:18px;background:rgba(245,245,240,0.04);border:1px solid rgba(200,184,154,0.3);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 1px 0 rgba(245,245,240,.08);}
+  .frame svg{width:126px;height:126px;image-rendering:pixelated;animation:float 5s var(--ease) infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+  .frame .tag{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#0A0A0A;background:var(--warm-sand);padding:4px 12px;border-radius:20px;white-space:nowrap;}
+  .hmeta{position:relative;z-index:1;flex:1;}
+  .hmeta .nm{font-size:clamp(30px,4.5vw,40px);font-weight:700;color:#F5F5F0;letter-spacing:-.02em;line-height:1;}
+  .hmeta .un{margin-top:8px;font-size:14px;color:var(--muted);}
+  .hmeta .un b{color:#C9C5BC;font-weight:500;}
+  .hmeta .wearing{margin-top:14px;font-size:14px;color:#C9C5BC;}.hmeta .wearing b{color:#F5F5F0;font-weight:600;}
+  .hmeta .pills{display:flex;gap:9px;margin-top:16px;flex-wrap:wrap;}
+  .hpill{font-size:12px;font-weight:600;padding:6px 13px;border-radius:20px;border:1px solid rgba(200,184,154,0.35);color:var(--warm-sand);}
+  .hpill.solid{background:var(--warm-sand);color:#0A0A0A;border-color:var(--warm-sand);}
+  .hmeta .actions{display:flex;gap:10px;margin-top:20px;}
+  .h-btn{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:11px 20px;border-radius:10px;border:1px solid rgba(245,245,240,0.28);background:transparent;color:#F5F5F0;}
+  .h-btn:hover{border-color:rgba(245,245,240,0.6);}
+  .h-btn.primary{background:var(--warm-sand);color:#0A0A0A;border-color:var(--warm-sand);}
+
+  /* LEVEL PROGRESS */
+  .level{margin-top:18px;border:1px solid var(--hair);border-radius:16px;background:var(--card);padding:22px 24px;opacity:0;transform:translateY(12px);animation:rise .7s var(--ease) .18s forwards;}
+  .level .row{display:flex;align-items:baseline;justify-content:space-between;}
+  .level .cur{font-size:15px;font-weight:700;color:var(--head);}
+  .level .cur .s{font-size:12px;color:var(--muted2);font-weight:500;margin-left:6px;}
+  .level .nxt{font-size:12px;color:var(--muted2);}
+  .lbar{height:8px;border-radius:4px;background:var(--divider);margin-top:12px;overflow:hidden;}
+  .lbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--deep-sand),var(--warm-sand));transition:width 1s var(--ease);border-radius:4px;}
+  .level .note{margin-top:10px;font-size:12.5px;color:var(--muted2);}
+
+  /* STATS GRID */
+  .sl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);margin:28px 0 14px;display:flex;align-items:center;gap:12px;}
+  .sl::after{content:"";flex:1;height:1px;background:var(--divider);}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .stat{border:1px solid var(--hair);border-radius:16px;background:var(--card);padding:22px 24px;opacity:0;transform:translateY(12px);animation:rise .6s var(--ease) forwards;}
+  .stat:nth-child(1){animation-delay:.24s;}.stat:nth-child(2){animation-delay:.3s;}.stat:nth-child(3){animation-delay:.36s;}
+  .stat:nth-child(4){animation-delay:.42s;}.stat:nth-child(5){animation-delay:.48s;}.stat:nth-child(6){animation-delay:.54s;}
+  .stat .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);}
+  .stat .v{font-size:30px;font-weight:700;color:var(--head);margin-top:8px;letter-spacing:-.02em;line-height:1;}
+  .stat .v .u{font-size:14px;color:var(--muted2);font-weight:500;}
+  .stat .v.sand{color:var(--deep-sand);}
+  .stat .d{margin-top:8px;font-size:12px;color:var(--muted2);}
+  .stat .d .up{color:var(--deep-sand);font-weight:600;}
+
+  .rep-note{margin-top:12px;font-size:12px;color:var(--muted2);}
+
+  @keyframes rise{to{opacity:1;transform:none;}}
+  @media(max-width:760px){.stats{grid-template-columns:1fr 1fr;}.hero{flex-direction:column;text-align:center;}.hmeta .pills,.hmeta .actions{justify-content:center;}}
+  @media(max-width:460px){.stats{grid-template-columns:1fr;}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}.hero,.level,.stat{opacity:1!important;transform:none!important;}}
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="word">VALUESKINS</div>
+    <div class="hnav">
+      <button class="b-out">Settings</button>
+      <div class="toggle" onclick="toggleTheme()"><span id="tl">Dark</span><span class="dw"><span class="kb"></span></span></div>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- IDENTITY -->
+    <div class="hero">
+      <div class="hmeta">
+        <div class="nm">Anshul Khatri</div>
+        <div class="un">@anshulk · <b>Software Engineer</b> · Bengaluru, India</div>
+        <div class="wearing">Speaks <b>English, Hindi</b> · Open for work</div>
+        <div class="pills"><span class="hpill solid">Professional</span><span class="hpill">Signal · Level 3</span><span class="hpill">Verified</span></div>
+        <div class="actions"><button class="h-btn primary">Watch pitch clip</button><button class="h-btn">Edit profile</button></div>
+      </div>
+      <div class="frame"><svg id="skin" viewBox="0 0 12 12" shape-rendering="crispEdges"></svg></div>
+    </div>
+
+    <!-- LEVEL PROGRESS -->
+    <div class="level">
+      <div class="row"><div class="cur">Signal <span class="s">Level 3 · earned</span></div><div class="nxt">17 more deals → Aura</div></div>
+      <div class="lbar"><i id="lbar"></i></div>
+      <div class="note">Levels rise only on completed, paid deals — never bought, never gamed.</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="sl">Track record</div>
+    <div class="stats">
+      <div class="stat"><div class="k">Deals done</div><div class="v"><span data-to="18">0</span></div><div class="d"><span class="up">+3</span> this month</div></div>
+      <div class="stat"><div class="k">Avg rating</div><div class="v sand"><span data-to="4.9" data-dec="1">0</span><span class="u">/5</span></div><div class="d">from 18 brands</div></div>
+      <div class="stat"><div class="k">Repeat clients</div><div class="v"><span data-to="42">0</span><span class="u">%</span></div><div class="d">came back for more</div></div>
+      <div class="stat"><div class="k">On-time delivery</div><div class="v"><span data-to="100">0</span><span class="u">%</span></div><div class="d">every deal, on time</div></div>
+      <div class="stat"><div class="k">Avg response</div><div class="v"><span data-to="2">0</span><span class="u">h</span></div><div class="d">fast to reply</div></div>
+      <div class="stat"><div class="k">Trust score</div><div class="v sand"><span data-to="92">0</span><span class="u">%</span></div><div class="d">earned, not claimed</div></div>
+    </div>
+    <p class="rep-note">Stats are earned automatically from completed deals — they can't be edited or bought.</p>
+
+  </div>
+
+<script>
+  function charSVG(shirt,skin,hair){const eye='#141414';const rows=[[4,1,4,hair],[3,2,6,hair],[3,3,6,skin],[3,4,6,skin],[4,5,4,skin],[3,6,6,shirt],[2,7,8,shirt],[2,8,8,shirt],[2,9,8,shirt],[1,7,1,skin],[10,7,1,skin],[5,10,2,'#C8B89A']];return rows.map(([x,y,w,c])=>`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c}"/>`).join('')+`<rect x="4" y="4" width="1" height="1" fill="${eye}"/><rect x="7" y="4" width="1" height="1" fill="${eye}"/>`;}
+  document.getElementById('skin').innerHTML=charSVG('#3B6FB0','#E8B98A','#241C15');
+
+  // count-up stats + level bar
+  function countUp(el){const to=parseFloat(el.dataset.to),dec=+(el.dataset.dec||0);let t0=null;
+    function fr(t){if(!t0)t0=t;const p=Math.min((t-t0)/1000,1);const e=1-Math.pow(1-p,3);el.textContent=(to*e).toFixed(dec);if(p<1)requestAnimationFrame(fr);else el.textContent=to.toFixed(dec);}
+    requestAnimationFrame(fr);}
+  setTimeout(()=>{document.querySelectorAll('[data-to]').forEach(countUp);document.getElementById('lbar').style.width='51%';},450);
+
+  function toggleTheme(){const el=document.documentElement;const d=el.getAttribute('data-theme')==='dark';el.setAttribute('data-theme',d?'light':'dark');document.getElementById('tl').textContent=d?'Dark':'Light';}
+</script>
+</body>
+</html>
