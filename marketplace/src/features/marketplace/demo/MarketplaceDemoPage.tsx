@@ -2660,15 +2660,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 </div>
 
                 {/* Preview card */}
-                {(creatorPitchVideoUrl || creatorPitchText) && (
+                {creatorPitchText && (
                   <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:10, padding:12, marginBottom:8 }}>
                     <div style={{ fontSize:10, fontWeight:700, color:C.textSecondary, textTransform:'uppercase', letterSpacing:'0.5px', marginBottom:8 }}>How brands see your skin</div>
-                    {creatorPitchVideoUrl && (
-                      <video src={creatorPitchVideoUrl} controls style={{ width:'100%', borderRadius:8, maxHeight:160, background:'#000', marginBottom:8 }} />
-                    )}
-                    {creatorPitchText && (
-                      <div style={{ fontSize:12, color:C.text, lineHeight:1.5 }}>{creatorPitchText}</div>
-                    )}
+                    <div style={{ fontSize:12, color:C.text, lineHeight:1.5 }}>{creatorPitchText}</div>
                   </div>
                 )}
               </>
