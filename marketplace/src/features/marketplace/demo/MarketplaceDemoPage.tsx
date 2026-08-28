@@ -6852,7 +6852,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
           {activeView === 'notifications' && <NotificationsView hasAnySkin={hasAnySkin} />}
 
           {/* ── EXPLORE VIEW ──────────────────────────────────── */}
-          {activeView === 'explore' && <ExploreView />}
+          {activeView === 'explore' && <ExploreView sharedState={sharedState} creatorProfile={myProfile} />}
           {/* ── SETTINGS VIEW ────────────────────────────────── */}
           {/* Settings tab. The hub is what used to live at /account/settings;
               the older preferences panel is now a pane inside it rather than a
