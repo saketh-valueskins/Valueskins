@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 820" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A0A0A"/><stop offset="0.6" stop-color="#141310"/><stop offset="1" stop-color="#1C1B17"/></linearGradient>
+    <linearGradient id="hero" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A0A0A"/><stop offset="0.55" stop-color="#17150F"/><stop offset="1" stop-color="#22201A"/></linearGradient>
+    <radialGradient id="glow" cx="0.86" cy="-0.12" r="0.6"><stop offset="0" stop-color="#A08A5E" stop-opacity="0.24"/><stop offset="0.62" stop-color="#A08A5E" stop-opacity="0"/></radialGradient>
+    <linearGradient id="lbar" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A08A5E"/><stop offset="1" stop-color="#C8B89A"/></linearGradient>
+    <clipPath id="heroClip"><rect x="270" y="88" width="900" height="196" rx="22"/></clipPath>
+  </defs>
+
+  <rect width="1440" height="820" fill="url(#bg)"/>
+
+  <!-- header -->
+  <rect x="0" y="0" width="1440" height="56" fill="#0A0A0A" fill-opacity="0.7"/>
+  <rect x="0" y="56" width="1440" height="1" fill="#F5F5F0" fill-opacity="0.08"/>
+  <text x="40" y="34" fill="#F5F5F0" font-size="15" font-weight="700" letter-spacing="2.7">VALUESKINS</text>
+  <rect x="1218" y="16" width="92" height="30" rx="9" fill="none" stroke="#F5F5F0" stroke-opacity="0.14"/>
+  <text x="1264" y="35" fill="#F5F5F0" font-size="13" font-weight="600" text-anchor="middle">Settings</text>
+  <rect x="1322" y="17" width="80" height="27" rx="13" fill="none" stroke="#F5F5F0" stroke-opacity="0.14"/>
+  <text x="1342" y="34" fill="#8A867E" font-size="12">Dark</text>
+  <circle cx="1390" cy="30.5" r="6" fill="#C8B89A"/>
+
+  <!-- hero -->
+  <rect x="270" y="88" width="900" height="196" rx="22" fill="url(#hero)" stroke="#C8B89A" stroke-opacity="0.22"/>
+  <rect x="270" y="88" width="900" height="196" rx="22" fill="url(#glow)" clip-path="url(#heroClip)"/>
+  <text x="306" y="152" fill="#F5F5F0" font-size="34" font-weight="700" letter-spacing="-0.6">Anshul Khatri</text>
+  <text x="306" y="180" fill="#B8B4AC" font-size="14">@anshulk · <tspan fill="#C9C5BC" font-weight="500">Software Engineer</tspan> · Bengaluru, India</text>
+  <text x="306" y="205" fill="#C9C5BC" font-size="14">Speaks <tspan fill="#F5F5F0" font-weight="600">English, Hindi</tspan> · Open for work</text>
+  <!-- pills -->
+  <rect x="306" y="218" width="98" height="26" rx="13" fill="#C8B89A"/><text x="355" y="235" fill="#0A0A0A" font-size="12" font-weight="600" text-anchor="middle">Professional</text>
+  <rect x="412" y="218" width="112" height="26" rx="13" fill="none" stroke="#C8B89A" stroke-opacity="0.35"/><text x="468" y="235" fill="#C8B89A" font-size="12" font-weight="600" text-anchor="middle">Signal · Level 3</text>
+  <rect x="532" y="218" width="76" height="26" rx="13" fill="none" stroke="#C8B89A" stroke-opacity="0.35"/><text x="570" y="235" fill="#C8B89A" font-size="12" font-weight="600" text-anchor="middle">Verified</text>
+  <!-- actions -->
+  <rect x="306" y="252" width="144" height="38" rx="10" fill="#C8B89A"/><text x="378" y="276" fill="#0A0A0A" font-size="14" font-weight="600" text-anchor="middle">Watch pitch clip</text>
+  <rect x="460" y="252" width="116" height="38" rx="10" fill="none" stroke="#F5F5F0" stroke-opacity="0.28"/><text x="518" y="276" fill="#F5F5F0" font-size="14" font-weight="600" text-anchor="middle">Edit profile</text>
+  <!-- ValueSkin frame (right) -->
+  <rect x="990" y="112" width="148" height="148" rx="18" fill="#F5F5F0" fill-opacity="0.04" stroke="#C8B89A" stroke-opacity="0.3"/>
+  <g shape-rendering="crispEdges">
+    <rect x="1046" y="141" width="36" height="9" fill="#241C15"/><rect x="1037" y="150" width="54" height="9" fill="#241C15"/>
+    <rect x="1037" y="159" width="54" height="9" fill="#E8B98A"/><rect x="1037" y="168" width="54" height="9" fill="#E8B98A"/><rect x="1046" y="177" width="36" height="9" fill="#E8B98A"/>
+    <rect x="1037" y="186" width="54" height="9" fill="#3B6FB0"/><rect x="1028" y="195" width="72" height="9" fill="#3B6FB0"/><rect x="1028" y="204" width="72" height="9" fill="#3B6FB0"/><rect x="1028" y="213" width="72" height="9" fill="#3B6FB0"/>
+    <rect x="1019" y="195" width="9" height="9" fill="#E8B98A"/><rect x="1100" y="195" width="9" height="9" fill="#E8B98A"/>
+    <rect x="1055" y="222" width="18" height="9" fill="#C8B89A"/>
+    <rect x="1046" y="168" width="9" height="9" fill="#141414"/><rect x="1073" y="168" width="9" height="9" fill="#141414"/>
+  </g>
+
+  <!-- level card -->
+  <rect x="270" y="304" width="900" height="104" rx="16" fill="#141310" stroke="#F5F5F0" stroke-opacity="0.08"/>
+  <text x="300" y="340" fill="#F5F5F0" font-size="15" font-weight="700">Signal <tspan fill="#8A867E" font-size="12" font-weight="500">Level 3 · earned</tspan></text>
+  <text x="1140" y="340" fill="#8A867E" font-size="12" text-anchor="end">17 more deals → Aura</text>
+  <rect x="300" y="352" width="840" height="8" rx="4" fill="#F5F5F0" fill-opacity="0.10"/>
+  <rect x="300" y="352" width="428" height="8" rx="4" fill="url(#lbar)"/>
+  <text x="300" y="386" fill="#8A867E" font-size="12">Levels rise only on completed, paid deals — never bought, never gamed.</text>
+
+  <!-- track record label -->
+  <text x="270" y="448" fill="#8A867E" font-size="11" font-weight="700" letter-spacing="1.5">TRACK RECORD</text>
+  <rect x="392" y="443" width="778" height="1" fill="#F5F5F0" fill-opacity="0.10"/>
+
+  <!-- stats grid -->
+  <g>
+    <!-- row 1 -->
+    <rect x="270" y="466" width="290" height="130" rx="16" fill="#141310" stroke="#F5F5F0" stroke-opacity="0.08"/>
+    <text x="294" y="500" fill="#8A867E" font-size="11" letter-spacing="0.6">DEALS DONE</text>
+    <text x="294" y="540" fill="#F5F5F0" font-size="30" font-weight="700">18</text>
+    <text x="294" y="566" fill="#8A867E" font-size="12"><tspan fill="#A08A5E" font-weight="600">+3</tspan> this month</text>
+
+    <rect x="574" y="466" width="290" height="130" rx="16" fill="#141310" stroke="#F5F5F0" stroke-opacity="0.08"/>
+    <text x="598" y="500" fill="#8A867E" font-size="11" letter-spacing="0.6">AVG RATING</text>
+    <text x="598" y="540" fill="#A08A5E" font-size="30" font-weight="700">4.9<tspan fill="#8A867E" font-size="14">/5</tspan></text>
+    <text x="598" y="566" fill="#8A867E" font-size="12">from 18 brands</text>
+
+    <rect x="878" y="466" width="290" height="130" rx="16" fill="#141310" stroke="#F5F5F0" stroke-opacity="0.08"/>
+    <text x="902" y="500" fill="#8A867E" font-size="11" letter-spacing="0.6">REPEAT CLIENTS</text>
+    <text x="902" y="540" fill="#F5F5F0" font-size="30" font-weight="700">42<tspan fill="#8A867E" font-size="14">%</tspan></text>
+    <text x="902" y="566" fill="#8A867E" font-size="12">came back for more</text>
+
+    <!-- row 2 -->
+    <rect x="270" y="610" width="290" height="130" rx="16" fill="#141310" stroke="#F5F5F0" stroke-opacity="0.08"/>
+    <text x="294" y="644" fill="#8A867E" font-size="11" letter-spacing="0.6">ON-TIME DELIVERY</text>
+    <text x="294" y="684" fill="#F5F5F0" font-size="30" font-weight="700">100<tspan fill="#8A867E" font-size="14">%</tspan></text>
+    <text x="294" y="710" fill="#8A867E" font-size="12">every deal, on time</text>
+
+    <rect x="574" y="610" width="290" height="130" rx="16" fill="#141310" stroke="#F5F5F0" stroke-opacity="0.08"/>
+    <text x="598" y="644" fill="#8A867E" font-size="11" letter-spacing="0.6">AVG RESPONSE</text>
+    <text x="598" y="684" fill="#F5F5F0" font-size="30" font-weight="700">2<tspan fill="#8A867E" font-size="14">h</tspan></text>
+    <text x="598" y="710" fill="#8A867E" font-size="12">fast to reply</text>
+
+    <rect x="878" y="610" width="290" height="130" rx="16" fill="#141310" stroke="#F5F5F0" stroke-opacity="0.08"/>
+    <text x="902" y="644" fill="#8A867E" font-size="11" letter-spacing="0.6">TRUST SCORE</text>
+    <text x="902" y="684" fill="#A08A5E" font-size="30" font-weight="700">92<tspan fill="#8A867E" font-size="14">%</tspan></text>
+    <text x="902" y="710" fill="#8A867E" font-size="12">earned, not claimed</text>
+  </g>
+
+  <text x="270" y="768" fill="#8A867E" font-size="12">Stats are earned automatically from completed deals — they can't be edited or bought.</text>
+</svg>

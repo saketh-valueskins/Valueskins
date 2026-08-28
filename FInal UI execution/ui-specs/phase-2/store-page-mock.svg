@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 860" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F3EE"/><stop offset="0.6" stop-color="#EEE9DE"/><stop offset="1" stop-color="#E6E0D2"/></linearGradient>
+  </defs>
+  <rect width="1440" height="860" fill="url(#bg)"/>
+
+  <!-- header -->
+  <rect x="0" y="0" width="1440" height="56" fill="#F5F5F0" fill-opacity="0.85"/>
+  <rect x="0" y="56" width="1440" height="1" fill="#2D2D2D" fill-opacity="0.09"/>
+  <text x="40" y="34" fill="#0A0A0A" font-size="15" font-weight="700" letter-spacing="2.7">VALUESKINS</text>
+  <rect x="1322" y="17" width="80" height="27" rx="13" fill="none" stroke="#A08A5E" stroke-opacity="0.35"/><text x="1342" y="34" fill="#6E6A60" font-size="12">Light</text>
+
+  <!-- ===== LEFT: category list ===== -->
+  <text x="130" y="112" fill="#0A0A0A" font-size="22" font-weight="700" letter-spacing="-0.4">ValueSkins Closet</text>
+  <text x="130" y="134" fill="#6E6A60" font-size="13">Pick a profession to see its skins.</text>
+  <rect x="130" y="150" width="380" height="44" rx="10" fill="#FBFAF6" stroke="#A08A5E" stroke-opacity="0.28"/>
+  <circle cx="151" cy="172" r="6" fill="none" stroke="#A08A5E" stroke-width="1.6"/><line x1="156" y1="177" x2="160" y2="181" stroke="#A08A5E" stroke-width="1.6"/>
+  <text x="174" y="177" fill="#B8B4AC" font-size="14">Search professions…</text>
+  <text x="130" y="224" fill="#6E6A60" font-size="11" font-weight="700" letter-spacing="1.5">BROWSE PROFESSIONS</text>
+
+  <!-- selected row highlight -->
+  <rect x="130" y="236" width="380" height="46" rx="6" fill="#C8B89A" fill-opacity="0.14"/>
+  <rect x="130" y="236" width="2" height="46" fill="#C8B89A"/>
+
+  <!-- rows -->
+  <g font-size="15" font-weight="600" fill="#0A0A0A">
+    <text x="142" y="264" font-size="11" font-weight="400" fill="#B8B4AC">01</text><text x="172" y="264">Technology</text><circle cx="440" cy="259" r="3" fill="#C8B89A"/><text x="498" y="264" font-size="12" font-weight="400" fill="#6E6A60" text-anchor="end">7 skins</text><text x="505" y="264" fill="#A08A5E">›</text>
+    <text x="142" y="310" font-size="11" font-weight="400" fill="#B8B4AC">02</text><text x="172" y="310">Food &amp; Beverage</text><text x="498" y="310" font-size="12" font-weight="400" fill="#6E6A60" text-anchor="end">10 skins</text><text x="505" y="310" fill="#B8B4AC">›</text>
+    <text x="142" y="356" font-size="11" font-weight="400" fill="#B8B4AC">03</text><text x="172" y="356">Retail &amp; Shopping</text><text x="498" y="356" font-size="12" font-weight="400" fill="#6E6A60" text-anchor="end">8 skins</text><text x="505" y="356" fill="#B8B4AC">›</text>
+    <text x="142" y="402" font-size="11" font-weight="400" fill="#B8B4AC">04</text><text x="172" y="402">Health &amp; Fitness</text><text x="498" y="402" font-size="12" font-weight="400" fill="#6E6A60" text-anchor="end">7 skins</text><text x="505" y="402" fill="#B8B4AC">›</text>
+    <text x="142" y="448" font-size="11" font-weight="400" fill="#B8B4AC">05</text><text x="172" y="448">Beauty &amp; Personal Care</text><text x="498" y="448" font-size="12" font-weight="400" fill="#6E6A60" text-anchor="end">6 skins</text><text x="505" y="448" fill="#B8B4AC">›</text>
+    <text x="142" y="494" font-size="11" font-weight="400" fill="#B8B4AC">06</text><text x="172" y="494">Travel &amp; Hospitality</text><text x="498" y="494" font-size="12" font-weight="400" fill="#6E6A60" text-anchor="end">6 skins</text><text x="505" y="494" fill="#B8B4AC">›</text>
+    <text x="142" y="540" font-size="11" font-weight="400" fill="#B8B4AC">07</text><text x="172" y="540">Fashion &amp; Apparel</text><text x="498" y="540" font-size="12" font-weight="400" fill="#6E6A60" text-anchor="end">6 skins</text><text x="505" y="540" fill="#B8B4AC">›</text>
+    <text x="142" y="586" font-size="11" font-weight="400" fill="#B8B4AC">08</text><text x="172" y="586">Entertainment &amp; Media</text><text x="498" y="586" font-size="12" font-weight="400" fill="#6E6A60" text-anchor="end">8 skins</text><text x="505" y="586" fill="#B8B4AC">›</text>
+  </g>
+  <g stroke="#2D2D2D" stroke-opacity="0.09">
+    <line x1="130" y1="282" x2="510" y2="282"/><line x1="130" y1="328" x2="510" y2="328"/><line x1="130" y1="374" x2="510" y2="374"/><line x1="130" y1="420" x2="510" y2="420"/><line x1="130" y1="466" x2="510" y2="466"/><line x1="130" y1="512" x2="510" y2="512"/><line x1="130" y1="558" x2="510" y2="558"/><line x1="130" y1="604" x2="510" y2="604"/>
+  </g>
+
+  <!-- ===== RIGHT: detail pane ===== -->
+  <rect x="542" y="150" width="768" height="610" rx="18" fill="#FFFFFF" stroke="#A08A5E" stroke-opacity="0.28"/>
+  <text x="574" y="200" fill="#0A0A0A" font-size="20" font-weight="700">Technology</text>
+  <rect x="1140" y="182" width="150" height="26" rx="13" fill="none" stroke="#2D2D2D" stroke-opacity="0.10"/><text x="1215" y="199" fill="#6E6A60" font-size="11" text-anchor="middle">7 skins · 0/1 owned</text>
+  <line x1="574" y1="220" x2="1278" y2="220" stroke="#2D2D2D" stroke-opacity="0.09"/>
+  <text x="574" y="250" fill="#6E6A60" font-size="13">Tap a badge to purchase and instantly apply it as your ValueSkin. One active skin at a time.</text>
+
+  <!-- skin cards 2x2 -->
+  <g>
+    <!-- A: Software Engineer -->
+    <rect x="570" y="272" width="350" height="150" rx="12" fill="#FBFAF6" stroke="#2D2D2D" stroke-opacity="0.09"/>
+    <g shape-rendering="crispEdges"><rect x="733" y="300" width="24" height="16" fill="#E8B98A"/><rect x="737" y="304" width="4" height="4" fill="#141414"/><rect x="749" y="304" width="4" height="4" fill="#141414"/><rect x="729" y="316" width="32" height="20" fill="#3B6FB0"/></g>
+    <text x="745" y="368" fill="#0A0A0A" font-size="14" font-weight="600" text-anchor="middle">Software Engineer</text>
+    <rect x="685" y="382" width="120" height="30" rx="7" fill="#0A0A0A"/><text x="745" y="401" fill="#F5F5F0" font-size="12" font-weight="600" text-anchor="middle">Acquire</text>
+
+    <!-- B: App Developer (equipped) -->
+    <rect x="932" y="272" width="350" height="150" rx="12" fill="#FBFAF6" stroke="#C8B89A" stroke-opacity="0.5"/>
+    <g shape-rendering="crispEdges"><rect x="1095" y="300" width="24" height="16" fill="#E8B98A"/><rect x="1099" y="304" width="4" height="4" fill="#141414"/><rect x="1111" y="304" width="4" height="4" fill="#141414"/><rect x="1091" y="316" width="32" height="20" fill="#3B6FB0"/></g>
+    <text x="1107" y="368" fill="#0A0A0A" font-size="14" font-weight="600" text-anchor="middle">App Developer</text>
+    <text x="1107" y="400" fill="#A08A5E" font-size="11" font-weight="700" letter-spacing="0.6" text-anchor="middle">EQUIPPED</text>
+
+    <!-- C: Data Scientist -->
+    <rect x="570" y="438" width="350" height="150" rx="12" fill="#FBFAF6" stroke="#2D2D2D" stroke-opacity="0.09"/>
+    <g shape-rendering="crispEdges"><rect x="733" y="466" width="24" height="16" fill="#C68642"/><rect x="737" y="470" width="4" height="4" fill="#141414"/><rect x="749" y="470" width="4" height="4" fill="#141414"/><rect x="729" y="482" width="32" height="20" fill="#2E8B8B"/></g>
+    <text x="745" y="534" fill="#0A0A0A" font-size="14" font-weight="600" text-anchor="middle">Data Scientist</text>
+    <rect x="685" y="548" width="120" height="30" rx="7" fill="#0A0A0A"/><text x="745" y="567" fill="#F5F5F0" font-size="12" font-weight="600" text-anchor="middle">Acquire</text>
+
+    <!-- D: Product Manager -->
+    <rect x="932" y="438" width="350" height="150" rx="12" fill="#FBFAF6" stroke="#2D2D2D" stroke-opacity="0.09"/>
+    <g shape-rendering="crispEdges"><rect x="1095" y="466" width="24" height="16" fill="#E8B98A"/><rect x="1099" y="470" width="4" height="4" fill="#141414"/><rect x="1111" y="470" width="4" height="4" fill="#141414"/><rect x="1091" y="482" width="32" height="20" fill="#6B4FA0"/></g>
+    <text x="1107" y="534" fill="#0A0A0A" font-size="14" font-weight="600" text-anchor="middle">Product Manager</text>
+    <rect x="1047" y="548" width="120" height="30" rx="7" fill="#0A0A0A"/><text x="1107" y="567" fill="#F5F5F0" font-size="12" font-weight="600" text-anchor="middle">Acquire</text>
+  </g>
+  <text x="574" y="628" fill="#B8B4AC" font-size="12">+ 3 more skins in Technology…</text>
+</svg>

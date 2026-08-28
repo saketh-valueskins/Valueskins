@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Profile Settings (concept)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--near-black:#0A0A0A;--off-white:#F5F5F0;--warm-sand:#C8B89A;--charcoal:#2D2D2D;
+    --deep-sand:#A08A5E;--muted:#B8B4AC;--ease:cubic-bezier(0.16,1,0.3,1);--hair:rgba(160,138,94,0.26);--hair-soft:rgba(160,138,94,0.15);}
+  [data-theme="light"]{--bg:linear-gradient(135deg,#F5F5F0 0%,#F1EDE3 60%,#ECE6D9 100%);
+    --text:#2D2D2D;--head:#0A0A0A;--card:#FFFDF9;--field:#FFFDF9;--divider:rgba(160,138,94,0.18);--chrome:rgba(245,245,240,0.72);--tile-hover:rgba(200,184,154,0.10);--cta-bg:#0A0A0A;--cta-text:#F5F5F0;}
+  [data-theme="dark"]{--bg:radial-gradient(60% 50% at 88% 0%,rgba(160,138,94,0.15),transparent 70%),linear-gradient(135deg,#0A0A0A 0%,#1C1B18 58%,#2D2D2D 100%);
+    --text:#D8D4CC;--head:#F5F5F0;--card:rgba(245,245,240,0.03);--field:rgba(245,245,240,0.04);--divider:rgba(245,245,240,0.12);--chrome:rgba(10,10,10,0.6);--tile-hover:rgba(200,184,154,0.08);--cta-bg:#F5F5F0;--cta-text:#0A0A0A;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}html,body{min-height:100dvh;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;background:var(--bg);background-attachment:fixed;color:var(--text);transition:background .4s var(--ease),color .3s;}
+
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:var(--chrome);backdrop-filter:blur(10px);border-bottom:1px solid var(--divider);}
+  .word{font-weight:700;font-size:22px;letter-spacing:.16em;color:var(--head);}
+  .nav{display:flex;align-items:center;gap:22px;}
+  .nav a{font-size:15px;font-weight:500;color:var(--text);text-decoration:none;}.nav a:hover{color:var(--head);}
+  .b-quiet{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:9px 16px;border-radius:6px;border:1px solid var(--divider);background:transparent;color:var(--head);}
+  .b-quiet:hover{border-color:var(--hair);}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none;border:1px solid var(--divider);border-radius:20px;padding:6px 12px;}
+  .toggle .dw{width:26px;height:14px;border-radius:8px;background:var(--muted);position:relative;transition:background .3s;}
+  .toggle .kb{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--off-white);transition:transform .3s var(--ease);}
+  [data-theme="dark"] .toggle .dw{background:var(--deep-sand);}[data-theme="dark"] .toggle .kb{transform:translateX(12px);}
+
+  .shell{max-width:1180px;margin:0 auto;padding:40px 40px 90px;display:grid;grid-template-columns:236px 1fr;gap:56px;align-items:start;}
+  .rail{position:sticky;top:96px;}
+  .rail .page-title{font-size:22px;font-weight:700;color:var(--head);}
+  .rail .page-sub{font-size:13px;color:var(--muted);margin-top:4px;}
+  .rnav{margin-top:24px;display:flex;flex-direction:column;gap:2px;border-left:1px solid var(--divider);}
+  .rnav a{font-size:14px;font-weight:500;color:var(--muted);text-decoration:none;padding:9px 0 9px 18px;margin-left:-1px;border-left:2px solid transparent;transition:color .18s,border-color .18s;}
+  .rnav a:hover{color:var(--head);}
+  .rnav a.on{color:var(--head);font-weight:600;border-left-color:var(--warm-sand);}
+
+  .content{min-width:0;}
+  .sect{scroll-margin-top:92px;margin-bottom:40px;}
+  .sl{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+  .sl::after{content:"";flex:1;height:1px;background:var(--divider);}
+  .card{border:1px solid var(--divider);border-radius:14px;background:var(--card);padding:24px;margin-bottom:16px;}
+
+  /* hero account identity */
+  .hero{display:flex;gap:22px;align-items:center;border-radius:18px;padding:26px 28px;color:#F5F5F0;
+    background:linear-gradient(160deg,#0A0A0A 0%,#161512 60%,#20201B 100%);border:1px solid rgba(200,184,154,0.24);box-shadow:0 26px 54px -28px rgba(10,10,10,0.5);position:relative;overflow:hidden;}
+  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(50% 70% at 12% 20%,rgba(160,138,94,0.18),transparent 70%);}
+  .hero .av{position:relative;z-index:1;width:92px;height:92px;image-rendering:pixelated;background:rgba(245,245,240,0.05);border:1px solid rgba(200,184,154,0.3);border-radius:14px;padding:10px;flex:none;}
+  .hero .meta{position:relative;z-index:1;flex:1;}
+  .hero .nm{font-size:24px;font-weight:700;color:#F5F5F0;}
+  .hero .em{font-size:14px;color:var(--muted);margin-top:3px;}
+  .hero .pills{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .hpill{font-size:11px;font-weight:600;letter-spacing:.04em;padding:5px 12px;border-radius:20px;border:1px solid rgba(200,184,154,0.35);color:var(--warm-sand);}
+  .hpill.solid{background:var(--warm-sand);color:#0A0A0A;border-color:var(--warm-sand);}
+  .hpill.verify{display:inline-flex;align-items:center;gap:5px;}
+
+  .f{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+  label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  input{font-family:inherit;font-size:15px;color:var(--text);background:var(--field);border:1px solid var(--hair);border-radius:8px;padding:13px 14px;width:100%;transition:border-color .15s,box-shadow .15s;}
+  input:focus{outline:none;border-color:var(--deep-sand);box-shadow:0 0 0 3px rgba(160,138,94,0.16);}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .btn{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:12px 22px;border-radius:6px;border:none;background:var(--cta-bg);color:var(--cta-text);transition:transform .14s;}
+  .btn:hover{transform:translateY(-1px);}.btn:active{transform:scale(.98);}
+  .btn.ghost{background:transparent;border:1px solid var(--hair);color:var(--head);}
+
+  /* quick-link rows */
+  .qrow{display:flex;align-items:center;gap:16px;padding:18px 20px;border:1px solid var(--divider);border-radius:12px;margin-bottom:12px;background:transparent;cursor:pointer;transition:background .18s,border-color .18s,transform .1s;}
+  .qrow:hover{background:var(--tile-hover);border-color:var(--hair);}
+  .qrow:active{transform:scale(.996);}
+  .qrow .av{width:44px;height:44px;image-rendering:pixelated;background:var(--field);border:1px solid var(--hair);border-radius:10px;padding:6px;flex:none;}
+  .qrow .ic{width:40px;height:40px;border-radius:10px;border:1px solid var(--hair);display:flex;align-items:center;justify-content:center;color:var(--deep-sand);flex:none;}
+  .qrow .tx{flex:1;}.qrow .tx .t{font-size:15px;font-weight:600;color:var(--head);}.qrow .tx .s{font-size:13px;color:var(--muted);margin-top:2px;}
+  .qrow .arw{color:var(--muted);}
+
+  /* toggle rows */
+  .trow{display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--divider);}
+  .trow:last-child{border-bottom:none;}
+  .trow .tx{flex:1;}.trow .tx .t{font-size:15px;font-weight:600;color:var(--head);}.trow .tx .s{font-size:13px;color:var(--muted);margin-top:2px;}
+  .sw{width:44px;height:25px;border-radius:13px;background:var(--muted);position:relative;cursor:pointer;flex:none;transition:background .2s var(--ease);}
+  .sw.on{background:var(--warm-sand);}
+  .sw .k{position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;background:#FFFDF9;transition:transform .2s var(--ease);box-shadow:0 1px 2px rgba(0,0,0,.2);}
+  .sw.on .k{transform:translateX(19px);}
+
+  /* payout method */
+  .pay{display:flex;align-items:center;gap:16px;padding:16px 18px;border:1px solid var(--divider);border-radius:12px;margin-bottom:12px;}
+  .pay .badge{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--deep-sand);border:1px solid var(--hair);border-radius:6px;padding:5px 9px;flex:none;}
+  .pay .tx{flex:1;}.pay .tx .t{font-size:15px;font-weight:600;color:var(--head);}.pay .tx .s{font-size:13px;color:var(--muted);margin-top:2px;}
+  .note{font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px;}
+
+  /* theme segmented */
+  .seg{display:flex;gap:8px;}
+  .seg button{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:10px 20px;border:1px solid var(--hair);border-radius:8px;background:var(--field);color:var(--text);transition:background .15s,border-color .15s,color .15s,transform .1s;}
+  .seg button:active{transform:scale(.97);}
+  .seg button.on{background:var(--warm-sand);border-color:var(--warm-sand);color:#0A0A0A;}
+
+  /* danger zone */
+  .danger{border:1px solid rgba(45,45,45,0.22);border-radius:14px;padding:6px 24px;}
+  [data-theme="dark"] .danger{border-color:rgba(245,245,240,0.18);}
+  .drow{display:flex;align-items:center;gap:16px;padding:18px 0;border-bottom:1px solid var(--divider);}
+  .drow:last-child{border-bottom:none;}
+  .drow .tx{flex:1;}.drow .tx .t{font-size:15px;font-weight:600;color:var(--head);}.drow .tx .s{font-size:13px;color:var(--muted);margin-top:2px;}
+  .b-danger{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:10px 20px;border-radius:6px;border:1px solid rgba(45,45,45,0.3);background:transparent;color:var(--charcoal);transition:border-color .15s;}
+  .b-danger:hover{border-color:var(--charcoal);}
+  [data-theme="dark"] .b-danger{color:var(--muted);border-color:rgba(245,245,240,0.28);}[data-theme="dark"] .b-danger:hover{border-color:rgba(245,245,240,0.6);}
+
+  .tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:14px 0;background:var(--chrome);backdrop-filter:blur(8px);border-top:1px solid var(--divider);font-size:13px;}
+  .tabs span{color:var(--muted);}.tabs .active{color:var(--head);font-weight:600;}
+
+  @media(max-width:900px){.shell{grid-template-columns:1fr;gap:26px;}.rail{position:static;}.rnav{flex-direction:row;flex-wrap:wrap;border-left:none;gap:8px;}
+    .rnav a{border-left:none;border:1px solid var(--divider);border-radius:20px;padding:7px 14px;margin-left:0;}.rnav a.on{border-color:var(--warm-sand);}
+    .grid2{grid-template-columns:1fr;}.hero{flex-direction:column;text-align:center;}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}html{scroll-behavior:auto;}}
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="word">VALUESKINS</div>
+    <div class="nav">
+      <a href="#">Profile</a><a href="#">Settings</a>
+      <button class="b-quiet">Logout</button>
+      <button class="b-quiet">Delete Account</button>
+      <div class="toggle" onclick="toggleTheme()"><span id="tl">Light</span><span class="dw"><span class="kb"></span></span></div>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="rail">
+      <div class="page-title">Profile Settings</div>
+      <div class="page-sub">Manage your account</div>
+      <nav class="rnav" id="rnav">
+        <a href="#s-account" class="on">Account</a>
+        <a href="#s-profile">Profile &amp; Skins</a>
+        <a href="#s-notif">Notifications</a>
+        <a href="#s-pay">Payments &amp; Payouts</a>
+        <a href="#s-security">Security</a>
+        <a href="#s-connect">Connections</a>
+        <a href="#s-appear">Appearance</a>
+        <a href="#s-danger">Danger Zone</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+
+      <!-- ACCOUNT -->
+      <section class="sect" id="s-account">
+        <div class="sl">Account</div>
+        <div class="hero">
+          <svg class="av" viewBox="0 0 12 12" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" id="skin"></svg>
+          <div class="meta">
+            <div class="nm">Anshul</div>
+            <div class="em">redhand756@gmail.com</div>
+            <div class="pills">
+              <span class="hpill solid">Professional</span>
+              <span class="hpill">Signal · Level 3</span>
+              <span class="hpill verify"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C8B89A" stroke-width="2.6"><path d="M5 13l4 4L19 7"/></svg> Verified</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="grid2">
+            <div class="f"><label>Display name</label><input value="Anshul"></div>
+            <div class="f"><label>Email</label><input value="redhand756@gmail.com"></div>
+          </div>
+          <button class="btn">Save Changes</button>
+        </div>
+      </section>
+
+      <!-- PROFILE & SKINS -->
+      <section class="sect" id="s-profile">
+        <div class="sl">Profile &amp; Skins</div>
+        <div class="qrow">
+          <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/></svg></div>
+          <div class="tx"><div class="t">Creator Profile</div><div class="s">Bio, social links, portfolio, pitch clip &amp; marketplace settings</div></div>
+          <span class="arw">›</span>
+        </div>
+        <div class="qrow">
+          <svg class="av" viewBox="0 0 12 12" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" id="skin2"></svg>
+          <div class="tx"><div class="t">Manage ValueSkins</div><div class="s">Your worn skin: App Developer · switch or acquire more in the Store</div></div>
+          <span class="arw">›</span>
+        </div>
+      </section>
+
+      <!-- NOTIFICATIONS -->
+      <section class="sect" id="s-notif">
+        <div class="sl">Notifications</div>
+        <div class="card">
+          <div class="trow"><div class="tx"><div class="t">New applications</div><div class="s">When a creator applies to your campaign</div></div><div class="sw on" onclick="tog(this)"><span class="k"></span></div></div>
+          <div class="trow"><div class="tx"><div class="t">Deal updates</div><div class="s">Deliverables, approvals, and revisions</div></div><div class="sw on" onclick="tog(this)"><span class="k"></span></div></div>
+          <div class="trow"><div class="tx"><div class="t">Payouts &amp; invoices</div><div class="s">Payment released, TDS, and invoice records</div></div><div class="sw on" onclick="tog(this)"><span class="k"></span></div></div>
+          <div class="trow"><div class="tx"><div class="t">Product &amp; marketing emails</div><div class="s">Occasional updates from ValueSkins</div></div><div class="sw" onclick="tog(this)"><span class="k"></span></div></div>
+        </div>
+      </section>
+
+      <!-- PAYMENTS & PAYOUTS -->
+      <section class="sect" id="s-pay">
+        <div class="sl">Payments &amp; Payouts</div>
+        <div class="card">
+          <div class="pay"><span class="badge">UPI</span><div class="tx"><div class="t">anshul@okhdfcbank</div><div class="s">Primary payout method</div></div><button class="b-quiet">Edit</button></div>
+          <div class="pay"><span class="badge">PAN</span><div class="tx"><div class="t">••••• 4821 F</div><div class="s">Required for TDS (Section 194R) &amp; identity</div></div><button class="b-quiet">Update</button></div>
+          <p class="note">TDS is deducted at source on creator payouts and remitted quarterly; Form 16A is issued each quarter. <a href="#" style="color:var(--deep-sand)">View statements →</a></p>
+        </div>
+      </section>
+
+      <!-- SECURITY -->
+      <section class="sect" id="s-security">
+        <div class="sl">Security</div>
+        <div class="card">
+          <div class="trow"><div class="tx"><div class="t">Two-factor authentication</div><div class="s">Require an OTP on new-device sign-in</div></div><div class="sw" onclick="tog(this)"><span class="k"></span></div></div>
+          <div class="trow"><div class="tx"><div class="t">Active sessions</div><div class="s">2 devices · Mumbai, IN</div></div><button class="b-quiet">Review</button></div>
+          <div class="trow"><div class="tx"><div class="t">Login history</div><div class="s">See recent sign-ins to your account</div></div><span class="arw" style="color:var(--muted)">›</span></div>
+        </div>
+      </section>
+
+      <!-- CONNECTIONS -->
+      <section class="sect" id="s-connect">
+        <div class="sl">Connected Accounts</div>
+        <div class="card">
+          <div class="trow"><div class="tx"><div class="t">Google</div><div class="s">redhand756@gmail.com · used for sign-in</div></div><span class="hpill verify" style="color:var(--deep-sand);border:1px solid var(--hair)">Connected</span></div>
+          <div class="trow"><div class="tx"><div class="t">Instagram</div><div class="s">Verify reach &amp; engagement via official Meta connection</div></div><button class="btn ghost">Connect</button></div>
+        </div>
+      </section>
+
+      <!-- APPEARANCE -->
+      <section class="sect" id="s-appear">
+        <div class="sl">Appearance</div>
+        <div class="card">
+          <div class="trow" style="border:none;padding-top:0"><div class="tx"><div class="t">Theme</div><div class="s">Choose how ValueSkins looks for you</div></div>
+            <div class="seg" id="theme-seg"><button class="on" data-t="light">Light</button><button data-t="dark">Dark</button><button data-t="system">System</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DANGER ZONE -->
+      <section class="sect" id="s-danger">
+        <div class="sl">Danger Zone</div>
+        <div class="danger">
+          <div class="drow"><div class="tx"><div class="t">Log out</div><div class="s">Sign out of this device</div></div><button class="b-danger">Log out</button></div>
+          <div class="drow"><div class="tx"><div class="t">Delete account</div><div class="s">Permanently erase your account (GDPR Art. 17) — 30 day process</div></div><button class="b-danger">Delete account</button></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="tabs"><span>Profile</span><span>Market</span><span>Store</span><span class="active">Settings</span></div>
+
+<script>
+  function devSprite(fig,sec){return [[4,1,4,fig],[3,2,6,fig],[3,3,6,sec],[4,4,4,fig],[2,5,8,sec],[1,6,10,sec],[1,7,10,fig],[2,8,8,'#A08A5E'],[1,9,10,'#A08A5E'],[3,10,6,'#C8B89A']].map(([x,y,w,c])=>`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c}"/>`).join('');}
+  function paint(){const d=document.documentElement.getAttribute('data-theme')==='dark';
+    document.getElementById('skin').innerHTML=devSprite('#F5F5F0','#B8B4AC');
+    document.getElementById('skin2').innerHTML=devSprite(d?'#F5F5F0':'#0A0A0A',d?'#B8B4AC':'#2D2D2D');}
+  function setTheme(t){const el=document.documentElement;el.setAttribute('data-theme',t==='dark'?'dark':'light');
+    document.getElementById('tl').textContent=t==='dark'?'Dark':'Light';paint();}
+  function toggleTheme(){const d=document.documentElement.getAttribute('data-theme')==='dark';setTheme(d?'light':'dark');
+    document.querySelectorAll('#theme-seg button').forEach(b=>b.classList.toggle('on',b.dataset.t===(d?'light':'dark')));}
+  function tog(el){el.classList.toggle('on');}
+  document.querySelectorAll('#theme-seg button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#theme-seg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');if(b.dataset.t!=='system')setTheme(b.dataset.t);}));
+
+  const links=[...document.querySelectorAll('.rnav a')];
+  const map=Object.fromEntries(links.map(a=>[a.getAttribute('href').slice(1),a]));
+  const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('on'));map[e.target.id]?.classList.add('on');}});},{rootMargin:'-35% 0px -60% 0px'});
+  document.querySelectorAll('.sect').forEach(s=>obs.observe(s));
+  paint();
+</script>
+</body>
+</html>

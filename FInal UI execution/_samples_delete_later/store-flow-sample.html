@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Store purchase flow (concept)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--near-black:#0A0A0A;--off-white:#F5F5F0;--warm-sand:#C8B89A;--charcoal:#2D2D2D;--deep-sand:#A08A5E;--muted:#B8B4AC;--ease:cubic-bezier(0.16,1,0.3,1);}
+  [data-theme="light"]{--bg:radial-gradient(72% 55% at 82% -8%,rgba(160,138,94,0.18),transparent 62%),linear-gradient(150deg,#F4F3EE 0%,#EFEADF 55%,#E4DCCB 100%);
+    --head:#0A0A0A;--text:#3A362E;--muted2:#6E6A60;--card:#FFFFFF;--cardbrd:rgba(160,138,94,0.30);--field:#FFFFFF;--divider:rgba(160,138,94,0.18);--chrome:rgba(245,245,240,0.78);--tile-hover:rgba(200,184,154,0.12);--cta-bg:#0A0A0A;--cta-text:#F5F5F0;}
+  [data-theme="dark"]{--bg:radial-gradient(60% 50% at 88% 0%,rgba(160,138,94,0.15),transparent 70%),linear-gradient(135deg,#0A0A0A 0%,#1C1B18 58%,#2D2D2D 100%);
+    --head:#F5F5F0;--text:#C9C5BC;--muted2:#8A867E;--card:rgba(245,245,240,0.04);--cardbrd:rgba(245,245,240,0.14);--field:rgba(245,245,240,0.05);--divider:rgba(245,245,240,0.12);--chrome:rgba(10,10,10,0.6);--tile-hover:rgba(200,184,154,0.08);--cta-bg:#F5F5F0;--cta-text:#0A0A0A;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100dvh;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;color:var(--text);background:var(--bg);background-attachment:fixed;transition:color .3s;}
+
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:var(--chrome);backdrop-filter:blur(10px);border-bottom:1px solid var(--divider);}
+  .word{font-weight:700;font-size:20px;letter-spacing:.18em;color:var(--head);}
+  .nav{display:flex;align-items:center;gap:20px;}
+  .nav a{font-size:15px;font-weight:500;color:var(--text);text-decoration:none;cursor:pointer;}.nav a:hover{color:var(--head);}
+  .nav a.on{color:var(--head);font-weight:600;}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer;user-select:none;border:1px solid var(--divider);border-radius:20px;padding:6px 12px;}
+  .toggle .dw{width:26px;height:14px;border-radius:8px;background:var(--muted);position:relative;transition:background .3s;}
+  .toggle .kb{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--off-white);transition:transform .3s var(--ease);}
+  [data-theme="dark"] .toggle .dw{background:var(--deep-sand);}[data-theme="dark"] .toggle .kb{transform:translateX(12px);}
+
+  .wrap{max-width:1060px;margin:0 auto;padding:44px 40px 100px;}
+  h1{font-size:32px;font-weight:700;color:var(--head);letter-spacing:-.01em;}
+  .sub{margin-top:8px;font-size:15px;color:var(--muted2);}
+
+  .search{margin:26px 0 8px;position:relative;}
+  .search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:16px;height:16px;}
+  .search input{width:100%;font-family:inherit;font-size:15px;color:var(--text);background:var(--field);border:1px solid var(--cardbrd);border-radius:10px;padding:14px 16px 14px 44px;transition:border-color .15s,box-shadow .15s;}
+  .search input::placeholder{color:var(--muted);}
+  .search input:focus{outline:none;border-color:var(--deep-sand);box-shadow:0 0 0 3px rgba(160,138,94,0.16);}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px;}
+  .cat{border:1px solid var(--divider);border-radius:12px;padding:20px 22px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:transparent;transition:background .18s,border-color .18s,transform .12s;}
+  .cat:hover{background:var(--tile-hover);border-color:var(--cardbrd);}
+  .cat:active{transform:scale(.996);}
+  .cat .nm{font-size:16px;font-weight:600;color:var(--head);}
+  .cat .rt{display:flex;align-items:center;gap:12px;}
+  .cat .ct{font-size:13px;color:var(--muted2);}
+  .cat .chev{color:var(--muted);}
+
+  /* overlays */
+  .backdrop{position:fixed;inset:0;background:rgba(10,10,10,0.55);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:50;}
+  .backdrop.open{opacity:1;pointer-events:auto;}
+  .modal{background:var(--card);border:1px solid var(--cardbrd);border-radius:16px;max-width:560px;width:100%;max-height:86vh;overflow-y:auto;padding:26px 28px;color:var(--text);
+    opacity:0;transform:scale(.97) translateY(8px);transition:opacity .24s var(--ease),transform .24s var(--ease);}
+  .backdrop.open .modal{opacity:1;transform:none;}
+  .m-head{display:flex;align-items:center;gap:10px;}
+  .m-head h2{font-size:21px;font-weight:700;color:var(--head);}
+  .m-max{font-size:11px;font-weight:600;color:var(--muted2);border:1px solid var(--divider);border-radius:20px;padding:3px 9px;}
+  .m-close{margin-left:auto;width:32px;height:32px;border:1px solid var(--divider);border-radius:8px;background:transparent;color:var(--head);cursor:pointer;}
+  .m-note{font-size:13.5px;color:var(--muted2);margin-top:8px;line-height:1.5;}
+
+  .skins{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;}
+  .skin{border:1px solid var(--divider);border-radius:12px;padding:16px;text-align:center;cursor:pointer;background:var(--field);transition:border-color .15s,transform .1s,box-shadow .15s;}
+  .skin:hover{border-color:var(--deep-sand);box-shadow:0 12px 26px -18px rgba(90,70,30,.4);}
+  .skin:active{transform:scale(.98);}
+  .skin .av{width:64px;height:64px;image-rendering:pixelated;margin:0 auto 10px;display:block;}
+  .skin .nm{font-size:14px;font-weight:600;color:var(--head);}
+
+  /* confirm */
+  .confirm{text-align:center;}
+  .confirm .big{width:120px;height:120px;image-rendering:pixelated;margin:6px auto 4px;display:block;}
+  .confirm h2{font-size:22px;color:var(--head);margin-top:6px;}
+  .confirm .price{margin-top:6px;font-size:15px;color:var(--muted2);}
+  .confirm .price b{color:var(--head);}
+  .confirm .desc{margin:14px auto 0;max-width:360px;font-size:14px;color:var(--muted2);line-height:1.5;}
+  .actions{display:flex;gap:12px;margin-top:24px;}
+  .btn{flex:1;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:14px;border-radius:8px;border:none;background:var(--cta-bg);color:var(--cta-text);transition:transform .14s;}
+  .btn:hover{transform:translateY(-1px);}.btn:active{transform:scale(.99);}
+  .btn.ghost{background:transparent;border:1px solid var(--cardbrd);color:var(--head);}
+
+  /* razorpay (fake) */
+  .rzp{max-width:420px;}
+  .rzp-top{display:flex;align-items:center;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--divider);}
+  .rzp-logo{width:34px;height:34px;border-radius:8px;background:#0A0A0A;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .rzp-top .t{font-size:14px;font-weight:600;color:var(--head);}.rzp-top .s{font-size:12px;color:var(--muted2);}
+  .rzp-top .amt{margin-left:auto;font-size:20px;font-weight:700;color:var(--head);}
+  .rzp-methods{margin-top:16px;display:flex;flex-direction:column;gap:10px;}
+  .rmethod{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--divider);border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;}
+  .rmethod:hover{border-color:var(--deep-sand);}
+  .rmethod.on{border-color:var(--head);background:rgba(200,184,154,0.12);}
+  .rmethod .ic{width:30px;height:30px;border-radius:7px;border:1px solid var(--divider);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--deep-sand);}
+  .rmethod .t{font-size:14px;font-weight:600;color:var(--head);}.rmethod .s{font-size:12px;color:var(--muted2);}
+  .rzp-pay{margin-top:18px;}
+  .rzp-secure{margin-top:12px;text-align:center;font-size:11px;color:var(--muted2);}
+  .rzp-state{text-align:center;padding:26px 0;}
+  .spinner{width:40px;height:40px;border-radius:50%;border:3px solid var(--divider);border-top-color:var(--deep-sand);margin:0 auto 16px;animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .check{width:56px;height:56px;border-radius:50%;background:var(--warm-sand);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;animation:pop .4s var(--ease);}
+  @keyframes pop{0%{transform:scale(0);}70%{transform:scale(1.15);}100%{transform:scale(1);}}
+
+  /* ===== profile view ===== */
+  .view{display:none;}.view.on{display:block;}
+  .pwrap{max-width:820px;margin:0 auto;padding:48px 32px 90px;}
+  .hero{display:flex;gap:36px;align-items:center;border-radius:22px;overflow:hidden;padding:40px;color:#F5F5F0;
+    background:linear-gradient(160deg,#0A0A0A 0%,#161512 60%,#20201B 100%);border:1px solid rgba(200,184,154,0.24);box-shadow:0 34px 70px -30px rgba(10,10,10,0.55);position:relative;}
+  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(50% 60% at 18% 30%,rgba(160,138,94,0.20),transparent 70%);}
+  .frame{position:relative;z-index:1;flex:none;width:190px;height:190px;border-radius:18px;background:rgba(245,245,240,0.04);border:1px solid rgba(200,184,154,0.3);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 1px 0 rgba(245,245,240,0.08);}
+  .frame svg{width:150px;height:150px;image-rendering:pixelated;}
+  .frame.empty{color:var(--muted);font-size:12px;text-align:center;padding:16px;}
+  .frame.impact{animation:impact .5s var(--ease);}
+  @keyframes impact{0%{box-shadow:inset 0 1px 0 rgba(245,245,240,0.08),0 0 0 0 rgba(200,184,154,0.6);}40%{box-shadow:inset 0 1px 0 rgba(245,245,240,0.08),0 0 0 18px rgba(200,184,154,0);}100%{box-shadow:inset 0 1px 0 rgba(245,245,240,0.08),0 0 0 0 rgba(200,184,154,0);}}
+  .hero.shake{animation:shake .4s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-6px);}40%{transform:translateX(5px);}60%{transform:translateX(-3px);}80%{transform:translateX(2px);}}
+  .hmeta{position:relative;z-index:1;}
+  .hmeta .nm{font-size:32px;font-weight:700;color:#F5F5F0;}
+  .hmeta .role{margin-top:6px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+  .hmeta .wearing{margin-top:16px;font-size:15px;color:#C9C5BC;}
+  .hmeta .wearing b{color:#F5F5F0;}
+  .hmeta .pills{display:flex;gap:10px;margin-top:14px;}
+  .hpill{font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;border:1px solid rgba(200,184,154,0.35);color:var(--warm-sand);}
+  .hpill.solid{background:var(--warm-sand);color:#0A0A0A;border-color:var(--warm-sand);}
+  .equip-toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);background:#0A0A0A;color:#F5F5F0;border:1px solid rgba(200,184,154,.4);padding:12px 22px;border-radius:30px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s var(--ease);z-index:80;}
+  .equip-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .equip-toast .s{color:var(--warm-sand);}
+
+  /* flyer (the slap) */
+  .flyer{position:fixed;z-index:70;image-rendering:pixelated;pointer-events:none;left:0;top:0;will-change:transform;filter:drop-shadow(0 20px 40px rgba(0,0,0,.5));}
+
+  .tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:14px 0;background:var(--chrome);backdrop-filter:blur(8px);border-top:1px solid var(--divider);font-size:13px;z-index:10;}
+  .tabs span{color:var(--muted);cursor:pointer;}.tabs .active{color:var(--head);font-weight:600;}
+
+  @media(max-width:760px){.grid,.skins{grid-template-columns:1fr;}.hero{flex-direction:column;text-align:center;}.hmeta .pills{justify-content:center;}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="word">VALUESKINS</div>
+    <div class="nav">
+      <a onclick="showView('store')" id="nav-store" class="on">Store</a>
+      <a onclick="showView('profile')" id="nav-profile">Profile</a>
+      <div class="toggle" onclick="toggleTheme()"><span id="tl">Light</span><span class="dw"><span class="kb"></span></span></div>
+    </div>
+  </header>
+
+  <!-- STORE -->
+  <div class="view on" id="view-store">
+    <div class="wrap">
+      <h1>ValueSkins Closet</h1>
+      <p class="sub">Pick the profession that becomes your identity. Same closet for creators and brands.</p>
+      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="#A08A5E" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="Search professions…" oninput="renderCats()"></div>
+      <div class="grid" id="cats"></div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="view" id="view-profile">
+    <div class="pwrap">
+      <div class="hero" id="hero">
+        <div class="frame empty" id="frame">Your ValueSkin<br>appears here</div>
+        <div class="hmeta">
+          <div class="nm">Anshul</div>
+          <div class="role">Creator</div>
+          <div class="wearing" id="wearing">No ValueSkin yet — visit the Store.</div>
+          <div class="pills"><span class="hpill solid">Professional</span><span class="hpill">Signal · Level 3</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORY MODAL -->
+  <div class="backdrop" id="catModal">
+    <div class="modal">
+      <div class="m-head"><h2 id="cat-title">Category</h2><span class="m-max">0/1 max</span><button class="m-close" onclick="close_('catModal')">✕</button></div>
+      <p class="m-note">Tap any badge to purchase (<b>₹950</b>) and instantly apply it as your ValueSkin.</p>
+      <div class="skins" id="cat-skins"></div>
+    </div>
+  </div>
+
+  <!-- CONFIRM MODAL -->
+  <div class="backdrop" id="confirmModal">
+    <div class="modal confirm">
+      <svg class="big" id="confirm-av" viewBox="0 0 12 12" shape-rendering="crispEdges"></svg>
+      <h2 id="confirm-name">Skin</h2>
+      <p class="price">One-time · <b>₹950</b></p>
+      <p class="desc">This becomes your ValueSkin — the identity brands see everywhere on the platform. One active skin at a time.</p>
+      <div class="actions">
+        <button class="btn ghost" onclick="close_('confirmModal')">Cancel</button>
+        <button class="btn" onclick="goPay()">Continue to payment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RAZORPAY (fake) -->
+  <div class="backdrop" id="payModal">
+    <div class="modal rzp" id="rzp-body"></div>
+  </div>
+
+  <div class="equip-toast" id="toast"></div>
+
+<script>
+  // ================= pixel character generator (colorful default skins) =================
+  function charSVG(shirt,skin,hair,prop){
+    const eye='#141414';
+    const rows=[
+      [4,1,4,hair],[3,2,6,hair],
+      [3,3,6,skin],[3,4,6,skin],[4,5,4,skin],
+      [3,6,6,shirt],[2,7,8,shirt],[2,8,8,shirt],[2,9,8,shirt],
+      [1,7,1,skin],[10,7,1,skin],
+      [5,10,2,prop]
+    ];
+    let s=rows.map(([x,y,w,c])=>`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c}"/>`).join('');
+    s+=`<rect x="4" y="4" width="1" height="1" fill="${eye}"/><rect x="7" y="4" width="1" height="1" fill="${eye}"/>`;
+    return s;
+  }
+  const SKINTONES=['#E8B98A','#C68642','#8D5524','#F1C9A5'];
+  const HAIRS=['#241C15','#3A2A1A','#111111','#5A3A1A'];
+  // category → accent shirt color + profession list
+  const CATS={
+    'Technology':{c:'#3B6FB0',n:['Software Engineer','Data Scientist','Product Manager','DevOps Engineer','UX/UI Designer','AI/ML Specialist','Security Researcher']},
+    'Entertainment':{c:'#B0413B',n:['Actor','Comedian','Musician','Producer','Director','Screenwriter','Animator','Voice Actor','Dancer']},
+    'Healthcare':{c:'#2E8B8B',n:['Doctor','Surgeon','Nurse','Pharmacist','Therapist','Nutritionist','Veterinarian']},
+    'Legal':{c:'#6B4FA0',n:['Lawyer','Attorney','Judge','Corporate Lawyer','Paralegal']},
+    'Business & Finance':{c:'#C8A24A',n:['CEO','Entrepreneur','Operations Manager','Consultant','Financial Advisor','Trader','Investment Banker','Crypto Analyst']},
+    'Education':{c:'#C0603B',n:['Teacher','Professor','Tutor','EdTech Creator']},
+    'Food & Beverage':{c:'#C64B7A',n:['Chef','Pastry Chef','Food Critic','Food Photographer','Sommelier']},
+    'Sports & Fitness':{c:'#3BA05A',n:['Professional Athlete','Fitness Coach','Yoga Instructor','Sports Manager']},
+    'Creative':{c:'#B04FA0',n:['Graphic Designer','Digital Artist','Illustrator','Photographer','Motion Designer','3D Artist']},
+    'Gaming':{c:'#7A3BB0',n:['Game Developer','Esports Pro','Game Streamer','Game Tester']},
+    'Content':{c:'#B0873B',n:['Content Creator','Educational Creator','Podcast Host','Video Creator','Streamer']},
+    'Media & Journalism':{c:'#3B7AB0',n:['Journalist','Reporter','Editor','Photojournalist']}
+  };
+  function skinFor(cat,name){const list=CATS[cat].n;const i=list.indexOf(name);
+    return charSVG(CATS[cat].c,SKINTONES[i%SKINTONES.length],HAIRS[(i+1)%HAIRS.length],'#C8B89A');}
+  function svgWrap(inner,size){return `<svg viewBox="0 0 12 12" shape-rendering="crispEdges" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;}
+
+  // ================= store render =================
+  function renderCats(){
+    const q=(document.getElementById('q').value||'').toLowerCase();
+    const el=document.getElementById('cats');el.innerHTML='';
+    Object.entries(CATS).forEach(([cat,data])=>{
+      const matches=cat.toLowerCase().includes(q)||data.n.some(n=>n.toLowerCase().includes(q));
+      if(q&&!matches)return;
+      const d=document.createElement('div');d.className='cat';
+      d.innerHTML=`<span class="nm">${cat}</span><span class="rt"><span class="ct">${data.n.length} skins</span><span class="chev">›</span></span>`;
+      d.onclick=()=>openCat(cat);el.appendChild(d);
+    });
+  }
+
+  let picked=null;
+  function openCat(cat){
+    document.getElementById('cat-title').textContent=cat;
+    const grid=document.getElementById('cat-skins');grid.innerHTML='';
+    CATS[cat].n.forEach(name=>{
+      const el=document.createElement('div');el.className='skin';
+      el.innerHTML=`${svgWrap(skinFor(cat,name),64)}<div class="nm">${name}</div>`;
+      el.onclick=()=>pickSkin(cat,name);grid.appendChild(el);
+    });
+    open_('catModal');
+  }
+  function pickSkin(cat,name){
+    picked={cat,name,svg:skinFor(cat,name)};
+    close_('catModal');
+    document.getElementById('confirm-av').innerHTML=picked.svg;
+    document.getElementById('confirm-name').textContent=name;
+    setTimeout(()=>open_('confirmModal'),180);
+  }
+
+  // ================= payment (fake Razorpay) =================
+  function goPay(){close_('confirmModal');setTimeout(()=>{renderPay();open_('payModal');},180);}
+  function renderPay(){
+    document.getElementById('rzp-body').innerHTML=`
+      <div class="rzp-top"><div class="rzp-logo">R</div><div><div class="t">ValueSkins</div><div class="s">Razorpay secure checkout</div></div><div class="amt">₹950</div></div>
+      <div class="rzp-methods">
+        <div class="rmethod on" onclick="selM(this)"><div class="ic">UPI</div><div><div class="t">UPI</div><div class="s">GPay · PhonePe · Paytm</div></div></div>
+        <div class="rmethod" onclick="selM(this)"><div class="ic">CARD</div><div><div class="t">Card</div><div class="s">Visa · Mastercard · RuPay</div></div></div>
+        <div class="rmethod" onclick="selM(this)"><div class="ic">NB</div><div><div class="t">Netbanking</div><div class="s">All major banks</div></div></div>
+      </div>
+      <button class="btn rzp-pay" onclick="payNow()">Pay ₹950</button>
+      <div class="rzp-secure">🔒 Demo checkout — no real payment. Powered by Razorpay (mock).</div>`;
+  }
+  function selM(el){document.querySelectorAll('.rmethod').forEach(m=>m.classList.remove('on'));el.classList.add('on');}
+  function payNow(){
+    document.getElementById('rzp-body').innerHTML=`<div class="rzp-state"><div class="spinner"></div><div style="font-size:15px;color:var(--head);font-weight:600">Processing payment…</div><div style="font-size:13px;color:var(--muted2);margin-top:6px">₹950 · secure</div></div>`;
+    setTimeout(paySuccess,1600);
+  }
+  function paySuccess(){
+    document.getElementById('rzp-body').innerHTML=`<div class="rzp-state"><div class="check"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="3" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg></div><div style="font-size:18px;color:var(--head);font-weight:700">Payment complete</div><div style="font-size:13px;color:var(--muted2);margin-top:6px">Applying <b>${picked.name}</b> to your profile…</div></div>`;
+    setTimeout(slapToProfile,950);
+  }
+
+  // ================= the SLAP =================
+  function slapToProfile(){
+    close_('payModal');
+    // go to profile with empty frame
+    showView('profile');
+    const frame=document.getElementById('frame');
+    frame.className='frame empty';frame.innerHTML='';
+    // build flyer at screen center, large
+    const flyer=document.createElement('div');flyer.className='flyer';
+    flyer.innerHTML=svgWrap(picked.svg,220);
+    document.body.appendChild(flyer);
+    const fw=220;
+    flyer.style.left=(innerWidth/2 - fw/2)+'px';
+    flyer.style.top=(innerHeight/2 - fw/2)+'px';
+    flyer.style.transform='scale(.3) rotate(-8deg)';
+    flyer.style.opacity='0';
+    // measure target
+    requestAnimationFrame(()=>{
+      // phase 1: rise/scale up at center
+      flyer.style.transition='transform .32s var(--ease),opacity .2s ease';
+      flyer.style.transform='scale(1.15) rotate(3deg)';flyer.style.opacity='1';
+      setTimeout(()=>{
+        const r=frame.getBoundingClientRect();
+        const tx=r.left + r.width/2 - (innerWidth/2);
+        const ty=r.top + r.height/2 - (innerHeight/2);
+        const k=(r.width*0.8)/fw;
+        // phase 2: SLAM into the frame (ease-in accelerates → impact)
+        flyer.style.transition='transform .34s cubic-bezier(0.5,0,0.85,0.2)';
+        flyer.style.transform=`translate(${tx}px,${ty}px) scale(${k}) rotate(0deg)`;
+        flyer.addEventListener('transitionend',land,{once:true});
+      },360);
+    });
+    function land(){
+      // place real skin, impact + shake
+      frame.className='frame';frame.innerHTML=svgWrap(picked.svg,150);
+      frame.classList.add('impact');document.getElementById('hero').classList.add('shake');
+      document.getElementById('wearing').innerHTML=`Wearing <b>${picked.name}</b> · ${picked.cat}`;
+      flyer.remove();
+      setTimeout(()=>{frame.classList.remove('impact');document.getElementById('hero').classList.remove('shake');},520);
+      // toast
+      const t=document.getElementById('toast');t.innerHTML=`<span class="s">Equipped</span> — ${picked.name} is now your ValueSkin`;
+      t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);
+    }
+  }
+
+  // ================= plumbing =================
+  function open_(id){document.getElementById(id).classList.add('open');}
+  function close_(id){document.getElementById(id).classList.remove('open');}
+  document.querySelectorAll('.backdrop').forEach(b=>b.addEventListener('click',e=>{if(e.target===b)b.classList.remove('open');}));
+  function showView(v){
+    document.getElementById('view-store').classList.toggle('on',v==='store');
+    document.getElementById('view-profile').classList.toggle('on',v==='profile');
+    document.getElementById('nav-store').classList.toggle('on',v==='store');
+    document.getElementById('nav-profile').classList.toggle('on',v==='profile');
+    scrollTo(0,0);
+  }
+  function toggleTheme(){const el=document.documentElement;const d=el.getAttribute('data-theme')==='dark';el.setAttribute('data-theme',d?'light':'dark');document.getElementById('tl').textContent=d?'Light':'Dark';}
+  renderCats();
+</script>
+</body>
+</html>

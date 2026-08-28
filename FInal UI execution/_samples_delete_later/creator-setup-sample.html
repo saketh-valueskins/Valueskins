@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Creator Setup (concept)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--near-black:#0A0A0A;--off-white:#F5F5F0;--warm-sand:#C8B89A;--charcoal:#2D2D2D;--deep-sand:#A08A5E;--muted:#B8B4AC;--ease:cubic-bezier(0.16,1,0.3,1);}
+  [data-theme="light"]{--bg:radial-gradient(72% 55% at 82% -8%,rgba(160,138,94,0.22),transparent 62%),linear-gradient(150deg,#F4F3EE 0%,#EFEADF 55%,#E4DCCB 100%);
+    --head:#0A0A0A;--text:#3A362E;--muted2:#6E6A60;--card:#FFFFFF;--cardbrd:rgba(160,138,94,0.34);--field:#FFFFFF;--track:rgba(160,138,94,0.20);--chrome:rgba(245,245,240,0.72);--tile-hover:rgba(200,184,154,0.12);--cta-bg:#0A0A0A;--cta-text:#F5F5F0;}
+  [data-theme="dark"]{--bg:radial-gradient(60% 50% at 88% 0%,rgba(160,138,94,0.15),transparent 70%),linear-gradient(135deg,#0A0A0A 0%,#1C1B18 58%,#2D2D2D 100%);
+    --head:#F5F5F0;--text:#C9C5BC;--muted2:#8A867E;--card:rgba(245,245,240,0.03);--cardbrd:rgba(245,245,240,0.12);--field:rgba(245,245,240,0.04);--track:rgba(245,245,240,0.12);--chrome:rgba(10,10,10,0.6);--tile-hover:rgba(200,184,154,0.08);--cta-bg:#F5F5F0;--cta-text:#0A0A0A;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100dvh;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;color:var(--text);background:var(--bg);background-attachment:fixed;transition:color .3s;}
+
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:var(--chrome);backdrop-filter:blur(10px);border-bottom:1px solid var(--cardbrd);}
+  .word{font-weight:700;font-size:20px;letter-spacing:.18em;color:var(--head);}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer;user-select:none;border:1px solid var(--cardbrd);border-radius:20px;padding:6px 12px;}
+  .toggle .dw{width:26px;height:14px;border-radius:8px;background:var(--muted);position:relative;transition:background .3s;}
+  .toggle .kb{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--off-white);transition:transform .3s var(--ease);}
+  [data-theme="dark"] .toggle .dw{background:var(--deep-sand);}[data-theme="dark"] .toggle .kb{transform:translateX(12px);}
+
+  /* progress */
+  .prog-wrap{max-width:1120px;margin:0 auto;padding:26px 40px 0;}
+  .segs{display:flex;gap:8px;}
+  .seg{flex:1;height:4px;border-radius:2px;background:var(--track);overflow:hidden;}
+  .seg i{display:block;height:100%;width:0;background:var(--deep-sand);transition:width .5s var(--ease);}
+  .seg.done i{width:100%;}.seg.active i{width:100%;}
+  .prog-meta{display:flex;justify-content:space-between;margin-top:12px;font-size:13px;color:var(--muted2);}
+  .prog-meta .step{font-weight:600;color:var(--head);}
+
+  /* layout */
+  .shell{max-width:1120px;margin:0 auto;padding:30px 40px 60px;display:grid;grid-template-columns:1fr 380px;gap:48px;align-items:start;}
+  .stage{min-height:340px;position:relative;}
+  .step-view{opacity:0;transform:translateY(14px);transition:opacity .35s var(--ease),transform .35s var(--ease);position:absolute;inset:0;pointer-events:none;}
+  .step-view.in{opacity:1;transform:none;pointer-events:auto;position:relative;}
+  h2{font-size:26px;font-weight:700;color:var(--head);letter-spacing:-.01em;}
+  .lead{margin-top:8px;font-size:15px;color:var(--muted2);max-width:460px;line-height:1.5;}
+
+  .f{display:flex;flex-direction:column;gap:8px;margin-top:22px;}
+  label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);}
+  input{font-family:inherit;font-size:16px;color:var(--text);background:var(--field);border:1px solid var(--cardbrd);border-radius:8px;padding:14px 15px;width:100%;transition:border-color .15s,box-shadow .15s;}
+  input::placeholder{color:var(--muted);}
+  input:focus{outline:none;border-color:var(--deep-sand);box-shadow:0 0 0 3px rgba(160,138,94,0.16);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+  .search{position:relative;margin-top:20px;}
+  .search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:16px;height:16px;}
+  .search input{padding-left:42px;}
+  .prof-scroll{margin-top:16px;max-height:300px;overflow-y:auto;padding-right:6px;}
+  .prof-cat{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);margin:14px 0 10px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{font-family:inherit;font-size:13.5px;font-weight:500;cursor:pointer;padding:9px 15px;border:1px solid var(--cardbrd);border-radius:20px;background:var(--field);color:var(--text);transition:background .15s,border-color .15s,color .15s,transform .1s;}
+  .chip:hover{border-color:var(--deep-sand);}.chip:active{transform:scale(.97);}
+  .chip.on{background:var(--warm-sand);border-color:var(--warm-sand);color:#0A0A0A;font-weight:600;}
+
+  .multi .chip.on{background:var(--warm-sand);}
+  .seg-choice{display:flex;flex-direction:column;gap:10px;margin-top:18px;}
+  .choice{cursor:pointer;padding:15px 18px;border:1px solid var(--cardbrd);border-radius:10px;background:var(--field);transition:background .15s,border-color .15s,transform .1s;}
+  .choice:active{transform:scale(.996);}
+  .choice.on{border:1.5px solid var(--head);background:rgba(200,184,154,0.14);}
+  .choice .t{font-size:15px;font-weight:600;color:var(--head);}
+  .choice .s{font-size:13px;color:var(--muted2);margin-top:3px;}
+
+  .rate-row{display:flex;align-items:center;gap:10px;margin-top:8px;}
+  .rate-row .cur{font-size:16px;color:var(--muted2);}
+
+  .review{margin-top:22px;border:1px solid var(--cardbrd);border-radius:12px;overflow:hidden;background:var(--card);}
+  .rrow{display:flex;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--cardbrd);font-size:14px;}
+  .rrow:last-child{border-bottom:none;}.rrow .k{color:var(--muted2);}.rrow .v{color:var(--head);font-weight:500;}
+
+  /* nav */
+  .nav{display:flex;align-items:center;gap:12px;margin-top:30px;}
+  .btn{font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:14px 30px;border-radius:8px;border:none;background:var(--cta-bg);color:var(--cta-text);transition:transform .14s;}
+  .btn:hover{transform:translateY(-1px);}.btn:active{transform:scale(.99);}
+  .btn.ghost{background:transparent;border:1px solid var(--cardbrd);color:var(--head);}
+  .skip{margin-left:auto;font-size:14px;color:var(--muted2);text-decoration:none;cursor:pointer;}
+  .skip:hover{color:var(--head);}
+
+  /* live preview card */
+  .preview{position:sticky;top:110px;}
+  .plabel{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);margin-bottom:12px;}
+  .plabel .d{width:7px;height:7px;border-radius:50%;background:var(--deep-sand);animation:breathe 2.6s var(--ease) infinite;}
+  @keyframes breathe{0%,100%{opacity:.4;transform:scale(.8);}50%{opacity:1;transform:scale(1.2);}}
+  .pcard{border-radius:18px;padding:26px;color:#F5F5F0;background:linear-gradient(160deg,#0A0A0A 0%,#161512 60%,#20201B 100%);border:1px solid rgba(200,184,154,0.24);box-shadow:0 26px 54px -28px rgba(10,10,10,0.5);position:relative;overflow:hidden;}
+  .pcard::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(55% 60% at 15% 10%,rgba(160,138,94,0.16),transparent 70%);}
+  .pav{position:relative;z-index:1;width:96px;height:96px;image-rendering:pixelated;background:rgba(245,245,240,0.05);border:1px solid rgba(200,184,154,0.3);border-radius:14px;padding:10px;margin:0 auto;display:block;}
+  .pav.empty{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;text-align:center;padding:14px;}
+  .pname{position:relative;z-index:1;text-align:center;margin-top:16px;font-size:20px;font-weight:700;color:#F5F5F0;transition:opacity .25s;}
+  .phandle{position:relative;z-index:1;text-align:center;font-size:13px;color:var(--muted);margin-top:3px;min-height:16px;}
+  .ppills{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:14px;min-height:26px;}
+  .ppill{font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;border:1px solid rgba(200,184,154,0.35);color:var(--warm-sand);opacity:0;transform:translateY(4px);transition:opacity .3s,transform .3s;}
+  .ppill.show{opacity:1;transform:none;}
+  .ppill.solid{background:var(--warm-sand);color:#0A0A0A;border-color:var(--warm-sand);}
+  .pmeta{position:relative;z-index:1;margin-top:18px;padding-top:16px;border-top:1px solid rgba(245,245,240,0.1);display:flex;flex-direction:column;gap:9px;}
+  .pmeta .m{display:flex;justify-content:space-between;font-size:13px;}
+  .pmeta .m .k{color:var(--muted);}.pmeta .m .v{color:#F5F5F0;font-weight:500;}
+  .pcomplete{position:relative;z-index:1;margin-top:16px;font-size:12px;color:var(--warm-sand);text-align:center;}
+
+  @media(max-width:900px){.shell{grid-template-columns:1fr;gap:26px;}.preview{position:static;order:-1;}.pcard{max-width:340px;margin:0 auto;}.stage{min-height:0;}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}.step-view{position:relative!important;}}
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="word">VALUESKINS</div>
+    <div class="toggle" onclick="toggleTheme()"><span id="tl">Light</span><span class="dw"><span class="kb"></span></span></div>
+  </header>
+
+  <div class="prog-wrap">
+    <div class="segs" id="segs"></div>
+    <div class="prog-meta"><span class="step" id="steplbl">Step 1 of 5</span><span id="pct">20%</span></div>
+  </div>
+
+  <div class="shell">
+    <div class="stage" id="stage">
+
+      <!-- 1 IDENTITY -->
+      <div class="step-view in" data-step="0">
+        <h2>Let's build your identity</h2>
+        <p class="lead">Start with your name and where creators can find you. You can refine everything later.</p>
+        <div class="f"><label>Display name</label><input id="i-name" placeholder="e.g. Anshul Khatri" oninput="sync()"></div>
+        <div class="row2">
+          <div class="f"><label>Instagram</label><input id="i-ig" placeholder="@handle" oninput="sync()"></div>
+          <div class="f"><label>City</label><input id="i-city" placeholder="e.g. Mumbai" oninput="sync()"></div>
+        </div>
+      </div>
+
+      <!-- 2 VALUESKIN -->
+      <div class="step-view" data-step="1">
+        <h2>Choose your ValueSkin</h2>
+        <p class="lead">The profession that best describes you. This becomes your identity — brands use it to find and match with you.</p>
+        <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="#A08A5E" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="prof-q" placeholder="Search professions…" oninput="renderProfs()"></div>
+        <div class="prof-scroll" id="prof-scroll"></div>
+      </div>
+
+      <!-- 3 HOW YOU WORK -->
+      <div class="step-view" data-step="2">
+        <h2>How you work</h2>
+        <p class="lead">Languages you create in, and how you like to collaborate on scripts.</p>
+        <div class="f"><label>Content languages</label>
+          <div class="chips multi" id="langs">
+            <span class="chip" onclick="tglMulti(this,'langs')">English</span><span class="chip" onclick="tglMulti(this,'langs')">Hindi</span>
+            <span class="chip" onclick="tglMulti(this,'langs')">Marathi</span><span class="chip" onclick="tglMulti(this,'langs')">Tamil</span>
+            <span class="chip" onclick="tglMulti(this,'langs')">Telugu</span><span class="chip" onclick="tglMulti(this,'langs')">Bengali</span>
+          </div>
+        </div>
+        <div class="f"><label>Script collaboration</label>
+          <div class="seg-choice" id="script" data-single>
+            <div class="choice" onclick="pickChoice(this,'script')"><div class="t">Creator freedom</div><div class="s">You own the creative; brand reviews and approves</div></div>
+            <div class="choice" onclick="pickChoice(this,'script')"><div class="t">Collaborative</div><div class="s">You and the brand shape the script together</div></div>
+            <div class="choice" onclick="pickChoice(this,'script')"><div class="t">Open to brand scripts</div><div class="s">Happy to run a brand-provided script</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 RATE & AVAILABILITY -->
+      <div class="step-view" data-step="3">
+        <h2>Rate &amp; availability</h2>
+        <p class="lead">A starting range and whether you're taking work. Both stay editable on your profile.</p>
+        <div class="row2">
+          <div class="f"><label>Rate from (per deal)</label><div class="rate-row"><span class="cur">₹</span><input id="i-rate" placeholder="25,000" oninput="sync()"></div></div>
+          <div class="f"><label>&nbsp;</label>
+            <div class="chips" style="margin-top:0"><span class="chip" onclick="pickAvail(this,'Open')">Open to work</span><span class="chip" onclick="pickAvail(this,'Limited')">Limited</span><span class="chip" onclick="pickAvail(this,'Booked')">Booked</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 REVIEW -->
+      <div class="step-view" data-step="4">
+        <h2>You're set</h2>
+        <p class="lead">Here's your ValueSkins identity. Launch it — you can polish anything from your profile.</p>
+        <div class="review" id="review"></div>
+      </div>
+
+      <div class="nav" id="nav"></div>
+    </div>
+
+    <!-- LIVE PREVIEW -->
+    <div class="preview">
+      <div class="plabel"><span class="d"></span> Live — your creator card</div>
+      <div class="pcard">
+        <div class="pav empty" id="p-av">Your ValueSkin<br>appears here</div>
+        <div class="pname" id="p-name">Your name</div>
+        <div class="phandle" id="p-handle"></div>
+        <div class="ppills" id="p-pills"></div>
+        <div class="pmeta">
+          <div class="m"><span class="k">Languages</span><span class="v" id="p-langs">—</span></div>
+          <div class="m"><span class="k">Rate from</span><span class="v" id="p-rate">—</span></div>
+          <div class="m"><span class="k">Status</span><span class="v" id="p-avail">—</span></div>
+        </div>
+        <div class="pcomplete" id="p-complete">20% complete</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ---------- pixel sprite ----------
+  const CP={off:'#F5F5F0',mut:'#B8B4AC',sand:'#A08A5E',warm:'#C8B89A'};
+  function devSprite(){return [[4,1,4,CP.off],[3,2,6,CP.off],[3,3,6,CP.mut],[4,4,4,CP.off],[2,5,8,CP.mut],[1,6,10,CP.mut],[1,7,10,CP.off],[2,8,8,CP.sand],[1,9,10,CP.sand],[3,10,6,CP.warm]].map(([x,y,w,c])=>`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c}"/>`).join('');}
+
+  // ---------- professions ----------
+  const PROFS={
+    'Technology':['Software Engineer','AI / ML Specialist','Product Manager','DevOps Engineer','UX/UI Designer','Security Researcher'],
+    'Creative & Media':['Actor','Musician','Comedian','Filmmaker','Animator','Photographer','Graphic Designer','Illustrator'],
+    'Food':['Chef','Pastry Chef','Food Critic','Restaurant Owner','Sommelier'],
+    'Health & Fitness':['Doctor','Nutritionist','Fitness Coach','Yoga Instructor','Therapist'],
+    'Business & Finance':['Entrepreneur','Consultant','Financial Advisor','Investment Banker','Crypto Analyst'],
+    'Education':['Teacher','Professor','Tutor','Course Creator']
+  };
+  let sel={name:'',ig:'',city:'',prof:'',langs:[],script:'',rate:'',avail:''};
+
+  function renderProfs(){
+    const q=(document.getElementById('prof-q').value||'').toLowerCase();
+    const el=document.getElementById('prof-scroll');el.innerHTML='';
+    Object.entries(PROFS).forEach(([cat,list])=>{
+      const items=list.filter(p=>p.toLowerCase().includes(q));
+      if(!items.length)return;
+      const c=document.createElement('div');c.className='prof-cat';c.textContent=cat;el.appendChild(c);
+      const wrap=document.createElement('div');wrap.className='chips';
+      items.forEach(p=>{const b=document.createElement('span');b.className='chip'+(sel.prof===p?' on':'');b.textContent=p;
+        b.onclick=()=>{sel.prof=p;renderProfs();sync();};wrap.appendChild(b);});
+      el.appendChild(wrap);
+    });
+  }
+
+  function tglMulti(el,key){el.classList.toggle('on');
+    sel.langs=[...document.querySelectorAll('#'+key+' .chip.on')].map(c=>c.textContent);sync();}
+  function pickChoice(el,key){el.parentElement.querySelectorAll('.choice').forEach(c=>c.classList.remove('on'));el.classList.add('on');
+    sel.script=el.querySelector('.t').textContent;sync();}
+  function pickAvail(el,v){el.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');sel.avail=v;sync();}
+
+  // ---------- live sync ----------
+  function sync(){
+    sel.name=val('i-name');sel.ig=val('i-ig');sel.city=val('i-city');sel.rate=val('i-rate');
+    setText('p-name',sel.name||'Your name');
+    setText('p-handle',sel.ig?('@'+sel.ig.replace(/^@/,'')+(sel.city?' · '+sel.city:'')):(sel.city||''));
+    // avatar
+    const av=document.getElementById('p-av');
+    if(sel.prof){av.className='pav';av.innerHTML=`<svg viewBox="0 0 12 12" shape-rendering="crispEdges" width="76" height="76" xmlns="http://www.w3.org/2000/svg">${devSprite()}</svg>`;}
+    else{av.className='pav empty';av.innerHTML='Your ValueSkin<br>appears here';}
+    // pills
+    const pills=document.getElementById('p-pills');pills.innerHTML='';
+    if(sel.prof)pills.appendChild(mkPill(sel.prof,true));
+    if(sel.script)pills.appendChild(mkPill(sel.script,false));
+    requestAnimationFrame(()=>pills.querySelectorAll('.ppill').forEach(p=>p.classList.add('show')));
+    setText('p-langs',sel.langs.length?sel.langs.join(', '):'—');
+    setText('p-rate',sel.rate?('₹'+sel.rate):'—');
+    setText('p-avail',sel.avail||'—');
+  }
+  function mkPill(t,solid){const s=document.createElement('span');s.className='ppill'+(solid?' solid':'');s.textContent=t;return s;}
+  const val=id=>document.getElementById(id)?.value.trim()||'';
+  const setText=(id,t)=>{const e=document.getElementById(id);if(e)e.textContent=t;};
+
+  // ---------- steps ----------
+  const TOTAL=5;let cur=0;
+  const segs=document.getElementById('segs');
+  for(let i=0;i<TOTAL;i++){const s=document.createElement('div');s.className='seg';s.innerHTML='<i></i>';segs.appendChild(s);}
+  function renderNav(){
+    const nav=document.getElementById('nav');const last=cur===TOTAL-1;
+    nav.innerHTML=`${cur>0?'<button class="btn ghost" onclick="go(-1)">Back</button>':''}
+      <button class="btn" onclick="${last?'finish()':'go(1)'}">${last?'Launch profile':'Continue'}</button>
+      ${!last&&cur>0?'<a class="skip" onclick="go(1)">Skip for now</a>':''}`;
+  }
+  function paintProgress(){
+    [...segs.children].forEach((s,i)=>{s.classList.toggle('done',i<cur);s.classList.toggle('active',i===cur);});
+    document.getElementById('steplbl').textContent=`Step ${cur+1} of ${TOTAL}`;
+    const pct=Math.round((cur+1)/TOTAL*100);
+    document.getElementById('pct').textContent=pct+'%';setText('p-complete',pct+'% complete');
+  }
+  function show(i){
+    document.querySelectorAll('.step-view').forEach(v=>v.classList.toggle('in',+v.dataset.step===i));
+    if(i===4)buildReview();renderNav();paintProgress();
+    const first=document.querySelector('.step-view.in input');if(first)setTimeout(()=>first.focus(),120);
+  }
+  function go(d){cur=Math.max(0,Math.min(TOTAL-1,cur+d));show(cur);}
+  function finish(){/* route to dashboard */alert('Profile launched — welcome to ValueSkins.');}
+  function buildReview(){
+    const r=document.getElementById('review');
+    const rows=[['Name',sel.name||'—'],['ValueSkin',sel.prof||'—'],['Languages',sel.langs.join(', ')||'—'],['Script style',sel.script||'—'],['Rate from',sel.rate?'₹'+sel.rate:'—'],['Status',sel.avail||'—']];
+    r.innerHTML=rows.map(([k,v])=>`<div class="rrow"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+  }
+
+  // enter to advance
+  document.addEventListener('keydown',e=>{if(e.key==='Enter'&&cur<TOTAL-1){e.preventDefault();go(1);}});
+
+  function toggleTheme(){const el=document.documentElement;const d=el.getAttribute('data-theme')==='dark';el.setAttribute('data-theme',d?'light':'dark');document.getElementById('tl').textContent=d?'Light':'Dark';}
+
+  renderProfs();sync();show(0);
+</script>
+</body>
+</html>

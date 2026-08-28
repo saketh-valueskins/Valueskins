@@ -71,7 +71,7 @@ interface Campaign {
 }
 
 export default function ExploreView(props: { sharedState?: any; creatorProfile?: any }) {
-  const [exploreTab, setExploreTab] = useState<'explore' | 'skins' | 'creators'>('explore');
+  const [exploreTab, setExploreTab] = useState<'trending' | 'skins' | 'creators'>('trending');
   const [previewCreator, setPreviewCreator] = useState<BackendCreator | null>(null);
 
   const [creators, setCreators] = useState<BackendCreator[]>([]);
@@ -132,7 +132,7 @@ export default function ExploreView(props: { sharedState?: any; creatorProfile?:
       </div>
 
       <div style={{ display: 'flex', borderBottom: `1px solid ${C.border}` }}>
-        {(['explore', 'skins', 'creators'] as const).map(tab => (
+        {(['trending', 'skins', 'creators'] as const).map(tab => (
           <button key={tab} onClick={() => setExploreTab(tab)}
             style={{ flex: 1, padding: '12px 0', fontSize: '13px', fontWeight: exploreTab === tab ? 700 : 500,
               color: exploreTab === tab ? C.text : C.textMuted, background: 'none', border: 'none',
@@ -144,7 +144,7 @@ export default function ExploreView(props: { sharedState?: any; creatorProfile?:
       </div>
 
       <div style={{ padding: '16px' }}>
-        {exploreTab === 'explore' && (
+        {exploreTab === 'trending' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div style={{ fontSize: '12px', color: C.textMuted }}>Campaigns for {props.creatorProfile?.profession || 'your niche'}</div>
             {campaigns.length === 0 ? (

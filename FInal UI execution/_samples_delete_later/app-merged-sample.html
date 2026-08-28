@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Merged app (concept)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--near-black:#0A0A0A;--off-white:#F5F5F0;--warm-sand:#C8B89A;--charcoal:#2D2D2D;--deep-sand:#A08A5E;--muted:#B8B4AC;--ease:cubic-bezier(0.16,1,0.3,1);}
+  [data-theme="light"]{--bg:radial-gradient(72% 55% at 82% -8%,rgba(160,138,94,0.18),transparent 62%),linear-gradient(150deg,#F4F3EE 0%,#EFEADF 55%,#E4DCCB 100%);
+    --head:#0A0A0A;--text:#3A362E;--muted2:#6E6A60;--card:#FFFFFF;--cardbrd:rgba(160,138,94,0.30);--field:#FFFFFF;--divider:rgba(160,138,94,0.18);--chrome:rgba(245,245,240,0.82);--tile-hover:rgba(200,184,154,0.12);--track:rgba(160,138,94,0.20);--cta-bg:#0A0A0A;--cta-text:#F5F5F0;}
+  [data-theme="dark"]{--bg:radial-gradient(60% 50% at 88% 0%,rgba(160,138,94,0.15),transparent 70%),linear-gradient(135deg,#0A0A0A 0%,#1C1B18 58%,#2D2D2D 100%);
+    --head:#F5F5F0;--text:#C9C5BC;--muted2:#8A867E;--card:rgba(245,245,240,0.04);--cardbrd:rgba(245,245,240,0.14);--field:rgba(245,245,240,0.05);--divider:rgba(245,245,240,0.12);--chrome:rgba(10,10,10,0.66);--tile-hover:rgba(200,184,154,0.08);--track:rgba(245,245,240,0.12);--cta-bg:#F5F5F0;--cta-text:#0A0A0A;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100dvh;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;color:var(--text);background:var(--bg);background-attachment:fixed;transition:color .3s;padding-bottom:70px;}
+
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:var(--chrome);backdrop-filter:blur(10px);border-bottom:1px solid var(--divider);}
+  .word{font-weight:700;font-size:20px;letter-spacing:.18em;color:var(--head);}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer;user-select:none;border:1px solid var(--divider);border-radius:20px;padding:6px 12px;}
+  .toggle .dw{width:26px;height:14px;border-radius:8px;background:var(--muted);position:relative;transition:background .3s;}
+  .toggle .kb{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--off-white);transition:transform .3s var(--ease);}
+  [data-theme="dark"] .toggle .dw{background:var(--deep-sand);}[data-theme="dark"] .toggle .kb{transform:translateX(12px);}
+
+  .view{display:none;}.view.on{display:block;animation:fade .35s var(--ease);}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .wrap{max-width:860px;margin:0 auto;padding:40px 32px 40px;}
+  h1{font-size:28px;font-weight:700;color:var(--head);letter-spacing:-.01em;}
+  .sl{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);margin:30px 0 14px;display:flex;align-items:center;gap:12px;}
+  .sl::after{content:"";flex:1;height:1px;background:var(--divider);}
+
+  /* ---------- PROFILE ---------- */
+  .hero{display:flex;gap:34px;align-items:center;border-radius:20px;overflow:hidden;padding:32px;color:#F5F5F0;background:linear-gradient(160deg,#0A0A0A 0%,#161512 60%,#20201B 100%);border:1px solid rgba(200,184,154,0.24);box-shadow:0 30px 60px -30px rgba(10,10,10,0.5);position:relative;}
+  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(50% 60% at 16% 26%,rgba(160,138,94,0.2),transparent 70%);}
+  .frame{position:relative;z-index:1;flex:none;width:150px;height:150px;border-radius:16px;background:rgba(245,245,240,0.05);border:1px solid rgba(200,184,154,0.3);display:flex;align-items:center;justify-content:center;}
+  .frame svg{width:118px;height:118px;image-rendering:pixelated;animation:float 5s var(--ease) infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+  .hmeta{position:relative;z-index:1;flex:1;}
+  .hmeta .nm{font-size:28px;font-weight:700;color:#F5F5F0;}
+  .hmeta .role{margin-top:5px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+  .hmeta .wearing{margin-top:12px;font-size:14px;color:#C9C5BC;}.hmeta .wearing b{color:#F5F5F0;}
+  .hmeta .pills{display:flex;gap:9px;margin-top:12px;}
+  .hpill{font-size:12px;font-weight:600;padding:5px 13px;border-radius:20px;border:1px solid rgba(200,184,154,0.35);color:var(--warm-sand);}
+  .hpill.solid{background:var(--warm-sand);color:#0A0A0A;border-color:var(--warm-sand);}
+  .edit-btn{position:relative;z-index:1;align-self:flex-start;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:11px 20px;border-radius:8px;border:1px solid rgba(245,245,240,0.28);background:transparent;color:#F5F5F0;transition:border-color .15s,transform .12s;}
+  .edit-btn:hover{border-color:rgba(245,245,240,0.6);}.edit-btn:active{transform:scale(.98);}
+
+  /* mild reputation strip (read-only) */
+  .rep{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-top:16px;border:1px solid var(--divider);border-radius:14px;overflow:hidden;background:var(--divider);}
+  .rep .cell{background:var(--card);padding:16px 18px;}
+  .rep .k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted2);}
+  .rep .v{font-size:20px;font-weight:700;color:var(--head);margin-top:5px;}
+  .rep .v .u{font-size:13px;color:var(--muted2);font-weight:500;}
+  .rep .v.sand{color:var(--deep-sand);}
+  .rep-note{margin-top:8px;font-size:12px;color:var(--muted2);}
+
+  /* generic stub cards */
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .stub{border:1px solid var(--divider);border-radius:14px;padding:22px;background:var(--card);}
+  .stub h3{font-size:16px;font-weight:700;color:var(--head);}
+  .stub p{font-size:14px;color:var(--muted2);margin-top:6px;line-height:1.5;}
+  .stub .go{margin-top:14px;font-size:14px;font-weight:600;color:var(--head);cursor:pointer;}
+  .stub .go .a{color:var(--deep-sand);}
+
+  .cat{border:1px solid var(--divider);border-radius:12px;padding:18px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:transparent;transition:background .18s,border-color .18s;margin-bottom:10px;}
+  .cat:hover{background:var(--tile-hover);border-color:var(--cardbrd);}
+  .cat .nm{font-size:15px;font-weight:600;color:var(--head);}.cat .ct{font-size:13px;color:var(--muted2);}
+
+  /* ---------- PREFERENCES (overlay sub-view) ---------- */
+  #prefs{position:fixed;inset:0;z-index:40;background:var(--bg);background-attachment:fixed;overflow-y:auto;
+    transform:translateY(100%);opacity:0;pointer-events:none;transition:transform .4s var(--ease),opacity .3s;padding-bottom:40px;}
+  #prefs.open{transform:none;opacity:1;pointer-events:auto;}
+  .p-head{position:sticky;top:0;z-index:5;background:var(--chrome);backdrop-filter:blur(10px);border-bottom:1px solid var(--divider);padding:16px 40px;}
+  .p-head-row{max-width:860px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;}
+  .p-head h2{font-size:20px;font-weight:700;color:var(--head);}
+  .back{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:9px 18px;border-radius:8px;border:1px solid var(--divider);background:transparent;color:var(--head);}
+  .back:hover{border-color:var(--cardbrd);}
+  .p-prog{max-width:860px;margin:14px auto 0;}
+  .p-prog .lab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted2);margin-bottom:6px;}
+  .p-prog .lab b{color:var(--head);}
+  .p-bar{height:6px;border-radius:3px;background:var(--track);overflow:hidden;}
+  .p-bar i{display:block;height:100%;width:0;background:var(--deep-sand);transition:width .5s var(--ease);}
+
+  .p-body{max-width:860px;margin:0 auto;padding:24px 32px;}
+  .tabs2{display:flex;gap:4px;border:1px solid var(--divider);border-radius:12px;padding:5px;background:var(--card);margin-bottom:24px;position:relative;}
+  .tabs2 button{flex:1;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;padding:11px 8px;border:none;background:transparent;color:var(--muted2);border-radius:8px;transition:color .2s;z-index:1;}
+  .tabs2 button.on{color:var(--head);}
+  .tabs2 .ind{position:absolute;top:5px;bottom:5px;border-radius:8px;background:var(--tile-hover);border:1px solid var(--cardbrd);transition:left .3s var(--ease),width .3s var(--ease);z-index:0;}
+
+  .ptab{display:none;}.ptab.on{display:block;animation:fade .3s var(--ease);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  .f{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+  .f.full{grid-column:1/-1;}
+  label{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted2);}
+  input,textarea{font-family:inherit;font-size:15px;color:var(--text);background:var(--field);border:1px solid var(--cardbrd);border-radius:8px;padding:12px 14px;width:100%;transition:border-color .15s,box-shadow .15s;}
+  input::placeholder,textarea::placeholder{color:var(--muted);}
+  input:focus,textarea:focus{outline:none;border-color:var(--deep-sand);box-shadow:0 0 0 3px rgba(160,138,94,0.16);}
+  textarea{min-height:96px;resize:vertical;}
+  .hint{font-size:12.5px;color:var(--muted2);margin-top:-2px;}
+  .chips{display:flex;gap:9px;flex-wrap:wrap;}
+  .chips button{font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;padding:9px 16px;border:1px solid var(--cardbrd);border-radius:20px;background:var(--field);color:var(--text);transition:background .15s,border-color .15s,color .15s,transform .1s;}
+  .chips button:active{transform:scale(.97);}
+  .chips button.on{background:var(--warm-sand);border-color:var(--warm-sand);color:#0A0A0A;}
+  .sw-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .sw{width:44px;height:25px;border-radius:13px;background:var(--muted);position:relative;cursor:pointer;flex:none;transition:background .2s var(--ease);}
+  .sw.on{background:var(--warm-sand);}
+  .sw .k{position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;background:#FFFDF9;transition:transform .2s var(--ease);box-shadow:0 1px 2px rgba(0,0,0,.2);}
+  .sw.on .k{transform:translateX(19px);}
+  .sw-row .t{font-size:15px;font-weight:600;color:var(--head);}
+
+  .save{font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:13px 28px;border-radius:8px;border:none;background:var(--cta-bg);color:var(--cta-text);transition:transform .14s;margin-top:6px;}
+  .save:hover{transform:translateY(-1px);}.save:active{transform:scale(.99);}
+  .saved-tag{margin-left:14px;font-size:13px;font-weight:600;color:var(--deep-sand);opacity:0;transition:opacity .3s;}
+  .saved-tag.show{opacity:1;}
+
+  /* bottom tabs */
+  .tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:12px 0;background:var(--chrome);backdrop-filter:blur(10px);border-top:1px solid var(--divider);z-index:30;}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--muted2);cursor:pointer;font-weight:500;transition:color .2s,transform .15s;}
+  .tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;}
+  .tab.on{color:var(--head);font-weight:600;}
+  .tab.on::after{content:"";position:absolute;margin-top:-6px;}
+  .tab .dot{width:5px;height:5px;border-radius:50%;background:var(--deep-sand);opacity:0;transition:opacity .2s;margin-top:2px;}
+  .tab.on .dot{opacity:1;}
+  .tab:active{transform:scale(.92);}
+
+  @media(max-width:760px){.cards,.rep{grid-template-columns:1fr 1fr;}.row2,.row3{grid-template-columns:1fr;}.hero{flex-direction:column;text-align:center;}.hmeta .pills{justify-content:center;}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="word">VALUESKINS</div>
+    <div class="toggle" onclick="toggleTheme()"><span id="tl">Light</span><span class="dw"><span class="kb"></span></span></div>
+  </header>
+
+  <!-- PROFILE -->
+  <div class="view on" id="v-profile">
+    <div class="wrap">
+      <div class="hero">
+        <div class="frame"><svg id="skin" viewBox="0 0 12 12" shape-rendering="crispEdges"></svg></div>
+        <div class="hmeta">
+          <div class="nm">Anshul</div>
+          <div class="role">Creator</div>
+          <div class="wearing">Wearing <b>Software Engineer</b> · Technology</div>
+          <div class="pills"><span class="hpill solid">Professional</span><span class="hpill">Signal · Level 3</span></div>
+        </div>
+        <button class="edit-btn" onclick="openPrefs()">Edit preferences</button>
+      </div>
+
+      <!-- reputation shown mildly, read-only -->
+      <div class="sl">Reputation &amp; Trust</div>
+      <div class="rep">
+        <div class="cell"><div class="k">Trust score</div><div class="v sand">0<span class="u">%</span></div></div>
+        <div class="cell"><div class="k">Completion</div><div class="v">0<span class="u">%</span></div></div>
+        <div class="cell"><div class="k">Repeat clients</div><div class="v">0<span class="u">%</span></div></div>
+        <div class="cell"><div class="k">Avg rating</div><div class="v">0<span class="u">/5</span></div></div>
+      </div>
+      <p class="rep-note">Earned automatically from completed deals — not editable. Grows as you close deals.</p>
+    </div>
+  </div>
+
+  <!-- MARKET -->
+  <div class="view" id="v-market">
+    <div class="wrap">
+      <h1>Marketplace</h1>
+      <p style="margin-top:8px;color:var(--muted2);font-size:15px">Discover brands, campaigns &amp; deals.</p>
+      <div class="sl">Open campaigns</div>
+      <div class="cards">
+        <div class="stub"><h3>Spring Dev Tooling Launch</h3><p>Tech · ₹5,000/creator · Level 1–5 · 6 applicants</p><div class="go">View brief <span class="a">→</span></div></div>
+        <div class="stub"><h3>Skincare Reels Campaign</h3><p>Beauty · ₹12,000/creator · Level 2–5 · Mumbai</p><div class="go">View brief <span class="a">→</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STORE -->
+  <div class="view" id="v-store">
+    <div class="wrap">
+      <h1>ValueSkins Closet</h1>
+      <p style="margin-top:8px;color:var(--muted2);font-size:15px">Buy the profession skin that becomes your identity.</p>
+      <div class="sl">Browse professions</div>
+      <div class="cat"><span class="nm">Technology</span><span class="ct">7 skins ›</span></div>
+      <div class="cat"><span class="nm">Creative</span><span class="ct">6 skins ›</span></div>
+      <div class="cat"><span class="nm">Business &amp; Finance</span><span class="ct">8 skins ›</span></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="view" id="v-settings">
+    <div class="wrap">
+      <h1>Settings</h1>
+      <p style="margin-top:8px;color:var(--muted2);font-size:15px">Account, notifications, payments &amp; more.</p>
+      <div class="sl">Quick links</div>
+      <div class="cat" onclick="openPrefs()"><span class="nm">Creator Profile Preferences</span><span class="ct">Edit ›</span></div>
+      <div class="cat"><span class="nm">Notifications</span><span class="ct">›</span></div>
+      <div class="cat"><span class="nm">Payments &amp; Payouts</span><span class="ct">›</span></div>
+      <div class="cat"><span class="nm">Security</span><span class="ct">›</span></div>
+    </div>
+  </div>
+
+  <!-- ===== CREATOR PROFILE PREFERENCES (overlay) ===== -->
+  <div id="prefs">
+    <div class="p-head">
+      <div class="p-head-row">
+        <h2>Creator Profile Preferences</h2>
+        <button class="back" onclick="closePrefs()">‹ Back to profile</button>
+      </div>
+      <div class="p-prog">
+        <div class="lab"><span>Profile completion</span><span><b id="pctnum">0%</b></span></div>
+        <div class="p-bar"><i id="pbar"></i></div>
+      </div>
+    </div>
+
+    <div class="p-body">
+      <div class="tabs2" id="tabs2">
+        <span class="ind" id="ind"></span>
+        <button class="on" onclick="prefsTab('identity',this)">Identity</button>
+        <button onclick="prefsTab('social',this)">Social Capital</button>
+        <button onclick="prefsTab('pitch',this)">Pitch</button>
+        <button onclick="prefsTab('market',this)">Marketplace</button>
+      </div>
+
+      <!-- Identity -->
+      <div class="ptab on" id="t-identity">
+        <div class="row3">
+          <div class="f"><label>Display name</label><input value="Anshul" oninput="prog()"></div>
+          <div class="f"><label>Username</label><input value="anshulnkhatri" oninput="prog()"></div>
+          <div class="f"><label>Niche</label><input placeholder="e.g. Tech, Fashion" oninput="prog()"></div>
+        </div>
+        <div class="row2">
+          <div class="f"><label>City</label><input placeholder="Mumbai" oninput="prog()"></div>
+          <div class="f"><label>Country</label><input placeholder="India" oninput="prog()"></div>
+        </div>
+        <div class="f full"><label>Bio</label><textarea placeholder="Tell brands who you are." oninput="prog()"></textarea></div>
+        <button class="save" onclick="saved(this)">Save changes</button><span class="saved-tag">Saved</span>
+      </div>
+
+      <!-- Social -->
+      <div class="ptab" id="t-social">
+        <div class="row2">
+          <div class="f"><label>Follower count</label><input placeholder="10,000" oninput="prog()"></div>
+          <div class="f"><label>Engagement rate (%)</label><input placeholder="4.2" oninput="prog()"></div>
+          <div class="f"><label>Instagram</label><input placeholder="@handle" oninput="prog()"></div>
+          <div class="f"><label>TikTok</label><input placeholder="@handle" oninput="prog()"></div>
+          <div class="f"><label>YouTube</label><input placeholder="channel" oninput="prog()"></div>
+          <div class="f"><label>Twitter / X</label><input placeholder="@handle" oninput="prog()"></div>
+          <div class="f"><label>LinkedIn</label><input placeholder="profile" oninput="prog()"></div>
+          <div class="f"><label>Website</label><input placeholder="https://…" oninput="prog()"></div>
+        </div>
+        <button class="save" onclick="saved(this)">Save changes</button><span class="saved-tag">Saved</span>
+      </div>
+
+      <!-- Pitch -->
+      <div class="ptab" id="t-pitch">
+        <div class="f full"><label>Pitch video link</label><input placeholder="https://drive.google.com/… or dropbox.com/…" oninput="prog()">
+          <span class="hint">A short clip pitching how you'd market a brand — your seriousness signal.</span></div>
+        <div class="f full"><label>Pitch text</label><textarea placeholder="Why should brands hire you? What's your unique value?" oninput="prog()"></textarea></div>
+        <button class="save" onclick="saved(this)">Save changes</button><span class="saved-tag">Saved</span>
+      </div>
+
+      <!-- Marketplace -->
+      <div class="ptab" id="t-market">
+        <div class="sw-row"><div class="sw on" onclick="this.classList.toggle('on')"><span class="k"></span></div><span class="t">Open for work</span></div>
+        <div class="row2">
+          <div class="f"><label>Minimum deal value ($)</label><input value="500" oninput="prog()"></div>
+          <div class="f"><label>Typical response time (hrs)</label><input value="24" oninput="prog()"></div>
+        </div>
+        <div class="f full"><label>Preferred deal types</label>
+          <div class="chips"><button class="on" onclick="this.classList.toggle('on')">Paid</button><button onclick="this.classList.toggle('on')">Barter</button><button onclick="this.classList.toggle('on')">Equity</button><button onclick="this.classList.toggle('on')">Ambassador</button></div>
+        </div>
+        <button class="save" onclick="saved(this)">Save changes</button><span class="saved-tag">Saved</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM TABS -->
+  <div class="tabs">
+    <div class="tab on" id="tab-profile" onclick="showTab('profile')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profile<span class="dot"></span></div>
+    <div class="tab" id="tab-market" onclick="showTab('market')"><svg viewBox="0 0 24 24"><path d="M4 7h16l-1.5 12H5.5L4 7z"/><path d="M9 7a3 3 0 016 0"/></svg>Market<span class="dot"></span></div>
+    <div class="tab" id="tab-store" onclick="showTab('store')"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M8 8V6a4 4 0 018 0v2"/></svg>Store<span class="dot"></span></div>
+    <div class="tab" id="tab-settings" onclick="showTab('settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg>Settings<span class="dot"></span></div>
+  </div>
+
+<script>
+  function charSVG(shirt,skin,hair){const eye='#141414';
+    const rows=[[4,1,4,hair],[3,2,6,hair],[3,3,6,skin],[3,4,6,skin],[4,5,4,skin],[3,6,6,shirt],[2,7,8,shirt],[2,8,8,shirt],[2,9,8,shirt],[1,7,1,skin],[10,7,1,skin],[5,10,2,'#C8B89A']];
+    return rows.map(([x,y,w,c])=>`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c}"/>`).join('')+`<rect x="4" y="4" width="1" height="1" fill="${eye}"/><rect x="7" y="4" width="1" height="1" fill="${eye}"/>`;}
+  document.getElementById('skin').innerHTML=charSVG('#3B6FB0','#E8B98A','#241C15');
+
+  function showTab(t){
+    ['profile','market','store','settings'].forEach(v=>{
+      document.getElementById('v-'+v).classList.toggle('on',v===t);
+      document.getElementById('tab-'+v).classList.toggle('on',v===t);
+    });
+    closePrefs();scrollTo(0,0);
+  }
+  function openPrefs(){document.getElementById('prefs').classList.add('open');setTimeout(()=>{moveInd(document.querySelector('#tabs2 button.on'));prog();},50);}
+  function closePrefs(){document.getElementById('prefs').classList.remove('open');}
+
+  function prefsTab(name,btn){
+    document.querySelectorAll('.ptab').forEach(p=>p.classList.remove('on'));
+    document.getElementById('t-'+name).classList.add('on');
+    document.querySelectorAll('#tabs2 button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');moveInd(btn);
+  }
+  function moveInd(btn){const ind=document.getElementById('ind');ind.style.left=btn.offsetLeft+'px';ind.style.width=btn.offsetWidth+'px';}
+
+  function prog(){
+    const inputs=[...document.querySelectorAll('#prefs input, #prefs textarea')];
+    const filled=inputs.filter(i=>i.value.trim()!=='').length;
+    const pct=Math.round(filled/inputs.length*100);
+    document.getElementById('pbar').style.width=pct+'%';
+    document.getElementById('pctnum').textContent=pct+'%';
+  }
+  function saved(btn){const tag=btn.nextElementSibling;tag.classList.add('show');setTimeout(()=>tag.classList.remove('show'),1600);}
+
+  function toggleTheme(){const el=document.documentElement;const d=el.getAttribute('data-theme')==='dark';el.setAttribute('data-theme',d?'light':'dark');document.getElementById('tl').textContent=d?'Light':'Dark';}
+  window.addEventListener('resize',()=>{const on=document.querySelector('#tabs2 button.on');if(on)moveInd(on);});
+</script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Profile (concept v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --near-black:#0A0A0A;--off-white:#F5F5F0;--warm-sand:#C8B89A;--charcoal:#2D2D2D;
+    --deep-sand:#A08A5E;--muted:#B8B4AC;--ease:cubic-bezier(0.16,1,0.3,1);
+    --hair:rgba(160,138,94,0.26);--hair-soft:rgba(160,138,94,0.15);
+  }
+  [data-theme="light"]{--bg:linear-gradient(135deg,#F5F5F0 0%,#F1EDE3 60%,#ECE6D9 100%);
+    --text:#2D2D2D;--head:#0A0A0A;--card:#FFFDF9;--divider:rgba(160,138,94,0.18);--chrome:rgba(245,245,240,0.72);}
+  [data-theme="dark"]{--bg:radial-gradient(60% 50% at 88% 0%,rgba(160,138,94,0.15),transparent 70%),linear-gradient(135deg,#0A0A0A 0%,#1C1B18 58%,#2D2D2D 100%);
+    --text:#D8D4CC;--head:#F5F5F0;--card:rgba(245,245,240,0.03);--divider:rgba(245,245,240,0.12);--chrome:rgba(10,10,10,0.6);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100dvh;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;
+    background:var(--bg);background-attachment:fixed;color:var(--text);transition:background .4s var(--ease),color .3s;}
+
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+    padding:18px 40px;background:var(--chrome);backdrop-filter:blur(10px);border-bottom:1px solid var(--divider);}
+  .word{font-weight:700;font-size:22px;letter-spacing:.16em;color:var(--head);}
+  .nav{display:flex;align-items:center;gap:22px;}
+  .nav a{font-size:15px;font-weight:500;color:var(--text);text-decoration:none;}.nav a:hover{color:var(--head);}
+  .b-quiet{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:9px 16px;border-radius:6px;border:1px solid var(--divider);background:transparent;color:var(--head);}
+  .b-quiet:hover{border-color:var(--hair);}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none;border:1px solid var(--divider);border-radius:20px;padding:6px 12px;}
+  .toggle .dw{width:26px;height:14px;border-radius:8px;background:var(--muted);position:relative;transition:background .3s;}
+  .toggle .kb{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--off-white);transition:transform .3s var(--ease);}
+  [data-theme="dark"] .toggle .dw{background:var(--deep-sand);}[data-theme="dark"] .toggle .kb{transform:translateX(12px);}
+
+  .wrap{max-width:860px;margin:0 auto;padding:48px 32px 120px;}
+
+  /* ===== HERO — ValueSkin front & center ===== */
+  .hero{position:relative;border-radius:22px;overflow:hidden;padding:44px 40px;
+    background:linear-gradient(160deg,#0A0A0A 0%,#161512 60%,#20201B 100%);
+    border:1px solid rgba(200,184,154,0.24);box-shadow:0 34px 70px -30px rgba(10,10,10,0.55);color:#F5F5F0;
+    display:flex;gap:38px;align-items:center;}
+  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(50% 60% at 18% 30%,rgba(160,138,94,0.20),transparent 70%);}
+  .skin-frame{position:relative;z-index:1;flex:none;width:190px;height:190px;border-radius:18px;
+    background:rgba(245,245,240,0.04);border:1px solid rgba(200,184,154,0.3);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:inset 0 1px 0 rgba(245,245,240,0.08);}
+  .skin-frame svg{width:150px;height:150px;image-rendering:pixelated;
+    filter:drop-shadow(0 8px 20px rgba(0,0,0,0.4));animation:float 5s var(--ease) infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+  .skin-frame .tag{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);
+    font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#0A0A0A;
+    background:var(--warm-sand);padding:4px 12px;border-radius:20px;white-space:nowrap;}
+
+  .hero-meta{position:relative;z-index:1;flex:1;}
+  .name-row{display:flex;align-items:center;gap:12px;}
+  .name{font-size:34px;font-weight:700;color:#F5F5F0;letter-spacing:-.01em;}
+  .badge{width:30px;height:30px;image-rendering:pixelated;}
+  .role-note{margin-top:6px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+  .skin-name{margin-top:18px;font-size:15px;color:#C9C5BC;}
+  .skin-name b{color:#F5F5F0;font-weight:600;}
+  .type-tier{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .pill{font-size:12px;font-weight:600;letter-spacing:.03em;padding:6px 14px;border-radius:20px;
+    border:1px solid rgba(200,184,154,0.35);color:var(--warm-sand);}
+  .pill.solid{background:var(--warm-sand);color:#0A0A0A;border-color:var(--warm-sand);}
+  .hero-actions{margin-top:22px;display:flex;gap:12px;}
+  .edit{font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:11px 22px;border-radius:6px;
+    border:1px solid rgba(245,245,240,0.25);background:transparent;color:#F5F5F0;transition:border-color .15s,transform .12s;}
+  .edit:hover{border-color:rgba(245,245,240,0.6);}.edit:active{transform:scale(.98);}
+
+  /* ===== stats ===== */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:22px;border:1px solid var(--divider);
+    border-radius:14px;overflow:hidden;background:var(--divider);}
+  .stat{background:var(--card);padding:22px 24px;}
+  .stat .num{font-size:26px;font-weight:700;color:var(--head);}
+  .stat .lab{margin-top:5px;font-size:13px;color:var(--muted);}
+
+  /* ===== account ===== */
+  .sl{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:38px 0 16px;display:flex;align-items:center;gap:12px;}
+  .sl::after{content:"";flex:1;height:1px;background:var(--divider);}
+  .acct{border:1px solid var(--divider);border-radius:14px;overflow:hidden;background:var(--card);}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:17px 24px;border-bottom:1px solid var(--divider);}
+  .row:last-child{border-bottom:none;}
+  .row .k{font-size:15px;color:var(--text);}
+  .row .v{font-size:15px;font-weight:500;color:var(--head);}
+  .del{margin-top:16px;width:100%;padding:15px;border-radius:10px;border:1px solid rgba(45,45,45,0.28);
+    background:transparent;font-family:inherit;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;transition:border-color .15s;}
+  .del:hover{border-color:var(--charcoal);}
+  [data-theme="dark"] .del{border-color:rgba(245,245,240,0.25);}[data-theme="dark"] .del:hover{border-color:rgba(245,245,240,0.55);}
+
+  @media(max-width:720px){.hero{flex-direction:column;text-align:center;gap:28px;}.hero-actions{justify-content:center;}.name-row{justify-content:center;}.stats{grid-template-columns:1fr;}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="word">VALUESKINS</div>
+    <div class="nav">
+      <a href="#">Profile</a><a href="#">Settings</a>
+      <button class="b-quiet">Logout</button>
+      <button class="b-quiet">Delete Account</button>
+      <div class="toggle" onclick="toggleTheme()"><span id="tl">Light</span><span class="dw"><span class="kb"></span></span></div>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- HERO: the ValueSkin is the centerpiece -->
+    <div class="hero">
+      <div class="skin-frame">
+        <svg viewBox="0 0 12 12" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg" id="bigskin"></svg>
+        <span class="tag">ValueSkin</span>
+      </div>
+      <div class="hero-meta">
+        <div class="name-row">
+          <span class="name">Anshul</span>
+        </div>
+        <div class="role-note">Brand</div>
+        <div class="skin-name">Wearing <b>App Developer</b> · Technology</div>
+        <div class="type-tier">
+          <span class="pill solid">Professional</span>
+          <span class="pill">Signal · Level 3</span>
+        </div>
+        <div class="hero-actions"><button class="edit">Edit Profile</button></div>
+      </div>
+    </div>
+
+    <!-- stats -->
+    <div class="stats">
+      <div class="stat"><div class="num">0</div><div class="lab">Deals Done</div></div>
+      <div class="stat"><div class="num">0.0 ★</div><div class="lab">Rating</div></div>
+      <div class="stat"><div class="num">$0.0K</div><div class="lab">Spent</div></div>
+    </div>
+
+    <!-- account -->
+    <div class="sl">Account</div>
+    <div class="acct">
+      <div class="row"><span class="k">Email</span><span class="v">redhand756@gmail.com</span></div>
+      <div class="row"><span class="k">Role</span><span class="v">Brand</span></div>
+      <div class="row"><span class="k">Member since</span><span class="v">Jul 2026</span></div>
+    </div>
+    <button class="del">Delete Account</button>
+
+  </div>
+
+<script>
+  // App Developer pixel skin (dev sprite). Light figure for the dark hero frame.
+  function devSprite(fig,sec){
+    const rows=[[4,1,4,fig],[3,2,6,fig],[3,3,6,sec],[4,4,4,fig],[2,5,8,sec],[1,6,10,sec],[1,7,10,fig],[2,8,8,'#A08A5E'],[1,9,10,'#A08A5E'],[3,10,6,'#C8B89A']];
+    return rows.map(([x,y,w,c])=>`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c}"/>`).join('');
+  }
+  document.getElementById('bigskin').innerHTML=devSprite('#F5F5F0','#B8B4AC');
+  // One ValueSkin per view: the hero skin is the only mark on the profile.
+  // (The small inline badge is used only in compact contexts — listings, search, deal room.)
+  function toggleTheme(){const el=document.documentElement;const d=el.getAttribute('data-theme')==='dark';
+    el.setAttribute('data-theme',d?'light':'dark');document.getElementById('tl').textContent=d?'Light':'Dark';}
+</script>
+</body>
+</html>

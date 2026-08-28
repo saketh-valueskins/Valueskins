@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ValueSkins — Closet (list layout)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--near-black:#0A0A0A;--off-white:#F5F5F0;--warm-sand:#C8B89A;--charcoal:#2D2D2D;--deep-sand:#A08A5E;--muted:#B8B4AC;--ease:cubic-bezier(0.16,1,0.3,1);}
+  [data-theme="light"]{--bg:linear-gradient(150deg,#F4F3EE 0%,#EEE9DE 60%,#E6E0D2 100%);--head:#0A0A0A;--text:#3A362E;--muted2:#6E6A60;--card:#FFFFFF;--cardbrd:rgba(160,138,94,0.28);--field:#FBFAF6;--divider:rgba(160,138,94,0.20);--hair:rgba(45,45,45,0.09);--chrome:rgba(245,245,240,0.85);--tile-hover:rgba(200,184,154,0.10);--cta-bg:#0A0A0A;--cta-text:#F5F5F0;}
+  [data-theme="dark"]{--bg:linear-gradient(150deg,#0A0A0A 0%,#141310 60%,#1C1B17 100%);--head:#F5F5F0;--text:#C9C5BC;--muted2:#8A867E;--card:#141310;--cardbrd:rgba(200,184,154,0.16);--field:rgba(245,245,240,0.04);--divider:rgba(245,245,240,0.10);--hair:rgba(245,245,240,0.07);--chrome:rgba(10,10,10,0.7);--tile-hover:rgba(200,184,154,0.07);--cta-bg:#F5F5F0;--cta-text:#0A0A0A;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100dvh;}
+  body{font-family:'Inter','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;color:var(--text);background:var(--bg);background-attachment:fixed;transition:color .3s;font-size:1rem;padding-bottom:72px;}
+  header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:var(--chrome);backdrop-filter:blur(12px);border-bottom:1px solid var(--hair);}
+  .word{font-weight:700;font-size:20px;letter-spacing:.18em;color:var(--head);}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2);cursor:pointer;border:1px solid var(--divider);border-radius:20px;padding:6px 12px;}
+  .toggle .dw{width:26px;height:14px;border-radius:8px;background:var(--muted);position:relative;transition:background .3s;}
+  .toggle .kb{position:absolute;top:1px;left:1px;width:12px;height:12px;border-radius:50%;background:var(--off-white);transition:transform .3s var(--ease);}
+  [data-theme="dark"] .toggle .dw{background:var(--deep-sand);}[data-theme="dark"] .toggle .kb{transform:translateX(12px);}
+
+  .wrap{max-width:720px;margin:0 auto;padding:36px 28px;}
+  h1{font-size:26px;font-weight:700;color:var(--head);letter-spacing:-.01em;}
+  .sub{margin-top:6px;font-size:15px;color:var(--muted2);}
+
+  .search{margin:22px 0 6px;position:relative;}
+  .search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:16px;height:16px;}
+  .search input{width:100%;font-family:inherit;font-size:15px;color:var(--text);background:var(--field);border:1px solid var(--cardbrd);border-radius:10px;padding:14px 16px 14px 44px;transition:border-color .15s,box-shadow .15s;}
+  .search input::placeholder{color:var(--muted);}
+  .search input:focus{outline:none;border-color:var(--deep-sand);box-shadow:0 0 0 3px rgba(160,138,94,0.16);}
+
+  .sl{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);margin:28px 0 8px;}
+
+  /* owned / equipped */
+  .owned{display:flex;align-items:center;gap:14px;padding:16px 18px;border:1px solid var(--cardbrd);border-radius:14px;background:var(--card);}
+  .owned .av{width:44px;height:44px;image-rendering:pixelated;background:var(--field);border:1px solid var(--hair);border-radius:10px;padding:6px;flex:none;}
+  .owned .nm{font-size:15px;font-weight:700;color:var(--head);}
+  .owned .cat{font-size:12px;color:var(--muted2);margin-top:2px;}
+  .owned .eq{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--deep-sand);display:inline-flex;align-items:center;gap:6px;}
+  .owned .eq .d{width:6px;height:6px;border-radius:50%;background:var(--warm-sand);}
+
+  /* THE LIST — single column, hairline rows, no filled boxes */
+  .list{margin-top:8px;border-top:1px solid var(--hair);}
+  .row{display:flex;align-items:center;gap:16px;padding:18px 8px;border-bottom:1px solid var(--hair);cursor:pointer;transition:background .16s var(--ease),padding-left .18s var(--ease);}
+  .row:hover{background:var(--tile-hover);padding-left:16px;}
+  .row .idx{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);width:26px;flex:none;}
+  .row .nm{font-size:16px;font-weight:600;color:var(--head);flex:1;letter-spacing:-.01em;}
+  .row.owned-row{border-left:2px solid var(--warm-sand);}
+  .row .own-dot{width:6px;height:6px;border-radius:50%;background:var(--warm-sand);flex:none;}
+  .row .ct{font-size:13px;color:var(--muted2);font-variant-numeric:tabular-nums;}
+  .row .chev{color:var(--muted);transition:transform .18s var(--ease);}
+  .row:hover .chev{transform:translateX(3px);color:var(--deep-sand);}
+  .empty{padding:40px 8px;color:var(--muted2);font-size:15px;}
+
+  .tabs{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;padding:12px 0;background:var(--chrome);backdrop-filter:blur(10px);border-top:1px solid var(--hair);z-index:30;font-size:13px;}
+  .tabs span{color:var(--muted2);}.tabs .active{color:var(--head);font-weight:600;}
+
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="word">VALUESKINS</div>
+    <div class="toggle" onclick="toggleTheme()"><span id="tl">Light</span><span class="dw"><span class="kb"></span></span></div>
+  </header>
+
+  <div class="wrap">
+    <h1>ValueSkins Closet</h1>
+    <p class="sub">Your identity skins — owned and available.</p>
+
+    <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="#A08A5E" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="q" placeholder="Search professions…" oninput="render()"></div>
+
+    <div class="sl">Your Closet</div>
+    <div class="owned">
+      <svg class="av" viewBox="0 0 12 12" shape-rendering="crispEdges" id="skin"></svg>
+      <div><div class="nm">App Developer</div><div class="cat">Technology</div></div>
+      <span class="eq"><span class="d"></span> Equipped</span>
+    </div>
+
+    <div class="sl">Browse professions</div>
+    <div class="list" id="list"></div>
+    <div class="empty" id="empty" style="display:none"></div>
+  </div>
+
+  <div class="tabs"><span>Profile</span><span>Market</span><span class="active">Store</span><span>Settings</span></div>
+
+<script>
+  function charSVG(shirt,skin,hair){const eye='#141414';const rows=[[4,1,4,hair],[3,2,6,hair],[3,3,6,skin],[3,4,6,skin],[4,5,4,skin],[3,6,6,shirt],[2,7,8,shirt],[2,8,8,shirt],[2,9,8,shirt],[1,7,1,skin],[10,7,1,skin],[5,10,2,'#C8B89A']];return rows.map(([x,y,w,c])=>`<rect x="${x}" y="${y}" width="${w}" height="1" fill="${c}"/>`).join('')+`<rect x="4" y="4" width="1" height="1" fill="${eye}"/><rect x="7" y="4" width="1" height="1" fill="${eye}"/>`;}
+  document.getElementById('skin').innerHTML=charSVG('#3B6FB0','#E8B98A','#241C15');
+
+  const CATS=[
+    {n:'Technology',c:7,owned:true},{n:'Food & Beverage',c:10},{n:'Retail & Shopping',c:8},
+    {n:'Health & Fitness',c:7},{n:'Beauty & Personal Care',c:6},{n:'Travel & Hospitality',c:6},
+    {n:'Fashion & Apparel',c:6},{n:'Entertainment & Media',c:8},{n:'Sports & Recreation',c:7},
+    {n:'Education',c:8},{n:'Finance & Insurance',c:6},{n:'Real Estate',c:5},
+    {n:'Professional Services',c:7},{n:'Automotive',c:6},{n:'Home & Garden',c:6},{n:'Non-Profit & Community',c:7},
+  ];
+  function render(){
+    const q=(document.getElementById('q').value||'').toLowerCase();
+    const list=CATS.filter(c=>c.n.toLowerCase().includes(q));
+    const el=document.getElementById('list'),empty=document.getElementById('empty');
+    if(!list.length){el.innerHTML='';empty.style.display='block';empty.textContent=`No professions match "${document.getElementById('q').value}".`;return;}
+    empty.style.display='none';
+    el.innerHTML=list.map((c,i)=>`
+      <div class="row ${c.owned?'owned-row':''}">
+        <span class="idx">${String(i+1).padStart(2,'0')}</span>
+        <span class="nm">${c.n}</span>
+        ${c.owned?'<span class="own-dot" title="owned"></span>':''}
+        <span class="ct">${c.c} skins</span>
+        <span class="chev">›</span>
+      </div>`).join('');
+  }
+  function toggleTheme(){const el=document.documentElement;const d=el.getAttribute('data-theme')==='dark';el.setAttribute('data-theme',d?'light':'dark');document.getElementById('tl').textContent=d?'Light':'Dark';}
+  render();
+</script>
+</body>
+</html>
