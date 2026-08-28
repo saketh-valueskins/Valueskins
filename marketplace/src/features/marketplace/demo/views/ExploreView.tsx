@@ -58,16 +58,42 @@ function Modal({ onClose, children }: { onClose: () => void; children: React.Rea
   );
 }
 
-export default function ExploreView() {
+interface Campaign {
+  id: number;
+  brandName?: string;
+  brandProfession: string;
+  title: string;
+  description: string;
+  requiredProfessions: string[];
+  budget: string;
+  deadline: string;
+  location: string;
+}
+
+export default function ExploreView(props: { sharedState?: any; creatorProfile?: any }) {
   const [exploreTab, setExploreTab] = useState<'trending' | 'skins' | 'creators'>('trending');
   const [previewCreator, setPreviewCreator] = useState<BackendCreator | null>(null);
 
   const [creators, setCreators] = useState<BackendCreator[]>([]);
   const [loadingCreators, setLoadingCreators] = useState(false);
 
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch creators when switching to creators tab
+  useEffect(() => {
+    if (!props.sharedState?.deals) return;
+    const creatorNiche = props.creatorProfile?.profession;
+    if (!creatorNiche) {
+      setCampaigns([]);
+      return;
+    }
+    const allDeals = Object.values(props.sharedState.deals) as any[];
+    const filtered = allDeals
+      .filter(deal => deal.requiredProfessions?.includes(creatorNiche) || deal.brandProfession === creatorNiche)
+      .slice(0, 50);
+    setCampaigns(filtered);
+  }, [props.sharedState?.deals, props.creatorProfile?.profession]);
+
   useEffect(() => {
     if (exploreTab !== 'creators') return;
     let cancelled = false;
@@ -120,23 +146,27 @@ export default function ExploreView() {
       <div style={{ padding: '16px' }}>
         {exploreTab === 'trending' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ fontSize: '12px', color: C.textMuted }}>Trending on ValueSkins</div>
-            {[
-              { title: 'AI-Powered Content Creation', desc: 'Creators using AI tools are seeing 3x engagement growth', tag: 'Tech', views: '24K' },
-              { title: 'Fitness Creators Dominating Reels', desc: 'Short-form workout content up 180% this quarter', tag: 'Sports', views: '18K' },
-              { title: 'Brand Deals Going Long-Term', desc: 'Ambassador programs replace one-off sponsorships', tag: 'Business', views: '12K' },
-              { title: 'Design Portfolios on Instagram', desc: 'UX designers showcase work through carousel posts', tag: 'Art & Design', views: '9K' },
-              { title: 'Finance Creators Hit Mainstream', desc: 'Budgeting and investing content reaches Gen Z', tag: 'Finance', views: '15K' },
-            ].map((item, i) => (
-              <div key={i} style={{ background: C.card, borderRadius: '10px', padding: '14px', border: `1px solid ${C.border}` }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{item.title}</span>
-                  <span style={{ fontSize: '10px', color: C.textMuted, flexShrink: 0 }}>{item.views} views</span>
-                </div>
-                <div style={{ fontSize: '12px', color: C.textSecondary, lineHeight: 1.4, marginBottom: '8px' }}>{item.desc}</div>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: C.primary, background: `${withAlpha(C.primary, 0x10)}`, padding: '2px 8px', borderRadius: '4px' }}>{item.tag}</span>
+            <div style={{ fontSize: '12px', color: C.textMuted }}>Campaigns for {props.creatorProfile?.profession || 'your niche'}</div>
+            {campaigns.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: C.textMuted }}>
+                <div style={{ fontSize: '13px', marginBottom: '4px' }}>No campaigns available for your niche yet</div>
+                <div style={{ fontSize: '11px' }}>New campaigns matching your profession will appear here</div>
               </div>
-            ))}
+            ) : (
+              campaigns.map((campaign: Campaign) => (
+                <div key={campaign.id} style={{ background: C.card, borderRadius: '10px', padding: '14px', border: `1px solid ${C.border}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: C.text }}>{campaign.title}</span>
+                    <span style={{ fontSize: '10px', color: C.textMuted, flexShrink: 0 }}>{campaign.budget}</span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: C.textSecondary, lineHeight: 1.4, marginBottom: '8px' }}>{campaign.description}</div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: C.primary, background: `${withAlpha(C.primary, 0x10)}`, padding: '2px 8px', borderRadius: '4px' }}>{campaign.brandProfession}</span>
+                    <span style={{ fontSize: '10px', color: C.textMuted }}>Deadline: {campaign.deadline}</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
 
