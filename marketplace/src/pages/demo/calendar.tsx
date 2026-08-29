@@ -266,21 +266,38 @@ export default function CalendarPage({ userId, displayName, googleAccountId, dea
             <p style={{ fontSize: '15px', color: C.textMuted, margin: '0 0 32px', maxWidth: '400px', marginLeft: 'auto', marginRight: 'auto' }}>
               When you accept deals that require a shoot on location, they'll appear here and sync to your Google Calendar.
             </p>
-            <button
-              onClick={() => router.push('/demo/marketplace')}
-              style={{
-                background: C.accent,
-                color: C.bg,
-                border: 'none',
-                padding: '12px 28px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '15px',
-                fontWeight: 600,
-              }}
-            >
-              Browse Campaigns
-            </button>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => router.push('/demo/marketplace')}
+                style={{
+                  background: C.accent,
+                  color: C.bg,
+                  border: 'none',
+                  padding: '12px 28px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                }}
+              >
+                Browse Campaigns
+              </button>
+              <button
+                onClick={handleOpenGoogleCalendar}
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${C.accent}`,
+                  color: C.accent,
+                  padding: '12px 28px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                  fontWeight: 600,
+                }}
+              >
+                Open Google Calendar
+              </button>
+            </div>
           </div>
         )}
       </div>
