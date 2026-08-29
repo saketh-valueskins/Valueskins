@@ -68,7 +68,7 @@ export async function refreshGoogleAccessToken(userId: number, refreshToken: str
 }
 
 export function getGoogleOAuthUrl(): string {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
   const redirectUri = process.env.GOOGLE_CALENDAR_REDIRECT_URI || `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google-calendar-callback`;
   const scope = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events';
 
