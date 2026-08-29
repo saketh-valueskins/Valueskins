@@ -259,7 +259,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       console.error('FakeBank record failed:', err);
     }
   };
-  const [activeView, setActiveView] = useState<'profile' | 'mim' | 'store' | 'admin' | 'messages' | 'settings' | 'explore' | 'notifications' | 'events' | 'calendar'>(() => {
+  const [activeView, setActiveView] = useState<'profile' | 'mim' | 'store' | 'admin' | 'messages' | 'settings' | 'explore' | 'notifications' | 'events'>(() => {
 
     if (typeof window !== 'undefined') {
       const p = window.location.pathname;
@@ -6870,41 +6870,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
             <CreatorProfile embedded onBack={() => setSettingsPane('hub')} />
           )}
 
-          {activeView === 'calendar' && (
-            <>
-              <button
-                onClick={() => setActiveView('profile')}
-                style={{
-                  margin: '12px 16px 0', minHeight: '44px', padding: '0 14px',
-                  background: 'none', border: `1px solid ${C.border}`, borderRadius: '8px',
-                  color: C.text, fontSize: '14px', fontWeight: 600, cursor: 'pointer',
-                }}
-              >
-                ← Back
-              </button>
-              <div style={{ padding: '24px 16px', maxWidth: '500px', margin: '0 auto' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 600, color: C.text, margin: '0 0 16px', textAlign: 'center' }}>
-                  How ValueSkins Works with Google Calendar
-                </h3>
-                <div style={{ background: C.card, border: `1px solid ${C.border}`, padding: '16px', borderRadius: '8px', marginBottom: '16px', textAlign: 'left', fontSize: '13px', lineHeight: 1.6, color: C.textMuted }}>
-                  <p style={{ margin: '0 0 12px' }}>
-                    When you accept a deal that requires a shoot on location:
-                  </p>
-                  <ul style={{ margin: '0 0 12px', paddingLeft: '20px' }}>
-                    <li>ValueSkins automatically syncs the deal to your Google Calendar</li>
-                    <li>You get all shoot details: date, time, location, brand, compensation</li>
-                    <li>Deadlines for submissions, approvals, and payments are included</li>
-                  </ul>
-                  <p style={{ margin: '0', color: C.textMuted }}>
-                    <strong>Everything stays in sync — one place to manage your shoots.</strong>
-                  </p>
-                </div>
-                <a href="/demo/calendar" style={{ display: 'inline-block', padding: '10px 20px', background: C.primary, color: C.onPrimary, borderRadius: '6px', textDecoration: 'none', fontWeight: 600, fontSize: '13px', width: '100%', textAlign: 'center', boxSizing: 'border-box' }}>
-                  Open Full Calendar
-                </a>
-              </div>
-            </>
-          )}
+          {/* Calendar view temporarily disabled - code archived in /archived/calendar-feature */}
 
           {activeView === 'settings' && settingsPane === 'preferences' && (
             <>

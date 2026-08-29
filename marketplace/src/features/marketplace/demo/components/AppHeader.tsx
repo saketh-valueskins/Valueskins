@@ -17,7 +17,7 @@ import { C } from '@/theme/colors';
 // and §1 rules out emoji, so these are drawn to the same weight as the ones
 // already in MarketplaceLayout rather than pulled from a library.
 
-export type AppView = 'profile' | 'mim' | 'store' | 'settings' | 'calendar';
+export type AppView = 'profile' | 'mim' | 'store' | 'settings';
 
 const STROKE = {
   fill: 'none',
@@ -75,7 +75,6 @@ const TABS: { view: AppView; label: string; Icon: () => JSX.Element }[] = [
   { view: 'profile',  label: 'Profile',  Icon: IconProfile },
   { view: 'mim',      label: 'Market',   Icon: IconMarket },
   { view: 'store',    label: 'Store',    Icon: IconStore },
-  { view: 'calendar', label: 'Calendar', Icon: IconCalendar },
   { view: 'settings', label: 'Settings', Icon: IconSettings },
 ];
 
