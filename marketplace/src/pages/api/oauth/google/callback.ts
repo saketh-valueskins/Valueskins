@@ -92,6 +92,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    // Store Google tokens for calendar sync
+    const tokenExpiresAt = new Date();
+    tokenExpiresAt.setSeconds(tokenExpiresAt.getSeconds() + (tokens.expires_in || 3600));
+
+    await query(
+      `UPDATE accounts
+       SET google_access_token = $1,
+           google_refresh_token = $2,
+           google_token_expires_at = $3
+       WHERE id = $4`,
+      [tokens.access_token, tokens.refresh_token || null, tokenExpiresAt.toISOString(), userId]
+    ).catch(() => {
+      // Account may not exist yet, ignore
+    });
+
     const sessionId = crypto.randomUUID();
     // 30-min idle timeout; renewed on activity, capped at 24h (see lib/session.ts)
     const expiresAt = new Date(Date.now() + SESSION_IDLE_TIMEOUT_MS);
