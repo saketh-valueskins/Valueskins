@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import ProfileLink from './ProfileLink';
 
 interface Message {
   id: number;
@@ -13,7 +14,11 @@ interface Message {
 
 interface DealRoomChatProps {
   dealId: string;
+  brandId?: string | number;
   brandName: string;
+  brandCategory?: string;
+  brandDeals?: number;
+  brandAvatar?: string;
   initialMessages: Message[];
   onSendMessage: (text: string) => void;
 }
@@ -22,7 +27,11 @@ const C_DOCUMENTED = '#0A0A0A';
 
 export default function DealRoomChat({
   dealId,
+  brandId,
   brandName,
+  brandCategory,
+  brandDeals,
+  brandAvatar,
   initialMessages,
   onSendMessage,
 }: DealRoomChatProps) {
@@ -135,7 +144,20 @@ export default function DealRoomChat({
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div>
             <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--c-text)', margin: 0 }}>
-              Deal with {brandName}
+              Deal with{' '}
+              {brandId ? (
+                <ProfileLink
+                  type="brand"
+                  id={brandId}
+                  name={brandName}
+                  avatar={brandAvatar}
+                  category={brandCategory}
+                  dealsCount={brandDeals}
+                  href={`/brand/${brandId}`}
+                />
+              ) : (
+                brandName
+              )}
             </h3>
             <p style={{ fontSize: '12px', color: 'var(--c-text-variant)', margin: '4px 0 0 0' }}>
               Status: In Progress
