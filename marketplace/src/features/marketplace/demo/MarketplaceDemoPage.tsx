@@ -6882,9 +6882,24 @@ export default function MarketplaceDemoPage(initialDealData?: {
               >
                 ← Back
               </button>
-              <div style={{ padding: '16px', textAlign: 'center', color: C.textMuted }}>
-                <p style={{ fontSize: '14px', marginBottom: '16px' }}>View your calendar at:</p>
-                <a href="/demo/calendar" style={{ display: 'inline-block', padding: '12px 24px', background: C.primary, color: C.onPrimary, borderRadius: '8px', textDecoration: 'none', fontWeight: 600, fontSize: '14px' }}>
+              <div style={{ padding: '24px 16px', maxWidth: '500px', margin: '0 auto' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: C.text, margin: '0 0 16px', textAlign: 'center' }}>
+                  How ValueSkins Works with Google Calendar
+                </h3>
+                <div style={{ background: C.card, border: `1px solid ${C.border}`, padding: '16px', borderRadius: '8px', marginBottom: '16px', textAlign: 'left', fontSize: '13px', lineHeight: 1.6, color: C.textMuted }}>
+                  <p style={{ margin: '0 0 12px' }}>
+                    When you accept a deal that requires a shoot on location:
+                  </p>
+                  <ul style={{ margin: '0 0 12px', paddingLeft: '20px' }}>
+                    <li>ValueSkins automatically syncs the deal to your Google Calendar</li>
+                    <li>You get all shoot details: date, time, location, brand, compensation</li>
+                    <li>Deadlines for submissions, approvals, and payments are included</li>
+                  </ul>
+                  <p style={{ margin: '0', color: C.textMuted }}>
+                    <strong>Everything stays in sync — one place to manage your shoots.</strong>
+                  </p>
+                </div>
+                <a href="/demo/calendar" style={{ display: 'inline-block', padding: '10px 20px', background: C.primary, color: C.onPrimary, borderRadius: '6px', textDecoration: 'none', fontWeight: 600, fontSize: '13px', width: '100%', textAlign: 'center', boxSizing: 'border-box' }}>
                   Open Full Calendar
                 </a>
               </div>
