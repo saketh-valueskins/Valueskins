@@ -119,41 +119,30 @@ export default function CalendarPage({ userId, displayName, googleAccountId, dea
       {/* Main Content */}
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 24px' }}>
         {!isConnected ? (
-          <div style={{ textAlign: 'center', paddingTop: '40px' }}>
-            <h1 style={{ fontSize: '32px', fontWeight: 700, color: C.text, margin: '0 0 20px' }}>
-              ValueSkins Syncs to Google Calendar
+          <div style={{ textAlign: 'center', paddingTop: '60px' }}>
+            <h1 style={{ fontSize: '32px', fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
+              Calendar Sync Ready
             </h1>
-            <div style={{ background: C.surface, border: `1px solid ${C.border}`, padding: '32px', borderRadius: '12px', maxWidth: '600px', margin: '0 auto 40px', textAlign: 'left' }}>
-              <p style={{ fontSize: '15px', color: C.text, margin: '0 0 16px', lineHeight: 1.8 }}>
-                When you accept a deal that requires a shoot on location, ValueSkins automatically adds it to your Google Calendar with all the details:
-              </p>
-              <ul style={{ fontSize: '14px', color: C.textMuted, margin: '0 0 16px', paddingLeft: '20px', lineHeight: 1.8 }}>
-                <li>Shoot date and time</li>
-                <li>Location</li>
-                <li>Brand name and compensation</li>
-                <li>Submission and approval deadlines</li>
-              </ul>
-              <p style={{ fontSize: '15px', color: C.text, margin: '0', lineHeight: 1.8 }}>
-                <strong>To use this feature, you must connect your Google Calendar account.</strong> We'll only access your calendar to add shoot dates — nothing else.
-              </p>
-            </div>
+            <p style={{ fontSize: '15px', color: C.textMuted, margin: '0 0 32px', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
+              Your Google Calendar is ready. When you accept deals that require a shoot on location, ValueSkins will automatically add them to your calendar.
+            </p>
             <button
-              onClick={handleConnectGoogle}
+              onClick={handleOpenGoogleCalendar}
               style={{
                 background: C.accent,
                 color: C.bg,
                 border: 'none',
-                padding: '14px 40px',
+                padding: '12px 32px',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                fontSize: '16px',
+                fontSize: '15px',
                 fontWeight: 600,
                 transition: 'opacity 0.2s',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
             >
-              Connect Google Calendar Now
+              Open Google Calendar
             </button>
           </div>
         ) : hasLocationDeals ? (

@@ -33,7 +33,7 @@ export async function getGoogleAuthUrl(): Promise<string> {
       client_id: GOOGLE_CLIENT_ID,
       redirect_uri: GOOGLE_REDIRECT_URI,
       response_type: 'code',
-      scope: 'openid profile email',
+      scope: 'openid profile email https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
       state: randomState(),
       access_type: 'offline',
       prompt: 'select_account',
