@@ -156,33 +156,6 @@ export default function CalendarPage({ userId, displayName, googleAccountId, dea
               Connect Google Calendar Now
             </button>
           </div>
-        ) : !isConnected ? (
-          <div style={{ textAlign: 'center', paddingTop: '60px' }}>
-            <h1 style={{ fontSize: '28px', fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
-              Connect Your Google Calendar
-            </h1>
-            <p style={{ fontSize: '15px', color: C.textMuted, margin: '0 0 32px', maxWidth: '450px', marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.6 }}>
-              ValueSkins syncs all your shoot dates and deadlines to Google Calendar. This way, you can see everything in one place and never miss a deadline.
-            </p>
-            <button
-              onClick={handleConnectGoogle}
-              style={{
-                background: C.accent,
-                color: C.bg,
-                border: 'none',
-                padding: '12px 32px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '15px',
-                fontWeight: 600,
-                transition: 'opacity 0.2s',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-            >
-              Connect Google Calendar
-            </button>
-          </div>
         ) : hasLocationDeals ? (
           <>
             <h1 style={{ fontSize: '32px', fontWeight: 700, color: C.text, margin: '0 0 12px' }}>
