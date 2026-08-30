@@ -6157,10 +6157,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     <div style={{ display:'flex', flexDirection:'column', gap:'6px', alignItems:'flex-end' }}>
                                       <button
                                         onClick={() => {
-                                          const creatorIdx = backendCreators.findIndex((c: any) => c.name === creatorName);
-                                          if (creatorIdx >= 0) {
-                                            setNegotiatingCreator(creatorIdx);
-                                            setNegotiatingOpp(parseInt(d.key.split('|')[2]));
+                                          const creator = backendCreators.find((c: any) => c.name === creatorName && c.valueSkin === creatorSkin);
+                                          if (creator) {
+                                            setNegotiatingCreator(creator._origIdx);
+                                            setBrandCurrentOppIndex(parseInt(d.key.split('|')[2]));
                                           }
                                         }}
                                         style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:600, color:C.primary, cursor:'pointer', whiteSpace:'nowrap' }}
