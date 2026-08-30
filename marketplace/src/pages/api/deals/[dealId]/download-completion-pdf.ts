@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db-pool';
-import { getDealPDFFile } from '@/lib/render-storage';
+import { downloadDealPDF } from '@/lib/render-storage';
 import { getSessionUserId } from '@/lib/session';
 
 /**
@@ -51,11 +51,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Fetch PDF from storage
-    const pdfBuffer = await getDealPDFFile(deal.completion_pdf_url);
+    const pdfBlob = await downloadDealPDF(deal.completion_pdf_url);
 
-    if (!pdfBuffer) {
+    if (!pdfBlob) {
       return res.status(404).json({ error: 'PDF file not found in storage' });
     }
+
+    // Convert blob to buffer
+    const pdfBuffer = Buffer.from(await pdfBlob.arrayBuffer());
 
     // Return PDF
     const fileName = `${deal.title || 'deal'}-completion.pdf`.replace(/[^a-z0-9-]/gi, '-');
