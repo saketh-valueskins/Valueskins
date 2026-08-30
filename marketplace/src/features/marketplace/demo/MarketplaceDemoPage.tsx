@@ -1474,8 +1474,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [pendingCampaignForEscrow, setPendingCampaignForEscrow] = useState<Campaign | null>(null);
 
   // Feature 4: Batch campaign sending
-  const [showBatchSendModal, setShowBatchSendModal] = useState(false);
-  const [batchSendCreatorIds, setBatchSendCreatorIds] = useState<Set<number>>(new Set());
   const [lastCreatedCampaignId, setLastCreatedCampaignId] = useState<number | null>(null);
 
   // Feature 2: Creator profile display
@@ -5464,7 +5462,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             setPendingCampaignForEscrow(newC);
                             setShowEscrowFundingModal(true);
                             setEscrowFundingInProgress2(false);
-                            setBatchSendCreatorIds(new Set());
                           }}
                         />
                       </div>
@@ -5859,87 +5856,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             >
                               Cancel
                             </button>
-                          </div>
-                        </div>
-                      </div>
-                      );
-                    })()}
-
-                    {/* Feature 4: Auto-Matched Creators Modal — reads from live continuous matches */}
-                    {showBatchSendModal && lastCreatedCampaignId && (() => {
-                      const batchMatches = campaignMatches.get(lastCreatedCampaignId) || [];
-                      return (
-                      <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999 }}>
-                        <div style={{ background:C.surface, borderRadius:'16px', padding:'24px', maxWidth:'520px', width:'95vw', maxHeight:'90vh', overflowY:'auto', border:`1px solid ${C.border}`, position:'relative' }}>
-                          <div style={{ fontSize:'16px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Auto-Matched Creators</div>
-                          <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'16px' }}>System found {batchMatches.length} creators matching your campaign. Select who to invite.</div>
-
-                          {batchMatches.length === 0 ? (
-                            <div style={{ padding:'40px 20px', textAlign:'center', color:C.textSecondary }}>
-                              <div style={{ fontSize:'14px', marginBottom:'8px' }}>No matching creators found</div>
-                              <div style={{ fontSize:'12px' }}>Try adjusting your campaign requirements</div>
-                            </div>
-                          ) : (
-                            <div style={{ maxHeight:'400px', overflowY:'auto', marginBottom:'16px', border:`1px solid ${C.border}`, borderRadius:'8px', background:C.bg }}>
-                              {batchMatches.map((match, idx) => {
-                                return (
-                                  <div
-                                    key={match.creatorHandle}
-                                    style={{
-                                      padding:'14px 12px',
-                                      borderBottom: idx < batchMatches.length - 1 ? `1px solid ${C.border}` : 'none',
-                                      display:'flex',
-                                      gap:'12px',
-                                      alignItems:'flex-start',
-                                      cursor:'pointer',
-                                      background: batchSendCreatorIds.has(idx) ? `${withAlpha(C.primary, 0x10)}` : 'transparent',
-                                      borderLeft: batchSendCreatorIds.has(idx) ? `3px solid ${C.primary}` : '3px solid transparent',
-                                      transition:'background 0.15s, border-color 0.15s'
-                                    }}
-                                    onClick={() => {
-                                      setBatchSendCreatorIds(prev => {
-                                        const newSet = new Set(prev);
-                                        if (newSet.has(idx)) newSet.delete(idx);
-                                        else newSet.add(idx);
-                                        return newSet;
-                                      });
-                                    }}
-                                  >
-                                    <input type="checkbox" checked={batchSendCreatorIds.has(idx)} onChange={() => {}} style={{ cursor:'pointer', width:'18px', height:'18px', accentColor:C.primary, marginTop:'2px', flexShrink:0 }} />
-                                    <div style={{ flex:1 }}>
-                                      <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px' }}>
-                                        <div
-                                          onMouseEnter={(e) => showHoverCard(buildCreatorHover(match.creatorName, match.creatorProfession), e)}
-                                          onMouseMove={updateHoverPosition}
-                                          onMouseLeave={hideHoverCard}
-                                          style={{ fontSize:'13px', fontWeight:600, color:C.text, cursor:'pointer' }}>{match.creatorName}</div>
-                                        <div style={{ fontSize:'12px', fontWeight:700, background:`${withAlpha(C.primary, 0x15)}`, color:C.primary, padding:'2px 8px', borderRadius:'4px' }}>{match.matchScore}%</div>
-                                      </div>
-                                      <div
-                                        onMouseEnter={(e) => showHoverCard(buildCreatorHover(match.creatorName, match.creatorProfession), e)}
-                                        onMouseMove={updateHoverPosition}
-                                        onMouseLeave={hideHoverCard}
-                                        style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'6px', cursor:'pointer' }}>{match.creatorProfession} · {match.creatorName}</div>
-                                      <div style={{ display:'flex', flexWrap:'wrap', gap:'6px' }}>
-                                        {match.reasons.map((reason, i) => (
-                                          <div key={i} style={{ fontSize:'0.75rem', background:C.card, color:C.textMuted, padding:'3px 8px', borderRadius:'4px' }}>{reason}</div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          <div style={{ marginBottom:'16px', padding:'10px 12px', background:`${withAlpha(C.primary, 0x08)}`, border:`1px solid ${withAlpha(C.primary, 0x30)}`, borderRadius:'8px' }}>
-                            <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>{batchSendCreatorIds.size} selected</div>
-                            <div style={{ fontSize:'0.75rem', color:C.textSecondary }}>Each selected creator will receive an invitation</div>
-                          </div>
-
-                          <div style={{ display:'flex', gap:'8px' }}>
-                            <button onClick={() => { setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'11px', color:C.text, fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
-                            <button onClick={() => { batchSendCreatorIds.forEach(idx => { const match = batchMatches[idx]; const campaign = campaigns.find(c => c.id === lastCreatedCampaignId); const oppIdx = activeOpportunities.findIndex(o => o.brand === campaign?.title); if (campaign) { const app: SharedApplication = { id:Date.now() + idx, campaignId:lastCreatedCampaignId ?? 0, campaignTitle:campaign.title || 'Campaign', creatorProfession:match.creatorProfession || '', creatorHandle:match.creatorHandle || '', creatorName:match.creatorName, status:'invited' as SharedApplication['status'], appliedAt:new Date().toISOString(), opportunityIndex: oppIdx >= 0 ? oppIdx : 0 }; sharedCreateApplication(app); sharedSendNotification(match.creatorHandle || '', 'campaign', `${profileName} invited you to: ${campaign.title || 'Campaign'}`); } }); setPurchaseToast(`Invitations sent to ${batchSendCreatorIds.size} creator${batchSendCreatorIds.size !== 1 ? 's' : ''}`); setTimeout(() => setPurchaseToast(null), 3000); setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:batchSendCreatorIds.size > 0 ? C.primary : C.border, border:'none', borderRadius:'8px', padding:'11px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'13px', cursor: batchSendCreatorIds.size > 0 ? 'pointer' : 'not-allowed', opacity: batchSendCreatorIds.size > 0 ? 1 : 0.5 }}>Send to {batchSendCreatorIds.size} Creator{batchSendCreatorIds.size !== 1 ? 's' : ''}</button>
                           </div>
                         </div>
                       </div>
