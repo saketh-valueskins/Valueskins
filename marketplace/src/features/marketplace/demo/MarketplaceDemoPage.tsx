@@ -2442,7 +2442,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       applicationDeadline: c.deadline,
       deliverables: (c.deliverables || '').split(',').map(d => {
               const trimmed = d.trim();
-              const countMatch = trimmed.match(/^(\d+)[xX]\s*(.+)$/);
+              const countMatch = trimmed.match(/^(\d+)[xX]\s*(.+)₹/);
               return countMatch ? { format: countMatch[2].trim(), count: parseInt(countMatch[1]) } : { format: trimmed, count: 1 };
             }),
       requirements: c.requirements || [],
@@ -3037,7 +3037,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '2px' }}>Rating</div>
                     </div>
                     <div style={{ textAlign: 'center', padding: '12px', background: C.bg, borderRadius: '10px' }}>
-                      <div style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>${(completedDeals.reduce((s, d) => s + d.amount, 0) / 1000).toFixed(1)}K</div>
+                      <div style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>${(completedDeals.reduce((s, d) => s + d.amount, 0) / 100000).toFixed(1)}L</div>
                       <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '2px' }}>{isBrand ? 'Spent' : 'Earned'}</div>
                     </div>
                   </div>
@@ -4464,7 +4464,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               type="number"
                                               value={dealCounterAmount}
                                               onChange={e => setDealCounterAmount(e.target.value)}
-                                              placeholder="Your ask ($)"
+                                              placeholder="Your ask (₹)"
                                               style={{ width: '100%', background: C.card, border: `1px solid ${C.border}`, borderRadius: '6px', padding: '6px 8px', fontSize: '12px', color: C.text, boxSizing: 'border-box', marginBottom: '4px' }}
                                             />
                                             <button
@@ -5615,7 +5615,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ fontSize:'15px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Send a Tip 💰</div>
                           <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'14px' }}>Thank this creator for excellent work. Tips go directly to them with zero platform fees.</div>
                           <div style={{ marginBottom:'14px' }}>
-                            <div style={{ fontSize:'0.75rem', fontWeight:600, color:C.textMuted, marginBottom:'6px' }}>Tip amount ($) *</div>
+                            <div style={{ fontSize:'0.75rem', fontWeight:600, color:C.textMuted, marginBottom:'6px' }}>Tip amount (₹) *</div>
                             <input type="number" value={tipAmount} onChange={e => setTipAmount(e.target.value)} placeholder="Enter amount" min="1" style={{ width:'100%', background:C.card, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px 12px', fontSize:'13px', color:C.text, boxSizing:'border-box' }} />
                           </div>
                           <div style={{ marginBottom:'14px', padding:'10px 12px', background:`${withAlpha(C.warning, 0x12)}`, border:`1px solid ${withAlpha(C.warning, 0x30)}`, borderRadius:'8px' }}>
@@ -5869,7 +5869,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     style={{ fontSize:'13px', fontWeight:600, color:C.text, cursor:'pointer' }}
                                   >{creatorName}</div>
                                   <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginTop:'2px' }}>{creatorSkin}</div>
-                                  <div style={{ fontSize:'0.75rem', color:C.text, marginTop:'4px' }}>Offer: <strong>₹{parseInt(String(offer).replace(/[^0-9]/g, '')) ? parseInt(String(offer).replace(/[^0-9]/g, '')).toLocaleString() : offer}</strong></div>
+                                  <div style={{ fontSize:'0.75rem', color:C.text, marginTop:'4px' }}>Offer: <strong>${parseInt(String(offer).replace(/[^0-9]/g, '')) ? parseInt(String(offer).replace(/[^0-9]/g, '')).toLocaleString() : offer}</strong></div>
                                 </div>
                                 <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'6px' }}>
                                   <span style={{ fontSize:'0.75rem', fontWeight:600, color:st.color, background:`${withAlpha(st.color, 0x12)}`, padding:'2px 8px', borderRadius:'10px', border:`1px solid ${withAlpha(st.color, 0x30)}` }}>{st.label}</span>
@@ -6092,7 +6092,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           }}
                         />
                         <span style={{ fontSize: '12px', color: C.textSecondary, minWidth: '80px' }}>
-                          ₹{(tier === 'community' ? communityTierCredits : marketplaceTierCredits) * 8}.00 INR
+                          ${(tier === 'community' ? communityTierCredits : marketplaceTierCredits) * 8}.00 INR
                         </span>
                       </div>
                     ))}
@@ -6206,18 +6206,18 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
                             <span style={{ color: C.textSecondary }}>Brand pays (total)</span>
-                            <span style={{ color: C.primary, fontWeight: 700 }}>₹{(10000 + 10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span style={{ color: C.primary, fontWeight: 700 }}>${(10000 + 10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginTop: '3px', paddingTop: '3px', borderTop: `1px solid ${C.border}`, color: C.textMuted }}>
                             <span>ValueSkins revenue</span>
-                            <span>₹{(10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span>${(10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                         </>
                       ) : (
                         <>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '3px' }}>
                             <span style={{ color: C.textSecondary }}>Creator receives</span>
-                            <span style={{ color: C.success, fontWeight: 700 }}>₹{(10000 - 10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span style={{ color: C.success, fontWeight: 700 }}>${(10000 - 10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
                             <span style={{ color: C.textSecondary }}>Brand pays (total)</span>
@@ -6225,7 +6225,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           </div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginTop: '3px', paddingTop: '3px', borderTop: `1px solid ${C.border}`, color: C.textMuted }}>
                             <span>ValueSkins revenue</span>
-                            <span>₹{(10000 * platformCommissionPct / 100).toLocaleString()}</span>
+                            <span>${(10000 * platformCommissionPct / 100).toLocaleString()}</span>
                           </div>
                         </>
                       )}
@@ -6936,7 +6936,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
             <MetricInput label="Followers" value={metrics.followers} onChange={(v) => updateMetric('followers', v)} />
             <MetricInput label="Engagement Rate (%)" value={metrics.engagement} onChange={(v) => updateMetric('engagement', v)} />
             <MetricInput label="Deals Completed" value={metrics.dealsCompleted} onChange={(v) => updateMetric('dealsCompleted', v)} />
-            <MetricInput label="Average Deal Value ($)" value={metrics.avgDealValue} onChange={(v) => updateMetric('avgDealValue', v)} />
+            <MetricInput label="Average Deal Value (₹)" value={metrics.avgDealValue} onChange={(v) => updateMetric('avgDealValue', v)} />
             <MetricInput label="On-Time Rate (%)" value={metrics.onTimeRate} onChange={(v) => updateMetric('onTimeRate', v)} />
             <MetricInput label="Brand Rating" value={metrics.brandRating} onChange={(v) => updateMetric('brandRating', v)} />
           </div>
