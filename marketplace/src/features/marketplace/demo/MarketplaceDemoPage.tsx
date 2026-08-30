@@ -5539,7 +5539,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 if (e.key === 'Enter' && (e.target as any).value.trim() && brandDealKey) {
                                   const now = new Date();
                                   const newMsg = { id: Date.now(), sender: 'brand' as const, text: (e.target as any).value, time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false }), isoTime: now.toISOString(), seen: false };
-                                  setChatMessages((prev) => [...prev, newMsg]);
                                   updateDeal(brandDealKey, { chatInput: '', chatMessages: [...(brandDeal?.chatMessages || []), newMsg] });
                                 }
                               }}
