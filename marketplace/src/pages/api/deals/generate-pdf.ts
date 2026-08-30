@@ -78,8 +78,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const deliverables = deliverablesResult.rows || [];
 
-      // Generate PDF
-      const pdfBuffer = await generateDealPDF(deal, messages, deliverables);
+      // Fetch all GST invoices for this deal
+      let invoices: any[] = [];
+      try {
+        const invoicesResult = await query(
+          `SELECT
+            id,
+            invoice_number,
+            invoice_type,
+            invoice_date,
+            payment_status,
+            payment_date,
+            line_items,
+            subtotal,
+            total_gst,
+            total_amount
+           FROM invoices
+           WHERE deal_id = $1
+           ORDER BY created_at ASC`,
+          [dealId]
+        );
+
+        invoices = (invoicesResult.rows || []).map(row => ({
+          invoiceNumber: row.invoice_number,
+          invoiceType: row.invoice_type,
+          invoiceDate: row.invoice_date,
+          paymentStatus: row.payment_status,
+          paymentDate: row.payment_date,
+          lineItems: row.line_items,
+          subtotal: row.subtotal,
+          totalGST: row.total_gst,
+          totalAmount: row.total_amount,
+        }));
+      } catch (invoiceError) {
+        console.warn('Could not fetch invoices (table may not exist yet):', invoiceError);
+        // Continue without invoices if table doesn't exist
+      }
+
+      // Generate PDF (with invoices if available)
+      const pdfBuffer = await generateDealPDF(deal, messages, deliverables, invoices);
 
       // Timestamped so each generation is a distinct version, not an overwrite
       const fileName = `deal-${dealId}-${new Date().toISOString().replace(/[:.]/g, '-')}.pdf`;
