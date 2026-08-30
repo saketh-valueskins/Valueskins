@@ -1464,6 +1464,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
   // Campaign escrow funding modal (shown after publish, before batch send)
   const [showEscrowFundingModal, setShowEscrowFundingModal] = useState(false);
   const [escrowFundingInProgress2, setEscrowFundingInProgress2] = useState(false);
+  const [showBrandPaymentModal, setShowBrandPaymentModal] = useState(false);
+  const [brandPaymentInProgress, setBrandPaymentInProgress] = useState(false);
   const [pendingCampaignForEscrow, setPendingCampaignForEscrow] = useState<Campaign | null>(null);
 
   // Feature 4: Batch campaign sending
@@ -5477,6 +5479,109 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       </div>
                     )}
 
+                    {/* Brand Payment Modal — commission payment after deal acceptance */}
+                    {showBrandPaymentModal && activeDealKey && (() => {
+                      const deal = dealStates[activeDealKey];
+                      if (!deal) return null;
+                      const dealAmount = parseInt(String(deal.counterAmount || deal.offerAmount || '0').replace(/[^0-9]/g, '') || '0');
+                      const commission = Math.round(dealAmount * platformCommissionPct / 100);
+                      const creatorName = deal.creatorName || 'Creator';
+                      return (
+                      <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10000 }}>
+                        <div style={{ background:C.surface, borderRadius:'16px', padding:'28px', maxWidth:'440px', width:'95vw', border:`1px solid ${C.border}` }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:'10px', marginBottom:'6px' }}>
+                            <div style={{ width:36, height:36, borderRadius:'50%', background:C.surfaceAlt, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.warning} strokeWidth="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            </div>
+                            <div style={{ fontSize:'16px', fontWeight:700, color:C.text }}>Complete Payment</div>
+                          </div>
+                          <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'20px', lineHeight:1.5 }}>
+                            Before {creatorName} begins work, pay ValueSkins' commission on this deal. The creator's advance will be held in escrow and released per your agreement.
+                          </div>
+
+                          {/* Deal Summary */}
+                          <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'14px', marginBottom:'14px' }}>
+                            <div style={{ fontSize:'12px', fontWeight:700, color:C.text, marginBottom:'8px' }}>{creatorName} — {deal.creatorSkin}</div>
+                            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', marginBottom:'8px' }}>
+                              <div>
+                                <div style={{ fontSize:'0.75rem', color:C.textMuted, fontWeight:600, marginBottom:'2px' }}>Deal Amount</div>
+                                <div style={{ fontSize:'14px', fontWeight:700, color:C.text }}>₹{dealAmount.toLocaleString()}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize:'0.75rem', color:C.textMuted, fontWeight:600, marginBottom:'2px' }}>Your Commission</div>
+                                <div style={{ fontSize:'14px', fontWeight:700, color:C.warning }}>₹{commission.toLocaleString()}</div>
+                              </div>
+                            </div>
+                            <div style={{ fontSize:'0.75rem', color:C.textSecondary, paddingTop:'8px', borderTop:`1px solid ${C.border}` }}>
+                              {platformCommissionPct}% platform fee on creator deals
+                            </div>
+                          </div>
+
+                          {/* Payment Methods */}
+                          <div style={{ background:C.bg, border:`1px solid ${C.border}`, borderRadius:'10px', padding:'12px', marginBottom:'14px' }}>
+                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.4px', marginBottom:'8px' }}>Payment Method</div>
+                            <div style={{ fontSize:'12px', color:C.textSecondary, padding:'8px', background:C.card, borderRadius:'6px', border:`1px solid ${C.border}` }}>
+                              Razorpay (Credit/Debit Card, UPI, NetBanking)
+                            </div>
+                          </div>
+
+                          {/* Payment Progress */}
+                          {brandPaymentInProgress && (
+                            <div style={{ marginBottom:'14px' }}>
+                              <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.75rem', color:C.textMuted, marginBottom:'6px' }}>
+                                <span>Processing payment...</span>
+                                <span style={{ color:'var(--c-warning)', fontWeight:600 }}>Verifying</span>
+                              </div>
+                              <div style={{ width:'100%', height:'6px', background:C.card, borderRadius:'3px', overflow:'hidden' }}>
+                                <div style={{ width:'70%', height:'100%', background:'var(--c-warning)', borderRadius:'3px', transition:'width 1.5s ease' }} />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div style={{ display:'flex', gap:'8px' }}>
+                            <button
+                              disabled={brandPaymentInProgress}
+                              onClick={() => {
+                                setBrandPaymentInProgress(true);
+                                setTimeout(() => {
+                                  recordFakeBankTransaction({
+                                    type: 'payment',
+                                    description: `Deal commission for ${creatorName}`,
+                                    amount: commission * 100,
+                                    reference: `commission_${activeDealKey}_${Date.now()}`,
+                                  });
+                                  updateDeal(activeDealKey, { phase: 'accepted', brandApprovalPhase: 'accepted', chatMessages: [...((dealStates as any)[activeDealKey]?.chatMessages || []), {
+                                    id: Date.now(),
+                                    sender: 'brand' as const,
+                                    text: `Brand accepted your offer of ₹${dealAmount.toLocaleString()} and paid commission. Work can now begin!`,
+                                    time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false }),
+                                    isoTime: new Date().toISOString(),
+                                    seen: false,
+                                  }] });
+                                  setShowBrandPaymentModal(false);
+                                  setBrandPaymentInProgress(false);
+                                  setPurchaseToast(`Payment of ₹${commission.toLocaleString()} sent to ValueSkins. ${creatorName} has been notified.`);
+                                  setTimeout(() => setPurchaseToast(null), 4000);
+                                }, 2000);
+                              }}
+                              style={{ flex:1, background: brandPaymentInProgress ? C.border : C.primary, border:'none', borderRadius:'8px', padding:'11px', color:'var(--c-surface-lowest)', fontWeight:700, cursor: brandPaymentInProgress ? 'not-allowed' : 'pointer', fontSize:'13px', opacity: brandPaymentInProgress ? 0.6 : 1 }}
+                            >
+                              {brandPaymentInProgress ? 'Processing...' : `Pay ₹${commission.toLocaleString()}`}
+                            </button>
+                            <button
+                              disabled={brandPaymentInProgress}
+                              onClick={() => setShowBrandPaymentModal(false)}
+                              style={{ padding:'11px 16px', background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', color:C.text, fontWeight:600, cursor: brandPaymentInProgress ? 'not-allowed' : 'pointer', fontSize:'13px', opacity: brandPaymentInProgress ? 0.6 : 1 }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      );
+                    })()}
+
                     {/* Feature 4: Auto-Matched Creators Modal — reads from live continuous matches */}
                     {showBatchSendModal && lastCreatedCampaignId && (() => {
                       const batchMatches = campaignMatches.get(lastCreatedCampaignId) || [];
@@ -5874,25 +5979,33 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'6px' }}>
                                   <span style={{ fontSize:'0.75rem', fontWeight:600, color:st.color, background:`${withAlpha(st.color, 0x12)}`, padding:'2px 8px', borderRadius:'10px', border:`1px solid ${withAlpha(st.color, 0x30)}` }}>{st.label}</span>
                                   {actionable && (
-                                    <div style={{ display:'flex', gap:'6px' }}>
+                                    <div style={{ display:'flex', flexDirection:'column', gap:'6px', alignItems:'flex-end' }}>
                                       <button
                                         onClick={() => {
-                                          updateDeal(d.key, { phase: 'accepted', brandApprovalPhase: 'accepted' });
-                                          pushStatusMessage(d.key, `Brand accepted your offer of ₹${parseInt(String(offer).replace(/[^0-9]/g, '') || '0').toLocaleString()}.`);
-                                          setPurchaseToast(`${creatorName} has been notified of your approval`);
-                                          setTimeout(() => setPurchaseToast(null), 3000);
+                                          setNegotiatingCreator(parseInt(d.key.split('|')[0]));
+                                          setNegotiatingOpp(parseInt(d.key.split('|')[2]));
                                         }}
-                                        style={{ background:C.success, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}
-                                      >Approve</button>
-                                      <button
-                                        onClick={() => {
-                                          updateDeal(d.key, { phase: 'rejected' });
-                                          pushStatusMessage(d.key, 'Brand declined the offer.');
-                                          setPurchaseToast(`${creatorName} has been notified of your decision`);
-                                          setTimeout(() => setPurchaseToast(null), 3000);
-                                        }}
-                                        style={{ background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-error)', cursor:'pointer' }}
-                                      >Reject</button>
+                                        style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:600, color:C.primary, cursor:'pointer', whiteSpace:'nowrap' }}
+                                      >View Negotiation</button>
+                                      <div style={{ display:'flex', gap:'6px' }}>
+                                        <button
+                                          onClick={() => {
+                                            updateDeal(d.key, { phase: 'formal_offer', brandApprovalPhase: 'reviewing' });
+                                            setShowBrandPaymentModal(true);
+                                            setPurchaseToast(`Processing payment for ${creatorName}`);
+                                          }}
+                                          style={{ background:C.success, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}
+                                        >Accept & Pay</button>
+                                        <button
+                                          onClick={() => {
+                                            updateDeal(d.key, { phase: 'rejected' });
+                                            pushStatusMessage(d.key, 'Brand declined the offer.');
+                                            setPurchaseToast(`${creatorName} has been notified of your decision`);
+                                            setTimeout(() => setPurchaseToast(null), 3000);
+                                          }}
+                                          style={{ background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-error)', cursor:'pointer' }}
+                                        >Reject</button>
+                                      </div>
                                     </div>
                                   )}
                                 </div>
