@@ -34,10 +34,31 @@ interface Deliverable {
   files?: string[];
 }
 
+interface InvoiceLineItem {
+  description: string;
+  amount: number;
+  gstRate: number;
+  gstAmount: number;
+  totalAmount: number;
+}
+
+interface PaymentInvoice {
+  invoiceNumber: string;
+  invoiceType: 'stage1_commission' | 'stage2_advance' | 'stage3_remainder';
+  invoiceDate: string;
+  paymentStatus: 'pending' | 'completed' | 'failed';
+  paymentDate?: string;
+  lineItems: InvoiceLineItem[];
+  subtotal: number;
+  totalGST: number;
+  totalAmount: number;
+}
+
 export async function generateDealPDF(
   deal: DealData,
   messages: ChatMessage[],
-  deliverables: Deliverable[]
+  deliverables: Deliverable[],
+  invoices?: PaymentInvoice[]
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
@@ -110,6 +131,63 @@ export async function generateDealPDF(
         });
 
         doc.moveDown(0.5);
+      }
+
+      // GST Invoices Section
+      if (invoices && invoices.length > 0) {
+        doc.fontSize(12).font('Helvetica-Bold').text('Payment & GST Invoices', { underline: true });
+        doc.moveDown(0.3);
+
+        invoices.forEach((invoice, index) => {
+          const invoiceTypeLabel: Record<string, string> = {
+            stage1_commission: 'Stage 1: Commission to ValueSkins',
+            stage2_advance: 'Stage 2: Advance to Creator',
+            stage3_remainder: 'Stage 3: Final Payment to Creator',
+          };
+
+          doc.fontSize(10).font('Helvetica-Bold').text(`Invoice ${index + 1}: ${invoiceTypeLabel[invoice.invoiceType]}`);
+          doc.fontSize(9).font('Helvetica').text(`Invoice #: ${invoice.invoiceNumber}`);
+          doc.fontSize(9).font('Helvetica').text(`Date: ${new Date(invoice.invoiceDate).toLocaleDateString()}`);
+          doc.fontSize(9).font('Helvetica').text(`Status: ${invoice.paymentStatus === 'completed' ? '✓ PAID' : invoice.paymentStatus.toUpperCase()}`);
+
+          if (invoice.paymentDate) {
+            doc.fontSize(9).font('Helvetica').text(`Paid: ${new Date(invoice.paymentDate).toLocaleDateString()}`);
+          }
+
+          // Line items table
+          doc.moveDown(0.2);
+          doc.fontSize(8).font('Helvetica-Bold').text('Description', { continued: true, width: 250 });
+          doc.text('Amount', { continued: true, width: 80 });
+          doc.text('GST', { continued: true, width: 80 });
+          doc.text('Total', { width: 100 });
+
+          invoice.lineItems.forEach((item) => {
+            const amountInRupees = (paise: number) => (paise / 100).toFixed(2);
+            doc.fontSize(8).font('Helvetica').text(item.description.substring(0, 30), { continued: true, width: 250 });
+            doc.text(`₹${amountInRupees(item.amount)}`, { continued: true, width: 80 });
+            doc.text(`₹${amountInRupees(item.gstAmount)}`, { continued: true, width: 80 });
+            doc.text(`₹${amountInRupees(item.totalAmount)}`, { width: 100 });
+          });
+
+          // Totals
+          const amountInRupees = (paise: number) => (paise / 100).toFixed(2);
+          doc.fontSize(8).font('Helvetica-Bold').text('TOTAL', { continued: true, width: 250 });
+          doc.text(`₹${amountInRupees(invoice.subtotal)}`, { continued: true, width: 80 });
+          doc.text(`₹${amountInRupees(invoice.totalGST)} (18%)`, { continued: true, width: 80 });
+          doc.text(`₹${amountInRupees(invoice.totalAmount)}`, { width: 100 });
+
+          doc.moveDown(0.5);
+        });
+
+        // Summary
+        const totalAllInvoices = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+        const totalGSTAllInvoices = invoices.reduce((sum, inv) => sum + inv.totalGST, 0);
+        const amountInRupees = (paise: number) => (paise / 100).toFixed(2);
+
+        doc.fontSize(10).font('Helvetica-Bold').text('Total Payment Summary');
+        doc.fontSize(9).font('Helvetica').text(`Total GST Collected: ₹${amountInRupees(totalGSTAllInvoices)}`);
+        doc.fontSize(9).font('Helvetica').text(`Total Amount (with GST): ₹${amountInRupees(totalAllInvoices)}`);
+        doc.moveDown(1);
       }
 
       // Chat Messages Section
