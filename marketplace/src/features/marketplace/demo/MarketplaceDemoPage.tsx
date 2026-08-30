@@ -3860,7 +3860,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     );
                                   })()}
 
-                                  {dealRoomPhase === 'accepted' && marketplaceRole === 'creator' && (() => {
+                                  {dealRoomPhase === 'accepted' && marketplaceRole === 'creator' && brandApprovalPhase !== 'accepted' && (() => {
                                     // Render based on deal type
                                     if (dealType === 'barter') {
                                       // BARTER DEAL — product incoming, no money
