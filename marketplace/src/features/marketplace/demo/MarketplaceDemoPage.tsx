@@ -6064,6 +6064,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             const offer = d.counterAmount || d.offerAmount || '—';
                             const st = statusOf(d);
                             const actionable = d.phase === 'formal_offer' || d.phase === 'pending' || d.phase === 'counter' || d.phase === 'brand_countered' || d.phase === 'chatroom';
+                            const paymentPending = d.phase === 'formal_offer' && d.brandApprovalPhase !== 'accepted';
                             return (
                               <div key={d.key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'8px', padding:'10px 0', borderTop:i>0?`1px solid ${C.border}`:'none' }}>
                                 <div style={{ flex:1, minWidth:0 }}>
@@ -6097,14 +6098,15 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           style={{ background:C.success, border:'none', borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}
                                         >Accept & Pay</button>
                                         <button
+                                          disabled={paymentPending}
                                           onClick={() => {
                                             updateDeal(d.key, { phase: 'rejected' });
                                             pushStatusMessage(d.key, 'Brand declined the offer.');
                                             setPurchaseToast(`${creatorName} has been notified of your decision`);
                                             setTimeout(() => setPurchaseToast(null), 3000);
                                           }}
-                                          style={{ background:'none', border:`1px solid rgba(176, 65, 62,0.3)`, borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-error)', cursor:'pointer' }}
-                                        >Reject</button>
+                                          style={{ background:paymentPending ? 'rgba(176, 65, 62,0.15)' : 'none', border:`1px solid rgba(176, 65, 62,${paymentPending ? '0.15' : '0.3'})`, borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:700, color:paymentPending ? 'rgba(176, 65, 62,0.5)' : 'var(--c-error)', cursor:paymentPending ? 'not-allowed' : 'pointer', opacity:paymentPending ? 0.6 : 1 }}
+                                        >{paymentPending ? 'Complete payment first' : 'Reject'}</button>
                                       </div>
                                     </div>
                                   )}
