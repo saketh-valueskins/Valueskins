@@ -88,3 +88,93 @@ export class SharedStateManager {
 }
 
 export const sharedStateManager = SharedStateManager.getInstance();
+
+// Realtime status management
+const realtimeStatusListeners = new Set<() => void>();
+let realtimeConnected = false;
+
+// Legacy API compatibility - maps to SharedStateManager
+export async function loadSharedState(): Promise<SharedState> {
+  try {
+    return sharedStateManager.getState();
+  } catch (e) {
+    logger.warn('[realtime] loadSharedState threw', { error: e instanceof Error ? e.message : String(e) });
+    return EMPTY_SHARED_STATE;
+  }
+}
+
+export async function upsertSharedKey(path: SharedCollections, key: string, value: unknown): Promise<boolean> {
+  try {
+    sharedStateManager.updateCollection(path, key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function mergeSharedDeal(dealKey: string, updates: Record<string, unknown>): Promise<boolean> {
+  try {
+    const current = sharedStateManager.getState().deals[dealKey] || {};
+    sharedStateManager.updateCollection('deals', dealKey, { ...current, ...updates });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function appendSharedMessage(dealKey: string, message: unknown): Promise<boolean> {
+  try {
+    const current = sharedStateManager.getState().messages[dealKey] || [];
+    sharedStateManager.updateCollection('messages', dealKey, [...current, message]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function setSharedMessages(dealKey: string, messages: unknown[]): Promise<boolean> {
+  try {
+    sharedStateManager.updateCollection('messages', dealKey, messages);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function deleteSharedKey(path: SharedCollections, key: string): Promise<boolean> {
+  try {
+    const current = sharedStateManager.getState()[path];
+    const { [key]: _, ...rest } = current;
+    sharedStateManager.setState({ [path]: rest } as any);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function subscribeSharedState(onChange: (state: SharedState) => void): () => void {
+  return sharedStateManager.subscribe(onChange);
+}
+
+export function subscribeRealtimeStatus(listener: () => void): () => void {
+  realtimeStatusListeners.add(listener);
+  return () => {
+    realtimeStatusListeners.delete(listener);
+  };
+}
+
+export function isRealtimeConnected(): boolean {
+  return realtimeConnected;
+}
+
+export function setRealtimeConnected(connected: boolean): void {
+  if (realtimeConnected === connected) return;
+  realtimeConnected = connected;
+  realtimeStatusListeners.forEach((listener) => {
+    try {
+      listener();
+    } catch (error) {
+      logger.error('Error notifying realtime status listener', error);
+    }
+  });
+}
