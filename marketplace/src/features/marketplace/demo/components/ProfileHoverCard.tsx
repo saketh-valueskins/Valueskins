@@ -15,11 +15,17 @@ type HoverProfile = {
   skin?: string;
   bio?: string;
   avatarUrl?: string;
+  // Shared fields
+  location?: string;
+  email?: string;
   // Brand fields
   brandProfileSelections?: Record<string, string>;
   brandValueSkins?: string[];
+  address?: string;
+  whatTheyDo?: string;
   // Creator fields
   aboutMe?: string;
+  height?: string;
   metrics?: {
     followers: number;
     engagement: number;
@@ -177,6 +183,24 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
           </div>
         )}
 
+        {/* Location and Email/Contact — shared for both */}
+        {(profile.location || profile.email) && (
+          <div style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
+            {profile.location && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0A0A0A' }}>
+                <span style={{ color: '#B8B4AC', fontWeight: 600 }}>📍 Location:</span>
+                <span>{profile.location}</span>
+              </div>
+            )}
+            {profile.email && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0A0A0A' }}>
+                <span style={{ color: '#B8B4AC', fontWeight: 600 }}>✉️ Email:</span>
+                <span style={{ fontSize: '11px', wordBreak: 'break-all' }}>{profile.email}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Skin / Profession badge — only show for creators */}
         {profile.role === 'creator' && profile.skin && (
           <div style={{
@@ -205,6 +229,56 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
                 {profile.skin}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Creator Height */}
+        {profile.role === 'creator' && profile.height && (
+          <div style={{
+            marginBottom: '10px',
+            padding: '6px 10px',
+            background: '#F5F5F0',
+            borderRadius: '8px',
+            border: '1px solid #E0E0DA',
+            fontSize: '12px', fontWeight: 600, color: '#0A0A0A',
+          }}>
+            📏 Height: {profile.height}
+          </div>
+        )}
+
+        {/* Brand Info: Address & What They Do */}
+        {profile.role === 'brand' && (profile.address || profile.whatTheyDo) && (
+          <div style={{ marginBottom: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {profile.address && (
+              <div style={{
+                padding: '8px 10px',
+                background: '#F5F5F0',
+                borderRadius: '8px',
+                border: '1px solid #E0E0DA',
+              }}>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: '#B8B4AC', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                  Address
+                </div>
+                <div style={{ fontSize: '12px', color: '#0A0A0A', lineHeight: 1.4 }}>
+                  {profile.address}
+                </div>
+              </div>
+            )}
+            {profile.whatTheyDo && (
+              <div style={{
+                padding: '8px 10px',
+                background: '#F5F5F0',
+                borderRadius: '8px',
+                border: '1px solid #E0E0DA',
+              }}>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: '#B8B4AC', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                  What They Do
+                </div>
+                <div style={{ fontSize: '12px', color: '#0A0A0A', lineHeight: 1.4 }}>
+                  {profile.whatTheyDo}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -308,6 +308,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
   }, [account]);
   const [profileBio, setProfileBio] = useState('');
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [profileLocation, setProfileLocation] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [profileHeight, setProfileHeight] = useState('');
+  const [profileAddress, setProfileAddress] = useState('');
+  const [profileWhatTheyDo, setProfileWhatTheyDo] = useState('');
   const [editingProfile, setEditingProfile] = useState(false);
   const [portfolioImage, setPortfolioImage] = useState<string | null>(null);
 
@@ -1477,6 +1482,28 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [showCreatorProfileModal, setShowCreatorProfileModal] = useState(false);
   const [selectedProfileCreator, setSelectedProfileCreator] = useState<typeof BRAND_MARKETPLACE_CREATORS[0] | null>(null);
 
+  // Profile completion check
+  const isProfileComplete = useCallback(() => {
+    const requiredFields = ['profileName', 'profileEmail', 'profileLocation'];
+    if (isBrand) {
+      requiredFields.push('profileAddress', 'profileWhatTheyDo');
+    } else {
+      requiredFields.push('profileHeight');
+    }
+
+    return requiredFields.every(field => {
+      const value = {
+        profileName,
+        profileEmail,
+        profileLocation,
+        profileHeight,
+        profileAddress,
+        profileWhatTheyDo,
+      }[field];
+      return value && value.toString().trim().length > 0;
+    });
+  }, [profileName, profileEmail, profileLocation, profileHeight, profileAddress, profileWhatTheyDo, isBrand]);
+
   // Convenience aliases for backward compatibility
   const persistCampaigns = (updated: Campaign[]) => {
     setCampaigns(updated);
@@ -1898,6 +1925,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
       brandValueSkins,
       completedDeals: brandDealCount,
       selectedCountry,
+      location: profileLocation,
+      email: profileEmail,
+      address: profileAddress,
+      whatTheyDo: profileWhatTheyDo,
       metrics: {
         followers: 0,
         engagement: 0,
@@ -1907,7 +1938,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
         brandRating: metrics.brandRating,
       },
     };
-  }, [brandValueSkins, profileBio, brandProfileSelections, completedDeals, selectedCountry, metrics, dealStates]);
+  }, [brandValueSkins, profileBio, brandProfileSelections, completedDeals, selectedCountry, metrics, dealStates, profileLocation, profileEmail, profileAddress, profileWhatTheyDo]);
 
   const buildCreatorHover = useCallback((creatorName: string, creatorSkin?: string): HoverProfile => {
     const sk = creatorSkin || Object.values(valueSkins).find(e => e?.profession)?.profession;
@@ -1928,6 +1959,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
       skin: sk,
       bio: profileBio,
       aboutMe,
+      location: profileLocation,
+      email: profileEmail,
+      height: profileHeight,
       metrics: {
         followers: metrics.followers, engagement: metrics.engagement,
         dealsCompleted: creatorDealCount, avgDealValue: metrics.avgDealValue,
@@ -1938,7 +1972,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       availableFrom: creatorAvailableFrom,
       selectedCountry,
     };
-  }, [valueSkins, profileBio, metrics, rateCard, creatorAvailableFrom, selectedCountry, dealStates]);
+  }, [valueSkins, profileBio, metrics, rateCard, creatorAvailableFrom, selectedCountry, dealStates, profileLocation, profileEmail, profileHeight]);
 
   // Track Record stats, computed server-side from completed deals.
   // /api/profile/stats previously did not exist, so this fetch 404'd and the UI
@@ -2974,6 +3008,47 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             placeholder="Short bio — what you do, what you're known for"
                             style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', fontFamily: 'inherit', resize: 'none', outline: 'none', lineHeight: 1.5 }}
                           />
+                          <input
+                            type="email"
+                            value={profileEmail}
+                            onChange={e => setProfileEmail(e.target.value)}
+                            placeholder="Email address"
+                            style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', outline: 'none' }}
+                          />
+                          <input
+                            type="text"
+                            value={profileLocation}
+                            onChange={e => setProfileLocation(e.target.value)}
+                            placeholder="Location / City"
+                            style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', outline: 'none' }}
+                          />
+                          {!isBrand && (
+                            <input
+                              type="text"
+                              value={profileHeight}
+                              onChange={e => setProfileHeight(e.target.value)}
+                              placeholder="Height (e.g., 5 ft 10 in or 178 cm)"
+                              style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', outline: 'none' }}
+                            />
+                          )}
+                          {isBrand && (
+                            <>
+                              <input
+                                type="text"
+                                value={profileAddress}
+                                onChange={e => setProfileAddress(e.target.value)}
+                                placeholder="Business address"
+                                style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', outline: 'none' }}
+                              />
+                              <textarea
+                                value={profileWhatTheyDo}
+                                onChange={e => setProfileWhatTheyDo(e.target.value)}
+                                rows={2}
+                                placeholder="What your brand does"
+                                style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', fontFamily: 'inherit', resize: 'none', outline: 'none', lineHeight: 1.5 }}
+                              />
+                            </>
+                          )}
                           <div style={{ display: 'flex', gap: '8px' }}>
                             <button
                               onClick={async () => {
@@ -2982,7 +3057,15 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     credentials: 'include',
-                                    body: JSON.stringify({ display_name: profileName, bio: profileBio }),
+                                    body: JSON.stringify({
+                                      display_name: profileName,
+                                      bio: profileBio,
+                                      email: profileEmail,
+                                      location: profileLocation,
+                                      height: profileHeight,
+                                      address: profileAddress,
+                                      whatTheyDo: profileWhatTheyDo,
+                                    }),
                                   });
                                 } catch {}
                                 setEditingProfile(false);
