@@ -5,20 +5,20 @@ export default function TestingBanner() {
     <div
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
+        bottom: '20px',
+        right: '20px',
         background: 'linear-gradient(135deg, #FF9800 0%, #F57C00 100%)',
         color: 'white',
-        padding: '12px 20px',
-        textAlign: 'center',
-        zIndex: 10000,
-        fontSize: '14px',
+        padding: '8px 16px',
+        borderRadius: '8px',
+        zIndex: 999,
+        fontSize: '12px',
         fontWeight: 500,
         letterSpacing: '0.5px',
+        boxShadow: '0 4px 12px rgba(255, 152, 0, 0.3)',
       }}
     >
-      ⚠️ <strong>Under Testing</strong> • Full launch expected <strong>October 2026</strong>
+      ⚠️ Testing • Launch Oct 2026
     </div>
   );
 }
