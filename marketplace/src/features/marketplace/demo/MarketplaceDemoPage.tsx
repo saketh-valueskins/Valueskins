@@ -179,7 +179,7 @@ type Opportunity = {
   compensationType: string;
   location: string;
   audienceTarget: string;
-  escrowFunded?: boolean;
+  paymentSecured?: boolean;
   escrowPool?: number;
   creatorCount?: number;
   contentReview?: 'direct_upload' | 'review_required';
@@ -1466,9 +1466,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [disputeDescription, setDisputeDescription] = useState('');
   const [intlCustomsAcknowledged, setIntlCustomsAcknowledged] = useState(false);
 
-  // Campaign escrow funding modal (shown after publish, before batch send)
+  // Campaign payment hold modal (shown after publish, before batch send)
   const [showEscrowFundingModal, setShowEscrowFundingModal] = useState(false);
-  const [escrowFundingInProgress2, setEscrowFundingInProgress2] = useState(false);
+  const [paymentHoldInProgress, setEscrowFundingInProgress2] = useState(false);
   const [showBrandPaymentModal, setShowBrandPaymentModal] = useState(false);
   const [brandPaymentInProgress, setBrandPaymentInProgress] = useState(false);
   const [pendingCampaignForEscrow, setPendingCampaignForEscrow] = useState<Campaign | null>(null);
@@ -1621,8 +1621,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
     } else {
       drawLine('No deliverables recorded', 10, m, { color: gray });
     }
-    if (deal.escrowFunded) {
-      drawLine(`Escrow: Funded (Pool: ₹${deal.escrowPool || 'N/A'})`, 10, m);
+    if (deal.paymentSecured) {
+      drawLine(`Payment: Secured (Pool: ₹${deal.escrowPool || 'N/A'})`, 10, m);
     }
     drawSep();
 
@@ -1746,7 +1746,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
   // MIGRATION: Existing deals where brand already accepted → skip to deliverables
   useEffect(() => {
     if (marketplaceRole === 'creator' && dealRoomPhase === 'accepted' && brandApprovalPhase === 'accepted' && creatorDealLifecycle !== 'deliverables' && activeDealKey) {
-      updateDeal(activeDealKey, { phase: 'softhold', creatorDealLifecycle: 'deliverables', escrowFunded: true });
+      updateDeal(activeDealKey, { phase: 'softhold', creatorDealLifecycle: 'deliverables', paymentSecured: true });
     }
   }, [marketplaceRole, dealRoomPhase, brandApprovalPhase, creatorDealLifecycle, activeDealKey]);
   const [dealUploadSimulated, setDealUploadSimulated] = useState(false);
@@ -1806,8 +1806,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
   // Dispute evidence input
   const [disputeEvidence, setDisputeEvidence] = useState('');
   // Escrow funding — synced from shared deal state
-  const escrowFunded = activeDeal?.escrowFunded ?? false;
-  const setEscrowFunded = (v: boolean) => { if (activeDealKey) updateDeal(activeDealKey, { escrowFunded: v }); };
+  const paymentSecured = activeDeal?.paymentSecured ?? false;
+  const setEscrowFunded = (v: boolean) => { if (activeDealKey) updateDeal(activeDealKey, { paymentSecured: v }); };
   const [escrowFundingInProgress, setEscrowFundingInProgress] = useState(false);
   // Contract agreement (before finalization)
   const [contractChecks, setContractChecks] = useState<Record<string, boolean>>({});
@@ -2504,7 +2504,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
       compensationType: c.compensationType || 'Paid',
       location: c.location || 'Remote',
       audienceTarget: c.audienceTarget || '',
-      escrowFunded: c.escrowFunded || false,
+      paymentSecured: c.paymentSecured || false,
       escrowPool: c.escrowPool || 0,
       requiredValueskin: c.requiredValueskin || 'profession',
       creatorCount: c.creatorCount || 1,
@@ -4766,9 +4766,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         const approvalPct = approvalPercent;
 
                                         // Escrow gate — reads from shared deal state (brand funds escrow from their side)
-                                        if (!escrowFunded && creatorDealLifecycle === 'checklist') {
+                                        if (!paymentSecured && creatorDealLifecycle === 'checklist') {
                                           // Check if brand has funded escrow via shared deal state
-                                          if (activeDeal?.escrowFunded) {
+                                          if (activeDeal?.paymentSecured) {
                                             // Brand funded — auto-advance creator to deliverables phase
                                             setTimeout(() => {
                                               setEscrowFunded(true);
@@ -4838,7 +4838,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           );
                                         }
 
-                                        // Deliverables phase (when escrowFunded && lifecycle==='deliverables')
+                                        // Deliverables phase (when paymentSecured && lifecycle==='deliverables')
                                         if (creatorDealLifecycle === 'deliverables') {
                                           const deadlineStr = opp.deadline ? new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null;
                                           const daysLeft = opp.deadline ? Math.ceil((new Date(opp.deadline).getTime() - Date.now()) / 86400000) : null;
@@ -5418,7 +5418,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               status: 'open',
                               applicants: 0,
                               creatorCount: draft.creatorCount,
-                              escrowFunded: false,
+                              paymentSecured: false,
                               escrowPool,
                               escrowAllocated: 0,
                               hasDigitalRights: draft.hasDigitalRights,
@@ -5524,7 +5524,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           </div>
 
                           {/* Escrow progress bar */}
-                          {escrowFundingInProgress2 && (
+                          {paymentHoldInProgress && (
                             <div style={{ marginBottom:'14px' }}>
                               <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.75rem', color:C.textMuted, marginBottom:'6px' }}>
                                 <span>Processing deposit...</span>
@@ -5537,11 +5537,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           )}
 
                           <button
-                            disabled={escrowFundingInProgress2}
+                            disabled={paymentHoldInProgress}
                             onClick={() => {
                               setEscrowFundingInProgress2(true);
                               setTimeout(() => {
-                                persistCampaigns(campaigns.map(c => c.id === pendingCampaignForEscrow.id ? { ...c, escrowFunded: true } : c));
+                                persistCampaigns(campaigns.map(c => c.id === pendingCampaignForEscrow.id ? { ...c, paymentSecured: true } : c));
                                 recordFakeBankTransaction({
                                   type: 'escrow',
                                   description: `Campaign escrow deposit: ${pendingCampaignForEscrow.title}`,
@@ -5564,13 +5564,13 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 setEscrowFundingInProgress2(false);
                                 setShowEscrowFundingModal(false);
                                 setCampaignsSectionOpen(true);
-                                setPurchaseToast(`Escrow funded — ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured.`);
+                                setPurchaseToast(`Payment secured — ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured.`);
                                 setTimeout(() => setPurchaseToast(null), 4000);
                               }, 2000);
                             }}
-                            style={{ width:'100%', background: escrowFundingInProgress2 ? C.border : C.primary, border:'none', borderRadius:'10px', padding:'13px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'14px', cursor: escrowFundingInProgress2 ? 'not-allowed' : 'pointer', opacity: escrowFundingInProgress2 ? 0.6 : 1, marginBottom:'8px' }}
+                            style={{ width:'100%', background: paymentHoldInProgress ? C.border : C.primary, border:'none', borderRadius:'10px', padding:'13px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'14px', cursor: paymentHoldInProgress ? 'not-allowed' : 'pointer', opacity: paymentHoldInProgress ? 0.6 : 1, marginBottom:'8px' }}
                           >
-                            {escrowFundingInProgress2 ? 'Finding matching creators...' : `Deposit ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} into Escrow`}
+                            {paymentHoldInProgress ? 'Finding matching creators...' : `Deposit ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} as Secure Payment`}
                           </button>
                           <div style={{ fontSize:'0.75rem', color:C.textMuted, textAlign:'center', lineHeight:1.5 }}>
                             Funds are non-transferable until released per milestone. Unused funds return within 5 business days.
@@ -5596,7 +5596,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             <div style={{ fontSize:'16px', fontWeight:700, color:C.text }}>Complete Payment</div>
                           </div>
                           <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'20px', lineHeight:1.5 }}>
-                            Before {creatorName} begins work, pay ValueSkins' commission on this deal. The creator's advance will be held in escrow and released per your agreement.
+                            Before {creatorName} begins work, pay ValueSkins' commission on this deal. The creator's advance will be held securely and released per your agreement.
                           </div>
 
                           {/* Deal Summary */}
@@ -5642,28 +5642,102 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           <div style={{ display:'flex', gap:'8px' }}>
                             <button
                               disabled={brandPaymentInProgress}
-                              onClick={() => {
+                              onClick={async () => {
                                 setBrandPaymentInProgress(true);
-                                setTimeout(() => {
-                                  recordFakeBankTransaction({
-                                    type: 'payment',
-                                    description: `Deal commission for ${creatorName}`,
-                                    amount: commission * 100,
-                                    reference: `commission_${activeDealKey}_${Date.now()}`,
+                                try {
+                                  // Load Razorpay script
+                                  if (!window.Razorpay) {
+                                    const script = document.createElement('script');
+                                    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                                    script.async = true;
+                                    await new Promise((resolve, reject) => {
+                                      script.onload = resolve;
+                                      script.onerror = () => reject(new Error('Failed to load Razorpay'));
+                                      document.body.appendChild(script);
+                                    });
+                                  }
+                                  
+                                  // Create order via API
+                                  const orderRes = await fetch('/api/razorpay-test/create-order', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      amount: commission * 100,
+                                      currency: 'INR',
+                                      description: `Deal commission for ${creatorName}`,
+                                      notes: { dealKey: activeDealKey, dealAmount },
+                                    }),
                                   });
-                                  updateDeal(activeDealKey, { phase: 'accepted', brandApprovalPhase: 'accepted', chatMessages: [...((dealStates as any)[activeDealKey]?.chatMessages || []), {
-                                    id: Date.now(),
-                                    sender: 'brand' as const,
-                                    text: `Brand accepted your offer of ₹${dealAmount.toLocaleString()} and paid commission. Work can now begin!`,
-                                    time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false }),
-                                    isoTime: new Date().toISOString(),
-                                    seen: false,
-                                  }] });
-                                  setShowBrandPaymentModal(false);
+                                  
+                                  if (!orderRes.ok) throw new Error('Failed to create order');
+                                  const orderData = await orderRes.json();
+                                  
+                                  // Open Razorpay checkout
+                                  await new Promise<void>((resolve, reject) => {
+                                    const razorpay = new (window as any).Razorpay({
+                                      key: 'rzp_test_SsPlKVWGuc1wcY',
+                                      order_id: orderData.orderId,
+                                      amount: commission * 100,
+                                      currency: 'INR',
+                                      name: 'ValueSkins',
+                                      description: `Deal commission for ${creatorName}`,
+                                      theme: { color: C.primary },
+                                      handler: async (response: any) => {
+                                        try {
+                                          // Verify payment
+                                          const verifyRes = await fetch('/api/razorpay-test/verify', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                              orderId: orderData.orderId,
+                                              paymentId: response.razorpay_payment_id,
+                                              signature: response.razorpay_signature,
+                                            }),
+                                          });
+                                          
+                                          if (!verifyRes.ok) throw new Error('Payment verification failed');
+                                          
+                                          // Payment successful - update deal
+                                          recordFakeBankTransaction({
+                                            type: 'payment',
+                                            description: `Deal commission for ${creatorName}`,
+                                            amount: commission * 100,
+                                            reference: `commission_${activeDealKey}_${Date.now()}`,
+                                          });
+                                          
+                                          updateDeal(activeDealKey, {
+                                            phase: 'accepted',
+                                            brandApprovalPhase: 'accepted',
+                                            chatMessages: [...((dealStates as any)[activeDealKey]?.chatMessages || []), {
+                                              id: Date.now(),
+                                              sender: 'brand' as const,
+                                              text: `Brand accepted your offer of ₹${dealAmount.toLocaleString()} and paid commission. Work can now begin!`,
+                                              time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false }),
+                                              isoTime: new Date().toISOString(),
+                                              seen: false,
+                                            }],
+                                          });
+                                          
+                                          setShowBrandPaymentModal(false);
+                                          setBrandPaymentInProgress(false);
+                                          setPurchaseToast(`Payment of ₹${commission.toLocaleString()} verified. ${creatorName} has been notified.`);
+                                          setTimeout(() => setPurchaseToast(null), 4000);
+                                          resolve();
+                                        } catch (error) {
+                                          reject(error);
+                                        }
+                                      },
+                                      modal: {
+                                        ondismiss: () => reject(new Error('Payment cancelled')),
+                                      },
+                                    });
+                                    razorpay.open();
+                                  });
+                                } catch (error) {
+                                  console.error('Payment error:', error);
+                                  setPurchaseToast(`Payment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
                                   setBrandPaymentInProgress(false);
-                                  setPurchaseToast(`Payment of ₹${commission.toLocaleString()} sent to ValueSkins. ${creatorName} has been notified.`);
-                                  setTimeout(() => setPurchaseToast(null), 4000);
-                                }, 2000);
+                                }
                               }}
                               style={{ flex:1, background: brandPaymentInProgress ? C.border : C.primary, border:'none', borderRadius:'8px', padding:'11px', color:'var(--c-surface-lowest)', fontWeight:700, cursor: brandPaymentInProgress ? 'not-allowed' : 'pointer', fontSize:'13px', opacity: brandPaymentInProgress ? 0.6 : 1 }}
                             >
@@ -5985,7 +6059,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               c.brandName,
                               c.budget ? `₹${parseInt(c.budget || '0').toLocaleString()}` : null,
                               c.requiredProfessions?.length ? c.requiredProfessions.join(', ') : null,
-                              c.escrowFunded ? 'Escrow funded' : 'Escrow pending',
+                              c.paymentSecured ? 'Payment Secured' : 'Payment Pending',
                               c.deadline || null,
                             ].filter(Boolean).join(' · ');
                             return (
@@ -6083,8 +6157,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     <div style={{ display:'flex', flexDirection:'column', gap:'6px', alignItems:'flex-end' }}>
                                       <button
                                         onClick={() => {
-                                          setNegotiatingCreator(parseInt(d.key.split('|')[0]));
-                                          setNegotiatingOpp(parseInt(d.key.split('|')[2]));
+                                          const creatorIdx = backendCreators.findIndex((c: any) => c.name === creatorName);
+                                          if (creatorIdx >= 0) {
+                                            setNegotiatingCreator(creatorIdx);
+                                            setNegotiatingOpp(parseInt(d.key.split('|')[2]));
+                                          }
                                         }}
                                         style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:600, color:C.primary, cursor:'pointer', whiteSpace:'nowrap' }}
                                       >View Negotiation</button>
