@@ -45,23 +45,12 @@ export type DealState = {
   // Payment milestone tracking — synced real-time
   paymentMilestones?: Record<'advance' | 'approval', PaymentMilestoneStatus>;
   creatorDealLifecycle?: 'checklist' | 'scripting' | 'deliverables' | 'submitted' | 'approved'; // Creator side
-  // Script workflow: both parties negotiate, edit, and approve script before deliverables
-  scriptMode?: 'non_negotiable' | 'discussion' | 'creator_freedom';
-  brandScriptText?: string; // Non-negotiable mode: fixed script from brand
-  scriptDraft?: string; // Current working script (real-time edits)
-  scriptVersion?: number; // Incremented each time a revision is submitted
-  scriptStatus?: 'draft' | 'submitted' | 'pending_revision' | 'approved'; // Approval state
-  scriptFeedback?: string; // Revision feedback from approver
-  scriptApprovedAt?: string; // ISO timestamp when both parties approved
-  creatorScriptApproved?: boolean; // Creator clicked "I approve"
-  brandScriptApproved?: boolean; // Brand clicked "I approve"
-  scriptVersionHistory?: Array<{
-    version: number;
-    text: string;
-    editedBy: 'creator' | 'brand';
-    editedAt: string; // ISO timestamp
-    reason?: string; // Why they edited (optional)
-  }>;
+  // Script workflow: simple binary choice
+  // 'brand_provides': Brand gives script, creator accepts/rejects in one click
+  // 'creator_freedom': Creator has full creative freedom, discuss in chat
+  scriptMode?: 'brand_provides' | 'creator_freedom';
+  scriptDraft?: string; // Brand's script text (if scriptMode === 'brand_provides')
+  scriptAccepted?: boolean; // Creator accepted the brand's script (if applicable)
   // Webhook simulation logs (MVP)
   publishEvents?: Array<{ id: number; type: 'video_published' | 'milestone_released'; message: string; at: string }>;
   deliverableStatuses?: Record<number, 'pending' | 'linking' | 'uploaded' | 'approved'>; // Per-deliverable status

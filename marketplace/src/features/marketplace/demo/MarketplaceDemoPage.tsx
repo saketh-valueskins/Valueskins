@@ -17,12 +17,9 @@ import CampaignComposer, { CAMPAIGN_DRAFT_KEY } from '@/features/campaigns/Campa
 import { useReputationConfig } from '@/lib/useConfigStorage';
 import { useDealSync, type DealState, type DealRoomPhase, type SharedApplication, type Campaign, type ChatMessage } from '@/features/valueskins/core/deals/useDealSync';
 import { useSupabaseRoom } from '@/features/valueskins/core/realtime/useSupabaseRoom';
-import { autoMatchCreators, type AutoMatchResult } from '@/lib/autoMatch';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { apiFetch, backendUrl } from '@/lib/backend';
 import { useWebSocket } from '@/hooks/useWebSocket';
-
-import { sendAutoMatchNotifications } from '@/lib/autoMatchNotifications';
 import {
   type ValueSkinMap,
   type ValueSkinSlot,
@@ -1474,8 +1471,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [pendingCampaignForEscrow, setPendingCampaignForEscrow] = useState<Campaign | null>(null);
 
   // Feature 4: Batch campaign sending
-  const [showBatchSendModal, setShowBatchSendModal] = useState(false);
-  const [batchSendCreatorIds, setBatchSendCreatorIds] = useState<Set<number>>(new Set());
   const [lastCreatedCampaignId, setLastCreatedCampaignId] = useState<number | null>(null);
 
   // Feature 2: Creator profile display
@@ -1813,21 +1808,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [contractChecks, setContractChecks] = useState<Record<string, boolean>>({});
   const [contractSignature, setContractSignature] = useState('');
   const [signatureJurisdiction, setSignatureJurisdiction] = useState('US');
-  // Script negotiation workflow — synced from shared deal state
+  // Script workflow — simplified binary choice
   const scriptDraft = activeDeal?.scriptDraft ?? '';
   const scriptMode = activeDeal?.scriptMode ?? 'creator_freedom';
-  const scriptStatus = activeDeal?.scriptStatus ?? 'draft';
-  const scriptVersion = activeDeal?.scriptVersion ?? 0;
-  const brandScriptText = activeDeal?.brandScriptText ?? '';
-  const creatorScriptApproved = activeDeal?.creatorScriptApproved ?? false;
-  const brandScriptApproved = activeDeal?.brandScriptApproved ?? false;
-  const scriptVersionHistory = (activeDeal?.scriptVersionHistory as any[]) ?? [];
-  const scriptApprovedAt = activeDeal?.scriptApprovedAt ?? '';
-  const [showScriptEditorCreator, setShowScriptEditorCreator] = useState(false);
-  const [showScriptExpandedCreator, setShowScriptExpandedCreator] = useState(false);
-  const [scriptEditReason, setScriptEditReason] = useState('');
-  const [scriptEditorText, setScriptEditorText] = useState(scriptDraft);
-  const [showScriptHistory, setShowScriptHistory] = useState(false);
+  const scriptAccepted = activeDeal?.scriptAccepted ?? false;
   const publishEvents = activeDeal?.publishEvents ?? [];
   const appendPublishEvent = (event: { id: number; type: 'video_published' | 'milestone_released'; message: string; at: string }) => {
     if (!activeDealKey) return;
@@ -2239,60 +2223,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
     }
   };
 
-  // Script approval handlers
-  const handleScriptChange = (newText: string, reason?: string) => {
-    if (!activeDealKey || scriptMode === 'non_negotiable') return;
-    const newVersion = (scriptVersion || 0) + 1;
-    const now = new Date();
-    const historyEntry = {
-      version: newVersion,
-      text: scriptDraft,
-      editedBy: marketplaceRole === 'creator' ? 'creator' : 'brand',
-      editedAt: now.toISOString(),
-      reason,
-    };
-    updateDeal(activeDealKey, {
-      scriptDraft: newText,
-      scriptVersion: newVersion,
-      scriptStatus: 'draft',
-      creatorScriptApproved: false,
-      brandScriptApproved: false,
-      scriptVersionHistory: [...scriptVersionHistory, historyEntry],
-    });
-  };
-
-  const handleScriptApprove = () => {
-    if (!activeDealKey) return;
-    const isCreatorRole = marketplaceRole === 'creator';
-    const otherParty = isCreatorRole ? (askModalOpp?.brand || 'Brand') : 'Creator';
-    const bothApproved = (isCreatorRole && brandScriptApproved) || (!isCreatorRole && creatorScriptApproved);
-    const payload: any = {
-      [isCreatorRole ? 'creatorScriptApproved' : 'brandScriptApproved']: true,
-      scriptStatus: bothApproved ? 'approved' : 'submitted',
-    };
-    if (bothApproved) {
-      payload.scriptApprovedAt = new Date().toISOString();
-      payload.scriptStatus = 'approved';
-      sharedSendNotification(otherParty, 'application', 'Both parties approved the script! Ready to move to deliverables.');
-      setPurchaseToast('Script approved by both parties');
-    } else {
-      sharedSendNotification(otherParty, 'application', `${isCreatorRole ? 'Creator' : 'Brand'} approved the script. Awaiting your approval to proceed.`);
-      setPurchaseToast(`Script approved by ${isCreatorRole ? 'you' : 'brand'}`);
-    }
-    updateDeal(activeDealKey, payload);
-    setTimeout(() => setPurchaseToast(null), 2500);
-  };
-
-  const handleScriptRevoke = () => {
-    if (!activeDealKey) return;
-    const isCreatorRole = marketplaceRole === 'creator';
-    updateDeal(activeDealKey, {
-      [isCreatorRole ? 'creatorScriptApproved' : 'brandScriptApproved']: false,
-      scriptStatus: 'draft',
-    });
-    setPurchaseToast('Approval revoked');
-    setTimeout(() => setPurchaseToast(null), 2500);
-  };
 
   // Which professions are already assigned (to show status in store)
   const assignedProfessions = new Set(
@@ -2395,16 +2325,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
   }, [dealStates, liveCampaigns, sharedApplications, setSharedApplications, sharedCreateApplication]);
 
   // Continuous live auto-matching: recomputes whenever campaigns or allCreators change
-  const campaignMatches = useMemo(() => {
-    const map = new Map<number, AutoMatchResult[]>();
-    if (!allCreators.length || !campaigns) return map;
-    for (const campaign of campaigns) {
-      if (campaign.status !== 'open') continue;
-      const matches = autoMatchCreators(campaign, allCreators);
-      map.set(campaign.id, matches);
-    }
-    return map;
-  }, [campaigns, allCreators]);
+  // Browse creators — search & filter state
+  const [creatorSearchQuery, setCreatorSearchQuery] = useState('');
+  const [creatorFilterProfession, setCreatorFilterProfession] = useState<string | null>(null);
+  const [creatorFilterLocation, setCreatorFilterLocation] = useState<string | null>(null);
 
   // Check if creator matches campaign requirements
   const creatorMatchesCampaignRequirements = (campaign: Campaign, creatorProfession: string, creatorData?: any): boolean => {
@@ -4017,100 +3941,43 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                               <div style={{ fontSize: '0.75rem', color: C.textSecondary }}>Deliver by: <strong>{new Date(opp.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</strong></div>
                                             )}
                                           </div>
-                                          {/* Script editor */}
-                                          <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
-                                            <button onClick={() => setShowScriptEditorCreator(v => !v)} style={{ width:'100%', background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'5px 6px', fontSize:'0.75rem', fontWeight:700, color:C.text, cursor:'pointer', marginBottom:'6px' }}>
-                                              Script {showScriptEditorCreator ? '▲' : '▼'} {scriptStatus === 'approved' && <span style={{color:C.success}}>✓</span>}
-                                            </button>
-                                            {showScriptEditorCreator && (
+                                          {/* Script section — simplified binary choice */}
+                                          <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '12px' }}>
+                                            {scriptMode === 'brand_provides' ? (
                                               <>
-                                                <div style={{ fontSize:'9px', color:C.textMuted, marginBottom:'4px' }}>{scriptMode === 'non_negotiable' ? 'Non-negotiable (locked)' : scriptMode === 'discussion' ? 'Discussion' : 'Creator freedom'}</div>
-                                                {scriptMode === 'non_negotiable' ? (
-                                                  <div style={{ fontSize:'0.75rem', color:C.text, background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', marginBottom:'6px', whiteSpace:'pre-wrap', lineHeight:1.4, maxHeight:'100px', overflowY:'auto' }}>
-                                                    {brandScriptText || 'No script provided'}
+                                                <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'10px' }}>Brand Script</div>
+                                                <div style={{ fontSize:'0.75rem', color:C.text, background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'10px', marginBottom:'12px', whiteSpace:'pre-wrap', lineHeight:1.5, maxHeight:'150px', overflowY:'auto' }}>
+                                                  {scriptDraft || 'No script provided'}
+                                                </div>
+                                                {!scriptAccepted ? (
+                                                  <div style={{ display:'flex', gap:'8px' }}>
+                                                    <button
+                                                      onClick={() => {
+                                                        if (activeDealKey) updateDeal(activeDealKey, { scriptAccepted: true });
+                                                        setPurchaseToast('Script accepted');
+                                                        setTimeout(() => setPurchaseToast(null), 2000);
+                                                      }}
+                                                      style={{ flex:1, background:C.primary, border:'none', borderRadius:'6px', padding:'8px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}
+                                                    >
+                                                      ✓ Accept Script
+                                                    </button>
+                                                    <button
+                                                      onClick={() => setPurchaseToast('Discuss alternatives in the chat room below')}
+                                                      style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'8px', fontSize:'0.75rem', fontWeight:700, color:C.text, cursor:'pointer' }}
+                                                    >
+                                                      Discuss
+                                                    </button>
                                                   </div>
                                                 ) : (
-                                                  <>
-                                                    <textarea
-                                                      value={scriptDraft}
-                                                      onChange={(e) => {
-                                                        setScriptEditorText(e.target.value);
-                                                        if (activeDealKey) updateDeal(activeDealKey, { scriptDraft: e.target.value, scriptStatus: 'draft', creatorScriptApproved: false, brandScriptApproved: false });
-                                                      }}
-                                                      rows={4}
-                                                      placeholder="Draft script..."
-                                                      style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'0.75rem', color:C.text, fontFamily:'inherit', resize:'none', boxSizing:'border-box', marginBottom:'4px' }}
-                                                    />
-                                                    <div style={{ fontSize:'8px', color:C.textMuted, marginBottom:'4px' }}>{scriptDraft.length} chars · {scriptDraft.split('\n').length} lines</div>
-                                                    <input type="text" value={scriptEditReason} onChange={(e) => setScriptEditReason(e.target.value)} placeholder="Reason for change (optional)" style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'4px', padding:'4px 6px', fontSize:'9px', color:C.text, marginBottom:'4px', boxSizing:'border-box' }} />
-                                                    <button
-                                                      onClick={() => { handleScriptChange(scriptDraft, scriptEditReason); setScriptEditReason(''); }}
-                                                      style={{ width:'100%', background:C.primary, border:'none', borderRadius:'4px', padding:'4px', fontSize:'9px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
-                                                    >
-                                                      Save Changes
-                                                    </button>
-                                                  </>
-                                                )}
-                                                <div style={{ background:C.surfaceAlt, borderRadius:'4px', padding:'6px', marginBottom:'4px' }}>
-                                                  <div style={{ fontSize:'9px', fontWeight:700, color:C.text, marginBottom:'3px' }}>Approvals</div>
-                                                  {marketplaceRole === 'creator' ? (
-                                                    <>
-                                                      <div style={{ fontSize:'8px', color:C.textSecondary, marginBottom:'3px' }}>
-                                                        {creatorScriptApproved ? '✓' : '○'} You {creatorScriptApproved ? 'approved' : 'not approved'}
-                                                      </div>
-                                                      <div style={{ fontSize:'8px', color:brandScriptApproved ? C.success : C.textSecondary, marginBottom:'3px' }}>
-                                                        {brandScriptApproved ? '✓' : '○'} Brand {brandScriptApproved ? 'approved' : 'not approved'}
-                                                      </div>
-                                                    </>
-                                                  ) : (
-                                                    <>
-                                                      <div style={{ fontSize:'8px', color:C.textSecondary, marginBottom:'3px' }}>
-                                                        {creatorScriptApproved ? '✓' : '○'} Creator {creatorScriptApproved ? 'approved' : 'not approved'}
-                                                      </div>
-                                                      <div style={{ fontSize:'8px', color:brandScriptApproved ? C.success : C.textSecondary, marginBottom:'3px' }}>
-                                                        {brandScriptApproved ? '✓' : '○'} You {brandScriptApproved ? 'approved' : 'not approved'}
-                                                      </div>
-                                                    </>
-                                                  )}
-                                                </div>
-                                                {scriptMode !== 'non_negotiable' && (
-                                                  <>
-                                                    {!creatorScriptApproved ? (
-                                                      <button
-                                                        onClick={handleScriptApprove}
-                                                        style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'6px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
-                                                      >
-                                                        I Approve Script
-                                                      </button>
-                                                    ) : (
-                                                      <button
-                                                        onClick={handleScriptRevoke}
-                                                        style={{ width:'100%', background:'transparent', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'0.75rem', fontWeight:700, color:C.textSecondary, cursor:'pointer', marginBottom:'4px' }}
-                                                      >
-                                                        Revoke Approval
-                                                      </button>
-                                                    )}
-                                                  </>
-                                                )}
-                                                {scriptVersionHistory.length > 0 && (
-                                                  <button
-                                                    onClick={() => setShowScriptHistory(!showScriptHistory)}
-                                                    style={{ width:'100%', background:'none', border:`1px solid ${C.border}`, borderRadius:'4px', padding:'4px', fontSize:'9px', fontWeight:700, color:C.textSecondary, cursor:'pointer' }}
-                                                  >
-                                                    Version history ({scriptVersionHistory.length})
-                                                  </button>
-                                                )}
-                                                {showScriptHistory && scriptVersionHistory.length > 0 && (
-                                                  <div style={{ fontSize:'8px', color:C.textSecondary, background:C.surfaceAlt, borderRadius:'4px', padding:'4px', marginTop:'4px', maxHeight:'120px', overflowY:'auto' }}>
-                                                    {scriptVersionHistory.slice(-3).reverse().map((v: any, i: number) => (
-                                                      <div key={i} style={{ marginBottom:'6px', paddingBottom:'4px', borderBottom: i < 2 ? `1px solid ${C.border}` : 'none' }}>
-                                                        <div style={{ fontWeight:700 }}>v{v.version} · {v.editedBy === 'creator' ? 'You' : 'Brand'}</div>
-                                                        <div>{new Date(v.editedAt).toLocaleTimeString()}</div>
-                                                        {v.reason && <div style={{color:C.textMuted}}>"{v.reason}"</div>}
-                                                      </div>
-                                                    ))}
+                                                  <div style={{ padding:'8px', background:`${withAlpha(C.success, 0x12)}`, border:`1px solid ${withAlpha(C.success, 0x30)}`, borderRadius:'6px', color:C.success, fontSize:'0.75rem', fontWeight:700, textAlign:'center' }}>
+                                                    ✓ Script Accepted
                                                   </div>
                                                 )}
+                                              </>
+                                            ) : (
+                                              <>
+                                                <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'6px' }}>Creative Freedom</div>
+                                                <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'10px' }}>You have full creative freedom. Discuss ideas and direction in the chat room below.</div>
                                               </>
                                             )}
                                           </div>
@@ -4145,7 +4012,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             </div>
                                           )}
                                           <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button disabled={!creatorScriptApproved || !brandScriptApproved} onClick={() => { if(creatorScriptApproved && brandScriptApproved) { setDealRoomPhase('softhold'); setC2cContentStatus('content_creating'); } else setPurchaseToast('Both parties must approve the script first'); }} style={{ flex: 2, background: (creatorScriptApproved && brandScriptApproved) ? C.primary : C.border, border: 'none', padding: '10px', borderRadius: '8px', color: 'var(--c-surface-lowest)', fontWeight: 600, cursor: (creatorScriptApproved && brandScriptApproved) ? 'pointer' : 'not-allowed', fontSize: '13px', opacity: (creatorScriptApproved && brandScriptApproved) ? 1 : 0.5 }}>
+                                            <button disabled={scriptMode === 'brand_provides' && !scriptAccepted} onClick={() => { if(scriptMode === 'creator_freedom' || scriptAccepted) { setDealRoomPhase('softhold'); setC2cContentStatus('content_creating'); } else setPurchaseToast('Please accept the script first'); }} style={{ flex: 2, background: (scriptMode === 'creator_freedom' || scriptAccepted) ? C.primary : C.border, border: 'none', padding: '10px', borderRadius: '8px', color: 'var(--c-surface-lowest)', fontWeight: 600, cursor: (scriptMode === 'creator_freedom' || scriptAccepted) ? 'pointer' : 'not-allowed', fontSize: '13px', opacity: (scriptMode === 'creator_freedom' || scriptAccepted) ? 1 : 0.5 }}>
                                               Begin Work
                                             </button>
                                             <button onClick={() => setShowCancelDealModal(true)} style={{ flex: 1, background: 'none', border: `1px solid rgba(176, 65, 62,0.3)`, padding: '10px', borderRadius: '8px', color: 'var(--c-error)', fontSize: '12px', cursor: 'pointer', fontWeight: 500 }}>
@@ -4191,100 +4058,43 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             </div>
                                           </div>
 
-                                          {/* Script editor */}
-                                          <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
-                                            <button onClick={() => setShowScriptEditorCreator(v => !v)} style={{ width:'100%', background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'5px 6px', fontSize:'0.75rem', fontWeight:700, color:C.text, cursor:'pointer', marginBottom:'6px' }}>
-                                              Script {showScriptEditorCreator ? '▲' : '▼'} {scriptStatus === 'approved' && <span style={{color:C.success}}>✓</span>}
-                                            </button>
-                                            {showScriptEditorCreator && (
+                                          {/* Script section — simplified binary choice */}
+                                          <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '12px' }}>
+                                            {scriptMode === 'brand_provides' ? (
                                               <>
-                                                <div style={{ fontSize:'9px', color:C.textMuted, marginBottom:'4px' }}>{scriptMode === 'non_negotiable' ? 'Non-negotiable (locked)' : scriptMode === 'discussion' ? 'Discussion' : 'Creator freedom'}</div>
-                                                {scriptMode === 'non_negotiable' ? (
-                                                  <div style={{ fontSize:'0.75rem', color:C.text, background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', marginBottom:'6px', whiteSpace:'pre-wrap', lineHeight:1.4, maxHeight:'100px', overflowY:'auto' }}>
-                                                    {brandScriptText || 'No script provided'}
+                                                <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'10px' }}>Brand Script</div>
+                                                <div style={{ fontSize:'0.75rem', color:C.text, background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'10px', marginBottom:'12px', whiteSpace:'pre-wrap', lineHeight:1.5, maxHeight:'150px', overflowY:'auto' }}>
+                                                  {scriptDraft || 'No script provided'}
+                                                </div>
+                                                {!scriptAccepted ? (
+                                                  <div style={{ display:'flex', gap:'8px' }}>
+                                                    <button
+                                                      onClick={() => {
+                                                        if (activeDealKey) updateDeal(activeDealKey, { scriptAccepted: true });
+                                                        setPurchaseToast('Script accepted');
+                                                        setTimeout(() => setPurchaseToast(null), 2000);
+                                                      }}
+                                                      style={{ flex:1, background:C.primary, border:'none', borderRadius:'6px', padding:'8px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}
+                                                    >
+                                                      ✓ Accept Script
+                                                    </button>
+                                                    <button
+                                                      onClick={() => setPurchaseToast('Discuss alternatives in the chat room below')}
+                                                      style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'8px', fontSize:'0.75rem', fontWeight:700, color:C.text, cursor:'pointer' }}
+                                                    >
+                                                      Discuss
+                                                    </button>
                                                   </div>
                                                 ) : (
-                                                  <>
-                                                    <textarea
-                                                      value={scriptDraft}
-                                                      onChange={(e) => {
-                                                        setScriptEditorText(e.target.value);
-                                                        if (activeDealKey) updateDeal(activeDealKey, { scriptDraft: e.target.value, scriptStatus: 'draft', creatorScriptApproved: false, brandScriptApproved: false });
-                                                      }}
-                                                      rows={4}
-                                                      placeholder="Draft script..."
-                                                      style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'0.75rem', color:C.text, fontFamily:'inherit', resize:'none', boxSizing:'border-box', marginBottom:'4px' }}
-                                                    />
-                                                    <div style={{ fontSize:'8px', color:C.textMuted, marginBottom:'4px' }}>{scriptDraft.length} chars · {scriptDraft.split('\n').length} lines</div>
-                                                    <input type="text" value={scriptEditReason} onChange={(e) => setScriptEditReason(e.target.value)} placeholder="Reason for change (optional)" style={{ width:'100%', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'4px', padding:'4px 6px', fontSize:'9px', color:C.text, marginBottom:'4px', boxSizing:'border-box' }} />
-                                                    <button
-                                                      onClick={() => { handleScriptChange(scriptDraft, scriptEditReason); setScriptEditReason(''); }}
-                                                      style={{ width:'100%', background:C.primary, border:'none', borderRadius:'4px', padding:'4px', fontSize:'9px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
-                                                    >
-                                                      Save Changes
-                                                    </button>
-                                                  </>
-                                                )}
-                                                <div style={{ background:C.surfaceAlt, borderRadius:'4px', padding:'6px', marginBottom:'4px' }}>
-                                                  <div style={{ fontSize:'9px', fontWeight:700, color:C.text, marginBottom:'3px' }}>Approvals</div>
-                                                  {marketplaceRole === 'creator' ? (
-                                                    <>
-                                                      <div style={{ fontSize:'8px', color:C.textSecondary, marginBottom:'3px' }}>
-                                                        {creatorScriptApproved ? '✓' : '○'} You {creatorScriptApproved ? 'approved' : 'not approved'}
-                                                      </div>
-                                                      <div style={{ fontSize:'8px', color:brandScriptApproved ? C.success : C.textSecondary, marginBottom:'3px' }}>
-                                                        {brandScriptApproved ? '✓' : '○'} Brand {brandScriptApproved ? 'approved' : 'not approved'}
-                                                      </div>
-                                                    </>
-                                                  ) : (
-                                                    <>
-                                                      <div style={{ fontSize:'8px', color:C.textSecondary, marginBottom:'3px' }}>
-                                                        {creatorScriptApproved ? '✓' : '○'} Creator {creatorScriptApproved ? 'approved' : 'not approved'}
-                                                      </div>
-                                                      <div style={{ fontSize:'8px', color:brandScriptApproved ? C.success : C.textSecondary, marginBottom:'3px' }}>
-                                                        {brandScriptApproved ? '✓' : '○'} You {brandScriptApproved ? 'approved' : 'not approved'}
-                                                      </div>
-                                                    </>
-                                                  )}
-                                                </div>
-                                                {scriptMode !== 'non_negotiable' && (
-                                                  <>
-                                                    {!creatorScriptApproved ? (
-                                                      <button
-                                                        onClick={handleScriptApprove}
-                                                        style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'6px', fontSize:'0.75rem', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer', marginBottom:'4px' }}
-                                                      >
-                                                        I Approve Script
-                                                      </button>
-                                                    ) : (
-                                                      <button
-                                                        onClick={handleScriptRevoke}
-                                                        style={{ width:'100%', background:'transparent', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'6px', fontSize:'0.75rem', fontWeight:700, color:C.textSecondary, cursor:'pointer', marginBottom:'4px' }}
-                                                      >
-                                                        Revoke Approval
-                                                      </button>
-                                                    )}
-                                                  </>
-                                                )}
-                                                {scriptVersionHistory.length > 0 && (
-                                                  <button
-                                                    onClick={() => setShowScriptHistory(!showScriptHistory)}
-                                                    style={{ width:'100%', background:'none', border:`1px solid ${C.border}`, borderRadius:'4px', padding:'4px', fontSize:'9px', fontWeight:700, color:C.textSecondary, cursor:'pointer' }}
-                                                  >
-                                                    Version history ({scriptVersionHistory.length})
-                                                  </button>
-                                                )}
-                                                {showScriptHistory && scriptVersionHistory.length > 0 && (
-                                                  <div style={{ fontSize:'8px', color:C.textSecondary, background:C.surfaceAlt, borderRadius:'4px', padding:'4px', marginTop:'4px', maxHeight:'120px', overflowY:'auto' }}>
-                                                    {scriptVersionHistory.slice(-3).reverse().map((v: any, i: number) => (
-                                                      <div key={i} style={{ marginBottom:'6px', paddingBottom:'4px', borderBottom: i < 2 ? `1px solid ${C.border}` : 'none' }}>
-                                                        <div style={{ fontWeight:700 }}>v{v.version} · {v.editedBy === 'creator' ? 'You' : 'Brand'}</div>
-                                                        <div>{new Date(v.editedAt).toLocaleTimeString()}</div>
-                                                        {v.reason && <div style={{color:C.textMuted}}>"{v.reason}"</div>}
-                                                      </div>
-                                                    ))}
+                                                  <div style={{ padding:'8px', background:`${withAlpha(C.success, 0x12)}`, border:`1px solid ${withAlpha(C.success, 0x30)}`, borderRadius:'6px', color:C.success, fontSize:'0.75rem', fontWeight:700, textAlign:'center' }}>
+                                                    ✓ Script Accepted
                                                   </div>
                                                 )}
+                                              </>
+                                            ) : (
+                                              <>
+                                                <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'6px' }}>Creative Freedom</div>
+                                                <div style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'10px' }}>You have full creative freedom. Discuss ideas and direction in the chat room below.</div>
                                               </>
                                             )}
                                           </div>
@@ -5464,9 +5274,117 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             setPendingCampaignForEscrow(newC);
                             setShowEscrowFundingModal(true);
                             setEscrowFundingInProgress2(false);
-                            setBatchSendCreatorIds(new Set());
                           }}
                         />
+                      </div>
+                    )}
+
+                    {/* Brand Negotiation View — when brand clicks "View Negotiation" for a creator's offer */}
+                    {negotiatingCreator !== null && brandDeal && (
+                      <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9998, padding:'16px' }}>
+                        <div style={{ background:C.surface, borderRadius:'16px', maxWidth:'600px', width:'100%', maxHeight:'90vh', overflowY:'auto', border:`1px solid ${C.border}`, display:'flex', flexDirection:'column' }}>
+                          {/* Header */}
+                          <div style={{ padding:'20px', borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+                            <div>
+                              <div style={{ fontSize:'18px', fontWeight:700, color:C.text }}>Negotiation with {backendCreators.find((c: any) => c._origIdx === negotiatingCreator)?.name || 'Creator'}</div>
+                              <div style={{ fontSize:'13px', color:C.textSecondary, marginTop:'4px' }}>{backendCreators.find((c: any) => c._origIdx === negotiatingCreator)?.valueSkin}</div>
+                            </div>
+                            <button onClick={() => setNegotiatingCreator(null)} style={{ background:'none', border:'none', color:C.textMuted, fontSize:'24px', cursor:'pointer', lineHeight:1 }}>×</button>
+                          </div>
+
+                          {/* Deal Details Section */}
+                          <div style={{ padding:'20px', borderBottom:`1px solid ${C.border}`, flexShrink:0 }}>
+                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'12px' }}>Negotiated Deal Terms</div>
+                            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'12px' }}>
+                              <div style={{ background:C.bg, borderRadius:'10px', padding:'12px', border:`1px solid ${C.border}` }}>
+                                <div style={{ fontSize:'0.75rem', color:C.textMuted, marginBottom:'4px' }}>Last Negotiated Price</div>
+                                <div style={{ fontSize:'18px', fontWeight:700, color:C.success }}>₹{parseInt(String(brandDeal?.counterAmount || brandDeal?.offerAmount || '0').replace(/[^0-9]/g, '')).toLocaleString()}</div>
+                              </div>
+                              <div style={{ background:C.bg, borderRadius:'10px', padding:'12px', border:`1px solid ${C.border}` }}>
+                                <div style={{ fontSize:'0.75rem', color:C.textMuted, marginBottom:'4px' }}>Phase</div>
+                                <div style={{ fontSize:'14px', fontWeight:700, color:C.primary, textTransform:'capitalize' }}>{brandDeal?.phase || 'pending'}</div>
+                              </div>
+                            </div>
+                            <div style={{ background:C.bg, borderRadius:'10px', padding:'12px', border:`1px solid ${C.border}` }}>
+                              <div style={{ fontSize:'0.75rem', color:C.textMuted, marginBottom:'8px' }}>Deal Structure</div>
+                              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', fontSize:'13px' }}>
+                                <div>
+                                  <div style={{ color:C.textMuted, marginBottom:'2px' }}>Advance</div>
+                                  <div style={{ fontWeight:700, color:C.text }}>{(brandDeal?.advancePercent || 30)}% - ₹{Math.round(parseInt(String(brandDeal?.counterAmount || brandDeal?.offerAmount || '0').replace(/[^0-9]/g, '')) * ((brandDeal?.advancePercent || 30) / 100)).toLocaleString()}</div>
+                                </div>
+                                <div>
+                                  <div style={{ color:C.textMuted, marginBottom:'2px' }}>On Approval</div>
+                                  <div style={{ fontWeight:700, color:C.text }}>{(brandDeal?.approvalPercent || 70)}% - ₹{Math.round(parseInt(String(brandDeal?.counterAmount || brandDeal?.offerAmount || '0').replace(/[^0-9]/g, '')) * ((brandDeal?.approvalPercent || 70) / 100)).toLocaleString()}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Chat Messages Section */}
+                          <div style={{ flex:1, padding:'16px', overflowY:'auto', minHeight:'200px', display:'flex', flexDirection:'column', gap:'8px' }}>
+                            {(brandDeal?.chatMessages || []).length === 0 ? (
+                              <div style={{ textAlign:'center', color:C.textMuted, padding:'20px' }}>No messages yet. Start the conversation!</div>
+                            ) : (
+                              (brandDeal?.chatMessages || []).map((msg: any, i: number) => (
+                                <div key={i} style={{ display:'flex', justifyContent: msg.sender === 'brand' ? 'flex-end' : 'flex-start', marginBottom:'8px' }}>
+                                  <div style={{ background: msg.sender === 'brand' ? C.primary : C.bg, color: msg.sender === 'brand' ? C.onPrimary : C.text, borderRadius:'10px', padding:'10px 12px', maxWidth:'70%', wordBreak:'break-word', fontSize:'13px' }}>
+                                    <div>{msg.text}</div>
+                                    <div style={{ fontSize:'0.7rem', opacity:0.7, marginTop:'4px' }}>{msg.time}</div>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                            <div ref={brandChatEndRef} />
+                          </div>
+
+                          {/* Input Area */}
+                          <div style={{ padding:'16px', borderTop:`1px solid ${C.border}`, flexShrink:0, display:'flex', gap:'8px' }}>
+                            <input
+                              type="text"
+                              placeholder="Send a message..."
+                              value={brandDeal?.chatInput || ''}
+                              onChange={(e) => { if (brandDealKey) updateDeal(brandDealKey, { chatInput: e.target.value }); }}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter' && (e.target as any).value.trim() && brandDealKey) {
+                                  const now = new Date();
+                                  const newMsg = { id: Date.now(), sender: 'brand' as const, text: (e.target as any).value, time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false }), isoTime: now.toISOString(), seen: false };
+                                  updateDeal(brandDealKey, { chatInput: '', chatMessages: [...(brandDeal?.chatMessages || []), newMsg] });
+                                }
+                              }}
+                              style={{ flex:1, padding:'10px 12px', borderRadius:'8px', border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:'13px', outline:'none' }}
+                            />
+                            <button
+                              onClick={() => {
+                                if ((brandDeal?.chatInput || '').trim() && brandDealKey) {
+                                  const now = new Date();
+                                  const newMsg = { id: Date.now(), sender: 'brand' as const, text: brandDeal.chatInput, time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false }), isoTime: now.toISOString(), seen: false };
+                                  updateDeal(brandDealKey, { chatInput: '', chatMessages: [...(brandDeal?.chatMessages || []), newMsg] });
+                                }
+                              }}
+                              style={{ padding:'10px 16px', borderRadius:'8px', background:C.primary, color:C.onPrimary, border:'none', fontWeight:700, fontSize:'13px', cursor:'pointer' }}
+                            >Send</button>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div style={{ padding:'16px', borderTop:`1px solid ${C.border}`, flexShrink:0, display:'flex', gap:'8px', justifyContent:'flex-end' }}>
+                            <button
+                              onClick={() => setNegotiatingCreator(null)}
+                              style={{ padding:'10px 16px', borderRadius:'8px', background:'none', border:`1px solid ${C.border}`, color:C.text, fontWeight:600, fontSize:'13px', cursor:'pointer' }}
+                            >Close</button>
+                            <button
+                              onClick={() => {
+                                if (brandDealKey) {
+                                  updateDeal(brandDealKey, { phase: 'formal_offer', brandApprovalPhase: 'reviewing' });
+                                  setShowBrandPaymentModal(true);
+                                  setNegotiatingCreator(null);
+                                  setPurchaseToast('Processing payment...');
+                                  setTimeout(() => setPurchaseToast(null), 3000);
+                                }
+                              }}
+                              style={{ padding:'10px 16px', borderRadius:'8px', background:C.success, color:'var(--c-surface-lowest)', border:'none', fontWeight:700, fontSize:'13px', cursor:'pointer' }}
+                            >Accept & Pay</button>
+                          </div>
+                        </div>
                       </div>
                     )}
 
@@ -5549,22 +5467,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   reference: `escrow_${pendingCampaignForEscrow.id}_${Date.now()}`,
                                 });
 
-                                // AUTO-MATCH: Use continuously computed matches
-                                const liveMatches = campaignMatches.get(pendingCampaignForEscrow.id) || [];
-
-                                // Send notifications
-                                const notifs = sendAutoMatchNotifications(
-                                  pendingCampaignForEscrow.id,
-                                  pendingCampaignForEscrow.title,
-                                  profileName,
-                                  liveMatches
-                                );
-                                setCreatorNotifications(prev => [...prev, ...notifs]);
-
                                 setEscrowFundingInProgress2(false);
                                 setShowEscrowFundingModal(false);
                                 setCampaignsSectionOpen(true);
-                                setPurchaseToast(`Payment secured — ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured.`);
+                                setPurchaseToast(`Payment secured — ₹${(pendingCampaignForEscrow.escrowPool||0).toLocaleString()} secured. Browse creators to invite.`);
                                 setTimeout(() => setPurchaseToast(null), 4000);
                               }, 2000);
                             }}
@@ -5750,87 +5656,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             >
                               Cancel
                             </button>
-                          </div>
-                        </div>
-                      </div>
-                      );
-                    })()}
-
-                    {/* Feature 4: Auto-Matched Creators Modal — reads from live continuous matches */}
-                    {showBatchSendModal && lastCreatedCampaignId && (() => {
-                      const batchMatches = campaignMatches.get(lastCreatedCampaignId) || [];
-                      return (
-                      <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999 }}>
-                        <div style={{ background:C.surface, borderRadius:'16px', padding:'24px', maxWidth:'520px', width:'95vw', maxHeight:'90vh', overflowY:'auto', border:`1px solid ${C.border}`, position:'relative' }}>
-                          <div style={{ fontSize:'16px', fontWeight:700, color:C.text, marginBottom:'4px' }}>Auto-Matched Creators</div>
-                          <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'16px' }}>System found {batchMatches.length} creators matching your campaign. Select who to invite.</div>
-
-                          {batchMatches.length === 0 ? (
-                            <div style={{ padding:'40px 20px', textAlign:'center', color:C.textSecondary }}>
-                              <div style={{ fontSize:'14px', marginBottom:'8px' }}>No matching creators found</div>
-                              <div style={{ fontSize:'12px' }}>Try adjusting your campaign requirements</div>
-                            </div>
-                          ) : (
-                            <div style={{ maxHeight:'400px', overflowY:'auto', marginBottom:'16px', border:`1px solid ${C.border}`, borderRadius:'8px', background:C.bg }}>
-                              {batchMatches.map((match, idx) => {
-                                return (
-                                  <div
-                                    key={match.creatorHandle}
-                                    style={{
-                                      padding:'14px 12px',
-                                      borderBottom: idx < batchMatches.length - 1 ? `1px solid ${C.border}` : 'none',
-                                      display:'flex',
-                                      gap:'12px',
-                                      alignItems:'flex-start',
-                                      cursor:'pointer',
-                                      background: batchSendCreatorIds.has(idx) ? `${withAlpha(C.primary, 0x10)}` : 'transparent',
-                                      borderLeft: batchSendCreatorIds.has(idx) ? `3px solid ${C.primary}` : '3px solid transparent',
-                                      transition:'background 0.15s, border-color 0.15s'
-                                    }}
-                                    onClick={() => {
-                                      setBatchSendCreatorIds(prev => {
-                                        const newSet = new Set(prev);
-                                        if (newSet.has(idx)) newSet.delete(idx);
-                                        else newSet.add(idx);
-                                        return newSet;
-                                      });
-                                    }}
-                                  >
-                                    <input type="checkbox" checked={batchSendCreatorIds.has(idx)} onChange={() => {}} style={{ cursor:'pointer', width:'18px', height:'18px', accentColor:C.primary, marginTop:'2px', flexShrink:0 }} />
-                                    <div style={{ flex:1 }}>
-                                      <div style={{ display:'flex', alignItems:'center', gap:'8px', marginBottom:'6px' }}>
-                                        <div
-                                          onMouseEnter={(e) => showHoverCard(buildCreatorHover(match.creatorName, match.creatorProfession), e)}
-                                          onMouseMove={updateHoverPosition}
-                                          onMouseLeave={hideHoverCard}
-                                          style={{ fontSize:'13px', fontWeight:600, color:C.text, cursor:'pointer' }}>{match.creatorName}</div>
-                                        <div style={{ fontSize:'12px', fontWeight:700, background:`${withAlpha(C.primary, 0x15)}`, color:C.primary, padding:'2px 8px', borderRadius:'4px' }}>{match.matchScore}%</div>
-                                      </div>
-                                      <div
-                                        onMouseEnter={(e) => showHoverCard(buildCreatorHover(match.creatorName, match.creatorProfession), e)}
-                                        onMouseMove={updateHoverPosition}
-                                        onMouseLeave={hideHoverCard}
-                                        style={{ fontSize:'0.75rem', color:C.textSecondary, marginBottom:'6px', cursor:'pointer' }}>{match.creatorProfession} · {match.creatorName}</div>
-                                      <div style={{ display:'flex', flexWrap:'wrap', gap:'6px' }}>
-                                        {match.reasons.map((reason, i) => (
-                                          <div key={i} style={{ fontSize:'0.75rem', background:C.card, color:C.textMuted, padding:'3px 8px', borderRadius:'4px' }}>{reason}</div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          <div style={{ marginBottom:'16px', padding:'10px 12px', background:`${withAlpha(C.primary, 0x08)}`, border:`1px solid ${withAlpha(C.primary, 0x30)}`, borderRadius:'8px' }}>
-                            <div style={{ fontSize:'13px', fontWeight:700, color:C.text, marginBottom:'4px' }}>{batchSendCreatorIds.size} selected</div>
-                            <div style={{ fontSize:'0.75rem', color:C.textSecondary }}>Each selected creator will receive an invitation</div>
-                          </div>
-
-                          <div style={{ display:'flex', gap:'8px' }}>
-                            <button onClick={() => { setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:'none', border:`1px solid ${C.border}`, borderRadius:'8px', padding:'11px', color:C.text, fontWeight:700, fontSize:'13px', cursor:'pointer' }}>Cancel</button>
-                            <button onClick={() => { batchSendCreatorIds.forEach(idx => { const match = batchMatches[idx]; const campaign = campaigns.find(c => c.id === lastCreatedCampaignId); const oppIdx = activeOpportunities.findIndex(o => o.brand === campaign?.title); if (campaign) { const app: SharedApplication = { id:Date.now() + idx, campaignId:lastCreatedCampaignId ?? 0, campaignTitle:campaign.title || 'Campaign', creatorProfession:match.creatorProfession || '', creatorHandle:match.creatorHandle || '', creatorName:match.creatorName, status:'invited' as SharedApplication['status'], appliedAt:new Date().toISOString(), opportunityIndex: oppIdx >= 0 ? oppIdx : 0 }; sharedCreateApplication(app); sharedSendNotification(match.creatorHandle || '', 'campaign', `${profileName} invited you to: ${campaign.title || 'Campaign'}`); } }); setPurchaseToast(`Invitations sent to ${batchSendCreatorIds.size} creator${batchSendCreatorIds.size !== 1 ? 's' : ''}`); setTimeout(() => setPurchaseToast(null), 3000); setShowBatchSendModal(false); setLastCreatedCampaignId(null); setBatchSendCreatorIds(new Set()); }} style={{ flex:1, background:batchSendCreatorIds.size > 0 ? C.primary : C.border, border:'none', borderRadius:'8px', padding:'11px', color:'var(--c-surface-lowest)', fontWeight:700, fontSize:'13px', cursor: batchSendCreatorIds.size > 0 ? 'pointer' : 'not-allowed', opacity: batchSendCreatorIds.size > 0 ? 1 : 0.5 }}>Send to {batchSendCreatorIds.size} Creator{batchSendCreatorIds.size !== 1 ? 's' : ''}</button>
                           </div>
                         </div>
                       </div>
@@ -6090,6 +5915,87 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         </div>
                       ) : null;
                     })()}
+
+                    {/* Browse Creators — simple search & filter for brands to find creators */}
+                    {brandValueSkins.length > 0 && (
+                      <div style={{ marginBottom: '20px' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:'12px', margin:'6px 0 14px' }}>
+                          <span style={{ fontSize:'12px', fontWeight:700, letterSpacing:'0.14em', textTransform:'uppercase', color:C.textSecondary }}>
+                            Browse Creators
+                          </span>
+                          <span aria-hidden="true" style={{ flex:1, height:'1px', background:C.border }} />
+                        </div>
+
+                        {/* Filters */}
+                        <div style={{ display:'flex', gap:'10px', marginBottom:'16px', flexWrap:'wrap' }}>
+                          <input
+                            type="text"
+                            placeholder="Search creator name..."
+                            value={creatorSearchQuery}
+                            onChange={(e) => setCreatorSearchQuery(e.target.value)}
+                            style={{ flex:1, minWidth:'200px', background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px 12px', fontSize:'13px', color:C.text, boxSizing:'border-box' }}
+                          />
+                          <select
+                            value={creatorFilterProfession || ''}
+                            onChange={(e) => setCreatorFilterProfession(e.target.value || null)}
+                            style={{ background:C.surfaceAlt, border:`1px solid ${C.border}`, borderRadius:'8px', padding:'10px 12px', fontSize:'13px', color:C.text, cursor:'pointer' }}
+                          >
+                            <option value="">All professions</option>
+                            {Object.keys(PROFESSION_BADGES).map(p => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Creator Cards */}
+                        <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap:'14px' }}>
+                          {backendCreators
+                            .filter(c => {
+                              if (creatorSearchQuery && !c.name.toLowerCase().includes(creatorSearchQuery.toLowerCase())) return false;
+                              if (creatorFilterProfession && c.valueSkin !== creatorFilterProfession) return false;
+                              return true;
+                            })
+                            .map((c, i) => (
+                              <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:'12px', padding:'16px', cursor:'pointer', transition:'border-color 180ms' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; }}
+                              >
+                                <div style={{ display:'flex', alignItems:'center', gap:'12px', marginBottom:'12px' }}>
+                                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${c.name.replace(/\s/g,'')}`} alt={c.name} style={{ width:'40px', height:'40px', borderRadius:'50%' }} />
+                                  <div style={{ flex:1, minWidth:0 }}>
+                                    <div style={{ fontSize:'13px', fontWeight:700, color:C.text }}>{c.name}</div>
+                                    <div style={{ fontSize:'0.75rem', color:C.textSecondary }}>{c.valueSkin}</div>
+                                  </div>
+                                </div>
+                                <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'12px', lineHeight:1.4 }}>
+                                  {c.followers} followers · {c.engagement}% engagement
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    setNegotiatingCreator(c._origIdx);
+                                    setBrandCurrentOppIndex(0);
+                                    setPurchaseToast(`Opened profile for ${c.name}`);
+                                  }}
+                                  style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'8px', fontSize:'12px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}
+                                >
+                                  View Profile & Invite
+                                </button>
+                              </div>
+                            ))}
+                        </div>
+
+                        {backendCreators.filter(c => {
+                          if (creatorSearchQuery && !c.name.toLowerCase().includes(creatorSearchQuery.toLowerCase())) return false;
+                          if (creatorFilterProfession && c.valueSkin !== creatorFilterProfession) return false;
+                          return true;
+                        }).length === 0 && (
+                          <div style={{ textAlign:'center', padding:'40px 20px', color:C.textSecondary }}>
+                            <div style={{ fontSize:'14px', marginBottom:'8px' }}>No creators found</div>
+                            <div style={{ fontSize:'12px' }}>Try adjusting your search or filters</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {/* Applicants & Offers — creator applications/offers received for this brand's campaigns */}
                     {(() => {
