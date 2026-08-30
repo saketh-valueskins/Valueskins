@@ -201,6 +201,7 @@ export type Campaign = {
   escrowPool?: number;
   escrowAllocated?: number;
   country?: string;
+  locations?: string[];
   poc?: { name: string; workEmail: string; role: string; phone?: string };
   hasDigitalRights?: boolean;
   digitalRightsAmount?: string;
