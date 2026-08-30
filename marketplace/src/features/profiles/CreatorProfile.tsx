@@ -104,7 +104,7 @@ export default function CreatorProfile({
 
   const hasValueSkins = account?.modules?.some((m) => m.code === 'valueskin' && m.is_active) || false;
   const isBrand = account?.modules?.some((m) => m.code === 'brand' && m.is_active) || false;
-  const showMarketplaceSettings = hasValueSkins || isBrand;
+  const showMarketplaceSettings = hasValueSkins;
 
   useEffect(() => {
     if (account) {
@@ -189,7 +189,7 @@ export default function CreatorProfile({
         <div style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
             <div>
-              <h1 style={{ fontSize: '2rem', fontWeight: 700, margin: 0 }}>Creator Profile Preferences</h1>
+              <h1 style={{ fontSize: '2rem', fontWeight: 700, margin: 0 }}>Profile</h1>
               {message && <span style={{ fontSize: '0.8125rem', color: message === 'Saved' ? C.sand : C.danger }}>{message}</span>}
             </div>
             <button

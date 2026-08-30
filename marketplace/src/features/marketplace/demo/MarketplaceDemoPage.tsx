@@ -116,13 +116,13 @@ const INR_CURRENCY = { code: 'INR', symbol: '₹' };
 // EXACTLY 7 brand categories — named DISTINCTLY from creator professions (Systems 2/3)
 // so the two systems are never conflated.
 const PROFESSIONS: Record<string, { name: string; subProfessions: string[] }> = {
-  'Fashion & Beauty Organisation': { name: 'Fashion & Beauty Organisation', subProfessions: [] },
-  'F&B Organisation': { name: 'F&B Organisation', subProfessions: [] },
-  'Travel Organisation': { name: 'Travel Organisation', subProfessions: [] },
-  'Music Organisation': { name: 'Music Organisation', subProfessions: [] },
-  'Tech Organisation': { name: 'Tech Organisation', subProfessions: [] },
-  'Education Organisation': { name: 'Education Organisation', subProfessions: [] },
-  'Entertainment Organisation': { name: 'Entertainment Organisation', subProfessions: [] },
+  'Fashion & Beauty Organisation': { name: 'Fashion & Beauty Organisation', subProfessions: ['Fashion & Beauty Organisation'] },
+  'F&B Organisation': { name: 'F&B Organisation', subProfessions: ['F&B Organisation'] },
+  'Travel Organisation': { name: 'Travel Organisation', subProfessions: ['Travel Organisation'] },
+  'Music Organisation': { name: 'Music Organisation', subProfessions: ['Music Organisation'] },
+  'Tech Organisation': { name: 'Tech Organisation', subProfessions: ['Tech Organisation'] },
+  'Education Organisation': { name: 'Education Organisation', subProfessions: ['Education Organisation'] },
+  'Entertainment Organisation': { name: 'Entertainment Organisation', subProfessions: ['Entertainment Organisation'] },
 };
 
 // Creator data is now fetched from backend via /api/creators/match
