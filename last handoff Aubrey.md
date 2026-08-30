@@ -6,7 +6,8 @@ Handoff notes for the next model picking up this repo. Read top to bottom before
 
 ## 1. How to work with Aubrey
 
-**Address him by name.** Start responses with "Aubrey" before giving output. He asked for this explicitly.
+**
+.
 
 **Never assume — ask, but always bring a recommendation.** Do not guess at intent and run ahead. When there is a real fork, ask, and say which option you'd pick and why. Do not ask about things you can verify yourself by reading the code — go check, then report.
 
