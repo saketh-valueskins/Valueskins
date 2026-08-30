@@ -91,12 +91,12 @@ export async function notifyCreatorsByNiche(
 }
 
 /**
- * Send real-time web notification via WebSocket
+ * Send real-time web notification via Render WebSocket
  */
 async function notifyCreatorWebSocket(creatorId: string, notification: NicheNotification) {
   try {
-    // In production, use Supabase real-time channels
-    // supabase.channel(`creator:${creatorId}`).send('broadcast', { event: 'new_deal_notification', data: notification })
+    // Use Render WebSocket for real-time notifications
+    // Broadcast to creator's WebSocket connection with deal notification
 
     const response = await fetch('/api/notifications/send-realtime', {
       method: 'POST',

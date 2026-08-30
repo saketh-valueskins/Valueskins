@@ -1,6 +1,4 @@
-import { getSupabase } from './supabase';
 import { logger } from './logger';
-import type { RealtimeChannel } from './supabase';
 
 export type SharedCollections = 'deals' | 'campaigns' | 'messages' | 'applications' | 'notifications' | 'events';
 
@@ -28,149 +26,65 @@ function emptyFallback(state: any): SharedState {
     messages: state?.messages && typeof state.messages === 'object' ? state.messages : {},
     applications: state?.applications && typeof state.applications === 'object' ? state.applications : {},
     notifications: state?.notifications && typeof state.notifications === 'object' ? state.notifications : {},
-    events: state?.events && typeof state.events === 'object' ? state.events : {},
   };
 }
 
-export async function loadSharedState(): Promise<SharedState> {
-  try {
-    const { data, error } = await getSupabase()
-      .from('shared_state')
-      .select('state')
-      .eq('id', 'main')
-      .maybeSingle();
-    if (error) {
-      logger.warn('[realtime] loadSharedState query error', { error: error.message });
-      return EMPTY_SHARED_STATE;
+export class SharedStateManager {
+  private static instance: SharedStateManager;
+  private state: SharedState = EMPTY_SHARED_STATE;
+  private listeners: Set<(state: SharedState) => void> = new Set();
+
+  private constructor() {}
+
+  static getInstance(): SharedStateManager {
+    if (!SharedStateManager.instance) {
+      SharedStateManager.instance = new SharedStateManager();
     }
-    const state = emptyFallback(data?.state);
-    logger.info('[realtime] loadSharedState ok', {
-      campaigns: Object.keys(state.campaigns).length,
-      deals: Object.keys(state.deals).length,
-      applications: Object.keys(state.applications).length,
+    return SharedStateManager.instance;
+  }
+
+  getState(): SharedState {
+    return this.state;
+  }
+
+  setState(newState: Partial<SharedState>): void {
+    this.state = { ...this.state, ...newState };
+    this.notifyListeners();
+  }
+
+  updateCollection<K extends SharedCollections>(
+    collection: K,
+    key: string,
+    value: any
+  ): void {
+    this.state[collection] = {
+      ...this.state[collection],
+      [key]: value,
+    };
+    this.notifyListeners();
+  }
+
+  subscribe(listener: (state: SharedState) => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    this.listeners.forEach((listener) => {
+      try {
+        listener(this.state);
+      } catch (error) {
+        logger.error('Error notifying state listener', error);
+      }
     });
-    return state;
-  } catch (e) {
-    logger.warn('[realtime] loadSharedState threw', { error: e instanceof Error ? e.message : String(e) });
-    return EMPTY_SHARED_STATE;
+  }
+
+  clear(): void {
+    this.state = EMPTY_SHARED_STATE;
+    this.notifyListeners();
   }
 }
 
-export async function upsertSharedKey(path: SharedCollections, key: string, value: unknown): Promise<boolean> {
-  try {
-    const { error } = await getSupabase().rpc('upsert_shared_state_path', { path, key, value });
-    return !error;
-  } catch {
-    return false;
-  }
-}
-
-export async function mergeSharedDeal(dealKey: string, updates: Record<string, unknown>): Promise<boolean> {
-  try {
-    const { error } = await getSupabase().rpc('merge_shared_deal', { deal_key: dealKey, updates });
-    return !error;
-  } catch {
-    return false;
-  }
-}
-
-export async function appendSharedMessage(dealKey: string, message: unknown): Promise<boolean> {
-  try {
-    const { error } = await getSupabase().rpc('append_shared_message', { deal_key: dealKey, value: message });
-    return !error;
-  } catch {
-    return false;
-  }
-}
-
-export async function setSharedMessages(dealKey: string, messages: unknown[]): Promise<boolean> {
-  try {
-    const { error } = await getSupabase().rpc('set_shared_messages', { deal_key: dealKey, value: messages });
-    return !error;
-  } catch {
-    return false;
-  }
-}
-
-export async function deleteSharedKey(path: SharedCollections, key: string): Promise<boolean> {
-  try {
-    const { error } = await getSupabase().rpc('delete_shared_key', { path, key });
-    return !error;
-  } catch {
-    return false;
-  }
-}
-
-// Single refcounted channel for all shared-state subscribers. Supabase's
-// channel() returns a cached channel for an existing topic, so a second
-// subscriber calling .on() on the already-subscribed channel would throw
-// ("cannot add postgres_changes callbacks ... after subscribe()"). Reuse one
-// channel and fan out to every registered listener instead.
-let sharedChannel: RealtimeChannel | null = null;
-const sharedListeners = new Set<(state: SharedState) => void>();
-let sharedChannelRefCount = 0;
-
-type RealtimeStatusListener = () => void;
-let realtimeConnected = false;
-const realtimeStatusListeners = new Set<RealtimeStatusListener>();
-
-function setRealtimeConnected(next: boolean) {
-  if (realtimeConnected === next) return;
-  realtimeConnected = next;
-  realtimeStatusListeners.forEach((listener) => listener());
-}
-
-export function subscribeRealtimeStatus(listener: RealtimeStatusListener): () => void {
-  realtimeStatusListeners.add(listener);
-  return () => {
-    realtimeStatusListeners.delete(listener);
-  };
-}
-
-export function isRealtimeConnected(): boolean {
-  return realtimeConnected;
-}
-
-export function subscribeSharedState(onChange: (state: SharedState) => void): () => void {
-  sharedListeners.add(onChange);
-  sharedChannelRefCount++;
-
-  if (!sharedChannel) {
-    sharedChannel = getSupabase()
-      .channel('shared-state-realtime')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'shared_state' },
-        (payload: any) => {
-          const state = emptyFallback(payload.new?.state);
-          logger.info('[realtime] postgres_changes received', {
-            eventType: payload.eventType,
-            campaigns: Object.keys(state.campaigns).length,
-            deals: Object.keys(state.deals).length,
-            applications: Object.keys(state.applications).length,
-          });
-          sharedListeners.forEach((listener) => {
-            try {
-              listener(state);
-            } catch (error) {
-              console.error('[Realtime] shared-state listener error:', error);
-            }
-          });
-        }
-      )
-      .subscribe((status, err) => {
-        setRealtimeConnected(status === 'SUBSCRIBED');
-        logger.info('[realtime] channel status', { status, error: err?.message });
-      });
-  }
-
-  return () => {
-    sharedListeners.delete(onChange);
-    sharedChannelRefCount--;
-    if (sharedChannelRefCount === 0 && sharedChannel) {
-      getSupabase().removeChannel(sharedChannel);
-      sharedChannel = null;
-      setRealtimeConnected(false);
-    }
-  };
-}
+export const sharedStateManager = SharedStateManager.getInstance();

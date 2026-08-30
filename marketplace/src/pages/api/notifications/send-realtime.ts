@@ -2,8 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 /**
  * POST /api/notifications/send-realtime
- * Send real-time notification via WebSocket/Supabase
- * This would integrate with Supabase real-time channels
+ * Send real-time notification via Render WebSocket
+ * Broadcasts to connected WebSocket clients via Render backend
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -17,14 +17,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // In production, integrate with Supabase real-time:
-    // const channel = supabase.channel(`creator:${creatorId}`);
-    // channel.send('broadcast', {
-    //   event: 'new_deal_notification',
-    //   data: notification,
-    // });
+    // Send notification via Render WebSocket
+    // Backend Rust server broadcasts to all connected clients in creator's room
+    try {
+      const wsUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      await fetch(`${wsUrl}/api/notifications/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: creatorId,
+          event: 'notification',
+          data: notification,
+        }),
+      });
+    } catch (wsError) {
+      console.warn('WebSocket broadcast failed, continuing:', wsError);
+    }
 
-    // For now, log it
+    // Log the notification
     console.log(`[Realtime Notification] Creator ${creatorId}: ${notification.dealTitle} from ${notification.brandName}`);
 
     return res.status(200).json({

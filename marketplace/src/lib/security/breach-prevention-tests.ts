@@ -94,15 +94,6 @@ test(
 );
 
 test(
-  'Risk Score for Low-Risk Vendors',
-  (() => {
-    const supabase = getIntegrationRiskScore('supabase');
-    return supabase.score <= 40;
-  })(),
-  'Supabase should have low risk score'
-);
-
-test(
   'All Third-Party Integrations Documented',
   (() => {
     return Object.keys(THIRD_PARTY_INTEGRATIONS).length >= 5;

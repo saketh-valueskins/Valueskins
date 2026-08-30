@@ -12,10 +12,10 @@ const SECURITY_HEADERS = {
   'Content-Security-Policy': [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Next.js requires this
-    "style-src 'self' 'unsafe-inline'", // Next.js requires this  
+    "style-src 'self' 'unsafe-inline'", // Next.js requires this
     "img-src 'self' data: https: blob:",
     "font-src 'self' data:",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    "connect-src 'self' wss://valueskins-api.render.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

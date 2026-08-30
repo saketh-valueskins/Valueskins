@@ -147,12 +147,6 @@ export const THIRD_PARTY_INTEGRATIONS = {
     requiredScopes: ['payments'],
     shouldAudit: true,
   },
-  supabase: {
-    name: 'Supabase',
-    riskLevel: 'low',
-    requiredScopes: ['database'],
-    shouldAudit: true,
-  },
   vercel: {
     name: 'Vercel',
     riskLevel: 'medium',
