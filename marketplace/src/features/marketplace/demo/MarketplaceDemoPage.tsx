@@ -5470,6 +5470,116 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       </div>
                     )}
 
+                    {/* Brand Negotiation View — when brand clicks "View Negotiation" for a creator's offer */}
+                    {negotiatingCreator !== null && brandDeal && (
+                      <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9998, padding:'16px' }}>
+                        <div style={{ background:C.surface, borderRadius:'16px', maxWidth:'600px', width:'100%', maxHeight:'90vh', overflowY:'auto', border:`1px solid ${C.border}`, display:'flex', flexDirection:'column' }}>
+                          {/* Header */}
+                          <div style={{ padding:'20px', borderBottom:`1px solid ${C.border}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+                            <div>
+                              <div style={{ fontSize:'18px', fontWeight:700, color:C.text }}>Negotiation with {backendCreators.find((c: any) => c._origIdx === negotiatingCreator)?.name || 'Creator'}</div>
+                              <div style={{ fontSize:'13px', color:C.textSecondary, marginTop:'4px' }}>{backendCreators.find((c: any) => c._origIdx === negotiatingCreator)?.valueSkin}</div>
+                            </div>
+                            <button onClick={() => setNegotiatingCreator(null)} style={{ background:'none', border:'none', color:C.textMuted, fontSize:'24px', cursor:'pointer', lineHeight:1 }}>×</button>
+                          </div>
+
+                          {/* Deal Details Section */}
+                          <div style={{ padding:'20px', borderBottom:`1px solid ${C.border}`, flexShrink:0 }}>
+                            <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'12px' }}>Negotiated Deal Terms</div>
+                            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'12px' }}>
+                              <div style={{ background:C.bg, borderRadius:'10px', padding:'12px', border:`1px solid ${C.border}` }}>
+                                <div style={{ fontSize:'0.75rem', color:C.textMuted, marginBottom:'4px' }}>Last Negotiated Price</div>
+                                <div style={{ fontSize:'18px', fontWeight:700, color:C.success }}>₹{parseInt(String(brandDeal?.counterAmount || brandDeal?.offerAmount || '0').replace(/[^0-9]/g, '')).toLocaleString()}</div>
+                              </div>
+                              <div style={{ background:C.bg, borderRadius:'10px', padding:'12px', border:`1px solid ${C.border}` }}>
+                                <div style={{ fontSize:'0.75rem', color:C.textMuted, marginBottom:'4px' }}>Phase</div>
+                                <div style={{ fontSize:'14px', fontWeight:700, color:C.primary, textTransform:'capitalize' }}>{brandDeal?.phase || 'pending'}</div>
+                              </div>
+                            </div>
+                            <div style={{ background:C.bg, borderRadius:'10px', padding:'12px', border:`1px solid ${C.border}` }}>
+                              <div style={{ fontSize:'0.75rem', color:C.textMuted, marginBottom:'8px' }}>Deal Structure</div>
+                              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px', fontSize:'13px' }}>
+                                <div>
+                                  <div style={{ color:C.textMuted, marginBottom:'2px' }}>Advance</div>
+                                  <div style={{ fontWeight:700, color:C.text }}>{(brandDeal?.advancePercent || 30)}% - ₹{Math.round(parseInt(String(brandDeal?.counterAmount || brandDeal?.offerAmount || '0').replace(/[^0-9]/g, '')) * ((brandDeal?.advancePercent || 30) / 100)).toLocaleString()}</div>
+                                </div>
+                                <div>
+                                  <div style={{ color:C.textMuted, marginBottom:'2px' }}>On Approval</div>
+                                  <div style={{ fontWeight:700, color:C.text }}>{(brandDeal?.approvalPercent || 70)}% - ₹{Math.round(parseInt(String(brandDeal?.counterAmount || brandDeal?.offerAmount || '0').replace(/[^0-9]/g, '')) * ((brandDeal?.approvalPercent || 70) / 100)).toLocaleString()}</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Chat Messages Section */}
+                          <div style={{ flex:1, padding:'16px', overflowY:'auto', minHeight:'200px', display:'flex', flexDirection:'column', gap:'8px' }}>
+                            {(brandDeal?.chatMessages || []).length === 0 ? (
+                              <div style={{ textAlign:'center', color:C.textMuted, padding:'20px' }}>No messages yet. Start the conversation!</div>
+                            ) : (
+                              (brandDeal?.chatMessages || []).map((msg: any, i: number) => (
+                                <div key={i} style={{ display:'flex', justifyContent: msg.sender === 'brand' ? 'flex-end' : 'flex-start', marginBottom:'8px' }}>
+                                  <div style={{ background: msg.sender === 'brand' ? C.primary : C.bg, color: msg.sender === 'brand' ? C.onPrimary : C.text, borderRadius:'10px', padding:'10px 12px', maxWidth:'70%', wordBreak:'break-word', fontSize:'13px' }}>
+                                    <div>{msg.text}</div>
+                                    <div style={{ fontSize:'0.7rem', opacity:0.7, marginTop:'4px' }}>{msg.time}</div>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                            <div ref={brandChatEndRef} />
+                          </div>
+
+                          {/* Input Area */}
+                          <div style={{ padding:'16px', borderTop:`1px solid ${C.border}`, flexShrink:0, display:'flex', gap:'8px' }}>
+                            <input
+                              type="text"
+                              placeholder="Send a message..."
+                              value={brandDeal?.chatInput || ''}
+                              onChange={(e) => { if (brandDealKey) updateDeal(brandDealKey, { chatInput: e.target.value }); }}
+                              onKeyPress={(e) => {
+                                if (e.key === 'Enter' && (e.target as any).value.trim() && brandDealKey) {
+                                  const now = new Date();
+                                  const newMsg = { id: Date.now(), sender: 'brand' as const, text: (e.target as any).value, time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false }), isoTime: now.toISOString(), seen: false };
+                                  setChatMessages((prev) => [...prev, newMsg]);
+                                  updateDeal(brandDealKey, { chatInput: '', chatMessages: [...(brandDeal?.chatMessages || []), newMsg] });
+                                }
+                              }}
+                              style={{ flex:1, padding:'10px 12px', borderRadius:'8px', border:`1px solid ${C.border}`, background:C.bg, color:C.text, fontSize:'13px', outline:'none' }}
+                            />
+                            <button
+                              onClick={() => {
+                                if ((brandDeal?.chatInput || '').trim() && brandDealKey) {
+                                  const now = new Date();
+                                  const newMsg = { id: Date.now(), sender: 'brand' as const, text: brandDeal.chatInput, time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false }), isoTime: now.toISOString(), seen: false };
+                                  updateDeal(brandDealKey, { chatInput: '', chatMessages: [...(brandDeal?.chatMessages || []), newMsg] });
+                                }
+                              }}
+                              style={{ padding:'10px 16px', borderRadius:'8px', background:C.primary, color:C.onPrimary, border:'none', fontWeight:700, fontSize:'13px', cursor:'pointer' }}
+                            >Send</button>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div style={{ padding:'16px', borderTop:`1px solid ${C.border}`, flexShrink:0, display:'flex', gap:'8px', justifyContent:'flex-end' }}>
+                            <button
+                              onClick={() => setNegotiatingCreator(null)}
+                              style={{ padding:'10px 16px', borderRadius:'8px', background:'none', border:`1px solid ${C.border}`, color:C.text, fontWeight:600, fontSize:'13px', cursor:'pointer' }}
+                            >Close</button>
+                            <button
+                              onClick={() => {
+                                if (brandDealKey) {
+                                  updateDeal(brandDealKey, { phase: 'formal_offer', brandApprovalPhase: 'reviewing' });
+                                  setShowBrandPaymentModal(true);
+                                  setNegotiatingCreator(null);
+                                  setPurchaseToast('Processing payment...');
+                                  setTimeout(() => setPurchaseToast(null), 3000);
+                                }
+                              }}
+                              style={{ padding:'10px 16px', borderRadius:'8px', background:C.success, color:'var(--c-surface-lowest)', border:'none', fontWeight:700, fontSize:'13px', cursor:'pointer' }}
+                            >Accept & Pay</button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Escrow Funding Modal — shown after campaign publish, before batch send */}
                     {showEscrowFundingModal && pendingCampaignForEscrow && (
                       <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.85)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10000 }}>
