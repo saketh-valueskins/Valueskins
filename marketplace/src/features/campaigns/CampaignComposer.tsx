@@ -38,6 +38,7 @@ export interface CampaignDraft {
   description: string;
   profession: string;
   country: string;
+  locations: string[];
   contentLanguage: string;
   minLevel: number;
   maxLevel: number;
@@ -64,7 +65,7 @@ export interface CampaignDraft {
 }
 
 export const EMPTY_DRAFT: CampaignDraft = {
-  brandName: '', title: '', description: '', profession: '', country: '',
+  brandName: '', title: '', description: '', profession: '', country: '', locations: [],
   contentLanguage: 'English', minLevel: 1, maxLevel: 5, budget: '', creatorCount: 1,
   deliverables: '', compensation: 'Paid', exclusivity: 'None',
   usageRights: '30 days, social only', deadline: '', deliveryDeadline: '',
@@ -478,6 +479,48 @@ export default function CampaignComposer({
 
           <Row two={formTwoCol}>{Select('profession', 'Target profession / niche', professions, 'Only creators wearing this ValueSkin are matched.', 'Select a profession…')}</Row>
           <Row two={formTwoCol}>{Text('country', 'Your country')}</Row>
+          <Row span={2} two={formTwoCol}>
+            <label style={labelStyle}>Target locations (cities)</label>
+            <div style={helpStyle}>Select which cities you want to work with. Leave empty to target all locations.</div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+              <input
+                type="text"
+                placeholder="Add a city (e.g., Mumbai, Delhi, Bangalore)"
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                    const newCity = (e.target as HTMLInputElement).value.trim();
+                    if (!draft.locations.includes(newCity)) {
+                      set('locations', [...draft.locations, newCity]);
+                    }
+                    (e.target as HTMLInputElement).value = '';
+                  }
+                }}
+                style={{ flex: 1, minWidth: '200px', padding: '8px 12px', borderRadius: '6px', border: `1px solid ${SAND_HAIR}`, background: C.surface, color: C.text, fontSize: '0.9375rem', outline: 'none' }}
+              />
+            </div>
+            {draft.locations.length > 0 && (
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '12px' }}>
+                {draft.locations.map((city, idx) => (
+                  <div key={idx} style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '6px 12px', borderRadius: '20px',
+                    background: SAND_TINT, border: `1px solid ${SAND_HAIR}`,
+                    fontSize: '0.875rem', fontWeight: 600, color: C.text,
+                  }}>
+                    {city}
+                    <button
+                      type="button"
+                      onClick={() => set('locations', draft.locations.filter((_, i) => i !== idx))}
+                      style={{
+                        background: 'none', border: 'none', color: 'inherit', cursor: 'pointer',
+                        fontSize: '1.2rem', lineHeight: 1, padding: '0 4px', marginLeft: '4px',
+                      }}
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Row>
 
           <Row two={formTwoCol}>{Select('contentLanguage', 'Content language', LANGUAGES, 'Which language should the creator use?')}</Row>
           <Row two={formTwoCol}>

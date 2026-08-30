@@ -2444,12 +2444,28 @@ export default function MarketplaceDemoPage(initialDealData?: {
       }
     }
 
-    // Check location match
+    // Check location match (legacy single location field)
     if (campaign.location && campaign.location.trim().toLowerCase() !== 'remote') {
       const campaignLoc = campaign.location.toLowerCase().trim();
       const creatorLoc = creatorData.audienceLocation?.toLowerCase().trim() || '';
       if (creatorLoc && !creatorLoc.includes(campaignLoc) && campaignLoc !== creatorLoc) {
         return { matches: false, reason: `Campaign requires ${campaign.location}, but your preferences are set to ${creatorData.audienceLocation}` };
+      }
+    }
+
+    // Check locations array match (new multi-city targeting)
+    if ((campaign as any).locations && Array.isArray((campaign as any).locations) && (campaign as any).locations.length > 0) {
+      const creatorLoc = (creatorData.location || creatorData.audienceLocation || '').toLowerCase().trim();
+      if (creatorLoc) {
+        const locationMatches = (campaign as any).locations.some((loc: string) =>
+          loc.toLowerCase().trim() === creatorLoc || creatorLoc.includes(loc.toLowerCase().trim())
+        );
+        if (!locationMatches) {
+          return {
+            matches: false,
+            reason: `Campaign targets ${(campaign as any).locations.join(', ')}, but your location is set to ${creatorData.location || creatorData.audienceLocation}`
+          };
+        }
       }
     }
 
@@ -5389,6 +5405,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               deadline: draft.deadline,
                               deliveryDeadline: draft.deliveryDeadline,
                               location: '',
+                              locations: draft.locations,
                               country: draft.country,
                               nonNegotiables: [],
                               deliverables: draft.deliverables,
