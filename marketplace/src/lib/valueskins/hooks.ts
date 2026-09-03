@@ -243,3 +243,34 @@ export function useMyDefaultValueSkinRealTime() {
 
   return { data, loading, error };
 }
+
+export function useValueSkinsCredentials(userId: string | null, token: string | null) {
+  const [credentials, setCredentials] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!userId || !token) return;
+
+    const fetchCreds = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/valueskins/credentials?userId=${userId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Failed to fetch credentials');
+        const data = await response.json();
+        setCredentials(data);
+        setError(null);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCreds();
+  }, [userId, token]);
+
+  return { credentials, loading, error };
+}

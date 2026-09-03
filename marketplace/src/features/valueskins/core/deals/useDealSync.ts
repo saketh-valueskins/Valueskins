@@ -109,6 +109,9 @@ export type DealState = {
   brandRating?: number;             // 1-5 stars from brand to creator
   brandRatingComment?: string;      // Brand's review comment
   displayBrandRating?: boolean;     // Brand chose to show on profile
+  // Payment and escrow
+  paymentSecured?: boolean;
+  escrowPool?: number;
 };
 
 export type ChatMessage = {
@@ -197,6 +200,7 @@ export type Campaign = {
   digitalRightsDays?: string;
   digitalRightsReels?: number;
   digitalRightsStories?: number;
+  paymentSecured?: boolean;
 };
 
 // ---- Storage keys ----
