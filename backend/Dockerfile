@@ -8,7 +8,7 @@ WORKDIR /src
 # Copy entire backend directory
 COPY . .
 
-# Build
+# Build only api_gateway (entry point)
 RUN cargo build --release -p api_gateway
 
 # ==================================
