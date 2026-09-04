@@ -14,48 +14,45 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy workspace manifest first for dependency caching
-COPY Cargo.toml Cargo.lock ./
+COPY backend/Cargo.toml backend/Cargo.lock ./
 
-# Copy all workspace members
-COPY api_gateway ./api_gateway
-COPY auth_service ./auth_service
-COPY persona_service ./persona_service
-COPY social_service ./social_service
-COPY analytics_service ./analytics_service
-COPY recommendation_service ./recommendation_service
-COPY ai_service ./ai_service
-COPY notification_service ./notification_service
-COPY referral_service ./referral_service
-COPY marketplace_service ./marketplace_service
-COPY waitlist_service ./waitlist_service
-COPY brand_api ./brand_api
-COPY communities_service ./communities_service
-COPY credential_service ./credential_service
-COPY matching_service ./matching_service
-COPY settings_service ./settings_service
-COPY linkedin_service ./linkedin_service
-COPY platform_service ./platform_service
-COPY pricing_service ./pricing_service
-COPY credit_service ./credit_service
-COPY contract_service ./contract_service
-COPY reputation_service ./reputation_service
-# These 11 are declared in Cargo.toml [workspace].members but were never copied,
-# so `cargo build --workspace` failed on the first one it reached
-# (account_service). Every deploy of this image has been broken.
-COPY account_service ./account_service
-COPY payment_service ./payment_service
-COPY storage_service ./storage_service
-COPY tax_service ./tax_service
-COPY identity_service ./identity_service
-COPY guardian_service ./guardian_service
-COPY trust_service ./trust_service
-COPY risk_engine ./risk_engine
-COPY verification_service ./verification_service
-COPY moderation_service ./moderation_service
-COPY events_service ./events_service
-COPY indexer ./indexer
-COPY shared ./shared
-COPY migrations ./migrations
+# Copy all workspace members (build context is repo root)
+COPY backend/api_gateway ./api_gateway
+COPY backend/auth_service ./auth_service
+COPY backend/persona_service ./persona_service
+COPY backend/social_service ./social_service
+COPY backend/analytics_service ./analytics_service
+COPY backend/recommendation_service ./recommendation_service
+COPY backend/ai_service ./ai_service
+COPY backend/notification_service ./notification_service
+COPY backend/referral_service ./referral_service
+COPY backend/marketplace_service ./marketplace_service
+COPY backend/waitlist_service ./waitlist_service
+COPY backend/brand_api ./brand_api
+COPY backend/communities_service ./communities_service
+COPY backend/credential_service ./credential_service
+COPY backend/matching_service ./matching_service
+COPY backend/settings_service ./settings_service
+COPY backend/linkedin_service ./linkedin_service
+COPY backend/platform_service ./platform_service
+COPY backend/pricing_service ./pricing_service
+COPY backend/credit_service ./credit_service
+COPY backend/contract_service ./contract_service
+COPY backend/reputation_service ./reputation_service
+COPY backend/account_service ./account_service
+COPY backend/payment_service ./payment_service
+COPY backend/storage_service ./storage_service
+COPY backend/tax_service ./tax_service
+COPY backend/identity_service ./identity_service
+COPY backend/guardian_service ./guardian_service
+COPY backend/trust_service ./trust_service
+COPY backend/risk_engine ./risk_engine
+COPY backend/verification_service ./verification_service
+COPY backend/moderation_service ./moderation_service
+COPY backend/events_service ./events_service
+COPY backend/indexer ./indexer
+COPY backend/shared ./shared
+COPY backend/migrations ./migrations
 
 # Build release binaries
 RUN cargo build --release --workspace
