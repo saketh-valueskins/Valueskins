@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy workspace manifest first for dependency caching
-COPY backend/Cargo.toml backend/Cargo.lock ./
+COPY backend/Cargo.toml ./Cargo.toml
+COPY backend/Cargo.lock ./Cargo.lock
 
 # Copy all workspace members (build context is repo root)
 COPY backend/api_gateway ./api_gateway
