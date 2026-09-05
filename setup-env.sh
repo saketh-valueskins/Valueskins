@@ -57,8 +57,6 @@ NEXTAUTH_SECRET="$NEXTAUTH_SECRET"
 NEXTAUTH_URL="http://localhost:3000"
 
 # Supabase (already configured)
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5dmZrcmRpZGlwcmR6ZGhucXBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NjEwNDYsImV4cCI6MjA4NzIzNzA0Nn0.8pGVastvjFP8B_ThlaGcnS_zU_JbiLoa7GqQ7VsUo_A"
-NEXT_PUBLIC_SUPABASE_URL="https://dyvfkrdidiprdzdhnqpj.supabase.co"
 EOF
 
 echo ""
