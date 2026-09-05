@@ -7,6 +7,8 @@ services:
   - type: web
     name: valueskins-api
     runtime: docker
+    repo: https://github.com/saketh-valueskins/Valueskins
+    branch: main
     envVars:
       - key: RUST_ENV
         value: production
@@ -59,6 +61,7 @@ services:
   # ── PostgreSQL ────────────────────────────────────────────────────────
   - type: pgsql
     name: valueskins-db
+    database: valueskins
     ipAllowList: []   # internal Render services only
 
   # ── Redis (sessions + cache + pub/sub) ────────────────────────────────
