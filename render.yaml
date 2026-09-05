@@ -6,9 +6,7 @@ services:
   # ── API Gateway (Docker) ──────────────────────────────────────────────
   - type: web
     name: valueskins-api
-    runtime: image
-    image:
-      url: # set after first push to Render registry, or use Docker Hub
+    runtime: docker
     envVars:
       - key: RUST_ENV
         value: production
