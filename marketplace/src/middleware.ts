@@ -18,6 +18,36 @@ export function middleware(request: NextRequest) {
     'camera=(), microphone=(), geolocation=(), payment=()'
   );
 
+  // Backend origins for connect-src, derived from the SAME env vars the client
+  // reads. This was previously a hardcoded wss://valueskins-api.render.com — a
+  // host that no longer exists — so the CSP silently blocked every WebSocket and
+  // API call to the real backend. Deriving it means the allowlist cannot drift
+  // away from what the app actually connects to.
+  const backendOrigins = [
+    process.env.NEXT_PUBLIC_BACKEND_URL,
+    process.env.NEXT_PUBLIC_WS_URL,
+  ]
+    .filter((u): u is string => Boolean(u))
+    .map((u) => {
+      try {
+        return new URL(u).origin; // strips the /ws path; connect-src wants origins
+      } catch {
+        return '';
+      }
+    })
+    .filter(Boolean);
+
+  // The app talks to the same host over both https (REST) and wss (realtime),
+  // so allow both schemes for every backend host.
+  const connectSrc = Array.from(
+    new Set(
+      backendOrigins.flatMap((origin) => {
+        const host = origin.replace(/^[a-z]+:\/\//, '');
+        return [`https://${host}`, `wss://${host}`];
+      })
+    )
+  ).join(' ');
+
   // CSP - Content Security Policy (prevent XSS, clickjacking, etc.)
   response.headers.set(
     'Content-Security-Policy',
@@ -28,7 +58,13 @@ export function middleware(request: NextRequest) {
     // _global-conventions.md G2 makes Inter the only typeface in the product,
     // so this was breaking brand typography on every page. Both origins are
     // Google-operated and serve static font assets only.
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://accounts.google.com https://api.razorpay.com wss://valueskins-api.render.com; frame-src https://accounts.google.com https://api.razorpay.com"
+    "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://checkout.razorpay.com; " +
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+      "img-src 'self' data: https:; " +
+      "font-src 'self' data: https://fonts.gstatic.com; " +
+      `connect-src 'self' https://accounts.google.com https://api.razorpay.com${connectSrc ? ` ${connectSrc}` : ''}; ` +
+      'frame-src https://accounts.google.com https://api.razorpay.com'
   );
 
   // Prevent MIME type sniffing
