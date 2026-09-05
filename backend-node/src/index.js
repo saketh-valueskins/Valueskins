@@ -211,6 +211,19 @@ app.get('/api/v1/creators', async (req, res) => {
   }
 });
 
+// HTTP server (explicit, so the realtime layer can claim the /ws upgrade).
+// Declared before the 404 handler so /health/realtime is reachable.
+const server = http.createServer(app);
+
+const realtime = attachRealtime({
+  server,
+  pgPool,
+  redisClient,
+  redisUrl: process.env.REDIS_URL,
+});
+
+app.get('/health/realtime', (req, res) => res.json(realtime.stats()));
+
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err);
@@ -221,19 +234,6 @@ app.use((err, req, res, next) => {
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
-
-// HTTP server (explicit, so the realtime layer can claim the /ws upgrade)
-const server = http.createServer(app);
-
-const realtime = attachRealtime({
-  server,
-  pgPool,
-  redisClient,
-  redisUrl: process.env.REDIS_URL,
-});
-
-// Realtime diagnostics
-app.get('/health/realtime', (req, res) => res.json(realtime.stats()));
 
 server.listen(PORT, () => {
   console.log(`✅ API running on port ${PORT}`);
