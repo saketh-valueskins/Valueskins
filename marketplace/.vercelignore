@@ -1,0 +1,10 @@
+# Local-only env files must never reach a Vercel build.
+# .env.local takes precedence over .env.production in Next.js, so uploading it
+# pins NEXT_PUBLIC_WS_URL to ws://localhost:8080/ws and every browser in
+# production silently fails to open a WebSocket.
+.env.local
+.env*.local
+.env.vercel-pull
+
+.next
+node_modules
