@@ -1,8 +1,10 @@
 const express = require('express');
+const http = require('http');
 const { Pool } = require('pg');
 const redis = require('redis');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const { attachRealtime } = require('./realtime');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -220,13 +222,43 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`✅ API running on port ${PORT}`);
+// HTTP server (explicit, so the realtime layer can claim the /ws upgrade)
+const server = http.createServer(app);
+
+const realtime = attachRealtime({
+  server,
+  pgPool,
+  redisClient,
+  redisUrl: process.env.REDIS_URL,
 });
 
-process.on('SIGTERM', async () => {
-  await pgPool.end();
-  await redisClient.quit();
-  process.exit(0);
+// Realtime diagnostics
+app.get('/health/realtime', (req, res) => res.json(realtime.stats()));
+
+server.listen(PORT, () => {
+  console.log(`✅ API running on port ${PORT}`);
+  console.log(`✅ WebSocket listening on /ws`);
+  realtime.init();
 });
+
+let shuttingDown = false;
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`${signal} received, draining...`);
+
+  // Flush room state before the pool closes, or the last messages are lost.
+  try { await realtime.shutdown(); } catch (err) { console.error('realtime shutdown:', err.message); }
+
+  server.close(async () => {
+    try { await pgPool.end(); } catch { /* already closed */ }
+    try { await redisClient.quit(); } catch { /* already closed */ }
+    process.exit(0);
+  });
+
+  // Render SIGKILLs at 30s; don't hang on a stuck socket.
+  setTimeout(() => process.exit(0), 10000).unref();
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

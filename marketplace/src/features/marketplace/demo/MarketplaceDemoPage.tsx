@@ -3,7 +3,7 @@ import { C as THEME, withAlpha } from '@/theme/colors';
 // ARCHITECTURE: See ARCHITECTURE_GUIDE.txt for codebase overview
 // FILE PURPOSE: Creator-Brand Marketplace demo page - shows creator & brand workflow
 // ROLE IN SYSTEM: Frontend UI component that displays marketplace, deals, chat, script negotiation
-// DATA SOURCE: useDealSync.ts (local state) + api.ts (backend calls) + Supabase (real-time)
+// DATA SOURCE: useDealSync.ts (local state) + api.ts (backend calls)
 // OUTPUT: Interactive UI where creators browse offers and negotiate with brands
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -16,7 +16,7 @@ import { ValueSkinSprite } from '@/features/profiles/ProfileView';
 import CampaignComposer, { CAMPAIGN_DRAFT_KEY } from '@/features/campaigns/CampaignComposer';
 import { useReputationConfig } from '@/lib/useConfigStorage';
 import { useDealSync, type DealState, type DealRoomPhase, type SharedApplication, type Campaign, type ChatMessage } from '@/features/valueskins/core/deals/useDealSync';
-import { useSupabaseRoom } from '@/features/valueskins/core/realtime/useSupabaseRoom';
+import { useRealtimeRoom } from '@/features/valueskins/core/realtime/useRealtimeRoom';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { apiFetch, backendUrl } from '@/lib/backend';
 import { useWebSocket } from '@/hooks/useWebSocket';
@@ -684,14 +684,23 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
   const [brandCurrentOppIndex, setBrandCurrentOppIndex] = useState(0);
 
-  // Deal sync hook — bridges localStorage with backend API + cross-device sync via Supabase Realtime
+  // Deal sync hook — bridges localStorage with backend API
   const dealSync = useDealSync(account?.id, initialDealData ? {
     campaigns: initialDealData.initialCampaigns,
     dealStates: initialDealData.initialDealStates,
     applications: initialDealData.initialApplications,
   } : undefined);
-  // Shared state — all users share one global namespace (Supabase realtime)
-  const { state: sharedState, syncing: sharedSyncing, realtimeConnected, createCampaign: sharedCreateCampaign, updateDeal: sharedUpdateDeal, addMessage: sharedAddMessage, sendNotification: sharedSendNotification, createApplication: sharedCreateApplication } = useSupabaseRoom(null, null, '');
+  // Shared room — every client sees the same state, live over WebSocket.
+  const {
+    state: sharedState,
+    syncing: sharedSyncing,
+    realtimeConnected,
+    createCampaign: sharedCreateCampaign,
+    updateDeal: sharedUpdateDeal,
+    addMessage: sharedAddMessage,
+    sendNotification: sharedSendNotification,
+    createApplication: sharedCreateApplication,
+  } = useRealtimeRoom();
   const { dealStates, setDealStates, getOrCreateDeal, updateDeal: localUpdateDeal } = dealSync;
 
   // Ref to bridge activeOpportunities declaration order (defined later at line ~2395)
@@ -1281,7 +1290,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const forceRefreshCampaigns = useCallback(async () => {
     try {
       // Pull latest from shared DB (update in-place, don't append-only).
-      // Writes to shared state go through useSupabaseRoom's granular upserts.
       const res = await fetch('/api/realtime/state');
       if (res.ok) {
         const data = await res.json();

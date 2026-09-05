@@ -5,7 +5,6 @@
  * WHAT IT DOES:
  *   - Manages deal state using React hooks
  *   - Syncs with localStorage (offline support)
- *   - Syncs with Supabase (real-time notifications)
  *   - Syncs across browser tabs via BroadcastChannel
  * CONSUMED BY: instagram/page.tsx, tiktok/page.tsx, youtube/page.tsx, linkedin/page.tsx
  *
@@ -469,9 +468,7 @@ export function useDealSync(userId?: number, initialData?: {
     chatMessages: Array.isArray(deal?.chatMessages) ? deal.chatMessages as ChatMessage[] : [],
   } as DealState);
 
-  // ── Cross-device sync (Supabase shared state) ─────────────────────────
 
-  // 1. Load shared state from Supabase on mount
   useEffect(() => {
     if (!userId) return;
     let cancelled = false;
@@ -516,8 +513,7 @@ export function useDealSync(userId?: number, initialData?: {
     return () => { cancelled = true; };
   }, [userId]);
 
-  // 2. Subscribe to shared-state changes from other devices (Supabase Realtime).
-  //    The demo page writes to shared state through useSupabaseRoom; this hook
+  // 2. Subscribe to shared-state changes from other devices (WebSocket realtime).
   //    only mirrors those changes back into local state.
   useEffect(() => {
     if (!userId) return;

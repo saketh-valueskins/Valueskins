@@ -33,7 +33,6 @@ export async function notifyCreatorsByNiche(
     // In production, this would:
     // 1. Query database for all creators with matching niche
     // 2. Create notification record for each creator
-    // 3. Send web push notification via Supabase
     // 4. Send real-time notification via WebSocket
 
     const notifications: NicheNotification[] = [];
@@ -77,7 +76,6 @@ export async function notifyCreatorsByNiche(
         body: JSON.stringify(notification),
       });
 
-      // Step 4: Send web notification via Supabase real-time
       // This will appear in the NotificationsView component
       await notifyCreatorWebSocket(creator.id, notification);
     }

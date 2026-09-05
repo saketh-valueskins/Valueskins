@@ -18,9 +18,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Get all deal PDFs stored in Supabase
-    // For now, return empty array - will be populated when we integrate Supabase
-    // TODO: Query Supabase Storage for PDFs or database table storing PDF metadata
 
     return res.status(200).json({ pdfs: [] });
   } catch (err: any) {

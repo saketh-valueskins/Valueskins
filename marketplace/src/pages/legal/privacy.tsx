@@ -49,7 +49,7 @@ export default function Privacy() {
           <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginTop: '24px', marginBottom: '12px' }}>6. Data Sharing & Disclosure</h2>
           <p><strong>Service Providers:</strong> We share data with trusted third-party service providers who help us operate the Platform, subject to contractual obligations to protect your data:</p>
           <p>• <strong>Payment Processing:</strong> Razorpay (INR payments) — transaction data necessary to process payments</p>
-          <p>• <strong>Hosting & Infrastructure:</strong> Vercel, Supabase (PostgreSQL), Render, AWS — data hosting and storage</p>
+          <p>• <strong>Hosting & Infrastructure:</strong> Vercel, Render, AWS — data hosting and storage</p>
           <p>• <strong>Authentication:</strong> Google, GitHub — authentication data when you use OAuth</p>
           <p>• <strong>Analytics:</strong> Google Analytics, Mixpanel — aggregated, anonymized usage data (only with your consent where required by law)</p>
           <p>• <strong>Communications:</strong> Email service providers for transactional emails</p>

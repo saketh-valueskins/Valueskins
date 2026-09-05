@@ -45,7 +45,6 @@ export function sendAutoMatchNotifications(
 
     // In production:
     // - Store in database
-    // - Send push notification via Supabase
     // - Send in-app notification via WebSocket
     // - Log to analytics: "Creator X matched with Brand Y at 87% score"
   }
