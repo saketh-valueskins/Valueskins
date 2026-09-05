@@ -2,10 +2,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY backend-node/package.json backend-node/package-lock.json ./
 RUN npm ci --only=production
 
-COPY src ./src
+COPY backend-node/src ./src
 
 USER node
 EXPOSE 8080
