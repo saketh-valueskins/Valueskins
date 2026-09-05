@@ -49,7 +49,7 @@ app.get('/health/ready', async (req, res) => {
   try {
     const dbResult = await pgPool.query('SELECT NOW()');
     const redisResult = await redisClient.ping();
-    
+
     res.json({
       status: 'ready',
       database: dbResult.rows[0] ? 'connected' : 'error',
@@ -57,6 +57,66 @@ app.get('/health/ready', async (req, res) => {
     });
   } catch (err) {
     res.status(503).json({ status: 'not ready', error: err.message });
+  }
+});
+
+// Admin: Cleanup all data (reset to fresh state)
+app.post('/admin/cleanup', async (req, res) => {
+  try {
+    const adminToken = req.headers['x-admin-token'];
+    if (adminToken !== process.env.ADMIN_TOKEN && process.env.ADMIN_TOKEN) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    console.log('🗑️  Starting database cleanup...');
+
+    // Truncate all tables
+    await pgPool.query(`
+      TRUNCATE TABLE IF EXISTS messages CASCADE;
+      TRUNCATE TABLE IF EXISTS deal_messages CASCADE;
+      TRUNCATE TABLE IF EXISTS deal_applications CASCADE;
+      TRUNCATE TABLE IF EXISTS deals CASCADE;
+      TRUNCATE TABLE IF EXISTS creator_profiles CASCADE;
+      TRUNCATE TABLE IF EXISTS brand_profiles CASCADE;
+      TRUNCATE TABLE IF EXISTS users CASCADE;
+      TRUNCATE TABLE IF EXISTS audit_logs CASCADE;
+      TRUNCATE TABLE IF EXISTS activity_logs CASCADE;
+    `);
+
+    // Reset all sequences
+    await pgPool.query(`
+      ALTER SEQUENCE IF EXISTS users_id_seq RESTART WITH 1;
+      ALTER SEQUENCE IF EXISTS creators_id_seq RESTART WITH 1;
+      ALTER SEQUENCE IF EXISTS brands_id_seq RESTART WITH 1;
+      ALTER SEQUENCE IF EXISTS deals_id_seq RESTART WITH 1;
+      ALTER SEQUENCE IF EXISTS messages_id_seq RESTART WITH 1;
+    `);
+
+    // Clear Redis cache
+    await redisClient.flushDb();
+
+    // Verify cleanup
+    const userCount = await pgPool.query('SELECT COUNT(*) FROM users');
+    const dealCount = await pgPool.query('SELECT COUNT(*) FROM deals');
+    const creatorCount = await pgPool.query('SELECT COUNT(*) FROM creator_profiles');
+    const brandCount = await pgPool.query('SELECT COUNT(*) FROM brand_profiles');
+
+    res.json({
+      status: 'cleanup_complete',
+      cleared: {
+        users: parseInt(userCount.rows[0].count),
+        deals: parseInt(dealCount.rows[0].count),
+        creators: parseInt(creatorCount.rows[0].count),
+        brands: parseInt(brandCount.rows[0].count),
+        redis: 'flushed'
+      },
+      timestamp: new Date().toISOString()
+    });
+
+    console.log('✅ Database cleanup complete - all tables truncated, sequences reset');
+  } catch (err) {
+    console.error('Cleanup error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
