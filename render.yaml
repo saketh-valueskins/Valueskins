@@ -59,7 +59,7 @@ services:
       sizeGB: 10
 
   # ── PostgreSQL ────────────────────────────────────────────────────────
-  - type: postgres
+  - type: pgsql
     name: valueskins-db
     ipAllowList: []   # internal Render services only
 
