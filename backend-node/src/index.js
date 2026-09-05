@@ -3,14 +3,9 @@ const { Pool } = require('pg');
 const redis = require('redis');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const pinoHttp = require('pino-http');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-
-// Logger
-const logger = pinoHttp({ transport: { target: 'pino-pretty' } });
-app.use(logger);
 
 // Middleware
 app.use(cors());
