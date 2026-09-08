@@ -33,7 +33,13 @@ export async function getGoogleAuthUrl(): Promise<string> {
       client_id: GOOGLE_CLIENT_ID,
       redirect_uri: GOOGLE_REDIRECT_URI,
       response_type: 'code',
-      scope: 'openid profile email https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+      // Sign-in asks for identity only. The Calendar scopes are "sensitive" in
+      // Google's terms: requesting them forces the app through Google's
+      // verification review and shows every user the "Google hasn't verified
+      // this app" interstitial. openid/profile/email need no verification.
+      // If Calendar returns, request it separately at the point of use
+      // (incremental auth) rather than at login.
+      scope: 'openid profile email',
       state: randomState(),
       access_type: 'offline',
       prompt: 'select_account',

@@ -18,7 +18,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     client_id: GOOGLE_CLIENT_ID,
     redirect_uri: GOOGLE_REDIRECT_URI,
     response_type: 'code',
-    scope: 'openid profile email https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events',
+    // Identity only. Calendar scopes are "sensitive" per Google, so requesting
+    // them here forced verification review and showed every user the
+    // "Google hasn't verified this app" interstitial — for a feature that no
+    // longer exists. Request Calendar separately at point of use if it returns.
+    scope: 'openid profile email',
     state,
     access_type: 'offline',
     prompt: 'select_account',
