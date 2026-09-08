@@ -17,7 +17,7 @@ cd "$(dirname "$0")/../marketplace" || exit 1
 SRC=".env.vercel-pull"
 [ -f "$SRC" ] || { echo "missing $SRC"; exit 1; }
 
-APP_URL="https://marketplace-psi-vert.vercel.app"
+APP_URL="https://www.valueskins.com"
 API_URL="https://valueskins-web-service.onrender.com"
 
 # Vercel injects these itself; setting them breaks the build.

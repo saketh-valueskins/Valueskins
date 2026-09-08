@@ -13,4 +13,5 @@ backend/target/
 node_modules.bak/
 
 # secrets — never commit
+CREDENTIALS.md
 SUPABASE_CREDENTIALS.md
