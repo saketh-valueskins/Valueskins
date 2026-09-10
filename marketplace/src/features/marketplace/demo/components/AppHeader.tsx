@@ -74,7 +74,7 @@ function IconCalendar() {
 const TABS: { view: AppView; label: string; Icon: () => JSX.Element }[] = [
   { view: 'profile',  label: 'Profile',  Icon: IconProfile },
   { view: 'mim',      label: 'Market',   Icon: IconMarket },
-  { view: 'store',    label: 'Store',    Icon: IconStore },
+  { view: 'store',    label: 'Niche',    Icon: IconStore },
   { view: 'settings', label: 'Settings', Icon: IconSettings },
 ];
 

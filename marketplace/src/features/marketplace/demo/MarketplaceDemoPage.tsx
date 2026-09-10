@@ -6881,8 +6881,15 @@ export default function MarketplaceDemoPage(initialDealData?: {
             return (
             <>
               <div style={{ padding: '12px 16px 0', position: 'sticky', top: 'var(--vs-header-h, 0px)', background: C.bg, zIndex: 10 }}>
-                <span style={{ fontSize: '22px', fontWeight: 700, color: C.text, display: 'block', marginBottom: '4px' }}>ValueSkins Closet</span>
-                <span style={{ fontSize: '13px', color: C.textSecondary, display: 'block', marginBottom: '14px' }}>Pick a profession to see its skins.</span>
+                <span style={{ fontSize: '22px', fontWeight: 700, color: C.text, display: 'block', marginBottom: '4px' }}>
+                  {isBrandRole ? 'Select Your Niche' : 'ValueSkins Closet'}
+                </span>
+                <span style={{ fontSize: '13px', color: C.textSecondary, display: 'block', marginBottom: '14px' }}>
+                  {isBrandRole
+                    ? !storeCategory ? 'Select your niche from the store to launch campaigns' : `Launch campaigns for ${storeCategory}`
+                    : 'Pick a profession to see its skins.'
+                  }
+                </span>
                 <div style={{ position: 'relative', marginBottom: '14px' }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}>
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -6975,15 +6982,40 @@ export default function MarketplaceDemoPage(initialDealData?: {
 
                     <div style={{ height: '1px', background: C.border, margin: '16px 0 14px' }} />
 
-                    <p style={{ fontSize: '13px', color: C.textSecondary, margin: '0 0 18px' }}>
-                      {/* No price. GP3 and flagged.md F1 both say currency stays
-                          unset until the final hardcode pass, and the mock shows
-                          none — leading with price is also the Tata Nano rule
-                          (BRANDING §1). */}
-                      {isBrandRole
-                        ? 'Tap any profession to add it to your brand ValueSkins.'
-                        : 'Tap a badge to apply it as your ValueSkin. One active skin at a time.'}
-                    </p>
+                    <div style={{ marginBottom: '18px' }}>
+                      <p style={{ fontSize: '13px', color: C.textSecondary, margin: '0 0 12px' }}>
+                        {/* No price. GP3 and flagged.md F1 both say currency stays
+                            unset until the final hardcode pass, and the mock shows
+                            none — leading with price is also the Tata Nano rule
+                            (BRANDING §1). */}
+                        {isBrandRole
+                          ? 'Tap any profession to add it to your brand ValueSkins.'
+                          : 'Tap a badge to apply it as your ValueSkin. One active skin at a time.'}
+                      </p>
+                      {isBrandRole && storeCategory && (
+                        <button
+                          onClick={() => {
+                            setMarketplaceTab('campaigns');
+                            setActiveView('mim');
+                          }}
+                          style={{
+                            padding: '12px 20px',
+                            background: C.primary,
+                            color: 'var(--c-surface-lowest)',
+                            border: 'none',
+                            borderRadius: '10px',
+                            fontSize: '15px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'opacity 160ms',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.9'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+                        >
+                          ✨ Launch a Campaign
+                        </button>
+                      )}
+                    </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr', gap: '10px' }}>
                       {selected.subProfessions.map((sub: string) => {
