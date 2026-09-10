@@ -23,6 +23,17 @@ API_URL="https://valueskins-web-service.onrender.com"
 # Vercel injects these itself; setting them breaks the build.
 SKIP_RE='^(VERCEL|TURBO|NX_DAEMON|NODE_ENV)'
 
+# Values in the snapshot that point at dead infrastructure. Restoring these
+# silently breaks production, so they are refused rather than replayed.
+#
+# dpg-d9hpuajeo5us73e4p1t0 is the SUSPENDED "valueskins test" database. The
+# snapshot's DATABASE_URL points there; restoring it made every OAuth login
+# fail with "Connection terminated unexpectedly". The live database is
+# dpg-dad68of10e5c73dgvigg. The real value is not hardcoded here because this
+# file is committed and the URL contains a password — set it with:
+#   vercel env add DATABASE_URL production --force
+DEAD_VALUE_RE='dpg-d9hpuajeo5us73e4p1t0|valueskins-api\.render\.com|valueskins-final\.onrender\.com'
+
 # Correct production values, overriding the localhost ones in the snapshot.
 declare -a OVERRIDE_KEYS=(
   NEXT_PUBLIC_APP_URL
@@ -58,7 +69,7 @@ set_var() {
 }
 
 echo "Restoring env -> $ENVIRONMENT"
-count=0; skipped=0
+count=0; skipped=0; refused=0
 
 while IFS= read -r line; do
   case "$line" in ''|'#'*) continue ;; esac
@@ -77,6 +88,10 @@ while IFS= read -r line; do
   if ov="$(override_for "$key")"; then
     val="$ov"
     printf '  %-34s (corrected)\n' "$key"
+  elif [[ "$val" =~ $DEAD_VALUE_RE ]]; then
+    printf '  %-34s REFUSED — points at dead infrastructure, set it manually\n' "$key"
+    refused=$((refused + 1))
+    continue
   else
     printf '  %-34s\n' "$key"
   fi
@@ -86,4 +101,4 @@ while IFS= read -r line; do
 done < "$SRC"
 
 echo
-echo "set: $count   skipped (Vercel-managed): $skipped"
+echo "set: $count   skipped (Vercel-managed): $skipped   refused (dead): $refused"

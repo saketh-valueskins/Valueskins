@@ -154,7 +154,10 @@ CREATE INDEX IF NOT EXISTS idx_deal_payments_deal_id ON deal_payments(deal_id);
 -- ── Deal Reminders ──
 CREATE TABLE IF NOT EXISTS deal_reminders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  -- BIGINT, not UUID: users.id is BIGSERIAL. As UUID this foreign key could not
+  -- be created ("cannot be implemented") and the whole base schema aborted, so
+  -- the database stayed empty. Every other table here already uses BIGINT.
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   deal_id TEXT NOT NULL,
   type VARCHAR(50) NOT NULL,
   reminder_date TIMESTAMPTZ NOT NULL,

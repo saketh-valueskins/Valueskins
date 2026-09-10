@@ -27,7 +27,10 @@
 
 import { NextApiRequest, NextApiResponse } from 'next';
 
-const PRODUCTION_BACKEND_HEALTH = 'https://valueskins-api.onrender.com/health';
+// valueskins-api.onrender.com does not exist — probing it reported the backend
+// as down (HTTP 404) while it was actually healthy. The live service is
+// valueskins-web-service, and its liveness path is /health/live.
+const PRODUCTION_BACKEND_HEALTH = 'https://valueskins-web-service.onrender.com/health/live';
 const TIMEOUT_MS = 5000;
 const MAX_BODY_BYTES = 4096;
 
