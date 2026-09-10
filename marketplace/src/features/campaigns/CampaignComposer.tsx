@@ -37,13 +37,11 @@ export interface CampaignDraft {
   title: string;
   description: string;
   profession: string;
-  country: string;
   locations: string[];
   contentLanguage: string;
   minLevel: number;
   maxLevel: number;
   budget: string;
-  creatorCount: number;
   deliverables: string;
   compensation: string;
   exclusivity: string;
@@ -65,8 +63,8 @@ export interface CampaignDraft {
 }
 
 export const EMPTY_DRAFT: CampaignDraft = {
-  brandName: '', title: '', description: '', profession: '', country: '', locations: [],
-  contentLanguage: 'English', minLevel: 1, maxLevel: 5, budget: '', creatorCount: 1,
+  brandName: '', title: '', description: '', profession: '', locations: [],
+  contentLanguage: 'English', minLevel: 1, maxLevel: 5, budget: '',
   deliverables: '', compensation: 'Paid', exclusivity: 'None',
   usageRights: '30 days, social only', deadline: '', deliveryDeadline: '',
   scriptMode: 'creator_freedom', scriptText: '', contentReview: 'review_required',
@@ -203,18 +201,35 @@ export default function CampaignComposer({
   }, []);
 
   const escrowTotal = useMemo(
-    () => (parseInt(draft.budget || '0', 10) || 0) * draft.creatorCount,
-    [draft.budget, draft.creatorCount]
+    () => parseInt(draft.budget || '0', 10) || 0,
+    [draft.budget]
   );
 
   const handleLaunch = () => {
     const missing: string[] = [];
+    const invalid: string[] = [];
+
     if (!draft.title.trim()) missing.push('Campaign title');
     if (!draft.description.trim()) missing.push('Description');
     if (!draft.budget) missing.push('Budget per creator');
     if (!draft.profession) missing.push('Target profession');
-    if (missing.length) {
-      setError(`Still needed: ${missing.join(', ')}`);
+    if (!draft.pocName.trim()) missing.push('Point of contact name');
+    if (!draft.pocEmail.trim()) missing.push('Point of contact email');
+    if (!draft.pocPhone.trim()) missing.push('Point of contact phone');
+
+    // Validate email format
+    if (draft.pocEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.pocEmail.trim())) {
+      invalid.push('Point of contact email is invalid');
+    }
+
+    // Validate phone format (basic: at least 10 digits)
+    if (draft.pocPhone.trim() && !/\d{10,}/.test(draft.pocPhone.replace(/\D/g, ''))) {
+      invalid.push('Point of contact phone must have at least 10 digits');
+    }
+
+    if (missing.length || invalid.length) {
+      const allErrors = [...missing, ...invalid];
+      setError(`Still needed: ${allErrors.join(', ')}`);
       return;
     }
     setError(null);
@@ -478,7 +493,6 @@ export default function CampaignComposer({
           </Row>
 
           <Row two={formTwoCol}>{Select('profession', 'Target profession / niche', professions, 'Only creators wearing this ValueSkin are matched.', 'Select a profession…')}</Row>
-          <Row two={formTwoCol}>{Text('country', 'Your country')}</Row>
           <Row span={2} two={formTwoCol}>
             <label style={labelStyle}>Target locations (cities)</label>
             <div style={helpStyle}>Select which cities you want to work with. Leave empty to target all locations.</div>
@@ -536,22 +550,6 @@ export default function CampaignComposer({
           </Row>
 
           <Row two={formTwoCol}>{Text('budget', `Budget per creator (${currencySymbol})`, { numeric: true })}</Row>
-          <Row two={formTwoCol}>
-            <label style={labelStyle}>Creators to hire</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={() => set('creatorCount', Math.max(1, draft.creatorCount - 1))}
-                style={{ width: '44px', minHeight: '44px', borderRadius: '6px', background: C.surface, border: `1px solid ${SAND_HAIR}`, color: C.text, fontSize: '1rem', cursor: 'pointer', flexShrink: 0 }}
-              >−</button>
-              <div style={{ ...fieldBase, textAlign: 'center', fontWeight: 600 }}>{draft.creatorCount}</div>
-              <button
-                type="button"
-                onClick={() => set('creatorCount', Math.min(50, draft.creatorCount + 1))}
-                style={{ width: '44px', minHeight: '44px', borderRadius: '6px', background: C.surface, border: `1px solid ${SAND_HAIR}`, color: C.text, fontSize: '1rem', cursor: 'pointer', flexShrink: 0 }}
-              >+</button>
-            </div>
-          </Row>
 
           <Row span={2} two={formTwoCol}>{Text('deliverables', 'Deliverables', { placeholder: 'e.g. 1 reel, 3 stories' })}</Row>
 
@@ -723,12 +721,6 @@ export default function CampaignComposer({
               <div style={{ fontSize: '0.6875rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8A867E' }}>Budget per creator</div>
               <div style={{ fontSize: '1.375rem', fontWeight: 700, color: '#F5F5F0', marginTop: '6px', letterSpacing: '-0.02em' }}>
                 {draft.budget ? `${currencySymbol}${parseInt(draft.budget, 10).toLocaleString()}` : '—'}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.6875rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8A867E' }}>Creators</div>
-              <div style={{ fontSize: '1.375rem', fontWeight: 700, color: '#F5F5F0', marginTop: '6px', letterSpacing: '-0.02em' }}>
-                {draft.creatorCount}
               </div>
             </div>
             <div>
