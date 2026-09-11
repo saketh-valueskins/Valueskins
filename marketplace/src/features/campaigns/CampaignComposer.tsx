@@ -211,7 +211,7 @@ export default function CampaignComposer({
 
     if (!draft.title.trim()) missing.push('Campaign title');
     if (!draft.description.trim()) missing.push('Description');
-    if (!draft.budget) missing.push('Budget per creator');
+    if (!draft.budget) missing.push('Budget');
     if (!draft.profession) missing.push('Target profession');
     if (!draft.pocName.trim()) missing.push('Point of contact name');
     if (!draft.pocEmail.trim()) missing.push('Point of contact email');
@@ -222,9 +222,10 @@ export default function CampaignComposer({
       invalid.push('Point of contact email is invalid');
     }
 
-    // Validate phone format (basic: at least 10 digits)
-    if (draft.pocPhone.trim() && !/\d{10,}/.test(draft.pocPhone.replace(/\D/g, ''))) {
-      invalid.push('Point of contact phone must have at least 10 digits');
+    // Validate phone format (exactly 10 digits)
+    const phoneDigits = draft.pocPhone.replace(/\D/g, '');
+    if (draft.pocPhone.trim() && phoneDigits.length !== 10) {
+      invalid.push('Point of contact phone must be exactly 10 digits');
     }
 
     if (missing.length || invalid.length) {
@@ -549,7 +550,7 @@ export default function CampaignComposer({
             </div>
           </Row>
 
-          <Row two={formTwoCol}>{Text('budget', `Budget per creator (${currencySymbol})`, { numeric: true })}</Row>
+          <Row two={formTwoCol}>{Text('budget', `Budget (${currencySymbol})`, { numeric: true })}</Row>
 
           <Row span={2} two={formTwoCol}>{Text('deliverables', 'Deliverables', { placeholder: 'e.g. 1 reel, 3 stories' })}</Row>
 
@@ -592,7 +593,6 @@ export default function CampaignComposer({
             <label style={labelStyle}>Content delivery mode</label>
             <div style={{ display: 'grid', gap: '8px' }}>
               {cardChoice(draft.contentReview === 'review_required', "Review content before publish", "The creator sends a link for you to review before the final publish.", () => set('contentReview', 'review_required'))}
-              {cardChoice(draft.contentReview === 'direct_upload', "Direct upload — no review", "The creator uploads the published link directly; no pre-approval.", () => set('contentReview', 'direct_upload'))}
             </div>
           </Row>
 
@@ -718,7 +718,7 @@ export default function CampaignComposer({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
-              <div style={{ fontSize: '0.6875rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8A867E' }}>Budget per creator</div>
+              <div style={{ fontSize: '0.6875rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8A867E' }}>Budget</div>
               <div style={{ fontSize: '1.375rem', fontWeight: 700, color: '#F5F5F0', marginTop: '6px', letterSpacing: '-0.02em' }}>
                 {draft.budget ? `${currencySymbol}${parseInt(draft.budget, 10).toLocaleString()}` : '—'}
               </div>
