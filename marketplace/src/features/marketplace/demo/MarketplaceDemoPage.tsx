@@ -5998,8 +5998,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           return true;
                         }).length === 0 && (
                           <div style={{ textAlign:'center', padding:'40px 20px', color:C.textSecondary }}>
-                            <div style={{ fontSize:'14px', marginBottom:'8px' }}>No creators found</div>
-                            <div style={{ fontSize:'12px' }}>Try adjusting your search or filters</div>
+                            <div style={{ fontSize:'14px', marginBottom:'8px' }}>Create a campaign first to see the list of creators available</div>
                           </div>
                         )}
                       </div>
