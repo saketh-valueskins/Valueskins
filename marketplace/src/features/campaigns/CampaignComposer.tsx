@@ -50,6 +50,11 @@ export interface CampaignDraft {
   deliveryDeadline: string;
   scriptMode: ScriptMode;
   scriptText: string;
+  /** Filename of a script draft the brand attaches inside the Script box. */
+  scriptFileName: string;
+  shootLocation: string;
+  expectations: string;
+  otherNotes: string;
   contentReview: ContentReview;
   hasDigitalRights: boolean;
   digitalRightsAmount: string;
@@ -67,7 +72,9 @@ export const EMPTY_DRAFT: CampaignDraft = {
   contentLanguage: 'English', minLevel: 1, maxLevel: 5, budget: '',
   deliverables: '', compensation: 'Paid', exclusivity: 'None',
   usageRights: '30 days, social only', deadline: '', deliveryDeadline: '',
-  scriptMode: 'creator_freedom', scriptText: '', contentReview: 'review_required',
+  scriptMode: 'creator_freedom', scriptText: '', scriptFileName: '',
+  shootLocation: '', expectations: '', otherNotes: '',
+  contentReview: 'review_required',
   hasDigitalRights: false, digitalRightsAmount: '', digitalRightsDays: '30',
   digitalRightsReels: 0, digitalRightsStories: 0,
   pocName: '', pocRole: '', pocEmail: '', pocPhone: '',
@@ -199,6 +206,17 @@ export default function CampaignComposer({
   const set = useCallback(<K extends keyof CampaignDraft>(k: K, v: CampaignDraft[K]) => {
     setDraft((d) => ({ ...d, [k]: v }));
   }, []);
+
+  // UI-only: whether the "paste script text" area is expanded inside the Script box.
+  const [showScriptPaste, setShowScriptPaste] = useState(false);
+
+  // The composer autosaves JSON, so we persist the draft's *name* (the actual
+  // file is what the brand sends in the deal room). The name surfaces in the
+  // live preview and in the created campaign.
+  const handleScriptFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) set('scriptFileName', f.name);
+  };
 
   const escrowTotal = useMemo(
     () => parseInt(draft.budget || '0', 10) || 0,
@@ -493,7 +511,8 @@ export default function CampaignComposer({
               'Creators need to understand what they are promoting. Be specific — what is the product, who is it for, and what makes it worth their audience’s trust. Any exclusivity or non-compete clause must be stated here.')}
           </Row>
 
-          <Row two={formTwoCol}>{Select('profession', 'Target profession / niche', professions, 'Only creators wearing this ValueSkin are matched.', 'Select a profession…')}</Row>
+          {/* ── [v1 COMMENTED OUT] Profession / niche targeting — v1 is niche-agnostic (lifestyle & fashion). See Things-Commented-Out.md. */}
+          {false && <Row two={formTwoCol}>{Select('profession', 'Target profession / niche', professions, 'Only creators wearing this ValueSkin are matched.', 'Select a profession…')}</Row>}
           <Row span={2} two={formTwoCol}>
             <label style={labelStyle}>Target locations (cities)</label>
             <div style={helpStyle}>Select which cities you want to work with. Leave empty to target all locations.</div>
@@ -570,24 +589,83 @@ export default function CampaignComposer({
           <Row two={formTwoCol}>{Text('deliveryDeadline', 'Delivery deadline', { type: 'date' })}</Row>
 
           <Row span={2} two={formTwoCol}>
-            <label style={labelStyle}>Script negotiation mode</label>
+            <label style={labelStyle}>Script</label>
             <div style={{ display: 'grid', gap: '8px' }}>
               {cardChoice(draft.scriptMode === 'non_negotiable', "Non-negotiable (locked)", "You provide the exact script creators must use.", () => set('scriptMode', 'non_negotiable'))}
               {cardChoice(draft.scriptMode === 'discussion', "Collaborative (both edit)", "Both parties negotiate and edit the script together.", () => set('scriptMode', 'discussion'))}
               {cardChoice(draft.scriptMode === 'creator_freedom', "Creator freedom", "The creator has complete freedom; you review and approve.", () => set('scriptMode', 'creator_freedom'))}
             </div>
-          </Row>
 
-          {draft.scriptMode !== 'creator_freedom' && (
-            <Row span={2} two={formTwoCol}>
-              {Area('scriptText',
-                draft.scriptMode === 'non_negotiable' ? 'Script to provide (locked)' : 'Starting script (optional)',
-                undefined,
-                draft.scriptMode === 'non_negotiable'
-                  ? 'Paste the exact script creators must follow…'
-                  : 'Provide a starting point — creators can edit and suggest changes…')}
-            </Row>
-          )}
+            {/* Script draft — the brand can always send a script draft to creators */}
+            <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: `1px solid ${SAND_HAIR}` }}>
+              <label style={labelStyle}>Send a script draft</label>
+              <div style={helpStyle}>
+                Attach a script draft (or paste it below) so creators know exactly what to produce. Optional — skip it and the creator writes the script.
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <label
+                  htmlFor="cc-script-file"
+                  style={{
+                    minHeight: '44px', padding: '0 16px', borderRadius: '6px', cursor: 'pointer',
+                    display: 'inline-flex', alignItems: 'center', gap: '8px', fontFamily: FONT,
+                    fontSize: '0.875rem', fontWeight: 600,
+                    background: draft.scriptFileName ? SAND_TINT : C.surface,
+                    color: draft.scriptFileName ? C.primary : C.textSecondary,
+                    border: `1px solid ${draft.scriptFileName ? C.primary : SAND_HAIR}`,
+                  }}
+                >
+                  <span aria-hidden="true">📎</span>
+                  {draft.scriptFileName ? 'Replace script draft' : 'Attach script draft'}
+                  <input
+                    id="cc-script-file"
+                    type="file"
+                    accept=".txt,.docx,.pdf,.doc,.md"
+                    style={{ display: 'none' }}
+                    onChange={handleScriptFile}
+                    onFocus={onFocus}
+                    onBlur={onBlur}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowScriptPaste((b) => !b)}
+                  style={{
+                    minHeight: '44px', padding: '0 16px', borderRadius: '6px', cursor: 'pointer',
+                    fontFamily: FONT, fontSize: '0.875rem', fontWeight: 600,
+                    background: 'none', color: C.textSecondary,
+                    border: `1px solid ${SAND_HAIR}`,
+                  }}
+                >
+                  {showScriptPaste ? 'Hide script text' : 'Or paste script text'}
+                </button>
+              </div>
+
+              {draft.scriptFileName && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', padding: '8px 12px', borderRadius: '6px', background: SAND_TINT, border: `1px solid ${SAND_HAIR}` }}>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: C.text, wordBreak: 'break-all' }}>📄 {draft.scriptFileName}</span>
+                  <button
+                    type="button"
+                    onClick={() => set('scriptFileName', '')}
+                    style={{ marginLeft: 'auto', background: 'none', border: 'none', color: C.textMuted, cursor: 'pointer', fontSize: '0.8125rem', fontWeight: 600, padding: '4px' }}
+                  >Remove</button>
+                </div>
+              )}
+
+              {(showScriptPaste || draft.scriptMode === 'non_negotiable') && (
+                <div style={{ marginTop: '12px' }}>
+                  {Area('scriptText',
+                    draft.scriptMode === 'non_negotiable' ? 'Locked script (required)' : 'Paste your script draft',
+                    draft.scriptMode === 'non_negotiable'
+                      ? 'Creators must follow this exact script — paste it in full.'
+                      : 'Paste the full script — every scene, line, and filming direction.',
+                    draft.scriptMode === 'non_negotiable'
+                      ? 'Paste the exact script creators must follow…'
+                      : 'Paste your script draft here…')}
+                </div>
+              )}
+            </div>
+          </Row>
 
           <Row span={2} two={formTwoCol}>
             <label style={labelStyle}>Content delivery mode</label>
@@ -633,6 +711,31 @@ export default function CampaignComposer({
               </Row>
             </>
           )}
+
+          <Row span={2} two={formTwoCol}>
+            <div style={{ border: `1px solid ${SAND_HAIR}`, borderRadius: '10px', padding: '16px', background: 'rgba(200,184,154,0.05)' }}>
+              <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: C.text, marginBottom: '4px' }}>Other information</div>
+              <div style={helpStyle}>
+                Extra details that help creators plan the shoot and know exactly what you expect. Optional.
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                {Text('shootLocation', 'Shoot location', { placeholder: 'e.g. Bandra, Mumbai (studio) or Kolkata (outdoor)', help: 'Where will the shoot happen? Creators use this to check travel, time and equipment.' })}
+              </div>
+
+              <div style={{ marginBottom: '14px' }}>
+                {Area('expectations', 'What you expect from the creator',
+                  'Be specific — e.g. a 60s talking-head reel, walk the product through the camera, show unboxing, tag the brand page, post within 7 days.',
+                  'Describe what a great result looks like for this campaign…')}
+              </div>
+
+              <div>
+                {Area('otherNotes', 'Anything else',
+                  'Shoot timings, equipment needed, prop/branding requests, or any other notes for creators.',
+                  'Any other notes for creators…')}
+              </div>
+            </div>
+          </Row>
 
           <Row span={2} two={formTwoCol}>
             <div style={{ fontSize: '0.9375rem', fontWeight: 600, color: C.text }}>Point of contact</div>
@@ -732,6 +835,48 @@ export default function CampaignComposer({
               <div style={{ fontSize: '0.875rem', color: '#C9C5BC', marginTop: '6px' }}>{draft.deliveryDeadline || '—'}</div>
             </div>
           </div>
+
+          {draft.scriptFileName || draft.scriptText.trim() ? (
+            <div style={{ marginTop: '20px' }}>
+              <div style={{ fontSize: '0.6875rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8A867E', marginBottom: '6px' }}>Script</div>
+              {draft.scriptFileName && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8125rem', fontWeight: 600, color: WARM_SAND, marginBottom: '4px' }}>
+                  📎 {draft.scriptFileName}
+                </div>
+              )}
+              {draft.scriptText.trim() && (
+                <div style={{ fontSize: '0.8125rem', color: '#C9C5BC', lineHeight: 1.5 }}>
+                  {draft.scriptText.trim().slice(0, 140)}{draft.scriptText.trim().length > 140 ? '…' : ''}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ marginTop: '20px' }}>
+              <div style={{ fontSize: '0.6875rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8A867E', marginBottom: '6px' }}>Script</div>
+              <div style={{ fontSize: '0.8125rem', color: '#8A867E' }}>No script — creator writes it</div>
+            </div>
+          )}
+
+          {(draft.shootLocation || draft.expectations || draft.otherNotes) && (
+            <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(245,245,240,0.10)' }}>
+              <div style={{ fontSize: '0.6875rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#8A867E', marginBottom: '8px' }}>Other information</div>
+              {draft.shootLocation && (
+                <div style={{ fontSize: '0.8125rem', color: '#C9C5BC', marginBottom: '4px' }}>
+                  <span style={{ fontWeight: 600, color: '#F5F5F0' }}>Shoot:</span> {draft.shootLocation}
+                </div>
+              )}
+              {draft.expectations && (
+                <div style={{ fontSize: '0.8125rem', color: '#C9C5BC', marginBottom: '4px', lineHeight: 1.5 }}>
+                  <span style={{ fontWeight: 600, color: '#F5F5F0' }}>Expectations:</span> {draft.expectations}
+                </div>
+              )}
+              {draft.otherNotes && (
+                <div style={{ fontSize: '0.8125rem', color: '#C9C5BC', lineHeight: 1.5 }}>
+                  {draft.otherNotes}
+                </div>
+              )}
+            </div>
+          )}
 
           {escrowTotal > 0 && (
             <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(245,245,240,0.10)' }}>

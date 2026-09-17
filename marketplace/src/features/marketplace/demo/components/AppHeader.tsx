@@ -45,14 +45,15 @@ function IconMarket() {
     </svg>
   );
 }
-function IconStore() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" {...STROKE} aria-hidden="true">
-      <path d="M6 8h12l1 12H5L6 8Z" />
-      <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-    </svg>
-  );
-}
+/* ── [v1 COMMENTED OUT] IconStore was only used by the disabled 'Niche' tab. See Things-Commented-Out.md. */
+// function IconStore() {
+//   return (
+//     <svg width="20" height="20" viewBox="0 0 24 24" {...STROKE} aria-hidden="true">
+//       <path d="M6 8h12l1 12H5L6 8Z" />
+//       <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+//     </svg>
+//   );
+// }
 function IconSettings() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" {...STROKE} aria-hidden="true">
@@ -74,7 +75,8 @@ function IconCalendar() {
 const TABS: { view: AppView; label: string; Icon: () => JSX.Element }[] = [
   { view: 'profile',  label: 'Profile',  Icon: IconProfile },
   { view: 'mim',      label: 'Market',   Icon: IconMarket },
-  { view: 'store',    label: 'Niche',    Icon: IconStore },
+  /* ── [v1 COMMENTED OUT] 'Niche' tab (store). v1 = lifestyle & fashion only, niche-agnostic creators. See Things-Commented-Out.md. */
+  // { view: 'store',    label: 'Niche',    Icon: IconStore },
   { view: 'settings', label: 'Settings', Icon: IconSettings },
 ];
 

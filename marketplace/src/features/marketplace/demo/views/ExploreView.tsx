@@ -68,6 +68,12 @@ interface Campaign {
   budget: string;
   deadline: string;
   location: string;
+  scriptMode?: string;
+  scriptText?: string;
+  scriptFileName?: string;
+  shootLocation?: string;
+  expectations?: string;
+  otherNotes?: string;
 }
 
 export default function ExploreView(props: { sharedState?: any; creatorProfile?: any }) {
@@ -160,6 +166,19 @@ export default function ExploreView(props: { sharedState?: any; creatorProfile?:
                     <span style={{ fontSize: '10px', color: C.textMuted, flexShrink: 0 }}>{campaign.budget}</span>
                   </div>
                   <div style={{ fontSize: '12px', color: C.textSecondary, lineHeight: 1.4, marginBottom: '8px' }}>{campaign.description}</div>
+                  {(campaign.shootLocation || campaign.expectations || campaign.scriptFileName || campaign.scriptText) && (
+                    <div style={{ marginBottom: '8px', fontSize: '11px', color: C.textSecondary, lineHeight: 1.5, background: C.bg, border: `1px solid ${C.border}`, borderRadius: '8px', padding: '8px 10px' }}>
+                      {campaign.shootLocation && <div style={{ marginBottom: '3px' }}>📍 <strong style={{ color: C.text }}>Shoot:</strong> {campaign.shootLocation}</div>}
+                      {campaign.expectations && <div style={{ marginBottom: '3px' }}><strong style={{ color: C.text }}>Expectations:</strong> {campaign.expectations.length > 80 ? campaign.expectations.slice(0, 80) + '…' : campaign.expectations}</div>}
+                      {(campaign.scriptFileName || campaign.scriptText) && (
+                        <div>
+                          <strong style={{ color: C.text }}>Script:</strong> {campaign.scriptFileName ? `📎 ${campaign.scriptFileName}` : 'Brand script'}
+                          {campaign.scriptMode === 'non_negotiable' ? ' (locked)' : ''}
+                          {campaign.scriptMode === 'discussion' ? ' (collaborative)' : ''}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <span style={{ fontSize: '10px', fontWeight: 700, color: C.primary, background: `${withAlpha(C.primary, 0x10)}`, padding: '2px 8px', borderRadius: '4px' }}>{campaign.brandProfession}</span>
                     <span style={{ fontSize: '10px', color: C.textMuted }}>Deadline: {campaign.deadline}</span>
