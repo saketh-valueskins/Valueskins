@@ -9,12 +9,35 @@ function getStickerForProfession(profession: string): string | undefined {
   return PROFESSION_BADGES[profession]?.stickerImage || BRAND_CATEGORY_BADGES[profession]?.stickerImage || STICKER_MANIFEST[profession];
 }
 
+// Instagram / Virtual Resume data as documented for Meta Graph API review.
+// - instagram_business_basic      -> basic profile fields below (rendered on the resume).
+// - instagram_business_manage_insights -> analytics block rendered directly below it.
+type HoverInstagram = {
+  username?: string;
+  name?: string;
+  accountType?: string;
+  followers?: number;
+  posts?: number;
+  following?: number;
+  bio?: string;
+  website?: string;
+  verified?: boolean;
+  insights?: {
+    reach?: number;
+    impressions?: number;
+    engagementRate?: number;
+    profileViews?: number;
+    syncedAt?: string;
+  };
+};
+
 type HoverProfile = {
   role: 'brand' | 'creator';
   name: string;
   skin?: string;
   bio?: string;
   avatarUrl?: string;
+  instagram?: HoverInstagram;
   // Shared fields
   location?: string;
   email?: string;
@@ -53,6 +76,157 @@ const C = {
   border: '#E0E0DA',
   success: 'var(--c-accent)',
 };
+
+function fmt(n: number | undefined): string {
+  if (typeof n !== 'number' || !isFinite(n) || n <= 0) return '0';
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (n >= 10_000) return `${Math.round(n / 1000)}K`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}K`;
+  return String(Math.round(n));
+}
+
+// The two statement banners are shown verbatim on the resume so Meta App
+// Review can map each requested permission to the surface that uses it.
+const IG_BASIC_NOTE =
+  'After the creator logs in with Instagram, the authorized account\x27s basic profile data is displayed here on their Virtual Resume: Instagram username, account type, profile picture, follower count, post count, and bio. This data is read at login and rendered on this profile page.';
+const IG_INSIGHTS_NOTE =
+  'Directly below the basic profile, the creator\x27s Instagram analytics are displayed on the same Virtual Resume: reach, impressions, engagement, and profile views. These insights give brands an accurate view of the creator\x27s performance, and they are read from the authorized account only.';
+
+function InstagramResumeBlock({ ig }: { ig: HoverInstagram }) {
+  const igStats = [
+    { label: 'Followers', value: fmt(ig.followers) },
+    { label: 'Posts', value: fmt(ig.posts) },
+    { label: 'Following', value: fmt(ig.following) },
+  ];
+  const insights = [
+    { label: 'Reach', value: fmt(ig.insights?.reach || 0) },
+    { label: 'Impressions', value: fmt(ig.insights?.impressions || 0) },
+    { label: 'Engagement', value: `${ig.insights?.engagementRate ?? 0}%` },
+    { label: 'Profile Views', value: fmt(ig.insights?.profileViews || 0) },
+  ];
+  const isBusiness = (ig.accountType || '').toUpperCase() === 'BUSINESS';
+
+  return (
+    <div style={{
+      marginBottom: '10px',
+      borderRadius: '10px',
+      overflow: 'hidden',
+      border: '1px solid rgba(225,48,108,0.28)',
+      background: '#FFF',
+    }}>
+      {/* Instagram header */}
+      <div style={{
+        padding: '8px 10px',
+        background: 'linear-gradient(135deg, #F58529 0%, #DD2A7B 50%, #8134AF 100%)',
+        display: 'flex', alignItems: 'center', gap: '8px',
+      }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+        </svg>
+        <span style={{ fontSize: '11px', fontWeight: 800, color: '#fff', letterSpacing: '0.4px', textTransform: 'uppercase' }}>
+          Instagram · Virtual Resume
+        </span>
+      </div>
+
+      {/* instagram_business_basic banner + data */}
+      <div style={{ padding: '10px 10px 4px' }}>
+        <div style={{
+          padding: '6px 8px', borderRadius: '6px',
+          background: 'rgba(0,102,204,0.06)', border: '1px solid rgba(0,102,204,0.18)',
+          fontSize: '10.5px', lineHeight: 1.45, color: '#334', marginBottom: '8px',
+        }}>
+          <span style={{ fontWeight: 800, color: '#0066CC', fontFamily: 'monospace' }}>instagram_business_basic</span>
+          <span style={{ color: '#667' }}> — {IG_BASIC_NOTE}</span>
+        </div>
+
+        {/* Basic profile row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+          <div style={{
+            width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0,
+            background: 'linear-gradient(135deg, #F58529, #DD2A7B, #8134AF)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontSize: '16px', fontWeight: 800,
+          }}>
+            <span style={{
+              width: '34px', height: '34px', borderRadius: '50%', background: '#141414',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {(ig.name || ig.username || '?').charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#0A0A0A', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              @{ig.username || 'creator'}
+              {ig.verified && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#0066CC" aria-label="Verified">
+                  <path d="M12 1.5l2.6 1.9 3.2-.3 1 3.1 2.9 1.5-.8 3.1 1.8 2.7-1.9 2.6.1 3.2-3.1.9-1.7 2.8-3.1-.9-2.8 1.8-2.6-2-3.1.8-.9-3.1-2.8-1.8 1.7-2.7-.1-3.2 2.5-2.1-.5-3.1 3.1-1 .9-3L11.2 2z" />
+                  <path d="M10.6 13.6l-1.9-1.9-1.3 1.3 3.2 3.2 5.6-5.6-1.3-1.3z" fill="#fff" />
+                </svg>
+              )}
+            </div>
+            <div style={{ fontSize: '11px', color: '#667' }}>
+              {ig.name || 'Instagram Creator'}
+              {isBusiness && <span style={{ fontWeight: 700 }}> · Business</span>}
+            </div>
+          </div>
+          <div style={{
+            fontSize: '9px', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase',
+            color: isBusiness ? '#0066CC' : '#7A4F01',
+            background: isBusiness ? 'rgba(0,102,204,0.08)' : 'rgba(245,133,41,0.12)',
+            borderRadius: '4px', padding: '2px 6px', whiteSpace: 'nowrap',
+          }}>
+            {isBusiness ? 'Business' : 'Creator account'}
+          </div>
+        </div>
+
+        {/* Basic stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '6px', marginBottom: '6px' }}>
+          {igStats.map((s) => (
+            <div key={s.label} style={{ textAlign: 'center', padding: '4px 2px', background: '#F7F7F2', borderRadius: '6px', border: '1px solid #ECECE6' }}>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: '#0A0A0A' }}>{s.value}</div>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: '#AAA49B', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Bio + website */}
+        {(ig.bio || ig.website) && (
+          <div style={{ fontSize: '11px', color: '#556', lineHeight: 1.4, marginBottom: '6px' }}>
+            {ig.bio && <div style={{ whiteSpace: 'pre-wrap' }}>{ig.bio}</div>}
+            {ig.website && <div style={{ color: '#0066CC', fontWeight: 600, marginTop: '2px', wordBreak: 'break-all' }}>{ig.website}</div>}
+          </div>
+        )}
+      </div>
+
+      {/* instagram_business_manage_insights banner + analytics */}
+      <div style={{ padding: '5px 10px 10px', borderTop: '1px solid #F0EDE6' }}>
+        <div style={{
+          padding: '6px 8px', borderRadius: '6px',
+          background: 'rgba(221,42,123,0.06)', border: '1px solid rgba(221,42,123,0.2)',
+          fontSize: '10.5px', lineHeight: 1.45, color: '#334', marginBottom: '8px',
+        }}>
+          <span style={{ fontWeight: 800, color: '#DD2A7B', fontFamily: 'monospace' }}>instagram_business_manage_insights</span>
+          <span style={{ color: '#667' }}> — {IG_INSIGHTS_NOTE}</span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+          {insights.map((m) => (
+            <div key={m.label} style={{ padding: '8px', background: '#F7F7F2', borderRadius: '8px', border: '1px solid #ECECE6' }}>
+              <div style={{ fontSize: '13px', fontWeight: 800, color: '#DD2A7B' }}>{m.value}</div>
+              <div style={{ fontSize: '9px', fontWeight: 700, color: '#AAA49B', textTransform: 'uppercase', letterSpacing: '0.4px' }}>{m.label}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ fontSize: '10px', color: '#AAA49B', marginTop: '6px', textAlign: 'right' }}>
+          {ig.insights?.syncedAt ? `Meta insights · synced ${ig.insights.syncedAt}` : 'Meta insights · synced at login'}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: number }) {
   const cardRef = React.useRef<HTMLDivElement>(null);
@@ -140,7 +314,7 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
         )}
       </div>
 
-      <div style={{ padding: '12px 16px', maxHeight: '400px', overflowY: 'auto' }}>
+      <div style={{ padding: '12px 16px', maxHeight: '560px', overflowY: 'auto' }}>
         {/* Level (creator) */}
         {level && levelInfo && (
           <div style={{
@@ -400,6 +574,11 @@ function HoverCard({ profile, x, y }: { profile: HoverProfile; x: number; y: num
               </div>
             </div>
           </div>
+        )}
+
+        {/* Instagram / Virtual Resume block (Meta Graph API data) */}
+        {profile.role === 'creator' && profile.instagram && (
+          <InstagramResumeBlock ig={profile.instagram} />
         )}
 
         {/* Creator Rate Card */}
