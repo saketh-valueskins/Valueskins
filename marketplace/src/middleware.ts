@@ -59,12 +59,12 @@ export function middleware(request: NextRequest) {
     // so this was breaking brand typography on every page. Both origins are
     // Google-operated and serve static font assets only.
     "default-src 'self'; " +
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://checkout.razorpay.com; " +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://checkout.razorpay.com https://www.instagram.com; " +
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
       "img-src 'self' data: https:; " +
       "font-src 'self' data: https://fonts.gstatic.com; " +
-      `connect-src 'self' https://accounts.google.com https://api.razorpay.com${connectSrc ? ` ${connectSrc}` : ''}; ` +
-      'frame-src https://accounts.google.com https://api.razorpay.com'
+      `connect-src 'self' https://accounts.google.com https://api.razorpay.com https://api.instagram.com https://graph.instagram.com https://www.instagram.com${connectSrc ? ` ${connectSrc}` : ''}; ` +
+      'frame-src https://accounts.google.com https://api.razorpay.com https://www.instagram.com'
   );
 
   // Prevent MIME type sniffing
