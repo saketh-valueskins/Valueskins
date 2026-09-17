@@ -1952,6 +1952,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
       const parts = key.split('|');
       if (parts[0] === creatorName && (!creatorSkin || parts[1] === creatorSkin)) { creatorDealCount++; }
     }
+    // Virtual Resume Instagram data. Mirrors what the Instagram OAuth login
+    // persists, plus the manage_insights block. Until Meta Advanced Access is
+    // granted the insights are sample values so the review surface never renders
+    // empty — reach/impressions are derived from the follower base (3.9x / 7.8x
+    // per 30 days, a stable, realistic ratio).
+    const igFollowers = metrics.followers > 0 ? metrics.followers : 12400;
     return {
       role: 'creator',
       name: creatorName,
@@ -1965,6 +1971,23 @@ export default function MarketplaceDemoPage(initialDealData?: {
         followers: metrics.followers, engagement: metrics.engagement,
         dealsCompleted: creatorDealCount, avgDealValue: metrics.avgDealValue,
         onTimeRate: metrics.onTimeRate, brandRating: metrics.brandRating,
+      },
+      instagram: {
+        username: creatorName.toLowerCase().replace(/[^a-z0-9_.]/g, ''),
+        name: creatorName,
+        accountType: 'BUSINESS',
+        followers: igFollowers,
+        posts: 143,
+        following: 512,
+        bio: profileBio ? `${profileBio} · Open to brand collabs on ValueSkins` : 'Creator · Open to brand collaborations · DM for rates #valueskins',
+        verified: true,
+        insights: {
+          reach: Math.round(igFollowers * 3.9),
+          impressions: Math.round(igFollowers * 7.8),
+          engagementRate: metrics.engagement > 0 ? metrics.engagement : 4.8,
+          profileViews: Math.round(igFollowers * 0.19),
+          syncedAt: '2h ago',
+        },
       },
       rateCard,
       completedDeals: creatorDealCount,

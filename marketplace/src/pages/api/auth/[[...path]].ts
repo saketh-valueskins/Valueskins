@@ -1,8 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db';
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
-const REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/oauth/google/callback';
+// ── GOOGLE OAUTH — COMMENTED OUT (kept for reference, do not delete) ──
+// const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+// const REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/oauth/google/callback';
+
+// ── INSTAGRAM OAUTH (Instagram Login via Meta) — replaces Google ──
+const INSTAGRAM_CLIENT_ID = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || '';
+const INSTAGRAM_REDIRECT_URI =
+  process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI ||
+  'http://localhost:3000/api/oauth/instagram/callback';
 
 const FULL_MODULES = [
   { code: 'explorer', is_active: true, activated_at: new Date().toISOString() },
@@ -169,17 +176,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   // ── GET /api/auth/google — redirect to Google OAuth ──
-  if (req.method === 'GET' && pathStr === 'google') {
+  // COMMENTED OUT (kept for reference, do not delete) — replaced by Instagram.
+  // if (req.method === 'GET' && pathStr === 'google') {
+  //   const params = new URLSearchParams({
+  //     client_id: GOOGLE_CLIENT_ID,
+  //     redirect_uri: REDIRECT_URI,
+  //     response_type: 'code',
+  //     scope: 'openid email profile',
+  //     access_type: 'offline',
+  //     prompt: 'consent',
+  //   });
+  //
+  //   return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+  // }
+
+  // ── GET /api/auth/instagram — redirect to Instagram OAuth ──
+  if (req.method === 'GET' && pathStr === 'instagram') {
     const params = new URLSearchParams({
-      client_id: GOOGLE_CLIENT_ID,
-      redirect_uri: REDIRECT_URI,
+      client_id: INSTAGRAM_CLIENT_ID,
+      redirect_uri: INSTAGRAM_REDIRECT_URI,
       response_type: 'code',
-      scope: 'openid email profile',
-      access_type: 'offline',
-      prompt: 'consent',
+      scope: 'instagram_business_basic',
     });
 
-    return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+    return res.redirect(`https://www.instagram.com/oauth/authorize?${params.toString()}`);
   }
 
   // ── POST /api/auth/dev/login — dev bypass ──

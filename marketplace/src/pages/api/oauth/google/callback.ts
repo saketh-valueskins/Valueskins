@@ -1,4 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GOOGLE OAUTH CALLBACK — COMMENTED OUT (kept for reference, do not delete)
+//
+// Superseded by /api/oauth/instagram/callback (Instagram Login via Meta).
+// The Google flow used the Google account email as the identity key
+// (instagram_user_id = email). The Instagram flow keys on the Instagram user id
+// and persists the IG token in social_media_accounts.
+//
+// Original implementation preserved verbatim below:
+// ─────────────────────────────────────────────────────────────────────────────
+/*
+import type { NextApiRequest, NextApiResponse } from 'next';
 import crypto from 'crypto';
 import { exchangeGoogleCode, getGoogleUserInfo } from '@/lib/oauth';
 import { query } from '@/lib/db';
@@ -135,4 +148,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       details: error instanceof Error ? error.message : String(error),
     });
   }
+}
+*/
+
+export default function handler(_req: NextApiRequest, res: NextApiResponse) {
+  return res.status(410).json({
+    error: 'google_oauth_disabled',
+    message:
+      'Google OAuth has been replaced by Instagram OAuth. Use /api/oauth/instagram/callback.',
+  });
 }

@@ -47,6 +47,12 @@ export default function PublicProfilePage() {
     verified: boolean;
     avatarColor: string;
     avatarAbbr: string;
+    avatarUrl: string | null;
+    igHandle: string;
+    igUsername: string;
+    igAccountType: string;
+    igBio: string;
+    mediaCount: number;
     recentDeals: { brand: string; amount: string; date: string }[];
     reviews?: { author: string; rating: number; quote: string }[];
   }>(null);
@@ -63,15 +69,33 @@ export default function PublicProfilePage() {
       }
 
       const profileResult = await api.persona.getPersona(numericId);
-      if (cancelled || !profileResult.data) return;
       const skinsResult = await api.persona.getPersonaSkins(numericId);
+      if (cancelled) return;
+
+      let ig: null | {
+        connected: boolean;
+        username?: string;
+        displayName?: string;
+        accountType?: string;
+        bio?: string;
+        followers?: number;
+        mediaCount?: number;
+        profilePictureUrl?: string | null;
+        lastSyncedAt?: string | null;
+      } = null;
+      try {
+        const igRes = await fetch(`/api/social/instagram?userId=${numericId}`);
+        ig = igRes.ok ? await igRes.json() : null;
+      } catch {
+        // Non-fatal — resume still renders from persona data alone.
+      }
       if (cancelled) return;
 
       setRemoteProfile({
         name: profileResult.data.display_name,
         handle: `@${profileResult.data.username}`,
-        bio: '',
-        followers: 0,
+        bio: ig?.connected && ig?.bio ? ig.bio : '',
+        followers: ig?.connected && typeof ig?.followers === 'number' ? ig.followers : 0,
         following: 0,
         engagement: 0,
         dealsCompleted: 0,
@@ -81,6 +105,12 @@ export default function PublicProfilePage() {
         verified: true,
         avatarColor: '#0A0A0A',
         avatarAbbr: profileResult.data.display_name.slice(0, 2).toUpperCase(),
+        avatarUrl: ig?.connected && ig?.profilePictureUrl ? ig.profilePictureUrl : null,
+        igHandle: ig?.connected && ig?.username ? ig.username : '',
+        igUsername: ig?.connected && ig?.username ? ig.username : '',
+        igAccountType: ig?.connected && ig?.accountType ? ig.accountType : '',
+        igBio: ig?.connected && ig?.bio ? ig.bio : '',
+        mediaCount: ig?.connected && typeof ig?.mediaCount === 'number' ? ig.mediaCount : 0,
         recentDeals: [],
         reviews: [],
       });
@@ -95,6 +125,7 @@ export default function PublicProfilePage() {
   const handle = typeof id === 'string' ? id.replace('@', '') : '';
   const profile = remoteProfile;
   const isLoadingRemote = !!handle && !Number.isNaN(Number(handle)) && !profile;
+  const igUsername = profile?.igUsername || '';
 
   if (!handle || (!profile && !isLoadingRemote)) {
     return (
@@ -141,8 +172,17 @@ export default function PublicProfilePage() {
             fontWeight: 700,
             color: profile.avatarColor,
             border: `3px solid ${profile.avatarColor}40`,
+            overflow: 'hidden',
           }}>
-            {profile.avatarAbbr}
+            {profile.avatarUrl ? (
+              <img
+                src={profile.avatarUrl}
+                alt={profile.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              profile.avatarAbbr
+            )}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -157,12 +197,20 @@ export default function PublicProfilePage() {
               {profile.handle}
             </div>
             <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-              <div style={{ fontSize: '12px', color: C.textSecondary }}>
-                <strong style={{ color: C.text }}>{profile.followers.toLocaleString()}</strong> followers
-              </div>
-              <div style={{ fontSize: '12px', color: C.textSecondary }}>
-                <strong style={{ color: C.text }}>{profile.following.toLocaleString()}</strong> following
-              </div>
+              {profile.igHandle ? (
+                <>
+                  <div style={{ fontSize: '12px', color: C.textSecondary }}>
+                    <strong style={{ color: C.text }}>{profile.followers.toLocaleString()}</strong> followers
+                  </div>
+                  <div style={{ fontSize: '12px', color: C.textSecondary }}>
+                    <strong style={{ color: C.text }}>{profile.mediaCount.toLocaleString()}</strong> posts
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: '12px', color: C.textMuted }}>
+                  No Instagram connected
+                </div>
+              )}
             </div>
           </div>
           <button
@@ -183,17 +231,75 @@ export default function PublicProfilePage() {
         </div>
 
         {/* Bio */}
-        <div style={{
-          fontSize: '13px',
-          color: C.textSecondary,
-          lineHeight: 1.6,
-          marginBottom: '20px',
-          padding: '14px',
-          background: C.surfaceAlt,
-          borderRadius: '10px',
-        }}>
-          {profile.bio}
-        </div>
+        {profile.bio ? (
+          <div style={{
+            fontSize: '13px',
+            color: C.textSecondary,
+            lineHeight: 1.6,
+            marginBottom: '20px',
+            padding: '14px',
+            background: C.surfaceAlt,
+            borderRadius: '10px',
+          }}>
+            {profile.bio}
+          </div>
+        ) : null}
+
+        {/* Instagram analytics */}
+        {profile.igHandle ? (
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: C.text, marginBottom: '10px' }}>
+              Instagram
+            </div>
+            <div style={{
+              background: C.surfaceAlt,
+              borderRadius: '10px',
+              padding: '14px',
+              border: `1px solid ${C.border}`,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>
+                  {profile.igAccountType ? `@${igUsername}` : `@${igUsername}`}
+                </div>
+                {profile.igAccountType && (
+                  <span style={{
+                    fontSize: '11px',
+                    padding: '3px 10px',
+                    borderRadius: '20px',
+                    background: C.primary + '12',
+                    color: C.primary,
+                    fontWeight: 600,
+                  }}>
+                    {profile.igAccountType}
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                <div style={{ background: C.bg, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 700, color: C.text }}>
+                    {profile.followers.toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: '11px', color: C.textMuted, marginTop: 2 }}>
+                    Followers
+                  </div>
+                </div>
+                <div style={{ background: C.bg, borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 700, color: C.text }}>
+                    {profile.mediaCount.toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: '11px', color: C.textMuted, marginTop: 2 }}>
+                    Posts
+                  </div>
+                </div>
+              </div>
+              {profile.igBio && (
+                <div style={{ fontSize: '12px', color: C.textSecondary, marginTop: '10px', lineHeight: 1.5 }}>
+                  {profile.igBio}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
 
         {/* ValueSkins */}
         <div style={{ marginBottom: '20px' }}>

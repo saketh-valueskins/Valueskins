@@ -28,11 +28,17 @@ export const BACKEND_CONFIG = {
 // ──────────────────────────────────────────────────────────────────────────────
 
 export const AUTH_CONFIG = {
-  // Google OAuth (set in .env.local or Vercel)
-  GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'PLACEHOLDER',
-  GOOGLE_REDIRECT_URI:
-    process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI ||
-    'http://localhost:3000/api/oauth/google/callback',
+  // ── GOOGLE OAUTH — COMMENTED OUT (kept for reference, do not delete) ──
+  // GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'PLACEHOLDER',
+  // GOOGLE_REDIRECT_URI:
+  //   process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI ||
+  //   'http://localhost:3000/api/oauth/google/callback',
+
+  // ── INSTAGRAM OAUTH (Instagram Login via Meta) — replaces Google ──
+  INSTAGRAM_CLIENT_ID: process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || 'PLACEHOLDER',
+  INSTAGRAM_REDIRECT_URI:
+    process.env.NEXT_PUBLIC_INSTAGRAM_REDIRECT_URI ||
+    'http://localhost:3000/api/oauth/instagram/callback',
 
   // JWT Configuration (user provides JWT_SECRET to backend)
   SESSION_TIMEOUT: parseInt(process.env.NEXT_PUBLIC_SESSION_TIMEOUT || '1800000', 10), // 30 min
@@ -168,8 +174,12 @@ export function validateConfig(): { valid: boolean; warnings: string[] } {
 
   // Check for placeholder values in production
   if (process.env.NODE_ENV === 'production') {
-    if (AUTH_CONFIG.GOOGLE_CLIENT_ID.includes('PLACEHOLDER')) {
-      warnings.push('NEXT_PUBLIC_GOOGLE_CLIENT_ID not configured for production');
+    // Google OAuth — commented out (kept for reference, do not delete)
+    // if (AUTH_CONFIG.GOOGLE_CLIENT_ID.includes('PLACEHOLDER')) {
+    //   warnings.push('NEXT_PUBLIC_GOOGLE_CLIENT_ID not configured for production');
+    // }
+    if (AUTH_CONFIG.INSTAGRAM_CLIENT_ID.includes('PLACEHOLDER')) {
+      warnings.push('NEXT_PUBLIC_INSTAGRAM_CLIENT_ID not configured for production');
     }
 
     if (PAYMENT_CONFIG.STRIPE_PUBLIC_KEY.includes('PLACEHOLDER')) {

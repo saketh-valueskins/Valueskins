@@ -2,7 +2,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-import { getGoogleAuthUrl } from '@/lib/oauth';
+// import { getGoogleAuthUrl } from '@/lib/oauth'; // Google OAuth — commented out (kept for reference)
+import { getInstagramAuthUrl } from '@/lib/oauth';
 import { ValueSkinSprite } from '@/features/profiles/ProfileView';
 
 // Login Page — per "login page.md" v2 (dark premium).
@@ -14,8 +15,8 @@ import { ValueSkinSprite } from '@/features/profiles/ProfileView';
 // Single viewport, no scroll (§3) — the global footer is suppressed for this
 // route in _app.tsx and a slim footer is pinned here instead (§0b.6).
 //
-// AUTH IS UNTOUCHED: handleGoogleAuth below is byte-for-byte the previous
-// implementation. This change is UI only.
+// AUTH: Google OAuth is commented out and replaced by Instagram OAuth
+// (Instagram Login via Meta). See handleInstagramAuth below.
 
 const FONT = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 const EASE = 'cubic-bezier(0.16,1,0.3,1)';
@@ -79,10 +80,22 @@ export default function Login() {
     return () => mq.removeEventListener('change', on);
   }, []);
 
-  // ─── AUTH — UNCHANGED ───────────────────────────────────────────────
-  const handleGoogleAuth = async () => {
+  // ─── AUTH ───────────────────────────────────────────────────────────
+  // GOOGLE OAUTH — COMMENTED OUT (kept for reference, do not delete)
+  // const handleGoogleAuth = async () => {
+  //   try {
+  //     const url = await getGoogleAuthUrl();
+  //     window.location.href = url;
+  //   } catch {
+  //     setError('Failed to start login');
+  //   }
+  // };
+
+  // Instagram Login (via Meta) — logging in also verifies account control,
+  // since only the holder of the account's credentials can complete OAuth.
+  const handleInstagramAuth = async () => {
     try {
-      const url = await getGoogleAuthUrl();
+      const url = await getInstagramAuthUrl();
       window.location.href = url;
     } catch {
       setError('Failed to start login');
@@ -204,7 +217,7 @@ export default function Login() {
 
             {/* §0b.4 — solid single action, 10px radius, soft tinted shadow, hover lift */}
             <button
-              onClick={handleGoogleAuth}
+              onClick={handleInstagramAuth}
               onMouseEnter={() => setHover(true)}
               onMouseLeave={() => { setHover(false); setPressed(false); }}
               onMouseDown={() => setPressed(true)}
@@ -223,7 +236,7 @@ export default function Login() {
                 ...enter(0.29),
               }}
             >
-              {/* Official Google G glyph (§6) */}
+              {/* GOOGLE GLYPH — COMMENTED OUT (kept for reference, do not delete)
               <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -231,15 +244,15 @@ export default function Login() {
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
               Continue with Google
+              */}
+              {/* Instagram glyph */}
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="2.2" y="2.2" width="19.6" height="19.6" rx="5.4" fill="none" stroke="currentColor" strokeWidth="1.9" />
+                <circle cx="12" cy="12" r="4.6" fill="none" stroke="currentColor" strokeWidth="1.9" />
+                <circle cx="17.4" cy="6.6" r="1.25" fill="currentColor" />
+              </svg>
+              Continue with Instagram
             </button>
-
-            {/* Sign-up line (§7) */}
-            <p style={{ margin: '22px 0 0', fontSize: '0.875rem', color: t.muted, ...enter(0.37) }}>
-              Don&apos;t have an account?{' '}
-              <Link href="/auth/signup" style={{ color: t.head, textDecoration: 'none', fontWeight: 600 }}>
-                Sign up
-              </Link>
-            </p>
 
             {/* §0b.5 — trust whisper */}
             <p style={{ margin: '18px 0 0', fontSize: '0.75rem', color: t.muted, letterSpacing: '0.01em', ...enter(0.45) }}>
