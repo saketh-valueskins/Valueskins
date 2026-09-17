@@ -81,6 +81,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const username = ig.username || `ig_${instagramUserId}`;
     const displayName = ig.name || ig.username || `Instagram ${instagramUserId}`;
 
+    // Instagram Login only authorizes Business and Creator accounts, so the
+    // account type answers "brand or creator?" for us: BUSINESS -> brand,
+    // CREATOR -> creator. PERSONAL/unset falls back to the manual role prompt
+    // (the /auth/onboarding split page).
+    const accountType = (ig.account_type || '').toUpperCase();
+    const detectedRole: 'brand' | 'creator' | null =
+      accountType === 'BUSINESS' ? 'brand' : accountType === 'CREATOR' ? 'creator' : null;
+
     const existing = await query(
       'SELECT id, onboarding_stage FROM users WHERE instagram_user_id = $1',
       [instagramUserId]
@@ -101,12 +109,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
          WHERE id = $1`,
         [userId, username, ig.profile_picture_url || null]
       );
+
+      // Auto-commit the detected role for returning users who never finished
+      // onboarding. This replaces the "brand or creator?" question entirely.
+      if (onboardingStage !== 'complete' && detectedRole) {
+        await query(
+          `UPDATE users SET role = $2, onboarding_stage = 'complete' WHERE id = $1`,
+          [userId, detectedRole]
+        );
+        onboardingStage = 'complete';
+      }
     } else {
       // No email from Instagram — stored empty. Onboarding collects and
       // confirms it. `instagram_user_id` is the IG-scoped identity key.
+      // When the account type identifies a role, the user is considered
+      // onboarded immediately and skips the role prompt.
       const created = await query(
-        `INSERT INTO users (instagram_user_id, email, username, display_name, avatar_url, is_active, onboarding_stage)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+        `INSERT INTO users (instagram_user_id, email, username, display_name, avatar_url, is_active, role, onboarding_stage)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
         [
           instagramUserId,
           '',
@@ -114,11 +134,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           displayName,
           ig.profile_picture_url || null,
           true,
-          'pending',
+          detectedRole ?? 'creator',
+          detectedRole ? 'complete' : 'pending',
         ]
       );
       if (!created.rows[0]) throw new Error('Failed to create user');
       userId = created.rows[0].id;
+      onboardingStage = detectedRole ? 'complete' : 'pending';
     }
 
     // 4. Persist the Instagram connection (token + profile). Tokens are stored
