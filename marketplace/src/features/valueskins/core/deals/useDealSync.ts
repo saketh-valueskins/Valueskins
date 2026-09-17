@@ -183,6 +183,10 @@ export type Campaign = {
   requirements?: string[];
   scriptMode?: 'non_negotiable' | 'discussion' | 'creator_freedom';
   scriptText?: string;
+  scriptFileName?: string;
+  shootLocation?: string;
+  expectations?: string;
+  otherNotes?: string;
   allowContentApprovalPayment?: boolean;
   contentReview?: 'direct_upload' | 'review_required';
   status: 'open' | 'closed' | 'expired';

@@ -180,6 +180,13 @@ type Opportunity = {
   escrowPool?: number;
   creatorCount?: number;
   contentReview?: 'direct_upload' | 'review_required';
+  // Script + other-information captured by the brand in the campaign composer
+  scriptMode?: 'non_negotiable' | 'discussion' | 'creator_freedom';
+  scriptText?: string;
+  scriptFileName?: string;
+  shootLocation?: string;
+  expectations?: string;
+  otherNotes?: string;
   // Point of Contact for the campaign
   poc?: { name: string; workEmail: string; role: string; phone?: string };
 };
@@ -2441,6 +2448,12 @@ export default function MarketplaceDemoPage(initialDealData?: {
       requiredValueskin: c.requiredValueskin || 'profession',
       creatorCount: c.creatorCount || 1,
       contentReview: c.contentReview || 'review_required',
+      scriptMode: c.scriptMode,
+      scriptText: c.scriptText || '',
+      scriptFileName: c.scriptFileName || '',
+      shootLocation: c.shootLocation || '',
+      expectations: c.expectations || '',
+      otherNotes: c.otherNotes || '',
     }));
   const activeOpportunities = selectedMarketplaceSkin
     ? campaignOpportunities.slice().sort((a, b) => parseInt(b.match) - parseInt(a.match))
@@ -2715,6 +2728,27 @@ export default function MarketplaceDemoPage(initialDealData?: {
               </div>
             </div>
 
+            {/* Script — what the brand expects creators to follow */}
+            {(askModalOpp.scriptText || askModalOpp.scriptFileName || (askModalOpp.scriptMode && askModalOpp.scriptMode !== 'creator_freedom')) && (
+              <div style={{ marginBottom: '18px' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Script</div>
+                <div style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: '10px', padding: '12px' }}>
+                  {askModalOpp.scriptMode === 'non_negotiable' && (
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: C.warning, marginBottom: '8px' }}>🔒 Non-negotiable — the brand provides the exact script that must be followed.</div>
+                  )}
+                  {askModalOpp.scriptMode === 'discussion' && (
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: C.primary, marginBottom: '8px' }}>✏️ Collaborative — both parties edit the script together.</div>
+                  )}
+                  {askModalOpp.scriptFileName && (
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: C.text, marginBottom: askModalOpp.scriptText ? '6px' : 0 }}>📎 {askModalOpp.scriptFileName}</div>
+                  )}
+                  {askModalOpp.scriptText && (
+                    <div style={{ fontSize: '12px', color: C.textSecondary, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{askModalOpp.scriptText}</div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Key details grid */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '18px' }}>
               <div style={{ background: C.bg, borderRadius: '10px', padding: '12px', border: `1px solid ${C.border}` }}>
@@ -2770,6 +2804,30 @@ export default function MarketplaceDemoPage(initialDealData?: {
                 )}
               </div>
             </div>
+
+            {/* Other information — shoot location + brand expectations */}
+            {(askModalOpp.shootLocation || askModalOpp.expectations || askModalOpp.otherNotes) && (
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>Other information</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {askModalOpp.shootLocation && (
+                    <div style={{ fontSize: '12px', color: C.text, lineHeight: 1.5 }}>
+                      <span style={{ fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.4px' }}>Shoot location: </span>
+                      {askModalOpp.shootLocation}
+                    </div>
+                  )}
+                  {askModalOpp.expectations && (
+                    <div style={{ fontSize: '12px', color: C.text, lineHeight: 1.5 }}>
+                      <span style={{ fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.4px' }}>What the brand expects: </span>
+                      {askModalOpp.expectations}
+                    </div>
+                  )}
+                  {askModalOpp.otherNotes && (
+                    <div style={{ fontSize: '12px', color: C.textSecondary, lineHeight: 1.5 }}>{askModalOpp.otherNotes}</div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Requirements */}
             <div style={{ marginBottom: '20px' }}>
@@ -3276,8 +3334,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       const activePipelineDeals = pipelineDeals.filter(d => d.creatorDealLifecycle !== 'approved' && d.brandApprovalPhase !== 'approved');
 
                       const columns = {
-                        'Negotiation': activePipelineDeals.filter(d =>
-                          ['offer', 'chatroom', 'counter', 'brand_countered', 'pending', 'brand_considering', 'brand_reviewing'].includes(d.phase)
+                        'Active': activePipelineDeals.filter(d =>
+                          ['offer', 'pending', 'brand_considering', 'brand_reviewing', 'formal_offer'].includes(d.phase)
                         ),
                         'In Progress': activePipelineDeals.filter(d =>
                           ['checklist', 'softhold'].includes(d.phase)
@@ -3407,6 +3465,33 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 )}
                               </div>
 
+                              {/* Brief strip — shoot location, expectations, script draft */}
+                              {(opp.shootLocation || opp.expectations || opp.scriptFileName || opp.scriptText) && (
+                                <div style={{ marginBottom: '12px', fontSize: '12px', color: C.textSecondary, lineHeight: 1.5 }}>
+                                  {opp.shootLocation && (
+                                    <div style={{ marginBottom: '3px' }}>
+                                      <span style={{ fontWeight: 700, color: C.textMuted }}>Shoot: </span>{opp.shootLocation}
+                                    </div>
+                                  )}
+                                  {opp.expectations && (
+                                    <div style={{ marginBottom: '3px' }}>
+                                      <span style={{ fontWeight: 700, color: C.textMuted }}>Expectations: </span>
+                                      {opp.expectations.length > 110 ? opp.expectations.slice(0, 110) + '…' : opp.expectations}
+                                    </div>
+                                  )}
+                                  {(opp.scriptFileName || opp.scriptText) && (
+                                    <div>
+                                      <span style={{ fontWeight: 700, color: C.textMuted }}>Script: </span>
+                                      {opp.scriptFileName ? `📎 ${opp.scriptFileName}` : null}
+                                      {opp.scriptFileName && opp.scriptText ? ' — ' : null}
+                                      {opp.scriptText && !opp.scriptFileName ? 'Brand script' : null}
+                                      {opp.scriptMode === 'non_negotiable' ? ' (non-negotiable, locked)' : ''}
+                                      {opp.scriptMode === 'discussion' ? ' (collaborative)' : ''}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
                               {/* Action row */}
                               <div style={{ display: 'flex', gap: '8px' }}>
                                 <button
@@ -3497,7 +3582,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           href={opp.brandWebsiteUrl || `https://portfolio.valueskins.com/${opp.brand.replace(/\s+/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ color: C.primary, textDecoration: 'none', cursor:'pointer' }}>{opp.brand}</a>
                                       </div>
                                       <div style={{ fontSize: '12px', color: C.textMuted }}>
-                                        {dealRoomPhase === 'accepted' || dealRoomPhase === 'softhold' ? 'Deal accepted — terms locked' : dealRoomPhase === 'formal_offer' ? 'Review formal offer' : 'Negotiate freely — price, terms, everything'}
+                                        {dealRoomPhase === 'accepted' || dealRoomPhase === 'softhold' ? 'Deal accepted — terms locked' : dealRoomPhase === 'formal_offer' ? 'Review formal offer' : 'Fixed deal — final amount set by the brand'}
                                       </div>
                                     </div>
                                   </div>
@@ -3507,9 +3592,9 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     <div style={{ fontSize:'9px', fontWeight:700, color:C.textMuted, textTransform:'uppercase', marginBottom:'8px', letterSpacing:'0.5px' }}>Deal Progression</div>
                                     <div style={{ display:'flex', alignItems:'center', gap:'4px' }}>
                                       {(() => {
-                                        const STEPS = ['brief', 'offer', 'counter', 'accepted', 'completed'];
-                                        const LABELS: Record<string, string> = { brief:'Brief', offer:'Offer', counter:'Negotiating', accepted:'Accepted', completed:'Completed' };
-                                        const phaseOrder: Record<string, number> = { brief:0, offer:1, pending:1, brand_considering:1.5, brand_reviewing:1.5, brand_countered:2, counter:2, last_offer:2.5, formal_offer:3, checklist:3, accepted:3, softhold:4, rejected:-1, brand_rejected:-1 };
+                                        const STEPS = ['brief', 'offer', 'accepted', 'completed'];
+                                        const LABELS: Record<string, string> = { brief:'Brief', offer:'Offer', accepted:'Accepted', completed:'Completed' };
+                                        const phaseOrder: Record<string, number> = { brief:0, offer:1, pending:1, brand_considering:1.5, brand_reviewing:1.5, brand_countered:2, counter:2, last_offer:2.5, formal_offer:2.5, checklist:2.5, accepted:3, softhold:4, rejected:-1, brand_rejected:-1 };
                                         const current = phaseOrder[dealRoomPhase] ?? 0;
                                         return STEPS.map((step, idx, arr) => {
                                           const stepPos = idx;
@@ -3588,26 +3673,25 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         {activeDeal?.briefTitle && <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginTop: '4px' }}>Campaign: {activeDeal.briefTitle}</div>}
                                       </div>
                                       <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                                        {/* ── [v1] No negotiation — brand's campaign amount is FINAL. Accept locks the deal immediately. */}
                                         <button
                                           onClick={() => {
                                             const localKey = `${profileName}|${selectedMarketplaceSkin}|${actualOppIndex}`;
-                                            if (dealRoomPhase === 'brief') {
-                                              updateDeal(localKey, { phase: 'pending', offerAmount: opp.budget?.replace(/[^0-9]/g, '') || '5000' });
-                                            }
                                             const now = new Date();
                                             const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: false });
-                                            const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator entered negotiation for ₹${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}/post`, time: timeStr, isoTime: now.toISOString(), seen: false };
+                                            const acceptMsg = { id: Date.now(), sender: 'creator' as const, text: `Creator accepted the fixed deal at ₹${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}/post (no negotiation)`, time: timeStr, isoTime: now.toISOString(), seen: false };
                                             const existingMsgs = (activeDeal?.chatMessages) || [];
                                             updateDeal(localKey, {
-                                              phase: 'chatroom',
+                                              phase: 'accepted',
+                                              offerAmount: opp.budget?.replace(/[^0-9]/g, '') || '5000',
                                               chatMessages: [...(existingMsgs as any[]), acceptMsg],
                                             });
-                                            setPurchaseToast('Negotiation opened');
-                                            setTimeout(() => setPurchaseToast(null), 2000);
+                                            setPurchaseToast('Deal accepted — terms locked');
+                                            setTimeout(() => setPurchaseToast(null), 2500);
                                           }}
                                           style={{ flex: 1, background: C.success, border: 'none', padding: '9px', borderRadius: '8px', color: 'var(--c-surface-lowest)', fontWeight: 600, cursor: 'pointer', fontSize: '12px' }}
                                         >
-                                          Accept & Negotiate ${parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()}
+                                          Accept Deal — ₹{parseInt(dealOfferAmount || opp.budget?.replace(/[^0-9]/g, '') || '5000').toLocaleString()} (fixed)
                                         </button>
                                         <button
                                           onClick={() => {
@@ -3632,8 +3716,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     </>
                                   )}
 
-                                  {/* Creator has sent counter, waiting for brand response */}
-                                  {dealRoomPhase === 'counter' && (
+                                  {/* ── [v1 COMMENTED OUT] Negotiation UI — no negotiation in v1. See Things-Commented-Out.md. */}
+                                  {false && dealRoomPhase === 'counter' && (
                                     <div style={{ background: 'rgba(255,193,7,0.06)', borderRadius: '8px', padding: '12px', border: `1px solid rgba(255,193,7,0.2)` }}>
                                       <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--c-warning)', marginBottom: '6px' }}>Counter Offer Sent</div>
                                       <div style={{ fontSize: '12px', color: C.text, marginBottom: '8px' }}>Your counter-offer of <strong>${parseInt(dealCounterAmount || '0').toLocaleString()}</strong> has been sent to the brand.</div>
@@ -3641,8 +3725,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     </div>
                                   )}
 
-                                  {/* Brand has accepted creator's counter-offer */}
-                                  {dealRoomPhase === 'pending' && dealCounterAmount && parseInt(dealOfferAmount || '0') === parseInt(dealCounterAmount) && (
+                                  {/* ── [v1 COMMENTED OUT] Negotiation UI — brand's amount is final, no counters. */}
+                                  {false && dealRoomPhase === 'pending' && dealCounterAmount && parseInt(dealOfferAmount || '0') === parseInt(dealCounterAmount) && (
                                     <div style={{ background: 'rgba(76,175,80,0.06)', borderRadius: '8px', padding: '12px', border: `1px solid rgba(76,175,80,0.2)` }}>
                                       <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.success, marginBottom: '6px' }}>Counter-Offer Accepted!</div>
                                       <div style={{ fontSize: '12px', color: C.text, marginBottom: '8px' }}>{opp.brand} accepted your counter-offer of <strong>${parseInt(dealCounterAmount).toLocaleString()}/post</strong></div>
@@ -4166,7 +4250,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                     <>
                                       {/* Chat + Sidebar layout */}
                                       <div style={{ display: 'flex', gap: '8px', minHeight: '340px' }}>
-                                        {/* Chat area */}
+                                        {/* ── [v1 COMMENTED OUT] Deal Room Chat box — see Things-Commented-Out.md.
+                                            Kept in code (hidden via {false && …}) so it can be restored later. */}
+                                        {false && (
+                                        /* Chat area */
                                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, overflow: 'hidden' }}>
                                           <div style={{ padding: '8px 10px', borderBottom: `1px solid ${C.border}`, fontSize: '0.75rem', fontWeight: 700, color: C.primary, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -4247,9 +4334,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             <button type="submit" disabled={!chatInput.trim()} style={{ padding: '6px 12px', background: chatInput.trim() ? C.primary : `${withAlpha(C.primary, 0x40)}`, color: 'var(--c-surface-lowest)', border: 'none', borderRadius: '14px', fontSize: '0.75rem', fontWeight: 600, cursor: chatInput.trim() ? 'pointer' : 'not-allowed' }}>Send</button>
                                           </form>
                                         </div>
+                                        )}
 
-                                        {/* Sidebar: checklist + payment */}
-                                        <div style={{ width: '160px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {/* Sidebar: checklist + payment (now full-width, chat column hidden above) */}
+                                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                           {/* Campaign brief */}
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
                                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Campaign Brief</div>
@@ -4267,6 +4355,22 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             {opp.contentReview && (
                                               <div style={{ marginTop:'4px', fontSize:'9px', padding:'3px 5px', borderRadius:'4px', background:opp.contentReview==='review_required'?`${withAlpha(C.warning, 0x15)}`:C.success+'20', color:opp.contentReview==='review_required'?C.warning:C.success, fontWeight:600 }}>
                                                 {opp.contentReview==='review_required' ? '📋 Review required before publish' : '✅ Direct upload — no review'}
+                                              </div>
+                                            )}
+                                            {opp.shootLocation && (
+                                              <div style={{ marginTop:'5px', fontSize:'0.75rem', color:C.textSecondary, lineHeight:1.4 }}>📍 Shoot: <strong style={{ color:C.text, fontWeight:600 }}>{opp.shootLocation}</strong></div>
+                                            )}
+                                            {(opp.expectations || opp.otherNotes) && (
+                                              <div style={{ marginTop:'4px', fontSize:'0.75rem', color:C.textSecondary, lineHeight:1.4 }}>
+                                                {(opp.expectations || opp.otherNotes).slice(0, 90)}{(opp.expectations || opp.otherNotes).length > 90 ? '…' : ''}
+                                              </div>
+                                            )}
+                                            {(opp.scriptFileName || opp.scriptText) && (
+                                              <div style={{ marginTop:'4px', fontSize:'0.75rem', color:C.textSecondary, lineHeight:1.4 }}>
+                                                <span style={{ color:C.text, fontWeight:600 }}>Script: </span>
+                                                {opp.scriptFileName ? `📎 ${opp.scriptFileName}` : 'Brand script'}
+                                                {opp.scriptMode === 'non_negotiable' ? ' (locked)' : ''}
+                                                {opp.scriptMode === 'discussion' ? ' (collaborative)' : ''}
                                               </div>
                                             )}
                                           </div>
@@ -4372,8 +4476,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                             />
                                           )}
 
-                                          {/* Counter-offer — hidden once deal is past negotiation */}
-                                          {dealRoomPhase !== 'accepted' && dealRoomPhase !== 'softhold' && dealRoomPhase !== 'checklist' && !activeDeal?.formalOfferSentByCreator && <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
+                                          {/* ── [v1 COMMENTED OUT] Negotiation UI — "Your Counter" input. Brand amount is final. See Things-Commented-Out.md. */}
+                                          {false && dealRoomPhase !== 'accepted' && dealRoomPhase !== 'softhold' && dealRoomPhase !== 'checklist' && !activeDeal?.formalOfferSentByCreator && <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
                                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Your Counter</div>
                                             <div style={{ fontSize: '0.75rem', color: C.textSecondary, marginBottom: '4px' }}>
                                               Brand offer: <strong style={{ color: C.text }}>${parseInt(dealOfferAmount || opp.budget.replace(/[^0-9]/g, '') || '0').toLocaleString()}</strong>
@@ -4439,8 +4543,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                           </div>
                                           )}
 
-                                          {/* Brand submits formal offer — hidden once submitted */}
-                                          {!activeDeal?.formalOfferSentByCreator && (
+                                          {/* ── [v1 COMMENTED OUT] Negotiation UI — creator "Submit Formal Offer" (counters). Brand's deal is final. */}
+                                          {false && !activeDeal?.formalOfferSentByCreator && (
                                           <div style={{ background: C.bg, borderRadius: '8px', border: `1px solid ${C.border}`, padding: '8px' }}>
                                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Finalize</div>
                                             <button
@@ -5232,6 +5336,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
                               usageRights: draft.usageRights,
                               scriptMode: draft.scriptMode,
                               scriptText: draft.scriptText,
+                              scriptFileName: draft.scriptFileName,
+                              shootLocation: draft.shootLocation,
+                              expectations: draft.expectations,
+                              otherNotes: draft.otherNotes,
                               contentReview: draft.contentReview,
                               status: 'open',
                               applicants: 0,
@@ -5287,8 +5395,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                       </div>
                     )}
 
-                    {/* Brand Negotiation View — when brand clicks "View Negotiation" for a creator's offer */}
-                    {negotiatingCreator !== null && brandDeal && (
+                    {/* ── [v1 COMMENTED OUT] Brand Negotiation View + its chat — no negotiation in v1, brand fixes the deal up-front. See Things-Commented-Out.md. */}
+                    {false && negotiatingCreator !== null && brandDeal && (
                       <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:9998, padding:'16px' }}>
                         <div style={{ background:C.surface, borderRadius:'16px', maxWidth:'600px', width:'100%', maxHeight:'90vh', overflowY:'auto', border:`1px solid ${C.border}`, display:'flex', flexDirection:'column' }}>
                           {/* Header */}
@@ -5978,15 +6086,15 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                 <div style={{ fontSize:'12px', color:C.textSecondary, marginBottom:'12px', lineHeight:1.4 }}>
                                   {c.followers} followers · {c.engagement}% engagement
                                 </div>
+                                {/* ── [v1 COMMENTED OUT] "View Profile & Invite" opened the negotiation modal, which is disabled in v1. See Things-Commented-Out.md. */}
                                 <button
                                   onClick={() => {
-                                    setNegotiatingCreator(c._origIdx);
-                                    setBrandCurrentOppIndex(0);
-                                    setPurchaseToast(`Opened profile for ${c.name}`);
+                                    setPurchaseToast('Creator invitations arrive in a later release — post your campaign and creators will apply.');
+                                    setTimeout(() => setPurchaseToast(null), 3200);
                                   }}
                                   style={{ width:'100%', background:C.primary, border:'none', borderRadius:'6px', padding:'8px', fontSize:'12px', fontWeight:700, color:'var(--c-surface-lowest)', cursor:'pointer' }}
                                 >
-                                  View Profile & Invite
+                                  View Profile
                                 </button>
                               </div>
                             ))}
@@ -5998,8 +6106,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                           return true;
                         }).length === 0 && (
                           <div style={{ textAlign:'center', padding:'40px 20px', color:C.textSecondary }}>
-                            <div style={{ fontSize:'14px', marginBottom:'8px' }}>No creators found</div>
-                            <div style={{ fontSize:'12px' }}>Try adjusting your search or filters</div>
+                            <div style={{ fontSize:'14px', marginBottom:'8px' }}>Create a campaign first to see the list of creators available</div>
                           </div>
                         )}
                       </div>
@@ -6023,7 +6130,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                         if (d.phase === 'accepted') return { label: 'Accepted', color: C.success };
                         if (d.phase === 'rejected') return { label: 'Rejected', color: 'var(--c-error)' };
                         if (d.phase === 'formal_offer') return { label: 'Final offer — awaiting your approval', color: C.primary };
-                        if (d.phase === 'counter' || d.phase === 'brand_countered' || d.phase === 'chatroom' || d.phase === 'pending') return { label: 'Negotiating', color: 'var(--c-warning)' };
+                        if (d.phase === 'pending') return { label: 'Awaiting your decision', color: 'var(--c-warning)' };
                         if (d.phase === 'checklist' || d.phase === 'softhold') return { label: 'In progress', color: C.success };
                         return { label: 'Applied', color: C.textSecondary };
                       };
@@ -6051,7 +6158,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                             const creatorSkin = d.creatorSkin || d.key.split('|')[1];
                             const offer = d.counterAmount || d.offerAmount || '—';
                             const st = statusOf(d);
-                            const actionable = d.phase === 'formal_offer' || d.phase === 'pending' || d.phase === 'counter' || d.phase === 'brand_countered' || d.phase === 'chatroom';
+                            const actionable = d.phase === 'formal_offer' || d.phase === 'pending';
                             const paymentPending = d.phase === 'formal_offer' && d.brandApprovalPhase !== 'accepted';
                             return (
                               <div key={d.key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:'8px', padding:'10px 0', borderTop:i>0?`1px solid ${C.border}`:'none' }}>
@@ -6069,6 +6176,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                   <span style={{ fontSize:'0.75rem', fontWeight:600, color:st.color, background:`${withAlpha(st.color, 0x12)}`, padding:'2px 8px', borderRadius:'10px', border:`1px solid ${withAlpha(st.color, 0x30)}` }}>{st.label}</span>
                                   {actionable && (
                                     <div style={{ display:'flex', flexDirection:'column', gap:'6px', alignItems:'flex-end' }}>
+                                      {/* ── [v1 COMMENTED OUT] "View Negotiation" — negotiation removed. See Things-Commented-Out.md. */}
+                                      {false && (
                                       <button
                                         onClick={() => {
                                           const creator = backendCreators.find((c: any) => c.name === creatorName && c.valueSkin === creatorSkin);
@@ -6079,6 +6188,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
                                         }}
                                         style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:'6px', padding:'5px 10px', fontSize:'0.75rem', fontWeight:600, color:C.primary, cursor:'pointer', whiteSpace:'nowrap' }}
                                       >View Negotiation</button>
+                                      )}
                                       <div style={{ display:'flex', gap:'6px' }}>
                                         <button
                                           onClick={() => {
@@ -6193,8 +6303,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
             </>
           )}
 
-          {/* ── MESSAGES VIEW — DMs + Communities (skin-gated DMs) ── */}
-          {activeView === 'messages' && <MessagesView valueSkins={valueSkins} profileName={profileName} hasValueSkin={hasValueSkin} />}
+          {/* ── [v1 COMMENTED OUT] MESSAGES VIEW — DMs + Communities chat. Chatbox removed in v1. See Things-Commented-Out.md. */}
+          {false && activeView === 'messages' && <MessagesView valueSkins={valueSkins} profileName={profileName} hasValueSkin={hasValueSkin} />}
           {activeView === 'admin' && (
             <>
               <div style={{ height: '60px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', paddingLeft: '20px', fontWeight: 'bold', fontSize: '16px', background: C.surface }}>
@@ -6861,8 +6971,10 @@ export default function MarketplaceDemoPage(initialDealData?: {
             </>
           )}
 
-          {/* ── STORE VIEW ────────────────────────────────────── */}
-          {activeView === 'store' && (() => {
+          {/* ── [v1 COMMENTED OUT] STORE VIEW — the "Store / Niche / 3-types-of-ValueSkins" selector.
+              v1 = lifestyle & fashion only, niche-agnostic creators. The entire store view (niche
+              grids, category cards, purchase flow) is disabled. See Things-Commented-Out.md. */}
+          {false && (() => {
             // ONE store. Two-pane master/detail per ui-specs/phase-2/store-page-mock.svg.
             // This replaces the old category-grid + modal: the right pane now shows the
             // skins directly, so buying is one click instead of two.

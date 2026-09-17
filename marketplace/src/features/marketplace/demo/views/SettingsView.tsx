@@ -485,13 +485,14 @@ export default function SettingsView({
                         </select>
                       </div>
                     </div>
-                    <div style={{ marginBottom: '10px' }}><div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Content Niche</div>
+                    {/* ── [v1 COMMENTED OUT] Content Niche selector — v1 is niche-agnostic (lifestyle & fashion only). See Things-Commented-Out.md. */}
+                    {false && <div style={{ marginBottom: '10px' }}><div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Content Niche</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                         {['Fashion & Beauty','Food','Travel','Music','Tech','Education','Comedy & Entertainment'].map(n => (
                           <span key={n} style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', background: C.bg, border: `1px solid ${C.border}`, color: C.textSecondary, cursor: 'pointer' }}>{n}</span>
                         ))}
                       </div>
-                    </div>
+                    </div>}
                     <div style={{ marginBottom: '10px' }}><div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Content Format</div>
                       <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                         {['Video','Photo','Text','Podcast','Live'].map(f => (
@@ -668,7 +669,8 @@ export default function SettingsView({
             </button>
             {creatorShowSafetySettings && (
               <div style={{ background: C.card, border: `1px solid ${C.border}`, borderTop: 'none', borderRadius: '0 0 10px 10px', padding: '14px' }}>
-                <div style={{ marginBottom: '12px' }}>
+                {/* ── [v1 COMMENTED OUT] Brand-niche filters — v1 is niche-agnostic (lifestyle & fashion only). See Things-Commented-Out.md. */}
+                  {false && <div style={{ marginBottom: '12px' }}>
                   <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Only accept proposals from these brand niches</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                     {['Fashion & Beauty Organisation', 'F&B Organisation', 'Travel Organisation', 'Music Organisation', 'Tech Organisation', 'Education Organisation', 'Entertainment Organisation'].map(n => {
@@ -686,7 +688,7 @@ export default function SettingsView({
                   {creatorAllowedNiches.length === 0 && (
                     <div style={{ fontSize: '10px', color: C.textMuted, marginTop: '4px' }}>None selected = all niches allowed</div>
                   )}
-                </div>
+                </div>}
                 <div style={{ marginBottom: '4px' }}>
                   <div style={{ fontSize: '10px', fontWeight: 700, color: C.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Blocked Brands</div>
                   {creatorBlockedBrands.length === 0 ? (
