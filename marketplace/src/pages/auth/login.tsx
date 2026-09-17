@@ -254,14 +254,6 @@ export default function Login() {
               Continue with Instagram
             </button>
 
-            {/* Sign-up line (§7) */}
-            <p style={{ margin: '22px 0 0', fontSize: '0.875rem', color: t.muted, ...enter(0.37) }}>
-              Don&apos;t have an account?{' '}
-              <Link href="/auth/signup" style={{ color: t.head, textDecoration: 'none', fontWeight: 600 }}>
-                Sign up
-              </Link>
-            </p>
-
             {/* §0b.5 — trust whisper */}
             <p style={{ margin: '18px 0 0', fontSize: '0.75rem', color: t.muted, letterSpacing: '0.01em', ...enter(0.45) }}>
               Escrow-backed <span style={{ color: DEEP_SAND }}>·</span> Verified identities{' '}
