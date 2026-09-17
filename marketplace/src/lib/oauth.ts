@@ -247,14 +247,29 @@ export async function exchangeGitHubCode(code: string): Promise<any> {
 // controls the Instagram account.
 // GET https://graph.instagram.com/me?fields=id,username,name,account_type,profile_picture_url
 export async function getInstagramUserInfo(accessToken: string): Promise<any> {
-  const params = new URLSearchParams({
-    fields: 'id,username,name,account_type,profile_picture_url,followers_count,media_count',
-    access_token: accessToken,
-  });
-  const response = await fetch(`https://graph.instagram.com/me?${params.toString()}`);
+  // Analytics fields (followers_count, media_count) and profile_picture_url can
+  // be denied depending on the token's granted scopes. Identity + account_type
+  // are what login and role detection actually need, so degrade gracefully:
+  // try the richest field set and drop fields until the call succeeds.
+  const fieldSets = [
+    'id,username,name,account_type,profile_picture_url,followers_count,media_count',
+    'id,username,name,account_type,profile_picture_url',
+    'id,username,account_type',
+    'id,username',
+  ];
 
-  if (!response.ok) throw new Error('Failed to fetch Instagram user info');
-  return response.json();
+  let lastError = '';
+  for (const fields of fieldSets) {
+    const params = new URLSearchParams({ fields, access_token: accessToken });
+    const response = await fetch(`https://graph.instagram.com/me?${params.toString()}`);
+    if (response.ok) return response.json();
+    lastError = `${response.status} ${await response.text().catch(() => '')}`;
+  }
+
+  console.error('[oauth] Instagram user info failed for all field sets', {
+    instagram: lastError.slice(0, 500),
+  });
+  throw new Error(`Failed to fetch Instagram user info (${lastError.slice(0, 300)})`);
 }
 
 export function parseOAuthState(state: string): { role: string; csrf: string } {
