@@ -5,6 +5,7 @@ import {
   exchangeInstagramLongLivedToken,
   getInstagramUserInfo,
 } from '@/lib/oauth';
+import { ensureSocialAccountsTable } from '@/lib/instagram-social';
 import { query } from '@/lib/db';
 import { SESSION_IDLE_TIMEOUT_MS, SESSION_ABSOLUTE_TIMEOUT_MS } from '@/config/constants';
 
@@ -21,29 +22,6 @@ interface InstagramUser {
 // Instagram Login does not expose an email address. We only ever store the
 // Instagram user id + handle here; email is collected during onboarding and
 // confirmed separately. No phone numbers are collected.
-async function ensureSocialAccountsTable() {
-  await query(`
-    CREATE TABLE IF NOT EXISTS social_media_accounts (
-      id BIGSERIAL PRIMARY KEY,
-      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      platform TEXT NOT NULL DEFAULT 'instagram',
-      platform_user_id TEXT NOT NULL,
-      username TEXT DEFAULT '',
-      account_type TEXT DEFAULT '',
-      followers_count INTEGER DEFAULT 0,
-      media_count INTEGER DEFAULT 0,
-      access_token TEXT DEFAULT '',
-      token_expires_at TIMESTAMPTZ,
-      is_active BOOLEAN NOT NULL DEFAULT TRUE,
-      connected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      follower_count_last_synced_at TIMESTAMPTZ,
-      UNIQUE(user_id, platform)
-    )
-  `);
-  await query(
-    `CREATE INDEX IF NOT EXISTS idx_social_media_accounts_user ON social_media_accounts(user_id)`
-  );
-}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -149,15 +127,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await ensureSocialAccountsTable();
       await query(
         `INSERT INTO social_media_accounts
-           (user_id, platform, platform_user_id, username, account_type,
-            followers_count, media_count, access_token, token_expires_at, is_active)
-         VALUES ($1, 'instagram', $2, $3, $4, $5, $6, $7, $8, TRUE)
+           (user_id, platform, platform_user_id, username, display_name, account_type,
+            followers_count, media_count, profile_picture_url, access_token, token_expires_at, is_active)
+         VALUES ($1, 'instagram', $2, $3, $4, $5, $6, $7, $8, $9, $10, TRUE)
          ON CONFLICT (user_id, platform) DO UPDATE SET
            platform_user_id = EXCLUDED.platform_user_id,
            username = EXCLUDED.username,
+           display_name = EXCLUDED.display_name,
            account_type = EXCLUDED.account_type,
            followers_count = EXCLUDED.followers_count,
            media_count = EXCLUDED.media_count,
+           profile_picture_url = EXCLUDED.profile_picture_url,
            access_token = EXCLUDED.access_token,
            token_expires_at = EXCLUDED.token_expires_at,
            is_active = TRUE`,
@@ -165,12 +145,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           userId,
           instagramUserId,
           ig.username || '',
+          ig.name || '',
           ig.account_type || '',
           ig.followers_count || 0,
           ig.media_count || 0,
+          ig.profile_picture_url || '',
           accessToken,
           expiresAt ? expiresAt.toISOString() : null,
         ]
+      );
+
+      // Mirror the Instagram snapshot onto the columns the profile/search
+      // surfaces read, so the virtual resume shows real IG data after login
+      // (not just manual onboarding input).
+      await query(
+        `UPDATE users
+           SET instagram_handle = COALESCE(NULLIF(instagram_handle, ''), $2),
+               followers_count = $3,
+               avatar_url = COALESCE(NULLIF(avatar_url, ''), $4)
+         WHERE id = $1`,
+        [userId, username, ig.followers_count || 0, ig.profile_picture_url || null]
       );
     } catch (err) {
       // Login must not fail if token persistence fails — the account still
