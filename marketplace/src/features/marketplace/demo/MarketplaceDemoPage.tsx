@@ -9,7 +9,6 @@ import { C as THEME, withAlpha } from '@/theme/colors';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth, type Account } from '@/context/AuthContext';
 import { getLevel, getProgressToNext } from '@/lib/levels';
-import ProfileView from '@/features/profiles/ProfileView';
 import SettingsHub from '@/features/settings/SettingsHub';
 import CreatorProfile from '@/features/profiles/CreatorProfile';
 import { ValueSkinSprite } from '@/features/profiles/ProfileView';
@@ -317,7 +316,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [profileHeight, setProfileHeight] = useState('');
   const [profileAddress, setProfileAddress] = useState('');
   const [profileWhatTheyDo, setProfileWhatTheyDo] = useState('');
-  const [editingProfile, setEditingProfile] = useState(false);
   const [portfolioImage, setPortfolioImage] = useState<string | null>(null);
 
   // Notifications
@@ -454,7 +452,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [storeSearch, setStoreSearch] = useState('');
   const [creatorCounts, setCreatorCounts] = useState<Record<string, number>>({});
   // Set right after a skin is applied, so the profile plays the slap animation.
-  const [justEquipped, setJustEquipped] = useState(false);
   // Settings tab: the hub, or the older preferences panel opened from it.
   const [settingsPane, setSettingsPane] = useState<'hub' | 'preferences' | 'creator-preferences'>('hub');
 
@@ -2126,9 +2123,6 @@ bio: profileBio
     }));
     setSelectedMarketplaceSkin(profession);
     setActiveView('profile');
-    // Slap-to-profile: the skin flies into the ValueSkin frame on the profile.
-    // The animation carries its own "Equipped" toast, so no duplicate toast here.
-    setJustEquipped(true);
   };
 
   const downloadReceipt = async (profession: string, orderId: string, paymentId: string) => {
@@ -2996,207 +2990,15 @@ bio: profileBio
             <>
               {/* ── PROFILE VIEW ── */}
               {/* 900px, per profile-identity-sample.html's .wrap and Profile
-                  page.md §0 ("content column 900px, centered"). This was 600px,
-                  so ProfileView's own maxWidth:900 never applied and the page
-                  rendered ~520px wide with 460px gutters either side — the
-                  empty-sides problem. The sample's padding is 34px 28px 80px. */}
+                  page.md §0 ("content column 900px, centered"). The column
+                  keeps the identity page from collapsing to a narrow reading
+                  column — the Virtual Resume card gets full width. */}
               <div style={{ padding: '34px 28px 80px', maxWidth: '900px', margin: '0 auto' }}>
 
-                {/* Identity anchor — ui-specs/phase-2/Profile page.md.
-                    Edit profile opens Creator Profile Preferences, which is the
-                    primary entry per Creator Profile Preferences.md §1 (P2-F9).
-                    Its Identity tab covers display name, username, niche, city,
-                    country and bio, so the old inline card below is superseded
-                    and no longer reachable — left in place rather than excised
-                    mid-pass, since it is interleaved with the stats block. */}
-                {!editingProfile ? (
-                  <ProfileView
-                    embedded
-                    containerWidth={860}
-                    justEquipped={justEquipped}
-                    onEquipAnimationDone={() => setJustEquipped(false)}
-                    onEditProfile={() => { setActiveView('settings'); setSettingsPane('creator-preferences'); }}
-                    profile={{
-                      display_name: heroProfile?.display_name || account?.display_name || profileName || 'Your Name',
-                      username: heroProfile?.username || (account?.email || '').split('@')[0] || 'you',
-                      // the worn ValueSkin IS the profession (§9); fall back to
-                      // the role only while no skin is equipped
-                      profession: wornProfession || (isBrand ? 'Brand' : 'Creator'),
-                      location: heroProfile?.location,
-                      country: heroProfile?.country,
-                      languages: selectedLanguages.length ? selectedLanguages : ['English'],
-                      open_for_work: creatorEnergy !== 'pause',
-                      // computed server-side from completed deals — never editable
-                      deals_completed: trackRecord?.deals_completed ?? completedDeals.length,
-                      deals_this_month: trackRecord?.deals_this_month ?? 0,
-                      avg_rating: trackRecord?.avg_rating ?? 0,
-                      repeat_rate: trackRecord?.repeat_rate ?? 0,
-                      on_time_rate: trackRecord?.on_time_rate ?? 0,
-                      avg_response_hours: trackRecord?.avg_response_hours ?? 0,
-                      trust_score: trackRecord?.trust_score ?? 0,
-                    }}
-                  />
-                ) : (
-                <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: '16px', padding: '24px', marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px' }}>
-                    {/* Avatar */}
-                    <div
-                      onMouseEnter={(e) => showHoverCard(
-                        marketplaceRole === 'brand'
-                          ? buildBrandHover(profileName || account?.display_name || 'User')
-                          : buildCreatorHover(profileName || account?.display_name || 'User'),
-                        e
-                      )}
-                      onMouseMove={updateHoverPosition}
-                      onMouseLeave={hideHoverCard}
-                      style={{ width: 80, height: 80, borderRadius: '50%', background: C.primary + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: 800, color: C.primary, flexShrink: 0, cursor: 'pointer' }}>
-                      {(account?.display_name || profileName || 'U').charAt(0).toUpperCase()}
-                    </div>
-                    {/* Name + role */}
-                    <div style={{ flex: 1 }}>
-                      {editingProfile ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <input
-                            type="text"
-                            value={profileName}
-                            onChange={e => setProfileName(e.target.value)}
-                            placeholder="Your name"
-                            style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '16px', fontWeight: 700, outline: 'none' }}
-                          />
-                          <textarea
-                            value={profileBio}
-                            onChange={e => setProfileBio(e.target.value)}
-                            rows={2}
-                            placeholder="Short bio — what you do, what you're known for"
-                            style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', fontFamily: 'inherit', resize: 'none', outline: 'none', lineHeight: 1.5 }}
-                          />
-                          <input
-                            type="email"
-                            value={profileEmail}
-                            onChange={e => setProfileEmail(e.target.value)}
-                            placeholder="Email address"
-                            style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', outline: 'none' }}
-                          />
-                          <input
-                            type="text"
-                            value={profileLocation}
-                            onChange={e => setProfileLocation(e.target.value)}
-                            placeholder="Location / City"
-                            style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', outline: 'none' }}
-                          />
-                          {!isBrand && (
-                            <input
-                              type="text"
-                              value={profileHeight}
-                              onChange={e => setProfileHeight(e.target.value)}
-                              placeholder="Height (e.g., 5 ft 10 in or 178 cm)"
-                              style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', outline: 'none' }}
-                            />
-                          )}
-                          {isBrand && (
-                            <>
-                              <input
-                                type="text"
-                                value={profileAddress}
-                                onChange={e => setProfileAddress(e.target.value)}
-                                placeholder="Business address"
-                                style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', outline: 'none' }}
-                              />
-                              <textarea
-                                value={profileWhatTheyDo}
-                                onChange={e => setProfileWhatTheyDo(e.target.value)}
-                                rows={2}
-                                placeholder="What your brand does"
-                                style={{ padding: '8px 12px', borderRadius: '8px', border: `1px solid ${C.border}`, background: C.bg, color: C.text, fontSize: '13px', fontFamily: 'inherit', resize: 'none', outline: 'none', lineHeight: 1.5 }}
-                              />
-                            </>
-                          )}
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <button
-                              onClick={async () => {
-                                try {
-                                  await fetch('/api/auth/update-profile', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    credentials: 'include',
-                                    body: JSON.stringify({
-                                      display_name: profileName,
-                                      bio: profileBio,
-                                      email: profileEmail,
-                                      location: profileLocation,
-                                      height: profileHeight,
-                                      address: profileAddress,
-                                      whatTheyDo: profileWhatTheyDo,
-                                    }),
-                                  });
-                                } catch {}
-                                setEditingProfile(false);
-                              }}
-                              style={{ padding: '7px 16px', borderRadius: '8px', border: 'none', background: C.primary, color: C.onPrimary, fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
-                            >Save</button>
-                            <button
-                              onClick={() => setEditingProfile(false)}
-                              style={{ padding: '7px 16px', borderRadius: '8px', border: `1px solid ${C.border}`, background: 'none', color: C.text, fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
-                            >Cancel</button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div
-                            onMouseEnter={(e) => showHoverCard(
-                              marketplaceRole === 'brand'
-                                ? buildBrandHover(profileName || account?.display_name || 'User')
-                                : buildCreatorHover(profileName || account?.display_name || 'User'),
-                              e
-                            )}
-                            onMouseMove={updateHoverPosition}
-                            onMouseLeave={hideHoverCard}
-                            style={{ fontSize: '22px', fontWeight: 800, color: C.text, marginBottom: '4px', cursor: 'pointer' }}>{account?.display_name || profileName || 'Your Name'}</div>
-                          <div style={{ fontSize: '13px', color: C.textSecondary, marginBottom: '8px' }}>{account?.email || ''}</div>
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <span style={{ padding: '4px 12px', borderRadius: '20px', background: isBrand ? 'rgba(160,138,94,0.1)' : 'rgba(200, 184, 154,0.1)', border: `1px solid ${isBrand ? '#A08A5E' : 'var(--c-accent)'}`, color: isBrand ? '#A08A5E' : 'var(--c-accent)', fontSize: '12px', fontWeight: 600 }}>
-                              {isBrand ? '🏢 Brand' : '🎨 Creator'}
-                            </span>
-                            <button onClick={() => setEditingProfile(true)} style={{ padding: '4px 12px', borderRadius: '20px', border: `1px solid ${C.border}`, background: 'none', color: C.textSecondary, fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
-                              Edit Profile
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Bio display */}
-                  {!editingProfile && profileBio && (
-                    <div style={{ fontSize: '14px', color: C.textSecondary, lineHeight: 1.6, padding: '12px 0', borderTop: `1px solid ${C.border}` }}>
-                      {profileBio}
-                    </div>
-                  )}
-
-                  {/* Stats row */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', paddingTop: '16px', borderTop: profileBio && !editingProfile ? `1px solid ${C.border}` : undefined, marginTop: profileBio && !editingProfile ? '0' : '16px' }}>
-                    <div style={{ textAlign: 'center', padding: '12px', background: C.bg, borderRadius: '10px' }}>
-                      <div style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>{completedDeals.length}</div>
-                      <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '2px' }}>Deals Done</div>
-                    </div>
-                    <div style={{ textAlign: 'center', padding: '12px', background: C.bg, borderRadius: '10px' }}>
-                      <div style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>{(metrics.brandRating || 0).toFixed(1)} ★</div>
-                      <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '2px' }}>Rating</div>
-                    </div>
-                    <div style={{ textAlign: 'center', padding: '12px', background: C.bg, borderRadius: '10px' }}>
-                      <div style={{ fontSize: '22px', fontWeight: 800, color: C.text }}>${(completedDeals.reduce((s, d) => s + d.amount, 0) / 100000).toFixed(1)}L</div>
-                      <div style={{ fontSize: '0.75rem', color: C.textMuted, marginTop: '2px' }}>{isBrand ? 'Spent' : 'Earned'}</div>
-                    </div>
-                  </div>
-                </div>
-                )}
-
-                {/* Virtual Resume · Instagram — the profile section itself is
-                    the Meta App Review surface. Both permissions render here:
-                    instagram_business_basic (basic profile row) and
-                    instagram_business_manage_insights (analytics block below).
-                    Shows for every role so the reviewed identity matches the
-                    proof-of-use statements in the permission request. */}
+                {/* ── PROFILE VIEW ── The Instagram Virtual Resume IS the profile
+                    section: both permissions render here so Meta App Review
+                    sees instagram_business_basic and instagram_business_manage
+                    _insights on the page itself. */}
                 <div style={{ marginBottom: '16px' }}>
                   <InstagramResumeBlock ig={getOwnInstagram()} />
                 </div>
@@ -3228,8 +3030,8 @@ bio: profileBio
                   </div>
                 )}
 
-                {/* Account block removed: role is already on the identity hero,
-                    and Delete Account lives in Settings. */}
+                {/* Delete Account lives in Settings; profile editing opens the
+                    Creator Profile Preferences pane from the Settings tab. */}
 
               </div>
             </>
