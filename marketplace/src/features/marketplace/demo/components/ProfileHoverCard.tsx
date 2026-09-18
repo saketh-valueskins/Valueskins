@@ -12,7 +12,7 @@ function getStickerForProfession(profession: string): string | undefined {
 // Instagram / Virtual Resume data as documented for Meta Graph API review.
 // - instagram_business_basic      -> basic profile fields below (rendered on the resume).
 // - instagram_business_manage_insights -> analytics block rendered directly below it.
-type HoverInstagram = {
+export type HoverInstagram = {
   username?: string;
   name?: string;
   accountType?: string;
@@ -92,7 +92,7 @@ const IG_BASIC_NOTE =
 const IG_INSIGHTS_NOTE =
   'Directly below the basic profile, the creator\x27s Instagram analytics are displayed on the same Virtual Resume: reach, impressions, engagement, and profile views. These insights give brands an accurate view of the creator\x27s performance, and they are read from the authorized account only.';
 
-function InstagramResumeBlock({ ig }: { ig: HoverInstagram }) {
+export function InstagramResumeBlock({ ig }: { ig: HoverInstagram }) {
   const igStats = [
     { label: 'Followers', value: fmt(ig.followers) },
     { label: 'Posts', value: fmt(ig.posts) },
