@@ -85,6 +85,22 @@ function fmt(n: number | undefined): string {
   return String(Math.round(n));
 }
 
+// The insights footer shows when data was last pulled from Meta. ISO
+// timestamps from the sync endpoint render as relative time; sample strings
+// ("2h ago (sample)") pass through untouched.
+function relSync(t?: string): string {
+  if (!t) return 'synced at login';
+  const fresh = Date.now() - new Date(t).getTime();
+  if (!isFinite(fresh)) return t;
+  if (fresh < 0) return 'synced just now';
+  const mins = Math.floor(fresh / 60000);
+  if (mins < 1) return 'synced just now';
+  if (mins < 60) return `synced ${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `synced ${hrs}h ago`;
+  return `synced ${Math.floor(hrs / 24)}d ago`;
+}
+
 // The two statement banners are shown verbatim on the resume so Meta App
 // Review can map each requested permission to the surface that uses it.
 const IG_BASIC_NOTE =
@@ -93,11 +109,13 @@ const IG_INSIGHTS_NOTE =
   'Directly below the basic profile, the creator\x27s Instagram analytics are displayed on the same Virtual Resume: reach, impressions, engagement, and profile views. These insights give brands an accurate view of the creator\x27s performance, and they are read from the authorized account only.';
 
 export function InstagramResumeBlock({ ig }: { ig: HoverInstagram }) {
-  const igStats = [
-    { label: 'Followers', value: fmt(ig.followers) },
-    { label: 'Posts', value: fmt(ig.posts) },
-    { label: 'Following', value: fmt(ig.following) },
-  ];
+  // Only render stats we actually have — a connected real account may not
+  // expose "following", and miss a media count until first sync.
+  const igStats: { label: string; value: string }[] = [
+    ig.followers != null && { label: 'Followers', value: fmt(ig.followers) },
+    ig.posts != null && { label: 'Posts', value: fmt(ig.posts) },
+    ig.following != null && { label: 'Following', value: fmt(ig.following) },
+  ].filter(Boolean) as { label: string; value: string }[];
   const insights = [
     { label: 'Reach', value: fmt(ig.insights?.reach || 0) },
     { label: 'Impressions', value: fmt(ig.insights?.impressions || 0) },
@@ -221,7 +239,7 @@ export function InstagramResumeBlock({ ig }: { ig: HoverInstagram }) {
         </div>
 
         <div style={{ fontSize: '10px', color: '#AAA49B', marginTop: '6px', textAlign: 'right' }}>
-          {ig.insights?.syncedAt ? `Meta insights · synced ${ig.insights.syncedAt}` : 'Meta insights · synced at login'}
+          Meta insights · {relSync(ig.insights?.syncedAt)}
         </div>
       </div>
     </div>
