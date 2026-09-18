@@ -245,8 +245,19 @@ export async function exchangeGitHubCode(code: string): Promise<any> {
 // Instagram Login — fetch the authorized account's profile. This is also the
 // verification signal: a successful call with this token proves the user
 // controls the Instagram account.
-// GET https://graph.instagram.com/me?fields=id,username,name,account_type,profile_picture_url
-export async function getInstagramUserInfo(accessToken: string): Promise<any> {
+//
+// NOTE: the Instagram Graph API (which `instagram_business_basic` and
+// `instagram_business_manage_insights` tokens authenticate against) has NO
+// `/me` node — that existed only in the deprecated Basic Display API. The
+// numeric user id from the token exchange must be used as the node id:
+// GET https://graph.instagram.com/{user_id}?fields=id,...
+export async function getInstagramUserInfo(
+  accessToken: string,
+  instagramUserId: string | number
+): Promise<any> {
+  if (!instagramUserId) {
+    throw new Error('Instagram token exchange did not return a user_id');
+  }
   // Analytics fields (followers_count, media_count) and profile_picture_url can
   // be denied depending on the token's granted scopes. Identity + account_type
   // are what login and role detection actually need, so degrade gracefully:
@@ -261,7 +272,9 @@ export async function getInstagramUserInfo(accessToken: string): Promise<any> {
   let lastError = '';
   for (const fields of fieldSets) {
     const params = new URLSearchParams({ fields, access_token: accessToken });
-    const response = await fetch(`https://graph.instagram.com/me?${params.toString()}`);
+    const response = await fetch(
+      `https://graph.instagram.com/${instagramUserId}?${params.toString()}`
+    );
     if (response.ok) return response.json();
     lastError = `${response.status} ${await response.text().catch(() => '')}`;
   }
