@@ -33,5 +33,13 @@ export async function ensureSocialAccountsTable() {
   await query(`ALTER TABLE social_media_accounts ADD COLUMN IF NOT EXISTS display_name TEXT DEFAULT ''`);
   await query(`ALTER TABLE social_media_accounts ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT ''`);
   await query(`ALTER TABLE social_media_accounts ADD COLUMN IF NOT EXISTS profile_picture_url TEXT DEFAULT ''`);
+  // Instagram Graph API user-insights (instagram_business_manage_insights):
+  // reach/impressions/profile_views are daily counts; engagement is a rate
+  // (accounts_engaged / reach), computed in the sync endpoint.
+  await query(`ALTER TABLE social_media_accounts ADD COLUMN IF NOT EXISTS insights_reach INTEGER DEFAULT 0`);
+  await query(`ALTER TABLE social_media_accounts ADD COLUMN IF NOT EXISTS insights_impressions INTEGER DEFAULT 0`);
+  await query(`ALTER TABLE social_media_accounts ADD COLUMN IF NOT EXISTS insights_profile_views INTEGER DEFAULT 0`);
+  await query(`ALTER TABLE social_media_accounts ADD COLUMN IF NOT EXISTS insights_engagement FLOAT DEFAULT 0`);
+  await query(`ALTER TABLE social_media_accounts ADD COLUMN IF NOT EXISTS insights_synced_at TIMESTAMPTZ`);
   migrated = true;
 }

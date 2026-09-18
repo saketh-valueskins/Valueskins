@@ -5,7 +5,6 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Footer from '@/components/Footer';
 import CookieConsent from '@/components/CookieConsent';
 import BottomTabBar from '@/components/BottomTabBar';
-import TestingBanner from '@/components/TestingBanner';
 import { ThemeProvider } from '@/theme/ThemeContext';
 import '@/styles/globals.css';
 
@@ -37,7 +36,6 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <ErrorBoundary>
-      <TestingBanner />
       <ThemeProvider>
       <AuthProvider>
       <Component {...pageProps} />

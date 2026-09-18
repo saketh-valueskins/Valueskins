@@ -2001,12 +2001,79 @@ bio: profileBio
   // in the hover card. Rendered directly on the profile section so Meta App
   // Review can see BOTH permissions on the page itself: instagram_business_basic
   // (profile data row) and instagram_business_manage_insights (analytics below
-  // it). After the creator OAuths in, the stored Instagram fields replace these
-  // values; until Advanced Access is granted the insights stay as samples
-  // (derived from the follower base) so the surface never renders empty.
+  // it). When the creator has an authorized Instagram connection (real OAuth
+  // + social_media_accounts row) the stored profile and insight values from
+  // the Graph API replace these values; until a connection exists or Advanced
+  // Access is granted, the insights stay as samples (derived from the follower
+  // base) so the surface never renders empty.
+  const [realIg, setRealIg] = useState<HoverInstagram & { connected: boolean } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/social/instagram', { credentials: 'include' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (cancelled || !d || d.connected !== true) return;
+        setRealIg({
+          connected: true,
+          username: d.username || undefined,
+          name: d.displayName || undefined,
+          accountType: d.accountType || 'BUSINESS',
+          followers: typeof d.followers === 'number' ? d.followers : undefined,
+          posts: typeof d.mediaCount === 'number' ? d.mediaCount : undefined,
+          bio: d.bio || undefined,
+          verified: true,
+          insights: d.insights
+            ? {
+                reach: d.insights.reach != null ? Number(d.insights.reach) : undefined,
+                impressions: d.insights.impressions != null ? Number(d.insights.impressions) : undefined,
+                profileViews: d.insights.profileViews != null ? Number(d.insights.profileViews) : undefined,
+                engagementRate: d.insights.engagementRate != null ? Number(d.insights.engagementRate) : undefined,
+                syncedAt: d.insights.syncedAt || undefined,
+              }
+            : undefined,
+        });
+      })
+      .catch(() => { /* no connection — resume falls back to samples */ });
+    return () => { cancelled = true; };
+  }, []);
+
   const getOwnInstagram = (): HoverInstagram => {
     const ownName = heroProfile?.display_name || account?.display_name || profileName || 'Your Name';
     const igFollowers = metrics.followers > 0 ? metrics.followers : 12400;
+
+    // A real authorized Instagram connection wins: profile fields come from
+    // the Graph API (instagram_business_basic). Insights use the stored Graph
+    // API values (instagram_business_manage_insights) or sample-derived values
+    // until advanced access is granted.
+    if (realIg?.connected && realIg.username) {
+      const sampleInsights = {
+        reach: Math.round(igFollowers * 3.9),
+        impressions: Math.round(igFollowers * 7.8),
+        engagementRate: metrics.engagement > 0 ? metrics.engagement : 4.8,
+        profileViews: Math.round(igFollowers * 0.19),
+        syncedAt: '2h ago (sample)',
+      };
+      const insights = realIg.insights
+        ? {
+            reach: realIg.insights.reach ?? sampleInsights.reach,
+            impressions: realIg.insights.impressions ?? sampleInsights.impressions,
+            engagementRate: realIg.insights.engagementRate ?? sampleInsights.engagementRate,
+            profileViews: realIg.insights.profileViews ?? sampleInsights.profileViews,
+            syncedAt: realIg.insights.syncedAt || sampleInsights.syncedAt,
+          }
+        : sampleInsights;
+      return {
+        username: realIg.username,
+        name: realIg.name || realIg.username,
+        accountType: realIg.accountType || 'BUSINESS',
+        followers: realIg.followers ?? igFollowers,
+        posts: realIg.posts,
+        bio: realIg.bio || (profileBio ? `${profileBio} · Open to brand collabs on ValueSkins` : 'Creator · Open to brand collaborations · DM for rates #valueskins'),
+        verified: realIg.verified ?? true,
+        insights,
+      };
+    }
+
     return {
       username: ownName.toLowerCase().replace(/[^a-z0-9_.]/g, '') || 'creator',
       name: ownName,

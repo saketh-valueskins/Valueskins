@@ -24,9 +24,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     redirect_uri: INSTAGRAM_REDIRECT_URI,
     response_type: 'code',
     // instagram_business_basic = identity + read the creator's own profile and
-    // media (the Virtual Resume data). Insights (CPV inputs) require
-    // instagram_business_manage_insights and Meta Advanced Access — add later.
-    scope: 'instagram_business_basic',
+    // media (the Virtual Resume data). instagram_business_manage_insights = the
+    // analytics (reach/impressions/engagement/profile views) feeding the CPV
+    // inputs. Both map 1:1 to the two surfaces on the Virtual Resume and are
+    // requested together at login.
+    scope: 'instagram_business_basic,instagram_business_manage_insights',
     state,
   });
 
