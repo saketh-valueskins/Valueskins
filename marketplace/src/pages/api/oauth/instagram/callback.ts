@@ -71,8 +71,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 3. Fetch the profile. THIS is the verification: a successful call proves
-    //    the user controls this Instagram account.
-    const ig = (await getInstagramUserInfo(accessToken)) as InstagramUser;
+    //    the user controls this Instagram account. The token exchange returns
+    //    the numeric user id, which is the node id the Graph API requires
+    //    (there is no /me on the Instagram Graph API).
+    const ig = (await getInstagramUserInfo(accessToken, short.user_id)) as InstagramUser;
     if (!ig.id) {
       return res.status(400).json({ error: 'no_instagram_id' });
     }
