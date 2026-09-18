@@ -11,6 +11,7 @@ import { SESSION_IDLE_TIMEOUT_MS, SESSION_ABSOLUTE_TIMEOUT_MS } from '@/config/c
 
 interface InstagramUser {
   id: string;
+  user_id?: string;
   username?: string;
   name?: string;
   account_type?: string;
@@ -71,15 +72,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 3. Fetch the profile. THIS is the verification: a successful call proves
-    //    the user controls this Instagram account. The token exchange returns
-    //    the numeric user id, which is the node id the Graph API requires
-    //    (there is no /me on the Instagram Graph API).
-    const ig = (await getInstagramUserInfo(accessToken, short.user_id)) as InstagramUser;
-    if (!ig.id) {
+    //    the user controls this Instagram account. Uses the documented `/me`
+    //    endpoint for the Instagram Login flow; `/me` returns the app-scoped
+    //    `id` plus the real professional `user_id` (which is what we persist,
+    //    so webhook + sync lookups key on the account's true IG node id).
+    const ig = (await getInstagramUserInfo(accessToken)) as InstagramUser;
+    if (!ig.user_id && !ig.id) {
       return res.status(400).json({ error: 'no_instagram_id' });
     }
 
-    const instagramUserId = String(ig.id);
+    const instagramUserId = String(ig.user_id || ig.id);
     const username = ig.username || `ig_${instagramUserId}`;
     const displayName = ig.name || ig.username || `Instagram ${instagramUserId}`;
 

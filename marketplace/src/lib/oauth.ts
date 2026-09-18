@@ -246,26 +246,36 @@ export async function exchangeGitHubCode(code: string): Promise<any> {
 // verification signal: a successful call with this token proves the user
 // controls the Instagram account.
 //
-// NOTE: the Instagram Graph API (which `instagram_business_basic` and
-// `instagram_business_manage_insights` tokens authenticate against) has NO
-// `/me` node — that existed only in the deprecated Basic Display API. The
-// numeric user id from the token exchange must be used as the node id:
-// GET https://graph.instagram.com/{user_id}?fields=id,...
-export async function getInstagramUserInfo(
-  accessToken: string,
-  instagramUserId: string | number
-): Promise<any> {
-  if (!instagramUserId) {
-    throw new Error('Instagram token exchange did not return a user_id');
-  }
+// NOTE: this app uses the "Instagram API with Instagram Login" flow
+// (Business Login: authorize at www.instagram.com/oauth/authorize, exchange
+// at api.instagram.com/oauth/access_token -> "Instagram User" access token).
+// For that flow the DOCUMENTED profile endpoint is `graph.instagram.com/me`
+// with fields `user_id,username` (see Meta "Get Started" guide), NOT the
+// numeric IG node. It returns:
+//   - `id`      -> app-scoped user id
+//   - `user_id` -> the Instagram professional account ID (used everywhere
+//                  else in this codebase: sync.ts, webhooks, /{id} lookups)
+//   - `username`, `name`, `account_type` ("Business" | "Media_Creator"),
+//     `profile_picture_url`, `followers_count`, `media_count`
+//
+// A 400 "Unsupported request - method type: get" (IGApiException code 100)
+// is a Meta app-level / account-level rejection, not an endpoint bug. It
+// means the access token is not allowed to read this account: the Meta app
+// must be app type "Business"; the logging-in account must either be added
+// as a tester/role (Standard Access) OR the app must hold App Review +
+// Advanced Access + Business Verification. Creator accounts without a
+// connected Facebook Page also hit this error on every graph.instagram.com
+// call.
+export async function getInstagramUserInfo(accessToken: string): Promise<any> {
   // Analytics fields (followers_count, media_count) and profile_picture_url can
   // be denied depending on the token's granted scopes. Identity + account_type
   // are what login and role detection actually need, so degrade gracefully:
   // try the richest field set and drop fields until the call succeeds.
   const fieldSets = [
-    'id,username,name,account_type,profile_picture_url,followers_count,media_count',
-    'id,username,name,account_type,profile_picture_url',
-    'id,username,account_type',
+    'id,user_id,username,name,account_type,profile_picture_url,followers_count,media_count',
+    'id,user_id,username,name,account_type,profile_picture_url',
+    'id,user_id,username,account_type',
+    'id,user_id,username',
     'id,username',
   ];
 
@@ -273,7 +283,7 @@ export async function getInstagramUserInfo(
   for (const fields of fieldSets) {
     const params = new URLSearchParams({ fields, access_token: accessToken });
     const response = await fetch(
-      `https://graph.instagram.com/${instagramUserId}?${params.toString()}`
+      `https://graph.instagram.com/me?${params.toString()}`
     );
     if (response.ok) return response.json();
     lastError = `${response.status} ${await response.text().catch(() => '')}`;
