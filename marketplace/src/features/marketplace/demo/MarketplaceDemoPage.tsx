@@ -1979,7 +1979,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
         followers: igFollowers,
         posts: 143,
         following: 512,
-        bio: profileBio ? `${profileBio} · Open to brand collabs on ValueSkins` : 'Creator · Open to brand collaborations · DM for rates #valueskins',
+bio: profileBio
+        ? `${profileBio} · ${isBrand ? 'Open for creator collabs on ValueSkins' : 'Open to brand collabs on ValueSkins'}`
+        : isBrand
+          ? 'Brand · Open to creator collaborations · DM for rates #valueskins'
+          : 'Creator · Open to brand collaborations · DM for rates #valueskins',
         verified: true,
         insights: {
           reach: Math.round(igFollowers * 3.9),
@@ -3191,13 +3195,11 @@ export default function MarketplaceDemoPage(initialDealData?: {
                     the Meta App Review surface. Both permissions render here:
                     instagram_business_basic (basic profile row) and
                     instagram_business_manage_insights (analytics block below).
-                    Mirrors the hover-card block so the identity the reviewer
-                    sees matches the proof-of-use statements in the request. */}
-                {!isBrand && (
-                  <div style={{ marginBottom: '16px' }}>
-                    <InstagramResumeBlock ig={getOwnInstagram()} />
-                  </div>
-                )}
+                    Shows for every role so the reviewed identity matches the
+                    proof-of-use statements in the permission request. */}
+                <div style={{ marginBottom: '16px' }}>
+                  <InstagramResumeBlock ig={getOwnInstagram()} />
+                </div>
 
                 {/* ValueSkins */}
                 {!isBrand && (
