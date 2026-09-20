@@ -223,7 +223,6 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const userRole = account?.role;
   const isBrand = userRole === 'brand';
   const isCreator = userRole === 'creator';
-  const roleNotSet = !userRole;
   // Per-user localStorage keys — prevents XP/skin data bleeding between accounts
   const uid = account?.id ?? 'anon';
   const SK = {
@@ -3108,8 +3107,10 @@ bio: profileBio
 
           {activeView === 'mim' && (
             <>
-              {/* Layer 2: Role selection */}
-              {roleNotSet && marketplaceRole === 'none' && (
+              {/* Layer 2: Role selection — show whenever no demo role is chosen,
+                  regardless of the linked account role, so non-brand/creator
+                  accounts aren't left with a blank marketplace. */}
+              {marketplaceRole === 'none' && (
                 <>
                   <div style={{ padding: '12px 16px 0', position: 'sticky', top: 'var(--vs-header-h, 0px)', background: C.bg, zIndex: 10 }}>
                     <span style={{ fontSize: '22px', fontWeight: 700, color: C.text }}>Marketplace</span>
@@ -5166,7 +5167,7 @@ bio: profileBio
               })()}
 
               {/* Layer 3b: Brand Marketplace */}
-              {hasAnySkin && marketplaceRole === 'brand' && (
+              {marketplaceRole === 'brand' && (
                 <>
                   <div style={{
                     padding: '20px 16px 0', position: 'sticky', top: 'var(--vs-header-h, 0px)', zIndex: 10,
