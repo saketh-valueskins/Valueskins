@@ -230,7 +230,6 @@ export default function CampaignComposer({
     if (!draft.title.trim()) missing.push('Campaign title');
     if (!draft.description.trim()) missing.push('Description');
     if (!draft.budget) missing.push('Budget');
-    if (!draft.profession) missing.push('Target profession');
     if (!draft.pocName.trim()) missing.push('Point of contact name');
     if (!draft.pocEmail.trim()) missing.push('Point of contact email');
     if (!draft.pocPhone.trim()) missing.push('Point of contact phone');

@@ -1444,6 +1444,8 @@ export default function MarketplaceDemoPage(initialDealData?: {
   const [refreshing, setRefreshing] = useState(false);
   const [hiddenSentDealIds, setHiddenSentDealIds] = useState<Set<number>>(new Set());
   const [showCampaignCreator, setShowCampaignCreator] = useState(false);
+  // Scroll target for the brand dashboard "View Past Campaigns" button
+  const brandPastRef = useRef<HTMLDivElement | null>(null);
 
   // Barter goods tracker and international compliance states
   const [goodsTrackingInput, setGoodsTrackingInput] = useState('');
@@ -2465,7 +2467,7 @@ bio: profileBio
   // Check if creator matches campaign requirements
   const creatorMatchesCampaignRequirements = (campaign: Campaign, creatorProfession: string, creatorData?: any): boolean => {
     // ONLY hard-block on profession. All other preferences are soft-blocks (show warning instead)
-    if (!campaign.requiredProfessions.includes(creatorProfession)) {
+    if (campaign.requiredProfessions.length > 0 && !campaign.requiredProfessions.includes(creatorProfession)) {
       // Try partial match on profession
       const skinLower = creatorProfession.toLowerCase();
       const match = campaign.requiredProfessions.some(r => {
@@ -2579,7 +2581,7 @@ bio: profileBio
 
   // Deals the creator missed (expired campaigns matching their skins)
   const missedDeals = selectedMarketplaceSkin
-    ? liveCampaigns.filter(c => c.status === 'expired' && c.requiredProfessions.includes(selectedMarketplaceSkin))
+    ? liveCampaigns.filter(c => c.status === 'expired' && (c.requiredProfessions.length === 0 || c.requiredProfessions.includes(selectedMarketplaceSkin)))
     : [];
 
   // ── Demo session identity ───────────────────────────────────────────
@@ -2616,7 +2618,7 @@ bio: profileBio
     setActiveView('mim');
     // SettingsHub already POSTed /api/auth/logout (cleared the session cookie),
     // so reload to drop the in-memory account and land on the signed-out role
-    // screen instead of the "ValueSkin Required" marketplace gate.
+    // selection screen.
     window.location.href = '/demo/marketplace';
   };
 
@@ -3106,34 +3108,6 @@ bio: profileBio
 
           {activeView === 'mim' && (
             <>
-              {/* Layer 1: Gate — no ValueSkin (signed-in only; logged-out users
-                  get the role picker below instead of a dead-end store prompt) */}
-              {!hasAnySkin && marketplaceRole !== 'none' && (
-                <>
-                  <div style={{ height: '60px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', paddingLeft: '20px', fontWeight: 'bold', fontSize: '16px', background: C.surface }}>Marketplace</div>
-                  <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: C.surfaceAlt, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                      {/* stroke was C.textMuted -> --c-outline -> #2D2D2D, which
-                          on the dark surface (#171716) is ~1.2:1 and disappeared
-                          entirely. C.textSecondary reads on both themes. */}
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={C.textSecondary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                      </svg>
-                    </div>
-                    <h2 style={{ fontSize: '20px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>ValueSkin Required</h2>
-                    <p style={{ fontSize: '14px', color: C.textSecondary, marginBottom: '24px', lineHeight: 1.6, maxWidth: '340px', margin: '0 auto 24px' }}>
-                      You need at least one ValueSkin to access the Marketplace. Visit the Store to get your first badge.
-                    </p>
-                    <button
-                      onClick={() => setActiveView('store')}
-                      style={{ background: C.primary, border: 'none', borderRadius: '10px', color: C.onPrimary, padding: '12px 32px', fontWeight: 600, fontSize: '14px', cursor: 'pointer' }}
-                    >
-                      Go to Store
-                    </button>
-                  </div>
-                </>
-              )}
-
               {/* Layer 2: Role selection */}
               {roleNotSet && marketplaceRole === 'none' && (
                 <>
@@ -3176,7 +3150,7 @@ bio: profileBio
               )}
 
               {/* Layer 3a: Creator Marketplace */}
-              {hasValueSkin && marketplaceRole === 'creator' && (() => {
+              {marketplaceRole === 'creator' && (() => {
                 const isProfileComplete = profileName || account?.display_name;
 
                 if (!isProfileComplete) {
@@ -3194,8 +3168,23 @@ bio: profileBio
                 <>
                   {/* Marketplace header */}
                   <div style={{ padding: '12px 16px 0', position: 'sticky', top: 'var(--vs-header-h, 0px)', background: C.bg, zIndex: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
                       <span style={{ fontSize: '22px', fontWeight: 700, color: C.text }}>Marketplace</span>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <button
+                          onClick={() => setShowCampaignCreator(true)}
+                          style={{ background: C.primary, color: C.onPrimary, border: 'none', borderRadius: '8px', padding: '8px 14px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                          Create New Campaign
+                        </button>
+                        <button
+                          onClick={() => setCreatorMarketplaceTab('pipeline')}
+                          style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '8px 14px', fontSize: '13px', fontWeight: 600, color: C.textSecondary, cursor: 'pointer' }}
+                        >
+                          View Past Campaigns
+                        </button>
+                      </div>
                     </div>
 
                     {/* Available for deals toggle + tab selector */}
@@ -3247,8 +3236,8 @@ bio: profileBio
                   <div style={{ padding: '0 16px 16px' }}>
                     {(<>
 
-                    {/* No skin selected prompt */}
-                    {!selectedMarketplaceSkin && !isBrand && (
+                    {/* No skin selected prompt (only when there are skins to pick) */}
+                    {!selectedMarketplaceSkin && !isBrand && ownedSkins.length > 0 && (
                       <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                         <div style={{ fontSize: '14px', color: C.textSecondary, lineHeight: 1.6 }}>
                           Select a category above to see opportunities matched to your ValueSkins.
@@ -3257,10 +3246,10 @@ bio: profileBio
                     )}
 
                     {/* Feature 6: Creator Pipeline View (Meta data source: deal states from backend) */}
-                    {selectedMarketplaceSkin && creatorMarketplaceTab === 'pipeline' && (() => {
+                    {creatorMarketplaceTab === 'pipeline' && (() => {
                       // Match deal keys regardless of name prefix (could be profileName or matchingCreator.name)
                       const pipelineDeals = Object.entries(dealStates)
-                        .filter(([k]) => k.includes(`|${selectedMarketplaceSkin}|`))
+                        .filter(([k]) => !selectedMarketplaceSkin || k.includes(`|${selectedMarketplaceSkin}|`))
                         .map(([key, deal]) => ({ key, ...deal }));
 
                       // Strict filtering: deals must be ONLY in one column
@@ -5208,6 +5197,13 @@ bio: profileBio
                           {refreshing ? '↻' : '⟳'} Refresh
                         </button>
                         <button
+                          onClick={() => { setCampaignsSectionOpen(true); brandPastRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+                          title="View past deals and expired campaigns"
+                          style={{ background: 'none', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '8px 14px', fontSize: '13px', fontWeight: 600, color: C.textSecondary, cursor: 'pointer' }}
+                        >
+                          View Past Campaigns
+                        </button>
+                        <button
                           onClick={() => setShowCampaignCreator(true)}
                           style={{
                             background: C.primary, color: C.onPrimary, border: 'none', borderRadius: '8px',
@@ -5216,7 +5212,7 @@ bio: profileBio
                           }}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                          Create Campaign
+                          Create New Campaign
                         </button>
                       </div>
                     </div>
@@ -5255,7 +5251,7 @@ bio: profileBio
                               brandProfession: draft.profession,
                               title: draft.title,
                               description: draft.description,
-                              requiredProfessions: [draft.profession],
+                              requiredProfessions: [],
                               minLevel: draft.minLevel,
                               maxLevel: draft.maxLevel,
                               budget: draft.budget,
@@ -5317,7 +5313,7 @@ bio: profileBio
                                 deadline: newC.deadline || null,
                                 delivery_type: 'no_delivery',
                                 usage_rights_days: 365,
-                                required_niches: [newC.brandProfession],
+                                required_niches: [],
                               }),
                             }).catch(() => {});
                             setShowCampaignCreator(false);
@@ -6161,7 +6157,7 @@ bio: profileBio
                         .map(([key, d]) => ({ key, creatorName: key.split('|')[0], creatorSkin: key.split('|')[1], ...d }));
                       if (brandPastDeals.length === 0) return null;
                       return (
-                        <div style={{ background:C.card, borderRadius:'12px', padding:'14px', marginBottom:'14px', border:`1px solid ${C.border}` }}>
+                        <div ref={brandPastRef} style={{ background:C.card, borderRadius:'12px', padding:'14px', marginBottom:'14px', border:`1px solid ${C.border}` }}>
                           <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'10px' }}>
                             Past Deals ({brandPastDeals.length})
                           </div>
