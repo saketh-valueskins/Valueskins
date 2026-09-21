@@ -5707,10 +5707,10 @@ bio: profileBio
                         </div>
                       ) : brandValueSkins.length === 0 ? (
                         <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:'12px', padding:'14px 16px', marginBottom:'14px' }}>
-                          <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'8px' }}>Your Brand Identity</div>
+                          <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.textMuted, textTransform:'uppercase', letterSpacing:'0.6px', marginBottom:'8px' }}>Ready to collaborate?</div>
                           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                            <div style={{ fontSize:'12px', color:C.textMuted }}>Purchase a ValueSkin to start contacting creators</div>
-                            <button onClick={() => setActiveView('store')} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'6px 12px', fontSize:'0.75rem', fontWeight:700, color:C.onPrimary, cursor:'pointer' }}>Get ValueSkin</button>
+                            <div style={{ fontSize:'12px', color:C.textMuted }}>Create a campaign and connect with creators</div>
+                            <button onClick={() => setActiveView('store')} style={{ background:C.primary, border:'none', borderRadius:'6px', padding:'6px 12px', fontSize:'0.75rem', fontWeight:700, color:C.onPrimary, cursor:'pointer' }}>Create Campaign</button>
                           </div>
                         </div>
                       ) : null
