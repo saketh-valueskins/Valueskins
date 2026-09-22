@@ -3,60 +3,37 @@
 # Docs: https://render.com/docs/blueprint-spec
 
 services:
-  # ── API Gateway (Docker) ──────────────────────────────────────────────
+  # ── API Gateway (Node.js + Express) ────────────────────────────────────
   - type: web
     name: valueskins-api
     runtime: docker
     repo: https://github.com/saketh-valueskins/Valueskins
     branch: main
     envVars:
-      - key: RUST_ENV
+      - key: NODE_ENV
         value: production
-      - key: APP_ENV
-        value: production
-      - key: RUST_LOG
-        value: info
       - key: PORT
         value: 8080
       - key: DATABASE_URL
         fromDatabase:
           name: valueskins-db
           property: databaseUrl
-      - key: JWT_SECRET
-        generateValue: true
-      - key: API_KEY_HMAC_SALT
-        generateValue: true
-      - key: VERIFICATION_HMAC_SECRET
-        generateValue: true
-      - key: PLATFORM_SIGNING_KEY_ED25519
-        generateValue: true
       - key: REDIS_URL
         fromService:
           name: valueskins-redis
           property: redisUrl
       - key: ALLOWED_ORIGINS
-        value: https://valueskins.com,https://www.valueskins.com
-      - key: SMTP_HOST
-        sync: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: SMTP_FROM
-        value: noreply@valueskins.io
+        value: https://valueskins.com,https://www.valueskins.com,https://www.valueskins.local
+      - key: JWT_SECRET
+        generateValue: true
     healthCheckPath: /health/live
     autoDeploy: true
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    dockerfilePath: ./backend-node/Dockerfile
+    dockerContext: .
     plan: starter
-    # Scale up when CPU > 70%
     autoScaling:
       minInstances: 1
       maxInstances: 3
-    disk:
-      name: uploads
-      mountPath: /app/uploads
-      sizeGB: 10
 
   # ── PostgreSQL ────────────────────────────────────────────────────────
   - type: pgsql
