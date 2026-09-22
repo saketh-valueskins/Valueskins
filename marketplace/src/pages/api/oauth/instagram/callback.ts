@@ -89,9 +89,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // account type answers "brand or creator?" for us: BUSINESS -> brand,
     // CREATOR -> creator. PERSONAL/unset falls back to the manual role prompt
     // (the /auth/onboarding split page).
-    const accountType = (ig.account_type || '').toUpperCase();
-    const detectedRole: 'brand' | 'creator' | null =
-      accountType === 'BUSINESS' ? 'brand' : accountType === 'CREATOR' ? 'creator' : null;
+    const accountType = (ig.account_type || '').toUpperCase().trim();
+    let detectedRole: 'brand' | 'creator' | null = null;
+
+    if (accountType === 'BUSINESS') {
+      detectedRole = 'brand';
+    } else if (accountType === 'CREATOR' || accountType === 'CREATOR_ACCOUNT' || accountType.includes('CREATOR')) {
+      detectedRole = 'creator';
+    }
+
+    // Log for debugging
+    console.log(`[OAuth] Instagram account_type: "${ig.account_type}" -> detected role: ${detectedRole}`);
 
     const existing = await query(
       'SELECT id, onboarding_stage FROM users WHERE instagram_user_id = $1',
