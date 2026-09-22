@@ -2,9 +2,8 @@
 // PURPOSE: Single source of truth for backend URL. Every fetch() goes through here.
 // WHY: One place to change when switching between local, staging, production.
 
-// TEMP: Use local API only (backend disabled for workflow testing)
-const BACKEND_URL = '';
-const WS_URL = '';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://valueskins-api.onrender.com';
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || '';
 
 /** Full URL for a backend path. Handles missing trailing/leading slashes. */
 export function backendUrl(path: string): string {
