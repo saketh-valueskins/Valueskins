@@ -91,9 +91,13 @@ export default function ExploreView(props: { sharedState?: any; creatorProfile?:
     // Initial fetch - show ALL campaigns to all creators (no niche filtering)
     async function fetchCampaigns() {
       try {
-        const res = await apiFetch<{ campaigns: Campaign[] }>('/browse/campaigns?limit=50');
-        if (res.data?.campaigns) {
-          setCampaigns((res.data.campaigns || []).slice(0, 50));
+        // Use local API directly (bypass backend)
+        const res = await fetch('/api/browse/campaigns?limit=50', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.campaigns) {
+            setCampaigns((data.campaigns || []).slice(0, 50));
+          }
         }
       } catch (err) {
         console.error('Failed to fetch campaigns:', err);
