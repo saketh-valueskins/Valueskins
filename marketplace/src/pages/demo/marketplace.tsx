@@ -21,10 +21,9 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
   const empty = { props: { initialCampaigns: [], initialDealStates: null, initialApplications: [] } };
   try {
     const cookie = ctx.req.headers.cookie || '';
-    // getSessionUserId hits the DB. It used to run OUTSIDE the try/catch, so a DB
-    // outage threw here and 500'd the whole page instead of rendering logged-out.
-    const userId = await getSessionUserId(cookie);
-    if (!userId) return empty;
+    const { getAccountId } = await import('@/lib/session');
+    const accountId = await getAccountId(cookie);
+    if (!accountId) return empty;
 
     const campResult = await query(
       `SELECT c.*, COUNT(ci.id) as invite_count,
@@ -33,7 +32,7 @@ export async function getServerSideProps(ctx: GetServerSidePropsContext) {
        LEFT JOIN campaign_invites ci ON c.id = ci.campaign_id
        WHERE c.brand_id = $1
        GROUP BY c.id ORDER BY c.created_at DESC LIMIT 50`,
-      [userId]
+      [accountId]
     );
 
     return {

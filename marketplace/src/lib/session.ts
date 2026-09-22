@@ -41,33 +41,65 @@ export async function getAccountId(cookie: string): Promise<string | null> {
   const userId = await getSessionUserId(cookie);
   if (!userId) return null;
 
-  // Ensure an account row exists for this user.
+  // Ensure an account row exists for this user, then return the account_id.
   // The accounts table may have different schemas depending on which migrations ran:
   //   - Backend schema: accounts(id, legacy_user_id, ...) — no user_id column
   //   - Marketplace schema: accounts(id, user_id, ...) — has user_id column
-  // Try the marketplace schema first; if the column doesn't exist, fall back gracefully.
   try {
-    await query(
-      'INSERT INTO accounts (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING',
+    const result = await query(
+      'INSERT INTO accounts (user_id) VALUES ($1) ON CONFLICT (user_id) DO UPDATE SET user_id = $1 RETURNING id',
       [userId]
     );
+    if (result.rows.length > 0) {
+      return String(result.rows[0].id);
+    }
+
+    // If insert didn't return anything, try to fetch the account_id
+    const fetch = await query(
+      'SELECT id FROM accounts WHERE user_id = $1 LIMIT 1',
+      [userId]
+    );
+    if (fetch.rows.length > 0) {
+      return String(fetch.rows[0].id);
+    }
   } catch (e: any) {
     // If the column doesn't exist (backend schema), try the legacy_user_id column
     if (e?.code === '42703') {
       // 42703 = undefined_column
       try {
-        await query(
-          'INSERT INTO accounts (legacy_user_id) VALUES ($1) ON CONFLICT (legacy_user_id) DO NOTHING',
+        const result = await query(
+          'INSERT INTO accounts (legacy_user_id) VALUES ($1) ON CONFLICT (legacy_user_id) DO UPDATE SET legacy_user_id = $1 RETURNING id',
           [userId]
         );
+        if (result.rows.length > 0) {
+          return String(result.rows[0].id);
+        }
+
+        const fetch = await query(
+          'SELECT id FROM accounts WHERE legacy_user_id = $1 LIMIT 1',
+          [userId]
+        );
+        if (fetch.rows.length > 0) {
+          return String(fetch.rows[0].id);
+        }
       } catch {
-        // If neither works, the accounts table may not support this user type.
-        // Return the userId anyway — callers can still use it for auth checks.
+        // If neither works, fallback to returning userId — callers may need to handle this
       }
     }
-    // For other errors, also continue — the userId is still valid for auth.
   }
 
+  // Last resort: try to find account by user_id
+  try {
+    const result = await query(
+      'SELECT id FROM accounts WHERE user_id = $1 OR id = $2 LIMIT 1',
+      [userId, userId]
+    );
+    if (result.rows.length > 0) {
+      return String(result.rows[0].id);
+    }
+  } catch {}
+
+  // If all else fails, return userId (may not match account_id but preserves auth)
   return userId;
 }
 

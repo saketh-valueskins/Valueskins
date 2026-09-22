@@ -154,7 +154,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const sessionToken = match[1];
     const SQL = `SELECT u.id, u.instagram_user_id, u.username, u.display_name, u.avatar_url,
-              u.is_active, u.created_at, u.last_login_at, u.role, u.onboarding_stage
+              u.is_active, u.created_at, u.last_login_at, u.role, u.onboarding_stage,
+              s.expires_at, s.created_at as session_created_at
        FROM auth_sessions s
        JOIN users u ON s.user_id = u.id
        WHERE s.id = $1 AND s.is_active = true AND s.expires_at > NOW()`;
@@ -172,7 +173,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (result.rows.length === 0) return null;
-    return result.rows[0];
+
+    const user = result.rows[0];
+
+    // SLIDING WINDOW: renew session on activity (touch session)
+    // If session is less than 5 minutes from expiry, extend it
+    const now = new Date();
+    const expiresAt = new Date(user.expires_at);
+    const timeUntilExpiry = expiresAt.getTime() - now.getTime();
+    const RENEWAL_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+
+    if (timeUntilExpiry < RENEWAL_THRESHOLD_MS) {
+      const newExpiresAt = new Date(now.getTime() + SESSION_IDLE_TIMEOUT_MS);
+      await query(
+        'UPDATE auth_sessions SET expires_at = $1 WHERE id = $2',
+        [newExpiresAt.toISOString(), sessionToken]
+      ).catch(() => {}); // Don't fail the request if renewal fails
+    }
+
+    return user;
   }
 
   // ── GET /api/auth/google — redirect to Google OAuth ──
