@@ -97,14 +97,13 @@ export default function ExploreView(props: { sharedState?: any; creatorProfile?:
     // Initial fetch
     async function fetchCampaigns() {
       try {
-        const res = await apiFetch<{ campaigns: Campaign[] }>('/browse/campaigns?limit=50');
+        const nicheParam = encodeURIComponent(creatorNiche);
+        const res = await apiFetch<{ campaigns: Campaign[] }>(`/browse/campaigns?niche=${nicheParam}&limit=50`);
         if (res.data?.campaigns) {
-          const filtered = (res.data.campaigns || [])
-            .filter(c => c.requiredProfessions?.includes(creatorNiche) || c.brandProfession === creatorNiche)
-            .slice(0, 50);
-          setCampaigns(filtered);
+          setCampaigns((res.data.campaigns || []).slice(0, 50));
         }
-      } catch {
+      } catch (err) {
+        console.error('Failed to fetch campaigns:', err);
         // Fallback to shared state if API fails
         if (props.sharedState?.deals) {
           const allDeals = Object.values(props.sharedState.deals) as any[];
