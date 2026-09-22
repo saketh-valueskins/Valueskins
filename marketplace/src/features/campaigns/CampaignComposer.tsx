@@ -556,17 +556,6 @@ export default function CampaignComposer({
           </Row>
 
           <Row two={formTwoCol}>{Select('contentLanguage', 'Content language', LANGUAGES, 'Which language should the creator use?')}</Row>
-          <Row two={formTwoCol}>
-            <label style={labelStyle}>Creator level range</label>
-            <div style={helpStyle}>Only creators inside this range can apply.</div>
-            {levelRow('minLevel')}
-            {levelRow('maxLevel')}
-            <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: C.text, marginTop: '10px' }}>
-              {draft.maxLevel !== draft.minLevel
-                ? `Accepting Level ${draft.minLevel} to ${draft.maxLevel}`
-                : `Accepting Level ${draft.minLevel} only`}
-            </div>
-          </Row>
 
           <Row two={formTwoCol}>{Text('budget', `Budget (${currencySymbol})`, { numeric: true })}</Row>
 
@@ -807,9 +796,6 @@ export default function CampaignComposer({
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '16px' }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '6px 13px', borderRadius: '20px', background: WARM_SAND, color: NEAR_BLACK }}>
               {draft.compensation}
-            </span>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '6px 13px', borderRadius: '20px', border: '1px solid rgba(200,184,154,0.35)', color: WARM_SAND }}>
-              {draft.maxLevel !== draft.minLevel ? `Level ${draft.minLevel}–${draft.maxLevel}` : `Level ${draft.minLevel}`}
             </span>
             <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '6px 13px', borderRadius: '20px', border: '1px solid rgba(200,184,154,0.35)', color: WARM_SAND }}>
               {draft.contentLanguage}

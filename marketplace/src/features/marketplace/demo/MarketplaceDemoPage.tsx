@@ -869,7 +869,7 @@ export default function MarketplaceDemoPage(initialDealData?: {
         formal_offer: 'Formal offer sent',
         checklist: 'Terms checklist',
         accepted: 'Deal accepted',
-        softhold: 'Escrow hold',
+        softhold: 'Payment hold',
       };
       sharedSendNotification(opp?.brand || 'Brand', 'application', `${phaseNames[p]} · ${opp?.brand} & you are now at: ${phaseNames[p]}`);
       setPurchaseToast(`Deal moved to: ${phaseNames[p]}`);
