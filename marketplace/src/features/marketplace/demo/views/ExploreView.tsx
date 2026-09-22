@@ -88,17 +88,10 @@ export default function ExploreView(props: { sharedState?: any; creatorProfile?:
 
   // Fetch campaigns from API for real-time updates
   useEffect(() => {
-    const creatorNiche = props.creatorProfile?.profession;
-    if (!creatorNiche) {
-      setCampaigns([]);
-      return;
-    }
-
-    // Initial fetch
+    // Initial fetch - show ALL campaigns to all creators (no niche filtering)
     async function fetchCampaigns() {
       try {
-        const nicheParam = encodeURIComponent(creatorNiche);
-        const res = await apiFetch<{ campaigns: Campaign[] }>(`/browse/campaigns?niche=${nicheParam}&limit=50`);
+        const res = await apiFetch<{ campaigns: Campaign[] }>('/browse/campaigns?limit=50');
         if (res.data?.campaigns) {
           setCampaigns((res.data.campaigns || []).slice(0, 50));
         }
@@ -107,10 +100,7 @@ export default function ExploreView(props: { sharedState?: any; creatorProfile?:
         // Fallback to shared state if API fails
         if (props.sharedState?.deals) {
           const allDeals = Object.values(props.sharedState.deals) as any[];
-          const filtered = allDeals
-            .filter(deal => deal.requiredProfessions?.includes(creatorNiche) || deal.brandProfession === creatorNiche)
-            .slice(0, 50);
-          setCampaigns(filtered);
+          setCampaigns(allDeals.slice(0, 50));
         }
       }
     }
@@ -120,7 +110,7 @@ export default function ExploreView(props: { sharedState?: any; creatorProfile?:
     // Poll for new campaigns every 15 seconds
     const interval = setInterval(fetchCampaigns, 15000);
     return () => clearInterval(interval);
-  }, [props.creatorProfile?.profession]);
+  }, [props.sharedState?.deals]);
 
   useEffect(() => {
     if (exploreTab !== 'creators') return;
