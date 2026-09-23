@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { backendClient } from '@/lib/backend-client';
+import { getAuthenticatedUserId } from '@/lib/auth/require-user';
 
 /**
  * Identity Verification Proxy (Revenue Protection #6, #7, #16)
@@ -11,9 +12,8 @@ import { backendClient } from '@/lib/backend-client';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const userId = req.headers['x-user-id']
-      ? parseInt(req.headers['x-user-id'] as string, 10)
-      : undefined;
+    const sessionUserId = await getAuthenticatedUserId(req);
+    const userId = sessionUserId ? parseInt(sessionUserId, 10) : undefined;
 
     if (req.method === 'POST' && req.body.action === 'record-fingerprint') {
       // Record device fingerprint

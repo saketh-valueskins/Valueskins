@@ -1,13 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { setupCors } from '@/lib/cors';
 import { query } from '@/lib/db-pool';
+import { requireUser } from '@/lib/auth/require-user';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (setupCors(req, res)) return;
 
   try {
-    const userId = req.headers['x-user-id'];
-    if (!userId) return res.status(401).json({ error: 'User ID required' });
+    const userId = await requireUser(req, res);
+    if (!userId) return;
 
     if (req.method === 'POST') {
       const { role, data, step } = req.body;

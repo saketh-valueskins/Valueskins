@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { requireUser } from '@/lib/auth/require-user';
 
 export const config = {
   api: {
@@ -20,10 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const sessionToken = req.cookies.valueskins_session;
-    if (!sessionToken) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    const sessionUserId = await requireUser(req, res);
+    if (!sessionUserId) return;
 
     // For now, return the base64 as a data URL (can be stored in DB later)
     return res.status(200).json({

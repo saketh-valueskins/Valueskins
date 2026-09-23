@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { backendClient } from '@/lib/backend-client';
+import { requireUser } from '@/lib/auth/require-user';
 
 /**
  * Contact Masking Proxy (Revenue Protection #1, #3)
@@ -31,10 +32,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'POST' && req.body.action === 'unmask-contact') {
       // Unmask contact after milestone
-      const userId = parseInt(req.headers['x-user-id'] as string, 10);
-      if (isNaN(userId)) {
-        return res.status(401).json({ error: 'Missing user ID' });
-      }
+      const sessionUserId = await requireUser(req, res);
+      if (!sessionUserId) return;
+      const userId = parseInt(sessionUserId, 10);
 
       const result = await backendClient.unmaskContact(roomIdNum, userId);
       return res.status(200).json(result);

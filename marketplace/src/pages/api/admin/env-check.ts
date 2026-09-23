@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { requireAdmin } from '@/lib/auth/require-user';
 
 interface EnvStatus {
   name: string;
@@ -10,11 +11,8 @@ interface EnvStatus {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const adminIds = (process.env.ADMIN_IDS || '').split(',').map(s => s.trim());
-  const userId = req.headers['x-user-id'] as string;
-  if (!userId || (adminIds.length > 0 && !adminIds.includes(userId))) {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
+  const adminId = await requireAdmin(req, res);
+  if (!adminId) return;
 
   const vars: EnvStatus[] = [
     { name: 'DATABASE_URL', set: !!process.env.DATABASE_URL, required: true },

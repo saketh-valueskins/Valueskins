@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db';
+import { requireUser } from '@/lib/auth/require-user';
 
 interface CreatorAgencySettings {
   minDealValue?: number;
@@ -55,15 +56,9 @@ const validateSettings = (settings: any): { valid: boolean; errors: string[] } =
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const userIdHeader = req.headers['x-user-id'];
-    if (!userIdHeader || typeof userIdHeader !== 'string') {
-      return res.status(401).json({ error: 'Unauthorized: missing or invalid user ID' });
-    }
-
-    const userId = parseInt(userIdHeader, 10);
-    if (isNaN(userId)) {
-      return res.status(401).json({ error: 'Unauthorized: invalid user ID format' });
-    }
+    const sessionUserId = await requireUser(req, res);
+    if (!sessionUserId) return;
+    const userId = parseInt(sessionUserId, 10);
 
     if (req.method === 'GET') {
       // Verify user exists and has creator module
@@ -126,7 +121,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (err: any) {
     console.error('[agency-settings] Error:', {
       method: req.method,
-      userId: req.headers['x-user-id'],
       message: err.message,
       code: err.code,
     });

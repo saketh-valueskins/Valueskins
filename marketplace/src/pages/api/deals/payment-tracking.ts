@@ -2,13 +2,14 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { withApiHandler } from '@/lib/api-handler';
 import { setupCors } from '@/lib/cors';
 import { query } from '@/lib/db-pool';
+import { requireUser } from '@/lib/auth/require-user';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (setupCors(req, res)) return;
 
   try {
-    const sessionToken = req.cookies.valueskins_session;
-    if (!sessionToken) return res.status(401).json({ error: 'Unauthorized' });
+    const sessionUserId = await requireUser(req, res);
+    if (!sessionUserId) return;
 
     if (req.method === 'GET') {
       const { dealId } = req.query;

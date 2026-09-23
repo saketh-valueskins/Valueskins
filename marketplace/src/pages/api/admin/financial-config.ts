@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db';
+import { getAuthenticatedUserId, isAdminUserId } from '@/lib/auth/require-user';
 
 interface FinancialConfig {
   platformFeePercent: number;
@@ -91,9 +92,9 @@ const validateConfig = (config: any): { valid: boolean; errors: string[] } => {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // All financial config endpoints require admin access (future: implement proper admin check)
-    const userRole = req.headers['x-user-role'];
-    const isAdmin = userRole === 'admin';
+    // Writes require an admin session (ADMIN_IDS). Never trust a role header.
+    const sessionUserId = await getAuthenticatedUserId(req);
+    const isAdmin = isAdminUserId(sessionUserId);
 
     if (req.method === 'GET') {
       // Fetch current config
@@ -157,7 +158,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         `INSERT INTO financial_config (id, config, updated_at, updated_by)
          VALUES (1, $1, NOW(), $2)
          ON CONFLICT (id) DO UPDATE SET config = $1, updated_at = NOW(), updated_by = $2`,
-        [JSON.stringify(newConfig), userRole || 'system']
+        [JSON.stringify(newConfig), `user:${sessionUserId}`]
       );
 
       return res.status(200).json({

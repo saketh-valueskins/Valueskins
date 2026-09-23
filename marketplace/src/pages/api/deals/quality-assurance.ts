@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db';
+import { requireUser } from '@/lib/auth/require-user';
 
 const validateQAInput = (data: any): { valid: boolean; errors: string[] } => {
   const errors: string[] = [];
@@ -28,15 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const userIdHeader = req.headers['x-user-id'];
-    if (!userIdHeader || typeof userIdHeader !== 'string') {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const userId = parseInt(userIdHeader, 10);
-    if (isNaN(userId)) {
-      return res.status(401).json({ error: 'Invalid user ID' });
-    }
+    const sessionUserId = await requireUser(req, res);
+    if (!sessionUserId) return;
+    const userId = parseInt(sessionUserId, 10);
 
     const { dealId, action, issues, notes } = req.body;
 
@@ -110,7 +105,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: req.method,
       dealId: req.body?.dealId,
       action: req.body?.action,
-      userId: req.headers['x-user-id'],
       message: err.message,
       code: err.code,
     });

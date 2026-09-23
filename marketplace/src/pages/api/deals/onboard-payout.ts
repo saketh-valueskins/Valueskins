@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withApiHandler } from '@/lib/api-handler';
+import { requireUser } from '@/lib/auth/require-user';
 import { query } from '@/lib/db-pool';
 import { createContact, createFundAccount } from '@/lib/razorpay';
 import { savePayoutAccountReference } from '@/lib/escrow';
@@ -7,11 +8,8 @@ import { savePayoutAccountReference } from '@/lib/escrow';
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const sessionToken = req.cookies.valueskins_session;
-  if (!sessionToken) return res.status(401).json({ error: 'Unauthorized' });
-
-  const userId = req.headers['x-user-id'] as string;
-  if (!userId) return res.status(401).json({ error: 'x-user-id header required' });
+  const userId = await requireUser(req, res);
+  if (!userId) return;
 
   const {
     accountHolderName,

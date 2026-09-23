@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db';
+import { requireUser } from '@/lib/auth/require-user';
 
 /**
  * Deal Workflow Extensions - Integrated into existing locked phases
@@ -474,7 +475,8 @@ export async function updatePortfolio(creatorId: number, campaignId: string) {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const userId = parseInt(req.headers['x-user-id'] as string, 10);
+  const sessionUserId = await requireUser(req, res);
+  if (!sessionUserId) return;
 
   try {
     if (req.method === 'POST' && req.body.action === 'create-timeline') {
