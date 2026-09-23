@@ -35,11 +35,11 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      # Canonical Vercel CI pattern: run from repo root with ORG/PROJECT IDs
-      # in env (read from the committed marketplace/.vercel/project.json), so
-      # Vercel links to the right project and applies Root Directory=marketplace
-      # exactly once. Running inside marketplace/ previously doubled the path
-      # (marketplace/marketplace/package.json) and failed.
+      # The Vercel project's Root Directory is "." (see fb84021a), so the
+      # pull/build/deploy steps must run from marketplace/ -- the same as
+      # production.yml. Run from the repo root they build the root package.json
+      # and fail with "No Next.js version detected". ORG/PROJECT IDs come from
+      # the committed marketplace/.vercel/project.json.
       - name: Read Vercel project link
         id: vlink
         run: |
@@ -47,12 +47,14 @@ jobs:
           echo "project=$(node -p "require('./marketplace/.vercel/project.json').projectId")" >> $GITHUB_OUTPUT
 
       - name: Pull Vercel Environment
+        working-directory: marketplace
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ steps.vlink.outputs.org }}
           VERCEL_PROJECT_ID: ${{ steps.vlink.outputs.project }}
 
       - name: Build Project
+        working-directory: marketplace
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ steps.vlink.outputs.org }}
@@ -60,6 +62,7 @@ jobs:
 
       - name: Deploy Preview
         id: deploy
+        working-directory: marketplace
         run: |
           URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$URL" >> $GITHUB_OUTPUT
@@ -80,32 +83,9 @@ jobs:
               body: `## 🛒 Marketplace Preview\n\n**Marketplace**: [${url}](${url})`
             });
 
-  preview-backend:
-    name: Preview Backend
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.fork == false
-    environment:
-      name: preview
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: backend
-
-      - name: Build backend (preview)
-        working-directory: backend
-        run: cargo build --release -p api_gateway
-
-      - name: Preview summary
-        run: |
-          echo "## Preview Backend" >> $GITHUB_STEP_SUMMARY
-          echo "Backend built from PR #${{ github.event.number }} (${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
-          echo "Deploy to Render preview env: https://dashboard.render.com/select-repo?ref=${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-
   status-check:
     name: Preview Status
-    needs: [preview-marketplace, preview-backend]
+    needs: [preview-marketplace]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -114,4 +94,3 @@ jobs:
           echo "| Service | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Marketplace | ${{ needs.preview-marketplace.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend | ${{ needs.preview-backend.result }} |" >> $GITHUB_STEP_SUMMARY
