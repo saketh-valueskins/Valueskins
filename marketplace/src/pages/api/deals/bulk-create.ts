@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db';
+import { requireUser } from '@/lib/auth/require-user';
 
 let cachedConfig: any = null;
 let configFetchTime = 0;
@@ -56,15 +57,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const userIdHeader = req.headers['x-user-id'];
-    if (!userIdHeader || typeof userIdHeader !== 'string') {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const userId = parseInt(userIdHeader, 10);
-    if (isNaN(userId)) {
-      return res.status(401).json({ error: 'Invalid user ID' });
-    }
+    const sessionUserId = await requireUser(req, res);
+    if (!sessionUserId) return;
+    const userId = parseInt(sessionUserId, 10);
 
     const { creatorIds, offerAmount, contentType, deliverables } = req.body;
 
@@ -143,7 +138,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } catch (err: any) {
     console.error('[bulk-create] Error:', {
       method: req.method,
-      userId: req.headers['x-user-id'],
       creatorCount: req.body?.creatorIds?.length,
       message: err.message,
       code: err.code,

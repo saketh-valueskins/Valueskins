@@ -2,31 +2,15 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { withApiHandler } from '@/lib/api-handler';
 import { getCreatorAnalytics, getBrandAnalytics } from '@/lib/analytics';
 import { query } from '@/lib/db-pool';
+import { requireUser } from '@/lib/auth/require-user';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const sessionToken = req.cookies.valueskins_session;
-    if (!sessionToken) return res.status(401).json({ error: 'Unauthorized' });
-
-    const userIdHeader = req.headers['x-user-id'];
-    if (!userIdHeader || typeof userIdHeader !== 'string') {
-      return res.status(401).json({ error: 'Unauthorized: x-user-id required' });
-    }
-
-    const userId = parseInt(userIdHeader, 10);
-    if (isNaN(userId)) return res.status(401).json({ error: 'Invalid user ID' });
-
-    // Verify session matches the claimed user
-    const sessionCheck = await query(
-      'SELECT user_id FROM auth_sessions WHERE id = $1 AND is_active = true AND expires_at > NOW()',
-      [sessionToken]
-    );
-    if (sessionCheck.rows.length === 0) return res.status(401).json({ error: 'Session expired or invalid' });
-    if (Number(sessionCheck.rows[0].user_id) !== userId) {
-      return res.status(403).json({ error: 'Session mismatch' });
-    }
+    const sessionUserId = await requireUser(req, res);
+    if (!sessionUserId) return;
+    const userId = parseInt(sessionUserId, 10);
 
     const userRow = await query('SELECT account_id FROM users WHERE id = $1', [userId]);
     if (userRow.rows.length === 0) return res.status(404).json({ error: 'User not found' });

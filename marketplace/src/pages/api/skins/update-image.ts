@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db-pool';
+import { requireUser } from '@/lib/auth/require-user';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -7,14 +8,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const sessionToken = req.cookies.valueskins_session;
-    if (!sessionToken) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+    const sessionUserId = await requireUser(req, res);
+    if (!sessionUserId) return;
 
-    const { userId, valueSkin, imageBase64 } = req.body;
+    // Identity is the session user; a body userId is ignored.
+    const userId = sessionUserId;
+    const { valueSkin, imageBase64 } = req.body;
 
-    if (!userId || !valueSkin || !imageBase64) {
+    if (!valueSkin || !imageBase64) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 

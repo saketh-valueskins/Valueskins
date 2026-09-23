@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { backendClient } from '@/lib/backend-client';
+import { getAuthenticatedUserId } from '@/lib/auth/require-user';
 
 /**
  * Payment-Gated Ratings Proxy (Revenue Protection #5, #8, #20, #21)
@@ -19,9 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const userId = req.headers['x-user-id']
-      ? parseInt(req.headers['x-user-id'] as string, 10)
-      : undefined;
+    const sessionUserId = await getAuthenticatedUserId(req);
+    const userId = sessionUserId ? parseInt(sessionUserId, 10) : undefined;
 
     if (req.method === 'GET' && req.query.action === 'can-rate') {
       // Check rating gates

@@ -1,20 +1,19 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { query } from '@/lib/db';
+import { requireUser } from '@/lib/auth/require-user';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const eventIdHeader = req.headers['x-event-id'];
-  const userIdHeader = req.headers['x-user-id'];
+  const sessionUserId = await requireUser(req, res);
+  if (!sessionUserId) return;
 
   if (!eventIdHeader || typeof eventIdHeader !== 'string') {
     return res.status(401).json({ error: 'Unauthorized: Missing event ID' });
   }
 
-  if (!userIdHeader || typeof userIdHeader !== 'string') {
-    return res.status(401).json({ error: 'Unauthorized: Missing user ID' });
-  }
 
   const eventId = parseInt(eventIdHeader, 10);
-  const userId = parseInt(userIdHeader, 10);
+  const userId = parseInt(sessionUserId, 10);
 
   if (isNaN(eventId) || isNaN(userId)) {
     return res.status(401).json({ error: 'Invalid event or user ID' });
@@ -32,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const event = eventCheck.rows[0];
-    if (event.host_id !== userId) {
+    if (Number(event.host_id) !== userId) {
       return res.status(403).json({ error: 'Only event host can manage tags' });
     }
 

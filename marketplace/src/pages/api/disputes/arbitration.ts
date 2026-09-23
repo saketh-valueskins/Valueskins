@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { backendClient } from '@/lib/backend-client';
+import { getAuthenticatedUserId, isAdminUserId } from '@/lib/auth/require-user';
 
 /**
  * Dispute Resolution Proxy (Revenue Protection #19, #24, #25, #26)
@@ -12,9 +13,8 @@ import { backendClient } from '@/lib/backend-client';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const userId = req.headers['x-user-id']
-      ? parseInt(req.headers['x-user-id'] as string, 10)
-      : undefined;
+    const sessionUserId = await getAuthenticatedUserId(req);
+    const userId = sessionUserId ? parseInt(sessionUserId, 10) : undefined;
 
     if (req.method === 'POST' && req.body.action === 'open-dispute') {
       // Open dispute
@@ -34,7 +34,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST' && req.body.action === 'resolve-dispute') {
       // Resolve dispute (arbitrator only)
       if (!userId) {
-        return res.status(401).json({ error: 'Missing user ID' });
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      if (!isAdminUserId(userId)) {
+        return res.status(403).json({ error: 'Admin access required' });
       }
 
       const { dispute_id, ruling, payout_adjustment } = req.body;

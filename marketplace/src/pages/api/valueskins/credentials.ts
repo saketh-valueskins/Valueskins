@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { setupCors } from '@/lib/cors';
 import { query } from '@/lib/db-pool';
+import { getAuthenticatedUserId } from '@/lib/auth/require-user';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (setupCors(req, res)) return;
@@ -11,7 +12,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const userId = req.query.userId || req.headers['x-user-id'];
+    // ?userId= is a public-profile lookup; otherwise default to the session user.
+    const userId = req.query.userId || (await getAuthenticatedUserId(req));
     if (!userId) {
       return res.status(200).json({ credentials: [] });
     }

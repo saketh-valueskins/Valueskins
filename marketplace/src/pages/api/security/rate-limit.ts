@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { backendClient } from '@/lib/backend-client';
+import { getAuthenticatedUserId, requireUser } from '@/lib/auth/require-user';
 
 /**
  * Rate Limiting Proxy (Revenue Protection #4, #15, #27)
@@ -13,9 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     if (req.method === 'POST' && req.body.action === 'check') {
       // Check rate limit for request
-      const userId = req.headers['x-user-id']
-        ? parseInt(req.headers['x-user-id'] as string, 10)
-        : undefined;
+      const sessionUserId = await getAuthenticatedUserId(req);
+      const userId = sessionUserId ? parseInt(sessionUserId, 10) : undefined;
 
       const ipAddress = req.socket.remoteAddress || '0.0.0.0';
       const endpoint = req.body.endpoint || 'unknown';
@@ -26,10 +26,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'GET' && req.query.action === 'status') {
       // Get rate limit status for user
-      const userId = parseInt(req.headers['x-user-id'] as string, 10);
-      if (isNaN(userId)) {
-        return res.status(401).json({ error: 'Missing user ID' });
-      }
+      const sessionUserId = await requireUser(req, res);
+      if (!sessionUserId) return;
+      const userId = parseInt(sessionUserId, 10);
 
       return res.status(200).json({
         status: 'ok',

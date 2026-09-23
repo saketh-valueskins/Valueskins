@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { withApiHandler } from '@/lib/api-handler';
+import { requireUser } from '@/lib/auth/require-user';
 import { setupCors } from '@/lib/cors';
 import { query } from '@/lib/db-pool';
 import { savePayoutAccountReference } from '@/lib/escrow';
@@ -7,10 +8,8 @@ import { savePayoutAccountReference } from '@/lib/escrow';
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (setupCors(req, res)) return;
 
-  const sessionToken = req.cookies.valueskins_session;
-  if (!sessionToken) return res.status(401).json({ error: 'Unauthorized' });
-  const userId = req.headers['x-user-id'] as string;
-  if (!userId) return res.status(401).json({ error: 'x-user-id header required' });
+  const userId = await requireUser(req, res);
+  if (!userId) return;
 
   // ── GET PAYOUT ACCOUNTS ──
   if (req.method === 'GET') {

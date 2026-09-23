@@ -16,7 +16,8 @@ export async function touchSession(sessionToken: string): Promise<void> {
 }
 
 export async function getSessionUserId(cookie: string): Promise<string | null> {
-  const match = cookie.match(/valueskins_session=([^;]+)/);
+  // Anchor on the cookie name so e.g. `xvalueskins_session=` cannot match.
+  const match = cookie.match(/(?:^|;\s*)valueskins_session=([^;]+)/);
   if (!match) return null;
 
   const sessionToken = match[1];

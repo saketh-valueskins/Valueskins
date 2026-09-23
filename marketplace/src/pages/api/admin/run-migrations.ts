@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { requireAdmin } from '@/lib/auth/require-user';
 import { query } from '@/lib/db-pool';
 import fs from 'fs';
 import path from 'path';
@@ -6,11 +7,8 @@ import path from 'path';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const adminIds = (process.env.ADMIN_IDS || '').split(',').map(s => s.trim());
-  const userId = req.headers['x-user-id'] as string;
-  if (!userId || (adminIds.length > 0 && !adminIds.includes(userId))) {
-    return res.status(403).json({ error: 'Admin access required' });
-  }
+  const adminId = await requireAdmin(req, res);
+  if (!adminId) return;
 
   const results: { name: string; success: boolean; error?: string }[] = [];
   let allPassed = true;
